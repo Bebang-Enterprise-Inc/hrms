@@ -103,6 +103,44 @@ def _notify_warehouse_handoff(
 		frappe.log_error(f"Warehouse handoff notification failed for {receiving_name}: {e}", "Warehouse API")
 
 
+def _get_store_crew_recipients(target_warehouse: str) -> list[str]:
+	"""S198 (P3-T1): Resolve store crew email recipients for dispatch notification.
+
+	Returns list of emails (capped at 20) by querying:
+	  1. Warehouse.custom_area_supervisor (custom field on Warehouse doctype)
+	  2. Employee WHERE branch = target_warehouse (standard HR link)
+	"""
+	recipients: list[str] = []
+	if not target_warehouse:
+		return recipients
+
+	try:
+		# 1. Area supervisor from Warehouse custom field
+		area_sup = frappe.db.get_value("Warehouse", target_warehouse, "custom_area_supervisor")
+		if area_sup:
+			# custom_area_supervisor stores a User ID (email)
+			recipients.append(area_sup)
+
+		# 2. Employees assigned to this branch/store
+		employees = frappe.get_all(
+			"Employee",
+			filters={"branch": target_warehouse, "status": "Active"},
+			fields=["user_id"],
+			limit_page_length=20,
+		)
+		for emp in employees:
+			uid = emp.get("user_id")
+			if uid and uid not in recipients:
+				recipients.append(uid)
+	except Exception as e:
+		frappe.log_error(
+			f"S198: Failed to resolve store crew recipients for {target_warehouse}: {e}",
+			"Warehouse API",
+		)
+
+	return recipients[:20]
+
+
 def _warehouse_receiving_item_rows(receiving_doc):
 	rows = []
 	for item in receiving_doc.items:
@@ -1152,6 +1190,82 @@ def get_ready_for_dispatch():
 	return {"success": True, "data": list(by_store.values())}
 
 
+def _create_warehouse_receiving_for_se(se, contract: dict) -> str | None:
+	"""S198: auto-create BEI Warehouse Receiving after SE submit on BKI dispatch.
+
+	This is a fire-and-forget helper that MUST NOT raise. If WR creation fails,
+	the SE is already submitted; throwing here would be a half-state.
+
+	Args:
+		se: The just-submitted Stock Entry doc
+		contract: The material request contract dict (contains destination_warehouse, etc.)
+
+	Returns:
+		The WR docname if created/found, or None on failure/skip.
+	"""
+	try:
+		# D-1: BKI scope guard — only auto-create WR for BKI-source dispatches
+		source_company = resolve_warehouse_company(se.from_warehouse)
+		if source_company != _get_commissary_company():
+			return None
+
+		destination_warehouse = contract.get("destination_warehouse") or getattr(se, "to_warehouse", None)
+		if not destination_warehouse:
+			return None
+
+		# P1-T4: Idempotency safeguard — if a WR already exists for this SE, return it
+		existing = frappe.db.get_value(
+			"BEI Warehouse Receiving",
+			{"stock_entry": se.name, "status": ("!=", "Cancelled")},
+			"name",
+		)
+		if existing:
+			return existing
+
+		# Build items payload from SE items
+		items_payload = []
+		for item in se.items:
+			items_payload.append({
+				"item_code": item.item_code,
+				"qty": item.qty,
+				"uom": getattr(item, "uom", None) or getattr(item, "stock_uom", "Nos"),
+			})
+
+		if not items_payload:
+			return None
+
+		# Call create_warehouse_receiving (the existing @frappe.whitelist endpoint)
+		result = create_warehouse_receiving(
+			source_warehouse=se.from_warehouse,
+			target_warehouse=destination_warehouse,
+			items=json.dumps(items_payload),
+			remarks=f"Auto-created from Stock Entry {se.name}",
+		)
+
+		wr_name = result.get("data", {}).get("name") if isinstance(result, dict) else None
+		if not wr_name:
+			return None
+
+		# D-11: Stamp stock_entry on the WR using frappe.db.set_value (read_only field)
+		frappe.db.set_value("BEI Warehouse Receiving", wr_name, "stock_entry", se.name)
+
+		# P3-T2: Dispatch notification via GChat (reuse existing pattern)
+		try:
+			_notify_warehouse_handoff(wr_name, se.from_warehouse, destination_warehouse)
+		except Exception:
+			pass  # notification failure must not affect WR creation
+
+		return wr_name
+
+	except Exception as e:
+		# MUST NOT raise — log and return None so SE submission is preserved
+		frappe.log_error(
+			f"S198: Auto-create WR failed for SE {getattr(se, 'name', '?')}: {e}",
+			"Warehouse API",
+		)
+		return None
+
+
 @frappe.whitelist()
 def create_stock_transfer(
 	source_warehouse: str,
@@ -1337,6 +1451,7 @@ def create_stock_transfer(
 		frappe.throw(_("No items to transfer"))
 
 	_enable_role_gated_write(se)
+	wr_name = None  # S198: will hold auto-created WR docname
 	try:
 		se.insert(ignore_permissions=True)
 		se = frappe.get_doc("Stock Entry", se.name)
@@ -1344,6 +1459,10 @@ def create_stock_transfer(
 		_clear_legacy_serial_batch_fields_after_auto_bundle(se)
 		with _run_as_system_user("Administrator"):
 			se.submit()
+
+		# S198: auto-create BEI Warehouse Receiving so the destination store's
+		# crew has an acknowledgment doc the moment dispatch packs the truck.
+		wr_name = _create_warehouse_receiving_for_se(se, contract)
 	except frappe.ValidationError as e:
 		import re
 
@@ -1383,6 +1502,7 @@ def create_stock_transfer(
 			"request_source_label": get_request_source_label(contract["request_source"]),
 			"cargo_lane": contract.get("cargo_lane"),
 			"finance_treatment": finance_treatment,
+			"warehouse_receiving": wr_name,  # S198: auto-created WR docname (or None)
 		},
 		"message": f"{movement_type} {se.name} created successfully",
 	}
