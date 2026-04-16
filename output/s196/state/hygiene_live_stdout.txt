@@ -1,0 +1,109 @@
+Backend container: 1635eda26507
+========================================================================
+S196 ITEM #2 DATA HYGIENE - LIVE EXECUTION
+========================================================================
+
+=== STEP 0: Pre-flight audit of 3 archived Companies ===
+  [DONE   ] 0: audit 'BEBANG ROBINSONS GALLERIA SOUTH' - status=Permanently Closed linked={'_operational_status': 'Permanently Closed', 'Cost Center': 2, 'Account': 109, 'Warehouse': 5, 'Customer': 1}
+  [DONE   ] 0: audit 'BEBANG SM CALOOCAN' - status=Permanently Closed linked={'_operational_status': 'Permanently Closed', 'Cost Center': 2, 'Account': 109, 'Warehouse': 5, 'Customer': 1}
+  [DONE   ] 0: audit 'BEBANG SM SANGANDAAN' - status=Permanently Closed linked={'_operational_status': 'Permanently Closed', 'Cost Center': 2, 'Account': 109, 'Warehouse': 5, 'Customer': 1}
+
+=== STEP 1-5: Migrate external linked docs to new Companies ===
+  [DONE   ] 1: migrate_Customer 'BEBANG ROBINSONS GALLERIA SOUTH -> Robinsons Galleria South - Tungsten Capital' - 1 rows updated
+  [DONE   ] 1: migrate_Customer 'BEBANG SM CALOOCAN -> SM Caloocan - TAJ Food Corp.' - 1 rows updated
+  [DONE   ] 1: migrate_Customer 'BEBANG SM SANGANDAAN -> SM Sangandaan - Tungsten Capital' - 1 rows updated
+
+=== STEP 6: Delete Fiscal Year Company child rows ===
+  [SKIP   ] 6: delete_fiscal_year_company 'BEBANG ROBINSONS GALLERIA SOUTH' - 0 rows
+  [SKIP   ] 6: delete_fiscal_year_company 'BEBANG SM CALOOCAN' - 0 rows
+  [SKIP   ] 6: delete_fiscal_year_company 'BEBANG SM SANGANDAAN' - 0 rows
+
+=== STEP 7: Cascade cleanup - Bin/SLE/Warehouse/CostCenter/Account ===
+  [DONE   ] 7c: delete_warehouses 'BEBANG ROBINSONS GALLERIA SOUTH' - 5 warehouses deleted
+  [DONE   ] 7d: delete_cost_centers 'BEBANG ROBINSONS GALLERIA SOUTH' - 2 cost centers deleted
+  [DONE   ] 7e: delete_accounts 'BEBANG ROBINSONS GALLERIA SOUTH' - 109 accounts deleted
+  [DONE   ] 7c: delete_warehouses 'BEBANG SM CALOOCAN' - 5 warehouses deleted
+  [DONE   ] 7d: delete_cost_centers 'BEBANG SM CALOOCAN' - 2 cost centers deleted
+  [DONE   ] 7e: delete_accounts 'BEBANG SM CALOOCAN' - 109 accounts deleted
+  [DONE   ] 7c: delete_warehouses 'BEBANG SM SANGANDAAN' - 5 warehouses deleted
+  [DONE   ] 7d: delete_cost_centers 'BEBANG SM SANGANDAAN' - 2 cost centers deleted
+  [DONE   ] 7e: delete_accounts 'BEBANG SM SANGANDAAN' - 109 accounts deleted
+
+=== STEP 8: Delete 3 archived Companies ===
+  [DONE   ] 8: delete_company 'BEBANG ROBINSONS GALLERIA SOUTH' 
+  [DONE   ] 8: delete_company 'BEBANG SM CALOOCAN' 
+  [DONE   ] 8: delete_company 'BEBANG SM SANGANDAAN' 
+
+=== STEP 9: Final verification ===
+  [DONE   ] 9: verify_deleted 'BEBANG ROBINSONS GALLERIA SOUTH' - deleted
+  [DONE   ] 9: verify_deleted 'BEBANG SM CALOOCAN' - deleted
+  [DONE   ] 9: verify_deleted 'BEBANG SM SANGANDAAN' - deleted
+  Orderable Companies: 50
+  Orderable warehouses: 50
+  Expected: 50 (unchanged from post-SJDM state)
+
+========================================================================
+{
+  "dry_run": false,
+  "total_actions": 24,
+  "by_status": {
+    "DONE": 21,
+    "SKIP": 3
+  }
+}
+
+Action log: /tmp/s196_data_hygiene_actions.csv
+Audit snapshot: /tmp/s196_data_hygiene_audit.json
+
+========================================================================
+S196 DATA HYGIENE DONE (LIVE)
+========================================================================
+step,action,target,status,note
+0,audit,BEBANG ROBINSONS GALLERIA SOUTH,DONE,"status=Permanently Closed linked={'_operational_status': 'Permanently Closed', 'Cost Center': 2, 'Account': 109, 'Warehouse': 5, 'Customer': 1}"
+0,audit,BEBANG SM CALOOCAN,DONE,"status=Permanently Closed linked={'_operational_status': 'Permanently Closed', 'Cost Center': 2, 'Account': 109, 'Warehouse': 5, 'Customer': 1}"
+0,audit,BEBANG SM SANGANDAAN,DONE,"status=Permanently Closed linked={'_operational_status': 'Permanently Closed', 'Cost Center': 2, 'Account': 109, 'Warehouse': 5, 'Customer': 1}"
+1,migrate_Customer,BEBANG ROBINSONS GALLERIA SOUTH -> Robinsons Galleria South - Tungsten Capital,DONE,1 rows updated
+1,migrate_Customer,BEBANG SM CALOOCAN -> SM Caloocan - TAJ Food Corp.,DONE,1 rows updated
+1,migrate_Customer,BEBANG SM SANGANDAAN -> SM Sangandaan - Tungsten Capital,DONE,1 rows updated
+6,delete_fiscal_year_company,BEBANG ROBINSONS GALLERIA SOUTH,SKIP,0 rows
+6,delete_fiscal_year_company,BEBANG SM CALOOCAN,SKIP,0 rows
+6,delete_fiscal_year_company,BEBANG SM SANGANDAAN,SKIP,0 rows
+7c,delete_warehouses,BEBANG ROBINSONS GALLERIA SOUTH,DONE,5 warehouses deleted
+7d,delete_cost_centers,BEBANG ROBINSONS GALLERIA SOUTH,DONE,2 cost centers deleted
+7e,delete_accounts,BEBANG ROBINSONS GALLERIA SOUTH,DONE,109 accounts deleted
+7c,delete_warehouses,BEBANG SM CALOOCAN,DONE,5 warehouses deleted
+7d,delete_cost_centers,BEBANG SM CALOOCAN,DONE,2 cost centers deleted
+7e,delete_accounts,BEBANG SM CALOOCAN,DONE,109 accounts deleted
+7c,delete_warehouses,BEBANG SM SANGANDAAN,DONE,5 warehouses deleted
+7d,delete_cost_centers,BEBANG SM SANGANDAAN,DONE,2 cost centers deleted
+7e,delete_accounts,BEBANG SM SANGANDAAN,DONE,109 accounts deleted
+8,delete_company,BEBANG ROBINSONS GALLERIA SOUTH,DONE,
+8,delete_company,BEBANG SM CALOOCAN,DONE,
+8,delete_company,BEBANG SM SANGANDAAN,DONE,
+9,verify_deleted,BEBANG ROBINSONS GALLERIA SOUTH,DONE,deleted
+9,verify_deleted,BEBANG SM CALOOCAN,DONE,deleted
+9,verify_deleted,BEBANG SM SANGANDAAN,DONE,deleted
+--- AUDIT ---
+{
+  "BEBANG ROBINSONS GALLERIA SOUTH": {
+    "_operational_status": "Permanently Closed",
+    "Cost Center": 2,
+    "Account": 109,
+    "Warehouse": 5,
+    "Customer": 1
+  },
+  "BEBANG SM CALOOCAN": {
+    "_operational_status": "Permanently Closed",
+    "Cost Center": 2,
+    "Account": 109,
+    "Warehouse": 5,
+    "Customer": 1
+  },
+  "BEBANG SM SANGANDAAN": {
+    "_operational_status": "Permanently Closed",
+    "Cost Center": 2,
+    "Account": 109,
+    "Warehouse": 5,
+    "Customer": 1
+  }
+}
