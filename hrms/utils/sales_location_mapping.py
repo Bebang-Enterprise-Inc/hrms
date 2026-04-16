@@ -17,12 +17,91 @@ _mapping_by_id_cache_ts: float = 0
 
 
 def clear_cache(doc=None, method=None):
-	"""Clear the TTL cache. Called by on_update hooks for Company/Warehouse."""
+	"""Clear the TTL cache + auto-sync Supabase stores table.
+
+	Called by on_update hooks for Company/Warehouse.
+	When a Company with mosaic_location_id is saved, auto-upserts the Supabase
+	`stores` table so the store appears in Analytics automatically.
+	"""
 	global _mapping_cache, _mapping_cache_ts, _mapping_by_id_cache, _mapping_by_id_cache_ts
 	_mapping_cache = {}
 	_mapping_cache_ts = 0
 	_mapping_by_id_cache = {}
 	_mapping_by_id_cache_ts = 0
+
+	# S200: Auto-sync Supabase stores table when Company has mosaic_location_id
+	if doc and getattr(doc, "doctype", None) == "Company":
+		_sync_supabase_store(doc)
+
+
+def _sync_supabase_store(doc):
+	"""Upsert Supabase `stores` table when Company has mosaic_location_id.
+
+	Runs in background (enqueue) to avoid blocking the Company save.
+	"""
+	lid = getattr(doc, "mosaic_location_id", None)
+	if not lid:
+		return
+	entity_cat = getattr(doc, "entity_category", "")
+	if entity_cat not in ("Store", "Commissary"):
+		return
+	try:
+		lid_int = int(lid)
+	except (TypeError, ValueError):
+		return
+	store_name = _store_prefix(doc.name)
+	frappe.enqueue(
+		_do_supabase_store_upsert,
+		queue="short",
+		location_id=lid_int,
+		store_name=store_name,
+		company_name=doc.name,
+	)
+
+
+def _do_supabase_store_upsert(location_id: int, store_name: str, company_name: str):
+	"""Background job: upsert Supabase stores table.
+
+	The `stores` table has a NOT NULL constraint on `go_live_date`, so we must
+	provide all required fields. Uses PostgREST upsert (merge-duplicates) on
+	the `location_id` primary key.
+	"""
+	try:
+		from hrms.utils.supabase import supabase_headers, SUPABASE_URL
+		import requests as _requests
+
+		url = f"{SUPABASE_URL}/rest/v1/stores"
+		headers = supabase_headers(prefer="resolution=merge-duplicates,return=representation")
+
+		# Read Company fields for the upsert payload
+		ownership = frappe.db.get_value("Company", company_name, "store_ownership_type") or "Managed Franchise"
+		store_type_map = {"JV": "Company-Owned", "Company Owned": "Company-Owned"}
+		store_type = store_type_map.get(ownership, "Managed Franchise")
+
+		payload = {
+			"location_id": location_id,
+			"store_name": store_name,
+			"erpnext_company": company_name,
+			"legal_entity": company_name.split(" - ", 1)[1] if " - " in company_name else company_name,
+			"mosaic_name": company_name.split(" - ", 1)[1] if " - " in company_name else company_name,
+			"store_type": store_type,
+			"credential_group": "New Store",
+			"go_live_date": frappe.utils.today(),
+			"is_active": True,
+		}
+		r = _requests.post(url, headers=headers, json=payload, timeout=15)
+		if r.status_code in (200, 201):
+			frappe.logger().info(f"S200: Supabase stores upsert OK — LID {location_id} = {store_name}")
+		else:
+			frappe.log_error(
+				title="S200: Supabase stores upsert failed",
+				message=f"LID {location_id}, store={store_name}, company={company_name}, status={r.status_code}, body={r.text[:500]}",
+			)
+	except Exception as e:
+		frappe.log_error(
+			title="S200: Supabase stores upsert error",
+			message=f"LID {location_id}, store={store_name}: {e}",
+		)
 
 
 def normalize_store_key(value: str | None) -> str:
