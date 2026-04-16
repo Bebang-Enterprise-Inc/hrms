@@ -1,5 +1,5 @@
 # Sprint Registry (Canonical SSOT)
-**Last Updated:** 2026-03-24
+**Last Updated:** 2026-04-17
 **Policy:** `docs/plans/SPRINT_NUMBERING_POLICY.md`
 
 ## Branch & PR Reservation Rules
@@ -280,9 +280,15 @@ These documents contain sprint-like naming but are not part of the canonical seq
 
 | `S199` | Sprint 199 | `s199-all-caps-store-first-naming-polish` (hrms) | TBD | PLANNED 2026-04-16 — ALL CAPS Store-First Company Naming Polish. | `docs/plans/2026-04-16-sprint-199-all-caps-store-first-naming-polish.md` |
 
+| `S200` | Sprint 200 | `fix/s200-auto-supabase-store-sync` + `fix/s200-drift-check-allow-commissary` + `fix/s200-use-mapping-warehouse-name` (hrms) | hrms#596, #599, #600, #602 | COMPLETED 2026-04-17 — Analytics auto-store discovery: 30s TTL cache + on_update hooks on Company/Warehouse, auto-sync Supabase stores table, drift check + ALL CAPS fixes, store prefix as display name. PRs merged. | `docs/plans/2026-04-16-sprint-200-analytics-auto-store-discovery.md` |
+
+| `S201` | Sprint 201 | `s201-per-store-employee-billing` (hrms) | TBD | GO 2026-04-17 — Per-Store Employee Billing Foundation. Branch rename to Company prefix, Employee.company auto-derived from branch (non-store/AS/Regional/IT/Marketing→BEI parent; Commissary→BKI; rest→store child Company), Transfer API updates new_company, backfill patch. Precursor to S202 reliever allocation. | `docs/plans/2026-04-17-sprint-201-per-store-employee-billing-foundation.md` |
+
+| `S202` | Sprint 202 | TBD | TBD | PLANNED — Reliever Punch-Based Allocation Engine. Depends on S201. Month-end inter-Company JE reclassifying labor cost by punch share from Employee Checkin. Data starts April 01, 2026 (LD-6). | — |
+
 ## Next Sprint Reservation
-1. Next canonical sprint ID to assign: `S200`.
-2. Reserve branch name: `s200-{slug}` (fill slug from plan filename).
+1. Next canonical sprint ID to assign: `S203`.
+2. Reserve branch name: `s203-{slug}` (fill slug from plan filename).
 3. Create new sprint plan only after adding row here first.
 4. **Agent MUST `git checkout -b <branch>` before writing any code.**
 5. **MANDATORY cross-check before reserving any S###:** run `git branch -a | grep -iE 's(17[5-9]|18[0-9]|19[0-9])'` on BOTH `hrms` and `bei-tasks` AND `ls docs/plans/ | grep -E 'sprint-(17[5-9]|18[0-9]|19[0-9])'` — if any match the ID you're about to reserve, pick the next free number. The local registry is not authoritative; remote branches and plan files are.
