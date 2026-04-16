@@ -1513,23 +1513,21 @@ def _normalize_store_name_for_route(warehouse_name):
 	import re
 	name = (warehouse_name or "").upper()
 
-	# S192: S188 child prefix — "BEBANG ENTERPRISE INC. - <STORE> - BEI-XXX"
-	# Strip the leading entity prefix so the remaining text starts with the
-	# store portion.
+	# S199: Strip S188-style leading entity prefix "BEBANG ENTERPRISE INC. - <STORE> - BEI-XXX"
 	if name.startswith("BEBANG ENTERPRISE INC. - "):
 		name = name[len("BEBANG ENTERPRISE INC. - "):]
 
-	# S192: Trailing "- BEI-XXX" S188 abbreviation suffixes (SMG, ARG, MML,
-	# etc.) — strip first so the generic " - BEI" pass below doesn't leave
-	# a dangling "-XXX" fragment glued to the store name.
+	# S199: Strip trailing S188 abbreviation suffixes "- BEI-XXX" / "- BKI-XXX"
 	name = re.sub(r" - BEI-[A-Z0-9]+$", "", name)
 	name = re.sub(r" - BKI-[A-Z0-9]+$", "", name)
 
-	# Strip company suffixes (generic cases after S188 handling above)
-	for suffix in (
-		" - BEBANG ENTERPRISE INC.", " - BEI", " - BKI",
-		" - BEBANG KITCHEN INC.",
-	):
+	# S199: Generic corp suffix strip — removes " - <ANYTHING>" ending in
+	# INC., CORP., OPC, or HOLDINGS OPC. Handles ALL CAPS Company names
+	# from S199 rename (e.g., "SM TANZA - BEBANG MEGA INC." -> "SM TANZA").
+	name = re.sub(r"\s+-\s+\S.*(?:INC\.|CORP\.|OPC)$", "", name)
+
+	# Fallback: strip remaining legacy suffixes
+	for suffix in (" - BEI", " - BKI"):
 		name = name.replace(suffix, "")
 	return name.strip()
 

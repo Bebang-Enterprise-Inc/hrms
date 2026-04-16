@@ -101,9 +101,9 @@ WAREHOUSE_ALIAS_NAME_MAP = {
 	"GENERAL TRIAS": "Robinson General Trias",
 	"ROBINSIN PLACE GENERAL TRIAS": "Robinson General Trias",
 	"BEBANG ROBINSONS GENTRI": "Robinson General Trias",
-	"ROB GALLERIA SOUTH": "Robisons Galleria South",
-	"ROBINSON GALLERIA SOUTH": "Robisons Galleria South",
-	"GALLERIA SOUTH": "Robisons Galleria South",
+	"ROB GALLERIA SOUTH": "ROBINSONS GALLERIA SOUTH",
+	"ROBINSON GALLERIA SOUTH": "ROBINSONS GALLERIA SOUTH",
+	"GALLERIA SOUTH": "ROBINSONS GALLERIA SOUTH",
 	"MALL OF ASIA": "SM Mall Of Asia",
 }
 SYNC_ALLOWED_ROLES = {
@@ -369,7 +369,7 @@ def _resolve_warehouse_alias(value: str | None) -> str | None:
 	if "MARKET MARKET" in normalized:
 		return _resolve_warehouse_exact_or_name("Ayala Market Market")
 	if "GALLERIA SOUTH" in normalized:
-		return _resolve_warehouse_exact_or_name("Robisons Galleria South")
+		return _resolve_warehouse_exact_or_name("ROBINSONS GALLERIA SOUTH")
 	if "GENERAL TRIAS" in normalized or "GENTRI" in normalized:
 		return _resolve_warehouse_exact_or_name("Robinson General Trias")
 	if normalized == "ANTIPOLO":

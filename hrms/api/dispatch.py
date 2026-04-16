@@ -2162,22 +2162,22 @@ def _canonical_store_key(value: Any):
 
 
 def _strip_legacy_company_suffix(store_name: str | None):
-	"""Strip common company suffixes from legacy store labels."""
+	"""Strip company suffixes from store labels.
+
+	S199: handles ALL CAPS store-first names (e.g., "SM TANZA - BEBANG MEGA INC.")
+	plus legacy patterns ("SM Tanza - BEI", "SM Tanza - Bebang Enterprise Inc.").
+	"""
+	import re
 	if not store_name:
 		return ""
 	text = str(store_name).strip()
 	upper = text.upper()
-	suffixes = (
-		" - BEI",
-		"- BEI",
-		" - BK",
-		"- BK",
-		" - BEBANG ENTERPRISE INC.",
-		"- BEBANG ENTERPRISE INC.",
-		" - BEBANG KITCHEN INC.",
-		"- BEBANG KITCHEN INC.",
-	)
-	for suffix in suffixes:
+	# S199: generic corp suffix — strip " - <ANYTHING INC./CORP./OPC>"
+	m = re.search(r"\s+-\s+\S.*(?:INC\.|CORP\.|OPC)$", upper)
+	if m:
+		return text[: m.start()].strip(" -")
+	# Legacy short suffixes
+	for suffix in (" - BEI", "- BEI", " - BK", "- BK", " - BKI", "- BKI"):
 		if upper.endswith(suffix):
 			return text[: len(text) - len(suffix)].strip(" -")
 	return text
