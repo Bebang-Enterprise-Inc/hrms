@@ -16,11 +16,65 @@ branch_hrms: s198-warehouse-receiving-flow-completion
 branch_bei_tasks: s198-warehouse-receiving-queue-ui
 hrms_pr: TBD
 bei_tasks_pr: TBD
-canonical_unit_total: 56
+canonical_unit_total: 53
 predecessor_fail_evidence: output/l3/s192/SUMMARY.md (S192 1/7 PASS, FAIL_RETRY_REQUIRED)
+audit_version: v2 (2026-04-16 — addresses 15 CRITICAL + 10 WARNING from 8-agent audit pipeline)
+audit_report: output/plan-audit/s198-warehouse-receiving-flow-completion/verified_blockers.md
 ```
 
 > **REGISTRY EVIDENCE** (locked 2026-04-16): registry row added at `docs/plans/SPRINT_REGISTRY.md` with `S198`, branch `s198-warehouse-receiving-flow-completion`, status `PLANNED`. `S197` was already claimed by `s197-pos-sync-5min-interval`; `S198` is the next free ID.
+
+---
+
+## Audit v2 Amendment Summary (2026-04-16)
+
+> **Audit pipeline:** 8 domain agents → code verifier (20 CONFIRMED, 5 STALE, 8 NEW GAPS) → adversarial fact-checker (24 SUPPORTED, 1 PARTIAL). Full report: `output/plan-audit/s198-warehouse-receiving-flow-completion/verified_blockers.md`
+>
+> All 15 CRITICAL blockers verified against source code. The plan body below is the **amended authoritative version** — do not reference the pre-audit v1 text.
+
+### Fixes applied (CRIT → amendment)
+
+| CRIT | Finding | Fix applied |
+|---|---|---|
+| 1 | `complete_warehouse_receiving` does NOT build SI; `store.complete_receiving` (store.py:4024) does | **Two Accept paths:** store crew's queue calls `/api/store?action=complete_receiving` (produces SI). Warehouse staff's queue calls `/api/warehouse?action=complete_internal_receipt` (stamps WR only). Phases 2 + 4A rewritten. |
+| 2 | "Draft" status doesn't exist; real: `Pending Warehouse Receive` | D-2 rewritten to "Pending Warehouse Receive" |
+| 3 | bei-tasks has zero Notification Log consumer | **Phase 3 descoped** from 6 → 3 units. Drop Notification Log; use Google Chat (reuse existing `_notify_warehouse_handoff` pattern in commissary.py). Slack/in-app deferred to a future sprint after a notification framework exists. |
+| 4 | `create_warehouse_receiving` hard-throws on non-BKI source | **P1-T1 scope guard:** `if resolve_warehouse_company(se.from_warehouse) != _get_commissary_company(): return None` — non-BKI dispatches skip WR auto-create. Explicit scope statement added. |
+| 5 | `source_type` locked to "Commissary Finished Goods" | Scope statement: S198 covers BKI→store dispatches only. Non-BKI internal transfers remain out of scope. |
+| 6 | `User.default_store` doesn't exist; `custom_area_supervisor` is on Warehouse (inverted) | **P3-T1 rewritten:** recipient resolution queries `Warehouse.custom_area_supervisor WHERE name = target_warehouse` + `Employee WHERE branch = target_warehouse`. Frontend filter uses `useUserStore().stores` (existing hook, NOT a User field). |
+| 7 | API signature is `get_pending_warehouse_receivings(target_warehouse=None)` — no `for_store`/`for_warehouse` | **P2-T4 rewritten:** frontend resolves user's store warehouse via `useUserStore().defaultStore`, passes as `target_warehouse` param. No new API kwarg. |
+| 8 | New MODULES keys break TypeScript `Record<Module, Role[]>` exhaustiveness | **MODULES.RECEIVING already exists** (roles.ts:103). Reuse it everywhere — no new module keys. CRIT-8 + WARN-2 resolved. |
+| 9 | Detail page RoleGuard uses `MODULES.WAREHOUSE` — blocks store crew | **Phase 2 adds task:** change detail page RoleGuard from `MODULES.WAREHOUSE` to `MODULES.RECEIVING` (which includes STORE_STAFF + STORE_SUPERVISOR). |
+| 10 | `ROUTES.WAREHOUSE_RECEIVE` = procurement GR page — wrong redirect | **Phase 2 adds task:** role-based redirect after accept. Store crew → `/dashboard/store-ops/receiving`. Warehouse staff → `/dashboard/warehouse/internal-receiving`. |
+| 11 | `CleanupLedger.reverse()` returns in-memory only — no fs.writeFile | **Phase 4A adds task:** after `reverse()`, persist result to `EVIDENCE.cleanupReport` file path. |
+| 12 | 2.5% JV markup hardcoded — actual BEI Settings default is 2.75% | **L3 S2 assertion rewritten:** read `bki_markup_jv_percent` from live BEI Settings, don't hardcode. |
+| 13 | The Grid - Rockwell has `active_with_billing_hold` — S3 SI guaranteed FAIL | **S3 rewritten as negative-path:** order + approve + dispatch succeed but SI is held (expected). Test asserts billing-hold log entry exists. |
+| 14 | S197 registry row missing | **Phase 0 adds task P0-T0:** backfill S197 row in SPRINT_REGISTRY.md. |
+| 15 | `stock_entry` field is read_only — ORM set fails silently | **P1-T1 rewritten:** use `frappe.db.set_value("BEI Warehouse Receiving", wr_name, "stock_entry", se.name)` instead of ORM assignment. |
+
+### WARNING fixes applied
+
+| WARN | Fix |
+|---|---|
+| 1 (double notification) | Resolved by Phase 3 descope — GChat only, no Notification Log. |
+| 2 (MODULES.RECEIVING exists) | Reuse existing module. No new RECEIVING_STORE / RECEIVING_WAREHOUSE. |
+| 5 (DispatchPage.ts already exists) | Plan says "rewrite" with explicit `MUST_MODIFY` — overwrite is intentional. |
+| 6 (relative URL in notification) | Moot — Notification Log dropped. GChat uses absolute URL. |
+| 9 (CleanupLedger missing wr-create kind) | Phase 4A adds `wr-create` to CleanupKind type + reverseOne handler. |
+| 10 (usePendingInternalReceipts exists) | **Phase 2 rewritten:** store queue page uses `usePendingInternalReceipts(defaultStore)` (DRY). No parallel SWR call. Warehouse queue page uses same hook with `targetWarehouse=null` (shows all). |
+
+### Phase Budget update
+
+| Phase | v1 units | v2 units | Change |
+|---|---|---|---|
+| 0 | 4 | 5 | +1 (S197 registry backfill) |
+| 1 | 10 | 10 | unchanged (scope guard replaces blind try/except) |
+| 2 | 12 | 12 | unchanged (tasks reshuffled — detail page RoleGuard + redirect fix, reuse existing hook) |
+| 3 | 6 | 3 | -3 (Notification Log dropped → GChat only) |
+| 4A | 8 | 8 | unchanged (CleanupLedger persist + wr-create kind added) |
+| 4B | 12 | 12 | unchanged (S3 now negative-path; S2 reads Settings) |
+| 5 | 4 | 3 | -1 (no LIBRARY_IMPROVEMENTS if <3 fixes) |
+| **Total** | **56** | **53** | **-3** |
 
 ---
 
@@ -82,14 +136,17 @@ We chose a **backend hook + frontend queue + notification** combination over the
 ### Design Decisions Locked
 | # | Decision | Why |
 |---|---|---|
-| D-1 | WR auto-creates on SE submit inside `create_stock_transfer` | Single transactional boundary — if SE submits, WR exists. No orphans possible. |
-| D-2 | WR initial status = `Draft` | Matches existing `complete_warehouse_receiving` precondition (`status != Cancelled`). |
-| D-3 | Notification doctype = `Notification Log` (Frappe core) | No new doctype. `for_user` field targets the destination store crew. |
-| D-4 | Store crew identification = users with `default_store == warehouse OR custom_area_supervisor contains warehouse` | Mirrors `_get_pending_approval_entries` lookup pattern. |
-| D-5 | List pages use SWR with `revalidateOnFocus: true` | Avoids the S192 D09 stale-cache issue that broke the prior L3 attempt. |
+| D-1 | WR auto-creates on SE submit inside `create_stock_transfer`, **scoped to BKI-source dispatches only** | Single transactional boundary. Non-BKI dispatches return None (their WR flow is out of S198 scope — `create_warehouse_receiving` hard-validates source_company == BKI at warehouse.py:569-573). |
+| D-2 | WR initial status = `Pending Warehouse Receive` | This is the only valid initial status per `bei_warehouse_receiving.json:72`. No "Draft" option exists. Controller resets to this on validate. Queue filter hardcodes `{"status": "Pending Warehouse Receive"}`. |
+| D-3 | ~~Notification Log~~ **Google Chat** notification on dispatch | bei-tasks has **zero Notification Log consumer** — no bell icon, no useNotifications hook. GChat notification reuses existing `_notify_warehouse_handoff` pattern in commissary.py. In-app notification deferred to a future sprint when a notification framework ships for bei-tasks. |
+| D-4 | Store crew identification: query `Warehouse.custom_area_supervisor WHERE name = target_warehouse` (warehouse.py custom field) + `Employee WHERE branch = <target_warehouse_name>` (standard HR link). Frontend filter uses `useUserStore().defaultStore` (existing hook at `bei-tasks/hooks/use-user-store.ts:42`). **`User.default_store` does NOT exist as a User-doctype field.** |
+| D-5 | List pages use existing `usePendingInternalReceipts(targetWarehouse)` hook (hooks/use-warehouse.ts:264-280) which wraps `get_pending_warehouse_receivings`. **Store page passes `targetWarehouse=defaultStore`, warehouse page passes `null` (all).** Hook already has SWR config; add `revalidateOnFocus: true` if missing. |
 | D-6 | `data-testid` on every list row = `delivery-row-${receiving_name}` | Matches existing `TEST_IDS.deliveryRow` constant in `bei-tasks/tests/e2e/support/selectors.ts`. |
-| D-7 | Receiving queue list page route names: `/dashboard/store-ops/receiving` (store) + `/dashboard/warehouse/internal-receiving` (warehouse) | First is store crew's daily flow; second is warehouse staff's inter-warehouse transfers. |
-| D-8 | Sentry observability on every new `@frappe.whitelist()` and every new `route.ts` action | Per `.claude/rules/sentry-observability.md` (DM-7) — not optional. |
+| D-7 | **Two Accept endpoints by role:** Store crew queue calls `store.complete_receiving` (store.py:3933→4024 — this is the endpoint that submits the SI via `_submit_store_sale_invoice`). Warehouse staff queue calls `warehouse.complete_internal_receipt` (warehouse.py — stamps WR only, no SI). **This is the CRIT-1 fix: the SI is built by the STORE endpoint, not the WAREHOUSE endpoint.** |
+| D-8 | **RoleGuard:** both queue list pages AND the existing detail page at `[receiving_name]/page.tsx:334` use `MODULES.RECEIVING` (already exists at roles.ts:103 — includes STORE_STAFF + STORE_SUPERVISOR + WAREHOUSE_USER + AREA_SUPERVISOR). No new module keys. |
+| D-9 | **Post-accept redirect:** detail page redirects based on originating route: store crew (came from `/dashboard/store-ops/receiving`) → back to store queue. Warehouse staff (came from `/dashboard/warehouse/internal-receiving`) → back to warehouse queue. Uses `searchParams.get("returnTo")` or `document.referrer` fallback. **Fixes CRIT-10:** current redirect goes to `/dashboard/procurement/goods-receipts` (wrong). |
+| D-10 | Sentry observability on every new `@frappe.whitelist()` and every new `route.ts` action. Per `.claude/rules/sentry-observability.md` (DM-7) — not optional. |
+| D-11 | `stock_entry` field on BEI Warehouse Receiving is `read_only: 1` (bei_warehouse_receiving.json:118). **Use `frappe.db.set_value()` (direct DB write) to stamp it, not ORM assignment.** Fixes CRIT-15. |
 
 ---
 
@@ -580,8 +637,8 @@ Every row must pass browser-only. Real SI docnames captured.
 | # | User | Action sequence | Expected SI / outcome | Failure means |
 |---|---|---|---|---|
 | S1 | test.area → test.area → test.scm → test.scm → test.supervisor | Submit order on SM Tanza → Single/Dual approval → MR approve at /warehouse/approve → Dispatch at /warehouse/dispatch → Open `/dashboard/store-ops/receiving` → tap delivery → click Accept | Real `ACC-SINV-YYYY-NNNNN` with customer = BEBANG MEGA INC., TIN = 010-885-436-00000, 12% VAT (exact ratio), 8% markup, GL has Customer party row | Backend auto-create WR broken OR queue page doesn't show |
-| S2 | same chain | Same on SM Megamall | Real SI with customer = `SM Megamall - Bebang Enterprise Inc.` (S196 STORE-FIRST naming), 2.5% JV markup, 12% VAT | S188 child resolution / S196 rename broken |
-| S3 | same chain | Same on The Grid - Rockwell | Real SI with customer = TASTECARTEL CORP., TIN = 672-270-879-00000, 8% Full Franchise markup | Full Franchise routing or post-P5 hold lift broken |
+| S2 | same chain | Same on SM Megamall | Real SI with customer = `SM Megamall - Bebang Enterprise Inc.` (S196 STORE-FIRST naming), JV markup = value from live `BEI Settings.bki_markup_jv_percent` (default 2.75% per bei_settings.json:360-365 — do NOT hardcode), 12% VAT | S188 child resolution / S196 rename broken |
+| S3 | same chain | Same on The Grid - Rockwell | **NEGATIVE PATH:** order + approve + dispatch SUCCEED, but SI is NOT built because The Grid - Rockwell has `active_with_billing_hold` status (commissary.py:1033 `buyer_entity_requires_billing_hold` returns True). Test asserts: (a) order.company = TASTECARTEL CORP., (b) MR approved + SE created, (c) WR auto-created, (d) `complete_receiving` returns billing-hold response, (e) no ACC-SINV created. This validates the billing-hold guard works. | Billing hold guard broken (SI created when it shouldn't be) |
 | S4 | same chain (single FG item at suggested qty) | Same on Ayala Evo | Real SI; SI customer doc IDENTICAL to S1's SI customer doc (multi-store same-entity dedupe) | S190 same-entity Customer dedupe broken |
 | F1 | test.area | Open `/dashboard/store-ops/ordering`, set no qty, attempt submit | Review/Submit controls hidden; no order created | S0 deviation gate or empty-order guard broken |
 | F2 | Administrator (setup) + test.area (run) | Create test warehouse with `company=NULL`; test.area attempts submit on it | Inline ValidationError "Store warehouse … has no Company set"; no order created | S190 Company-first guard broken |
