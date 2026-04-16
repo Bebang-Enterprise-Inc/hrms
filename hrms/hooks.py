@@ -198,6 +198,11 @@ doc_events = {
 		"on_update": "hrms.utils.sales_location_mapping.clear_cache",
 		"on_trash": "hrms.utils.sales_location_mapping.clear_cache",
 	},
+	"Branch": {
+		# S201 — invalidate branch->Company resolver cache when Branch docs change
+		"on_update": "hrms.utils.company_lookup.clear_cache",
+		"on_trash": "hrms.utils.company_lookup.clear_cache",
+	},
 	"Holiday List": {
 		"on_update": "hrms.utils.holiday_list.invalidate_cache",
 		"on_trash": "hrms.utils.holiday_list.invalidate_cache",
@@ -231,6 +236,8 @@ doc_events = {
 		"validate": [
 			"hrms.overrides.employee_master.validate_onboarding_process",
 			"hrms.utils.bio_id_validation.validate_employee_bio_id",
+			# S201 — derive company from branch (store child / BEI parent / BKI)
+			"hrms.overrides.employee_master.derive_company_from_branch",
 		],
 		"on_update": [
 			"hrms.overrides.employee_master.update_approver_role",
