@@ -276,8 +276,10 @@ These documents contain sprint-like naming but are not part of the canonical seq
 
 | `S198` | Sprint 198 | `s198-warehouse-receiving-flow-completion` (hrms) + `s198-warehouse-receiving-queue-ui` (bei-tasks) | TBD | PLANNED 2026-04-16 — **Warehouse Receiving Flow Completion** (closes the production gap surfaced by the S192 L3 retry). Today `create_stock_transfer` submits a Stock Entry but never creates a BEI Warehouse Receiving doc; the store crew has no list page for incoming deliveries; `complete_warehouse_receiving` (which builds the S190 Sales Invoice) is unreachable through the browser. Sprint delivers: (a) backend hook so dispatch auto-creates the WR alongside the SE, (b) `/dashboard/store-ops/receiving` list page for store crew + `/dashboard/warehouse/internal-receiving` list page for warehouse staff (both consume `get_pending_warehouse_receivings`), (c) in-app notification to destination store crew at dispatch time, (d) re-execution of the S192 L3 retry (all 7 scenarios browser-only with real SI docs on S1/S2/S3/S4). **Number choice:** S197 was already taken by branch `s197-pos-sync-5min-interval` (registry row missing — flagged). | `docs/plans/2026-04-16-sprint-198-warehouse-receiving-flow-completion.md` |
 
+| `S199` | Sprint 199 | `s199-all-caps-store-first-naming-polish` (hrms) | TBD | PLANNED 2026-04-16 — **ALL CAPS Store-First Company Naming Polish.** Rename ALL 44 store Companies to uniform `<STORE NAME> - <CORP NAME>` ALL CAPS. Fix typos (Robisons→ROBINSONS, SM  Manila double space), spell out abbreviations (SJDM→SM SAN JOSE DEL MONTE, UPTC→UP TOWN CENTER, EDSA stays). Flatten compound names (The Grid - Rockwell→THE GRID ROCKWELL). Rewire `_filter_sales_warehouses` from CSV to `Company.mosaic_location_id` (closes S191 36-store gap). Delete stale `sales_dashboard_store_mapping.csv`. | `docs/plans/2026-04-16-sprint-199-all-caps-store-first-naming-polish.md` |
+
 ## Next Sprint Reservation
-1. Next canonical sprint ID to assign: `S199`.
+1. Next canonical sprint ID to assign: `S200`.
 2. Reserve branch name: `s199-{slug}` (fill slug from plan filename).
 3. Create new sprint plan only after adding row here first.
 4. **Agent MUST `git checkout -b <branch>` before writing any code.**

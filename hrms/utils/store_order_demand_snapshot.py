@@ -811,12 +811,12 @@ def _build_store_warehouse_map() -> dict[str, str]:
 
 	# POS store names that differ from Frappe warehouse_name
 	pos_aliases = {
-		"D'Verde Calamba": "D'verde Laguna",
+		"D'Verde Calamba": "D'VERDE CALAMBA",
 		"NAIA Terminal 3": "NAIA T3",
-		"Robinsons Galleria South": "Robisons Galleria South",
+		"Robinsons Galleria South": "ROBINSONS GALLERIA SOUTH",
 		"SM San Pablo": "SM San Pablo",
-		"SM SJDM": "SJDM",
-		"SM Manila": "SM  Manila",
+		"SM SJDM": "SM SAN JOSE DEL MONTE",
+		"SM Manila": "SM MANILA",
 	}
 	for alias, wh_name in pos_aliases.items():
 		if alias not in mapping and wh_name in mapping:

@@ -590,22 +590,22 @@ def _resolve_company_for_s037_row(
 	# S188: per-store child company lookup — check if a child company
 	# exists for this specific store before falling back to the parent
 	_STORE_TO_CHILD: dict[str, str] = {
-		"SM Megamall": "Bebang Enterprise Inc. - SM Megamall",
-		"SM Manila": "Bebang Enterprise Inc. - SM Manila",
-		"SM Southmall": "Bebang Enterprise Inc. - SM Southmall",
-		"Robinsons Place Antipolo": "Bebang Enterprise Inc. - Robinsons Antipolo",
-		"Ayala Evo City": "Bebang Mega Inc. - Ayala Evo City",
-		"Ayala Vermosa": "Bebang Mega Inc. - Ayala Vermosa",
-		"Robinsons Place Gen. Trias": "Bebang Mega Inc. - Robinsons Gen Trias",
-		"Robinsons Place Imus": "Bebang Mega Inc. - Robinsons Imus",
-		"SM Tanza": "Bebang Mega Inc. - SM Tanza",
-		"Sta. Lucia East Grand Mall": "Bebang SM Marikina Inc. - Sta Lucia",
-		"D'Verde Calamba": "TAJ Food Corp. - DVerde Calamba",
-		"Food Express (Gateway Mall)": "Tungsten Capital - Gateway Mall",
-		# Existing per-store companies (pre-S188, now re-parented)
-		"SM Caloocan": "BEBANG SM CALOOCAN",
-		"SM Sangandaan": "BEBANG SM SANGANDAAN",
-		"Robinsons Galleria South": "BEBANG ROBINSONS GALLERIA SOUTH",
+		# S199: ALL CAPS store-first Company names
+		"SM Megamall": "SM MEGAMALL - BEBANG ENTERPRISE INC.",
+		"SM Manila": "SM MANILA - BEBANG ENTERPRISE INC.",
+		"SM Southmall": "SM SOUTHMALL - BEBANG ENTERPRISE INC.",
+		"Robinsons Place Antipolo": "ROBINSONS ANTIPOLO - BEBANG ENTERPRISE INC.",
+		"Ayala Evo City": "AYALA EVO CITY - BEBANG MEGA INC.",
+		"Ayala Vermosa": "AYALA VERMOSA - BEBANG MEGA INC.",
+		"Robinsons Place Gen. Trias": "ROBINSONS GENERAL TRIAS - BEBANG MEGA INC.",
+		"Robinsons Place Imus": "ROBINSONS IMUS - BEBANG MEGA INC.",
+		"SM Tanza": "SM TANZA - BEBANG MEGA INC.",
+		"Sta. Lucia East Grand Mall": "STA. LUCIA EAST GRAND MALL - BEBANG SM MARIKINA INC.",
+		"D'Verde Calamba": "D'VERDE CALAMBA - TAJ FOOD CORP.",
+		"Food Express (Gateway Mall)": "ARANETA GATEWAY - TUNGSTEN CAPITAL HOLDINGS OPC",
+		"SM Caloocan": "SM CALOOCAN - TAJ FOOD CORP.",
+		"SM Sangandaan": "SM SANGANDAAN - TUNGSTEN CAPITAL HOLDINGS OPC",
+		"Robinsons Galleria South": "ROBINSONS GALLERIA SOUTH - TUNGSTEN CAPITAL HOLDINGS OPC",
 	}
 	if store_name and store_name in _STORE_TO_CHILD:
 		child = _STORE_TO_CHILD[store_name]
@@ -1006,7 +1006,7 @@ def populate_s181_fields() -> dict:
 		"Uptown Mall": "Up Town Mall BGC",
 		"Robinsons Place Gen. Trias": "Robinson General Trias",
 		"Robinsons Place Imus": "Robinson Imus",
-		"Robinsons Galleria South": "Robisons Galleria South",  # Mosaic typo preserved
+		"Robinsons Galleria South": "ROBINSONS GALLERIA SOUTH",  # S199: typo fixed + ALL CAPS
 		"Robinsons Place Antipolo": "Robinsons Antipolo",
 		"Robinsons Place Dasmarinas": "Robinsons Place Dasmarinas",  # may not be in Mosaic
 		"The Terminal Exchange": "The Terminal",
@@ -1137,15 +1137,15 @@ def populate_s181_fields() -> dict:
 	# Companies not in S037 that are Stores — Sam confirmed 2026-04-13.
 	# These get entity_category=Store + TIN/RDO directly.
 	_STORE_OVERRIDES: dict[str, dict] = {
-		"TASTECARTEL CORP.": {"store": "The Grid - Rockwell", "tin": "672-270-879-00000", "rdo": "049"},
-		# S196 follow-up (2026-04-16): Sam confirmed JL Trade OPC runs SJDM. Legacy77 archived. Renamed store-first.
-		"SM San Jose Del Monte - JL TRADE OPC": {"store": "SM San Jose Del Monte", "tin": "775-842-763-00003", "rdo": "045"},
-		"DLS Dessert Craft Inc.": {"store": "Ever Gotesco Commonwealth", "tin": "671-219-097-00001", "rdo": "028"},
-		"BEBANG FT INC.": {"store": "Ayala Fairview Terraces"},
-		"BEBANG SM CALOOCAN": {"store": "SM Caloocan"},
-		"BEBANG SM SANGANDAAN": {"store": "SM Sangandaan"},
-		"BEBANG ROBINSONS GALLERIA SOUTH": {"store": "Robinsons Galleria South"},
-		"SWEET HARMONY FOOD CORP.": {"store": "SM Sta. Rosa"},
+		# S199: ALL CAPS store-first Company names as keys
+		"THE GRID ROCKWELL - TASTECARTEL CORP.": {"store": "The Grid - Rockwell", "tin": "672-270-879-00000", "rdo": "049"},
+		"SM SAN JOSE DEL MONTE - JL TRADE OPC": {"store": "SM San Jose Del Monte", "tin": "775-842-763-00003", "rdo": "045"},
+		"EVER COMMONWEALTH - DLS DESSERT CRAFT INC.": {"store": "Ever Gotesco Commonwealth", "tin": "671-219-097-00001", "rdo": "028"},
+		"AYALA MALLS FAIRVIEW TERRACES - BEBANG FT INC.": {"store": "Ayala Fairview Terraces"},
+		"SM CALOOCAN - TAJ FOOD CORP.": {"store": "SM Caloocan"},
+		"SM SANGANDAAN - TUNGSTEN CAPITAL HOLDINGS OPC": {"store": "SM Sangandaan"},
+		"ROBINSONS GALLERIA SOUTH - TUNGSTEN CAPITAL HOLDINGS OPC": {"store": "Robinsons Galleria South"},
+		"SM STA. ROSA - SWEET HARMONY FOOD CORP.": {"store": "SM Sta. Rosa"},
 	}
 
 	# ------------ Phase 3: entity_category + mosaic + GPS + city + status + pos -----------
@@ -1660,37 +1660,36 @@ def populate_s181_fields() -> dict:
 		# S037 buyer_entity_name doesn't match the Company docname.
 		# Sam confirmed these mappings 2026-04-13.
 		_COMPANY_TO_SA_STORE: dict[str, str] = {
-			# Untagged companies Sam identified
-			"TASTECARTEL CORP.": "The Grid - Rockwell",
-			"SM San Jose Del Monte - JL TRADE OPC": "SM SJDM",
-			"DLS Dessert Craft Inc.": "Ever Commonwealth",
-			# Companies whose S037 buyer differs from Frappe name
-			"BEBANG BF HOMES INC.": "BF Homes",
-			"BEBANG FT INC.": "Ayala Malls Fairview Terraces",
-			"BEBANG SM CALOOCAN": "SM Caloocan",
-			"BEBANG SM SANGANDAAN": "SM Sangandaan",
-			"BEBANG ROBINSONS GALLERIA SOUTH": "Robisons Galleria South",
-			"SWEET HARMONY FOOD CORP.": "SM Sta. Rosa",
-			"HFFM SOLENAD FOOD SERVICES INC.": "Ayala Solenad",
-			"BEBANG MARKET MARKET INC.": "Ayala Market Market",
-			"BEBANG SMM INC.": "SM  Manila",
-			"BEBANG SMOA INC.": "SM Mall Of Asia",
+			# S199: ALL CAPS store-first Company names as keys
+			"THE GRID ROCKWELL - TASTECARTEL CORP.": "The Grid - Rockwell",
+			"SM SAN JOSE DEL MONTE - JL TRADE OPC": "SM SJDM",
+			"EVER COMMONWEALTH - DLS DESSERT CRAFT INC.": "Ever Commonwealth",
+			"BF HOMES - BEBANG BF HOMES INC.": "BF Homes",
+			"AYALA MALLS FAIRVIEW TERRACES - BEBANG FT INC.": "Ayala Malls Fairview Terraces",
+			"SM CALOOCAN - TAJ FOOD CORP.": "SM Caloocan",
+			"SM SANGANDAAN - TUNGSTEN CAPITAL HOLDINGS OPC": "SM Sangandaan",
+			"ROBINSONS GALLERIA SOUTH - TUNGSTEN CAPITAL HOLDINGS OPC": "Robinsons Galleria South",
+			"SM STA. ROSA - SWEET HARMONY FOOD CORP.": "SM Sta. Rosa",
+			"AYALA SOLENAD - HFFM SOLENAD FOOD SERVICES INC.": "Ayala Solenad",
+			"AYALA MARKET MARKET - BEBANG MARKET MARKET INC.": "Ayala Market Market",
+			"SM PULILAN - BEBANG SMM INC.": "SM Manila",
+			"SM MALL OF ASIA - BEBANG SMOA INC.": "SM Mall Of Asia",
 			"BEIFRANCHISE FOOD OPC": "Ortigas Land Greenhills",
 			"TAJ FOOD CORP.": "D'Verde Calamba",
 			"Bebang Kitchen Inc.": "Shaw BLVD",
-			# S188: per-store child companies
-			"Bebang Enterprise Inc. - SM Megamall": "SM Megamall",
-			"Bebang Enterprise Inc. - SM Manila": "SM  Manila",
-			"Bebang Enterprise Inc. - SM Southmall": "SM Southmall",
-			"Bebang Enterprise Inc. - Robinsons Antipolo": "Robinsons Antipolo",
-			"Bebang Mega Inc. - Ayala Evo City": "Ayala Evo",
-			"Bebang Mega Inc. - Ayala Vermosa": "Ayala Vermosa",
-			"Bebang Mega Inc. - Robinsons Gen Trias": "Robinson General Trias",
-			"Bebang Mega Inc. - Robinsons Imus": "Robinson Imus",
-			"Bebang Mega Inc. - SM Tanza": "SM Tanza",
-			"Bebang SM Marikina Inc. - Sta Lucia": "Sta. Lucia East Grand Mall",
-			"TAJ Food Corp. - DVerde Calamba": "D'Verde Calamba",
-			"Tungsten Capital - Gateway Mall": "Araneta Gateway",
+			# S199: per-store child companies (ALL CAPS)
+			"SM MEGAMALL - BEBANG ENTERPRISE INC.": "SM Megamall",
+			"SM MANILA - BEBANG ENTERPRISE INC.": "SM Manila",
+			"SM SOUTHMALL - BEBANG ENTERPRISE INC.": "SM Southmall",
+			"ROBINSONS ANTIPOLO - BEBANG ENTERPRISE INC.": "Robinsons Antipolo",
+			"AYALA EVO CITY - BEBANG MEGA INC.": "Ayala Evo",
+			"AYALA VERMOSA - BEBANG MEGA INC.": "Ayala Vermosa",
+			"ROBINSONS GENERAL TRIAS - BEBANG MEGA INC.": "Robinson General Trias",
+			"ROBINSONS IMUS - BEBANG MEGA INC.": "Robinson Imus",
+			"SM TANZA - BEBANG MEGA INC.": "SM Tanza",
+			"STA. LUCIA EAST GRAND MALL - BEBANG SM MARIKINA INC.": "Sta. Lucia East Grand Mall",
+			"D'VERDE CALAMBA - TAJ FOOD CORP.": "D'Verde Calamba",
+			"ARANETA GATEWAY - TUNGSTEN CAPITAL HOLDINGS OPC": "Araneta Gateway",
 		}
 
 		for company_name in all_company_names:
