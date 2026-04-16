@@ -187,8 +187,16 @@ doc_events = {
 			"hrms.overrides.company.auto_provision_company",
 			# S181 — ADMS enqueue worker (idempotent, non-blocking)
 			"hrms.overrides.company.auto_enroll_adms_devices",
+			# S200 — clear Analytics store mapping cache so new Companies
+			# appear in the Store Leaderboard within 30 seconds
+			"hrms.utils.sales_location_mapping.clear_cache",
 		],
 		"on_trash": "hrms.overrides.company.handle_linked_docs",
+	},
+	"Warehouse": {
+		# S200 — clear Analytics store mapping cache on warehouse changes
+		"on_update": "hrms.utils.sales_location_mapping.clear_cache",
+		"on_trash": "hrms.utils.sales_location_mapping.clear_cache",
 	},
 	"Holiday List": {
 		"on_update": "hrms.utils.holiday_list.invalidate_cache",
