@@ -53,8 +53,19 @@ def load_sales_location_mapping() -> dict[str, dict[str, Any]]:
 		fields=["name", "warehouse_name", "company"],
 	)
 
+	# Structural warehouse names that are NOT store-facing — must be excluded
+	# to prevent "Work In Progress", "Finished Goods", etc. from appearing
+	# in the Analytics Store Leaderboard.
+	_STRUCTURAL_NAMES = {
+		"Stores", "Finished Goods", "Goods In Transit", "Work In Progress",
+		"All Warehouses", "Raw Materials", "In Transit",
+	}
+
 	mapping: dict[str, dict[str, Any]] = {}
 	for wh in warehouses:
+		wh_name = (wh.get("warehouse_name") or wh.get("name") or "").strip()
+		if wh_name in _STRUCTURAL_NAMES:
+			continue
 		company = wh.get("company") or ""
 		location_id = co_location.get(company)
 		if not location_id:
