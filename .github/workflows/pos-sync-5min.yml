@@ -1,7 +1,7 @@
-name: POS Sync (5-Minute Interval)
+name: POS Sync (10-Minute Interval)
 on:
   schedule:
-    - cron: "*/5 2-16 * * *"  # every 5 minutes, 10 AM-midnight PHT (02:00-16:00 UTC)
+    - cron: "*/10 2-16 * * *"  # every 10 minutes, 10 AM-midnight PHT (02:00-16:00 UTC)
   workflow_dispatch:
     inputs:
       dry_run:
@@ -11,7 +11,7 @@ on:
         default: false
 
 concurrency:
-  group: pos-sync-5min
+  group: pos-sync-10min
   cancel-in-progress: true  # slow run yields to newer trigger
 
 env:
@@ -24,7 +24,7 @@ env:
 jobs:
   sync:
     runs-on: ubuntu-latest
-    timeout-minutes: 4  # hard cap below 5-min cadence; next run starts if we are late
+    timeout-minutes: 8  # must finish within 10-min cadence; p50=5.5 min, p95=13 min
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
