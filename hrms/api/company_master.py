@@ -2130,7 +2130,9 @@ def _drift_check_non_store_entities():
 		if not frappe.db.exists("Company", co_name):
 			continue
 		ec = frappe.db.get_value("Company", co_name, "entity_category")
-		if ec in ("Store", "Commissary"):
+		# Commissary IS allowed in non-store entities (BKI orders raw materials
+		# from warehouse but should NOT appear on the store grid/delivery schedule)
+		if ec == "Store":
 			msg = (
 				f"S196 drift: Company {co_name!r} is in _NON_STORE_ENTITIES "
 				f"(expected non-store) but has entity_category={ec!r}. "
