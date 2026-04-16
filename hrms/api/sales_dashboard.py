@@ -503,6 +503,11 @@ def _filter_sales_warehouses(rows: list[dict[str, Any]]) -> list[dict[str, Any]]
 	for row in rows:
 		location_id = lookup_location_id(row.get("warehouse_name"), row.get("name"))
 		if not location_id:
+			wh_name = row.get("name") or row.get("warehouse_name") or "(unknown)"
+			frappe.log_error(
+				title="Sales Dashboard: unmapped warehouse dropped",
+				message=f"Warehouse {wh_name!r} (company={row.get('company')!r}) has no mosaic_location_id on its Company — excluded from Analytics scope.",
+			)
 			continue
 		filtered.append(
 			{
