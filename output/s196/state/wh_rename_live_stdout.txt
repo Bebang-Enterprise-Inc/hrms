@@ -1,0 +1,174 @@
+Backend container: 1635eda26507
+========================================================================
+S196 ITEM #3 WAREHOUSE RENAME SWEEP - LIVE
+========================================================================
+
+=== STEP A: Discovery ===
+  Found 35 leaf `- BEI` warehouses not owned by BEI parent
+  After structural filter: 35
+  PLAN: 'Araneta Gateway - BEI' -> 'Araneta Gateway - Tungsten Capital'  (company=Gateway Mall - Tungsten Capital, corp_suffix=Tungsten Capital)
+  PLAN: 'Ayala Evo - BEI' -> 'Ayala Evo - BEBANG MEGA INC.'  (company=BEBANG MEGA INC., corp_suffix=BEBANG MEGA INC.)
+  PLAN: 'Ayala Malls Fairview Terraces - BEI' -> 'Ayala Malls Fairview Terraces - BEBANG FT INC.'  (company=BEBANG FT INC., corp_suffix=BEBANG FT INC.)
+  PLAN: 'Ayala Market Market - BEI' -> 'Ayala Market Market - BEBANG MARKET MARKET INC.'  (company=BEBANG MARKET MARKET INC., corp_suffix=BEBANG MARKET MARKET INC.)
+  PLAN: 'Ayala Solenad - BEI' -> 'Ayala Solenad - HFFM SOLENAD FOOD SERVICES INC.'  (company=HFFM SOLENAD FOOD SERVICES INC., corp_suffix=HFFM SOLENAD FOOD SERVICES INC.)
+  PLAN: 'Ayala UPTC - BEI' -> 'Ayala UPTC - BEBANG UP TOWN CENTER INC.'  (company=BEBANG UP TOWN CENTER INC., corp_suffix=BEBANG UP TOWN CENTER INC.)
+  PLAN: 'Ayala Vermosa - BEI' -> 'Ayala Vermosa - BEBANG MEGA INC.'  (company=BEBANG MEGA INC., corp_suffix=BEBANG MEGA INC.)
+  PLAN: 'BF Homes - BEI' -> 'BF Homes - BEBANG BF HOMES INC.'  (company=BEBANG BF HOMES INC., corp_suffix=BEBANG BF HOMES INC.)
+  PLAN: 'CTTM Tomas Morato - BEI' -> 'CTTM Tomas Morato - B CUBED VENTURES CORP.'  (company=B CUBED VENTURES CORP., corp_suffix=B CUBED VENTURES CORP.)
+  PLAN: "D'verde Laguna - BEI" -> "D'verde Laguna - TAJ Food Corp."  (company=DVerde Calamba - TAJ Food Corp., corp_suffix=TAJ Food Corp.)
+  PLAN: 'Ever Commonwealth - BEI' -> 'Ever Commonwealth - DLS Dessert Craft Inc.'  (company=DLS Dessert Craft Inc., corp_suffix=DLS Dessert Craft Inc.)
+  PLAN: 'Festival Mall Alabang - BEI' -> 'Festival Mall Alabang - BEBANG FESTIVAL INC.'  (company=BEBANG FESTIVAL INC., corp_suffix=BEBANG FESTIVAL INC.)
+  PLAN: 'Greenhills Ortigas - BEI' -> 'Greenhills Ortigas - BEIFRANCHISE FOOD OPC'  (company=BEIFRANCHISE FOOD OPC, corp_suffix=BEIFRANCHISE FOOD OPC)
+  PLAN: 'Lucky Chinatown - BEI' -> 'Lucky Chinatown - BEBANG LCT INC.'  (company=BEBANG LCT INC., corp_suffix=BEBANG LCT INC.)
+  PLAN: 'Megawide PITX - BEI' -> 'Megawide PITX - BEBANG PITX INC.'  (company=BEBANG PITX INC., corp_suffix=BEBANG PITX INC.)
+  PLAN: 'Megaworld Venice Grand Canal - BEI' -> 'Megaworld Venice Grand Canal - BEBANG VENICE GRAND CANAL INC.'  (company=BEBANG VENICE GRAND CANAL INC., corp_suffix=BEBANG VENICE GRAND CANAL INC.)
+  PLAN: 'NAIA T3 - BEI' -> 'NAIA T3 - HALO-HALO TERMINAL FOOD CORP.'  (company=HALO-HALO TERMINAL FOOD CORP., corp_suffix=HALO-HALO TERMINAL FOOD CORP.)
+  PLAN: 'Robisons Galleria South - BEI' -> 'Robisons Galleria South - Tungsten Capital'  (company=Robinsons Galleria South - Tungsten Capital, corp_suffix=Tungsten Capital)
+  PLAN: 'SJDM - BEI' -> 'SJDM - JL TRADE OPC'  (company=SM San Jose Del Monte - JL TRADE OPC, corp_suffix=JL TRADE OPC)
+  PLAN: 'SM Bicutan - BEI' -> 'SM Bicutan - BEBANG SM BICUTAN INC.'  (company=BEBANG SM BICUTAN INC., corp_suffix=BEBANG SM BICUTAN INC.)
+  PLAN: 'SM Caloocan - BEI' -> 'SM Caloocan - TAJ Food Corp.'  (company=SM Caloocan - TAJ Food Corp., corp_suffix=TAJ Food Corp.)
+  PLAN: 'SM East Ortigas - BEI' -> 'SM East Ortigas - BEBANG SMEO INC.'  (company=BEBANG SMEO INC., corp_suffix=BEBANG SMEO INC.)
+  PLAN: 'SM Grand Central - BEI' -> 'SM Grand Central - BEBANG GRAND CENTRAL INC.'  (company=BEBANG GRAND CENTRAL INC., corp_suffix=BEBANG GRAND CENTRAL INC.)
+  PLAN: 'SM Mall Of Asia - BEI' -> 'SM Mall Of Asia - BEBANG SMOA INC.'  (company=BEBANG SMOA INC., corp_suffix=BEBANG SMOA INC.)
+  PLAN: 'SM Marikina - BEI' -> 'SM Marikina - BEBANG SM MARIKINA INC.'  (company=BEBANG SM MARIKINA INC., corp_suffix=BEBANG SM MARIKINA INC.)
+  PLAN: 'SM Marilao - BEI' -> 'SM Marilao - BEBANG MARILAO INC.'  (company=BEBANG MARILAO INC., corp_suffix=BEBANG MARILAO INC.)
+  PLAN: 'SM North EDSA - BEI' -> 'SM North EDSA - BEBANG NORTH EDSA INC.'  (company=BEBANG NORTH EDSA INC., corp_suffix=BEBANG NORTH EDSA INC.)
+  PLAN: 'SM Pulilan - BEI' -> 'SM Pulilan - BEBANG SMM INC.'  (company=BEBANG SMM INC., corp_suffix=BEBANG SMM INC.)
+  PLAN: 'SM Sangandaan - BEI' -> 'SM Sangandaan - Tungsten Capital'  (company=SM Sangandaan - Tungsten Capital, corp_suffix=Tungsten Capital)
+  PLAN: 'SM Sta. Rosa - BEI' -> 'SM Sta. Rosa - SWEET HARMONY FOOD CORP.'  (company=SWEET HARMONY FOOD CORP., corp_suffix=SWEET HARMONY FOOD CORP.)
+  PLAN: 'SM Tanza - BEI' -> 'SM Tanza - BEBANG MEGA INC.'  (company=BEBANG MEGA INC., corp_suffix=BEBANG MEGA INC.)
+  PLAN: 'SM Valenzuela - BEI' -> 'SM Valenzuela - BEBANG SMV INC.'  (company=BEBANG SMV INC., corp_suffix=BEBANG SMV INC.)
+  PLAN: 'The Grid - Rockwell - BEI' -> 'The Grid - Rockwell - TASTECARTEL CORP.'  (company=TASTECARTEL CORP., corp_suffix=TASTECARTEL CORP.)
+  PLAN: 'The Terminal - BEI' -> 'The Terminal - BEBANG STARMALL ALABANG INC.'  (company=BEBANG STARMALL ALABANG INC., corp_suffix=BEBANG STARMALL ALABANG INC.)
+  PLAN: 'Up Town Mall BGC - BEI' -> 'Up Town Mall BGC - DMD HOLDINGS INC.'  (company=DMD HOLDINGS INC., corp_suffix=DMD HOLDINGS INC.)
+
+  Total renames planned: 35
+
+=== STEP B: LIVE renames ===
+  [DONE   ] B: rename_warehouse 'Araneta Gateway - BEI -> Araneta Gateway - Tungsten Capital' - company=Gateway Mall - Tungsten Capital
+  [DONE   ] B: rename_warehouse 'Ayala Evo - BEI -> Ayala Evo - BEBANG MEGA INC.' - company=BEBANG MEGA INC.
+  [DONE   ] B: rename_warehouse 'Ayala Malls Fairview Terraces - BEI -> Ayala Malls Fairview Terraces - BEBANG FT INC.' - company=BEBANG FT INC.
+  [DONE   ] B: rename_warehouse 'Ayala Market Market - BEI -> Ayala Market Market - BEBANG MARKET MARKET INC.' - company=BEBANG MARKET MARKET INC.
+  [DONE   ] B: rename_warehouse 'Ayala Solenad - BEI -> Ayala Solenad - HFFM SOLENAD FOOD SERVICES INC.' - company=HFFM SOLENAD FOOD SERVICES INC.
+  [DONE   ] B: rename_warehouse 'Ayala UPTC - BEI -> Ayala UPTC - BEBANG UP TOWN CENTER INC.' - company=BEBANG UP TOWN CENTER INC.
+  [DONE   ] B: rename_warehouse 'Ayala Vermosa - BEI -> Ayala Vermosa - BEBANG MEGA INC.' - company=BEBANG MEGA INC.
+  [DONE   ] B: rename_warehouse 'BF Homes - BEI -> BF Homes - BEBANG BF HOMES INC.' - company=BEBANG BF HOMES INC.
+  [DONE   ] B: rename_warehouse 'CTTM Tomas Morato - BEI -> CTTM Tomas Morato - B CUBED VENTURES CORP.' - company=B CUBED VENTURES CORP.
+  [DONE   ] B: rename_warehouse "D'verde Laguna - BEI -> D'verde Laguna - TAJ Food Corp." - company=DVerde Calamba - TAJ Food Corp.
+  [DONE   ] B: rename_warehouse 'Ever Commonwealth - BEI -> Ever Commonwealth - DLS Dessert Craft Inc.' - company=DLS Dessert Craft Inc.
+  [DONE   ] B: rename_warehouse 'Festival Mall Alabang - BEI -> Festival Mall Alabang - BEBANG FESTIVAL INC.' - company=BEBANG FESTIVAL INC.
+  [DONE   ] B: rename_warehouse 'Greenhills Ortigas - BEI -> Greenhills Ortigas - BEIFRANCHISE FOOD OPC' - company=BEIFRANCHISE FOOD OPC
+  [DONE   ] B: rename_warehouse 'Lucky Chinatown - BEI -> Lucky Chinatown - BEBANG LCT INC.' - company=BEBANG LCT INC.
+  [DONE   ] B: rename_warehouse 'Megawide PITX - BEI -> Megawide PITX - BEBANG PITX INC.' - company=BEBANG PITX INC.
+  [DONE   ] B: rename_warehouse 'Megaworld Venice Grand Canal - BEI -> Megaworld Venice Grand Canal - BEBANG VENICE GRAND CANAL INC.' - company=BEBANG VENICE GRAND CANAL INC.
+  [DONE   ] B: rename_warehouse 'NAIA T3 - BEI -> NAIA T3 - HALO-HALO TERMINAL FOOD CORP.' - company=HALO-HALO TERMINAL FOOD CORP.
+  [DONE   ] B: rename_warehouse 'Robisons Galleria South - BEI -> Robisons Galleria South - Tungsten Capital' - company=Robinsons Galleria South - Tungsten Capital
+  [DONE   ] B: rename_warehouse 'SJDM - BEI -> SJDM - JL TRADE OPC' - company=SM San Jose Del Monte - JL TRADE OPC
+  [DONE   ] B: rename_warehouse 'SM Bicutan - BEI -> SM Bicutan - BEBANG SM BICUTAN INC.' - company=BEBANG SM BICUTAN INC.
+  [DONE   ] B: rename_warehouse 'SM Caloocan - BEI -> SM Caloocan - TAJ Food Corp.' - company=SM Caloocan - TAJ Food Corp.
+  [DONE   ] B: rename_warehouse 'SM East Ortigas - BEI -> SM East Ortigas - BEBANG SMEO INC.' - company=BEBANG SMEO INC.
+  [DONE   ] B: rename_warehouse 'SM Grand Central - BEI -> SM Grand Central - BEBANG GRAND CENTRAL INC.' - company=BEBANG GRAND CENTRAL INC.
+  [DONE   ] B: rename_warehouse 'SM Mall Of Asia - BEI -> SM Mall Of Asia - BEBANG SMOA INC.' - company=BEBANG SMOA INC.
+  [DONE   ] B: rename_warehouse 'SM Marikina - BEI -> SM Marikina - BEBANG SM MARIKINA INC.' - company=BEBANG SM MARIKINA INC.
+  [DONE   ] B: rename_warehouse 'SM Marilao - BEI -> SM Marilao - BEBANG MARILAO INC.' - company=BEBANG MARILAO INC.
+  [DONE   ] B: rename_warehouse 'SM North EDSA - BEI -> SM North EDSA - BEBANG NORTH EDSA INC.' - company=BEBANG NORTH EDSA INC.
+  [DONE   ] B: rename_warehouse 'SM Pulilan - BEI -> SM Pulilan - BEBANG SMM INC.' - company=BEBANG SMM INC.
+  [DONE   ] B: rename_warehouse 'SM Sangandaan - BEI -> SM Sangandaan - Tungsten Capital' - company=SM Sangandaan - Tungsten Capital
+  [DONE   ] B: rename_warehouse 'SM Sta. Rosa - BEI -> SM Sta. Rosa - SWEET HARMONY FOOD CORP.' - company=SWEET HARMONY FOOD CORP.
+  [DONE   ] B: rename_warehouse 'SM Tanza - BEI -> SM Tanza - BEBANG MEGA INC.' - company=BEBANG MEGA INC.
+  [DONE   ] B: rename_warehouse 'SM Valenzuela - BEI -> SM Valenzuela - BEBANG SMV INC.' - company=BEBANG SMV INC.
+  [DONE   ] B: rename_warehouse 'The Grid - Rockwell - BEI -> The Grid - Rockwell - TASTECARTEL CORP.' - company=TASTECARTEL CORP.
+  [DONE   ] B: rename_warehouse 'The Terminal - BEI -> The Terminal - BEBANG STARMALL ALABANG INC.' - company=BEBANG STARMALL ALABANG INC.
+  [DONE   ] B: rename_warehouse 'Up Town Mall BGC - BEI -> Up Town Mall BGC - DMD HOLDINGS INC.' - company=DMD HOLDINGS INC.
+
+=== STEP C: Dump live warehouse snapshot for fixture regeneration ===
+  Warehouse snapshot: /tmp/s196_warehouse_snapshot.csv (272 rows)
+
+=== STEP D: Final verification ===
+  Remaining `- BEI` leaf warehouses with non-BEI company: 0
+  Expected: 0 after live rename (unless a rename failed)
+
+========================================================================
+{
+  "dry_run": false,
+  "total_actions": 35,
+  "planned_renames": 35,
+  "by_status": {
+    "DONE": 35
+  }
+}
+
+Action log: /tmp/s196_wh_rename_actions.csv
+
+========================================================================
+S196 WH RENAME SWEEP DONE (LIVE)
+========================================================================
+--- WH SNAPSHOT (first 30) ---
+warehouse_record_name,warehouse_name,company,company_name,warehouse_type,disabled
+Bebang Mega Inc. - Ayala Evo City - BMI-AEC,Bebang Mega Inc. - Ayala Evo City,Ayala Evo City - Bebang Mega Inc.,Ayala Evo City - Bebang Mega Inc.,,0
+Finished Goods - BMI-AEC,Finished Goods,Ayala Evo City - Bebang Mega Inc.,Ayala Evo City - Bebang Mega Inc.,,0
+Goods In Transit - BMI-AEC,Goods In Transit,Ayala Evo City - Bebang Mega Inc.,Ayala Evo City - Bebang Mega Inc.,Transit,0
+Stores - BMI-AEC,Stores,Ayala Evo City - Bebang Mega Inc.,Ayala Evo City - Bebang Mega Inc.,,0
+Work In Progress - BMI-AEC,Work In Progress,Ayala Evo City - Bebang Mega Inc.,Ayala Evo City - Bebang Mega Inc.,,0
+Bebang Mega Inc. - Ayala Vermosa - BMI-AV,Bebang Mega Inc. - Ayala Vermosa,Ayala Vermosa - Bebang Mega Inc.,Ayala Vermosa - Bebang Mega Inc.,,0
+Finished Goods - BMI-AV,Finished Goods,Ayala Vermosa - Bebang Mega Inc.,Ayala Vermosa - Bebang Mega Inc.,,0
+Goods In Transit - BMI-AV,Goods In Transit,Ayala Vermosa - Bebang Mega Inc.,Ayala Vermosa - Bebang Mega Inc.,Transit,0
+Stores - BMI-AV,Stores,Ayala Vermosa - Bebang Mega Inc.,Ayala Vermosa - Bebang Mega Inc.,,0
+Work In Progress - BMI-AV,Work In Progress,Ayala Vermosa - Bebang Mega Inc.,Ayala Vermosa - Bebang Mega Inc.,,0
+CTTM Tomas Morato - B CUBED VENTURES CORP.,CTTM Tomas Morato,B CUBED VENTURES CORP.,B CUBED VENTURES CORP.,,0
+Finished Goods - BTM,Finished Goods,B CUBED VENTURES CORP.,B CUBED VENTURES CORP.,,0
+Goods In Transit - BTM,Goods In Transit,B CUBED VENTURES CORP.,B CUBED VENTURES CORP.,Transit,0
+Stores - BTM,Stores,B CUBED VENTURES CORP.,B CUBED VENTURES CORP.,,0
+Work In Progress - BTM,Work In Progress,B CUBED VENTURES CORP.,B CUBED VENTURES CORP.,,0
+Finished Goods - BBEFC,Finished Goods,BB ESTANCIA FOOD CORP.,BB ESTANCIA FOOD CORP.,,0
+Goods In Transit - BBEFC,Goods In Transit,BB ESTANCIA FOOD CORP.,BB ESTANCIA FOOD CORP.,Transit,0
+Ortigas Estancia - BB ESTANCIA FOOD CORP.,BB ESTANCIA FOOD CORP. - Ortigas Estancia - BBEFC,BB ESTANCIA FOOD CORP.,BB ESTANCIA FOOD CORP.,,0
+Stores - BBEFC,Stores,BB ESTANCIA FOOD CORP.,BB ESTANCIA FOOD CORP.,,0
+Work In Progress - BBEFC,Work In Progress,BB ESTANCIA FOOD CORP.,BB ESTANCIA FOOD CORP.,,0
+BF Homes - BEBANG BF HOMES INC.,BF Homes,BEBANG BF HOMES INC.,BEBANG BF HOMES INC.,,0
+Finished Goods - BBHI,Finished Goods,BEBANG BF HOMES INC.,BEBANG BF HOMES INC.,,0
+Goods In Transit - BBHI,Goods In Transit,BEBANG BF HOMES INC.,BEBANG BF HOMES INC.,Transit,0
+Stores - BBHI,Stores,BEBANG BF HOMES INC.,BEBANG BF HOMES INC.,,0
+Work In Progress - BBHI,Work In Progress,BEBANG BF HOMES INC.,BEBANG BF HOMES INC.,,0
+Stores - BEI,Stores,Bebang Enterprise Inc.,Bebang Enterprise Inc.,,0
+TEST-COMMISSARY - BEI,TEST-COMMISSARY,Bebang Enterprise Inc.,Bebang Enterprise Inc.,,0
+TEST-STORE-BGC - BEI,TEST-STORE-BGC,Bebang Enterprise Inc.,Bebang Enterprise Inc.,,0
+Festival Mall Alabang - BEBANG FESTIVAL INC.,Festival Mall Alabang,BEBANG FESTIVAL INC.,BEBANG FESTIVAL INC.,,0
+
+--- ACTION LOG ---
+step,action,target,status,note
+B,rename_warehouse,Araneta Gateway - BEI -> Araneta Gateway - Tungsten Capital,DONE,company=Gateway Mall - Tungsten Capital
+B,rename_warehouse,Ayala Evo - BEI -> Ayala Evo - BEBANG MEGA INC.,DONE,company=BEBANG MEGA INC.
+B,rename_warehouse,Ayala Malls Fairview Terraces - BEI -> Ayala Malls Fairview Terraces - BEBANG FT INC.,DONE,company=BEBANG FT INC.
+B,rename_warehouse,Ayala Market Market - BEI -> Ayala Market Market - BEBANG MARKET MARKET INC.,DONE,company=BEBANG MARKET MARKET INC.
+B,rename_warehouse,Ayala Solenad - BEI -> Ayala Solenad - HFFM SOLENAD FOOD SERVICES INC.,DONE,company=HFFM SOLENAD FOOD SERVICES INC.
+B,rename_warehouse,Ayala UPTC - BEI -> Ayala UPTC - BEBANG UP TOWN CENTER INC.,DONE,company=BEBANG UP TOWN CENTER INC.
+B,rename_warehouse,Ayala Vermosa - BEI -> Ayala Vermosa - BEBANG MEGA INC.,DONE,company=BEBANG MEGA INC.
+B,rename_warehouse,BF Homes - BEI -> BF Homes - BEBANG BF HOMES INC.,DONE,company=BEBANG BF HOMES INC.
+B,rename_warehouse,CTTM Tomas Morato - BEI -> CTTM Tomas Morato - B CUBED VENTURES CORP.,DONE,company=B CUBED VENTURES CORP.
+B,rename_warehouse,D'verde Laguna - BEI -> D'verde Laguna - TAJ Food Corp.,DONE,company=DVerde Calamba - TAJ Food Corp.
+B,rename_warehouse,Ever Commonwealth - BEI -> Ever Commonwealth - DLS Dessert Craft Inc.,DONE,company=DLS Dessert Craft Inc.
+B,rename_warehouse,Festival Mall Alabang - BEI -> Festival Mall Alabang - BEBANG FESTIVAL INC.,DONE,company=BEBANG FESTIVAL INC.
+B,rename_warehouse,Greenhills Ortigas - BEI -> Greenhills Ortigas - BEIFRANCHISE FOOD OPC,DONE,company=BEIFRANCHISE FOOD OPC
+B,rename_warehouse,Lucky Chinatown - BEI -> Lucky Chinatown - BEBANG LCT INC.,DONE,company=BEBANG LCT INC.
+B,rename_warehouse,Megawide PITX - BEI -> Megawide PITX - BEBANG PITX INC.,DONE,company=BEBANG PITX INC.
+B,rename_warehouse,Megaworld Venice Grand Canal - BEI -> Megaworld Venice Grand Canal - BEBANG VENICE GRAND CANAL INC.,DONE,company=BEBANG VENICE GRAND CANAL INC.
+B,rename_warehouse,NAIA T3 - BEI -> NAIA T3 - HALO-HALO TERMINAL FOOD CORP.,DONE,company=HALO-HALO TERMINAL FOOD CORP.
+B,rename_warehouse,Robisons Galleria South - BEI -> Robisons Galleria South - Tungsten Capital,DONE,company=Robinsons Galleria South - Tungsten Capital
+B,rename_warehouse,SJDM - BEI -> SJDM - JL TRADE OPC,DONE,company=SM San Jose Del Monte - JL TRADE OPC
+B,rename_warehouse,SM Bicutan - BEI -> SM Bicutan - BEBANG SM BICUTAN INC.,DONE,company=BEBANG SM BICUTAN INC.
+B,rename_warehouse,SM Caloocan - BEI -> SM Caloocan - TAJ Food Corp.,DONE,company=SM Caloocan - TAJ Food Corp.
+B,rename_warehouse,SM East Ortigas - BEI -> SM East Ortigas - BEBANG SMEO INC.,DONE,company=BEBANG SMEO INC.
+B,rename_warehouse,SM Grand Central - BEI -> SM Grand Central - BEBANG GRAND CENTRAL INC.,DONE,company=BEBANG GRAND CENTRAL INC.
+B,rename_warehouse,SM Mall Of Asia - BEI -> SM Mall Of Asia - BEBANG SMOA INC.,DONE,company=BEBANG SMOA INC.
+B,rename_warehouse,SM Marikina - BEI -> SM Marikina - BEBANG SM MARIKINA INC.,DONE,company=BEBANG SM MARIKINA INC.
+B,rename_warehouse,SM Marilao - BEI -> SM Marilao - BEBANG MARILAO INC.,DONE,company=BEBANG MARILAO INC.
+B,rename_warehouse,SM North EDSA - BEI -> SM North EDSA - BEBANG NORTH EDSA INC.,DONE,company=BEBANG NORTH EDSA INC.
+B,rename_warehouse,SM Pulilan - BEI -> SM Pulilan - BEBANG SMM INC.,DONE,company=BEBANG SMM INC.
+B,rename_warehouse,SM Sangandaan - BEI -> SM Sangandaan - Tungsten Capital,DONE,company=SM Sangandaan - Tungsten Capital
+B,rename_warehouse,SM Sta. Rosa - BEI -> SM Sta. Rosa - SWEET HARMONY FOOD CORP.,DONE,company=SWEET HARMONY FOOD CORP.
+B,rename_warehouse,SM Tanza - BEI -> SM Tanza - BEBANG MEGA INC.,DONE,company=BEBANG MEGA INC.
+B,rename_warehouse,SM Valenzuela - BEI -> SM Valenzuela - BEBANG SMV INC.,DONE,company=BEBANG SMV INC.
+B,rename_warehouse,The Grid - Rockwell - BEI -> The Grid - Rockwell - TASTECARTEL CORP.,DONE,company=TASTECARTEL CORP.
+B,rename_warehouse,The Terminal - BEI -> The Terminal - BEBANG STARMALL ALABANG INC.,DONE,company=BEBANG STARMALL ALABANG INC.
+B,rename_warehouse,Up Town Mall BGC - BEI -> Up Town Mall BGC - DMD HOLDINGS INC.,DONE,company=DMD HOLDINGS INC.
