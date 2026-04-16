@@ -1,0 +1,49 @@
+name: POS Sync (5-Minute Interval)
+on:
+  schedule:
+    - cron: "*/5 2-16 * * *"  # every 5 minutes, 10 AM-midnight PHT (02:00-16:00 UTC)
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Preview only - log plan, skip sync"
+        required: false
+        type: boolean
+        default: false
+
+concurrency:
+  group: pos-sync-5min
+  cancel-in-progress: true  # slow run yields to newer trigger
+
+env:
+  SUPABASE_URL: "https://csnniykjrychgajfrgua.supabase.co"
+  SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+  SUPABASE_MGMT_TOKEN: ${{ secrets.SUPABASE_MGMT_TOKEN }}
+  # MOSAIC_CREDS_CSV intentionally NOT in env block - decoded inline in step
+  # (matches daily-pos-sync.yml pattern; avoids exposing raw CSV in runner env)
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4  # hard cap below 5-min cadence; next run starts if we are late
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install httpx
+      - name: Setup Mosaic credentials
+        run: |
+          mkdir -p data/POS_Extraction
+          echo "${{ secrets.MOSAIC_CREDS_CSV }}" | base64 -d > data/POS_Extraction/MOSAIC_POS_API_KEYS.csv
+      - name: Compute today in PHT
+        id: today
+        run: |
+          echo "date=$(TZ=Asia/Manila date '+%Y-%m-%d')" >> "$GITHUB_OUTPUT"
+      - name: Dry run check
+        if: ${{ inputs.dry_run }}
+        run: |
+          echo "DRY RUN: would sync date=${{ steps.today.outputs.date }} parallel=true"
+          exit 0
+      - name: Sync today POS orders
+        run: |
+          python scripts/sync_pos_to_supabase.py --from "${{ steps.today.outputs.date }}" --to "${{ steps.today.outputs.date }}" --parallel

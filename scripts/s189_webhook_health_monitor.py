@@ -181,6 +181,27 @@ def check_reconciliation_gap(token: str) -> dict:
     }
 
 
+def check_pos_sync_freshness(token: str) -> dict:
+    """S197: POS sync 5-min health — newest pos_orders row within last 10 min."""
+    rows = sql("SELECT MAX(updated_at) AS latest FROM pos_orders", token)
+    latest = rows[0].get("latest") if rows else None
+    if not latest:
+        return {"check": "pos_sync_freshness", "status": "NO_DATA"}
+    from datetime import datetime as dt
+    try:
+        ts = dt.fromisoformat(str(latest).replace("Z", "+00:00"))
+        lag_min = (datetime.now(timezone.utc) - ts).total_seconds() / 60
+    except Exception:
+        return {"check": "pos_sync_freshness", "status": "ERROR", "raw_latest": str(latest)}
+    status = "PASS" if lag_min <= 10 else "WARN" if lag_min <= 30 else "FAIL"
+    return {
+        "check": "pos_sync_freshness",
+        "status": status,
+        "lag_minutes": round(lag_min, 1),
+        "latest_updated_at": str(latest),
+    }
+
+
 def check_endpoint_reachability() -> dict:
     try:
         r = requests.post(
@@ -278,6 +299,7 @@ def main() -> int:
         (check_silence, {}),
         (check_store_internet_health, {}),
         (check_reconciliation_gap, {}),
+        (check_pos_sync_freshness, {}),  # S197: 5-min sync freshness
     ]:
         try:
             if fn is check_endpoint_reachability:
