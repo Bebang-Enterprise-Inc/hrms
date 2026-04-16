@@ -501,15 +501,11 @@ _S037_RELPATH = ("data_seed", "store_entity_mapping_2026-04-13.csv")
 # Non-store legal entities that don't appear in S037 but should still
 # appear in the list. Category maps to the S181 entity_category field.
 _NON_STORE_ENTITIES: dict[str, str] = {
-	"Bebang Enterprise Inc.": "Head Office",
-	"Bebang Kitchen Inc.": "Commissary",
+	# S199: ALL CAPS Company names. Only entities that are NOT stores.
+	"BEBANG ENTERPRISE INC.": "Head Office",
+	"BEBANG KITCHEN INC.": "Commissary",
 	"BEBANG FRANCHISE CORP.": "Franchisor",
-	"Bebang Franchise Corporation": "Franchisor",
-	"BFC": "Franchisor",
-	"Irresistible Infusions Inc.": "Holding Company",
-	"DMD HOLDINGS INC.": "Holding Company",
-	"DMD Holdings Inc": "Holding Company",
-	"Resto Tech Inc": "Head Office",
+	"IRRESISTIBLE INFUSIONS INC.": "Holding Company",
 }
 
 
@@ -1123,15 +1119,11 @@ def populate_s181_fields() -> dict:
 
 	# Non-store entity category map
 	non_store_categories: dict[str, str] = {
-		"Bebang Enterprise Inc.": "Head Office",
-		"Bebang Kitchen Inc.": "Commissary",
+		# S199: ALL CAPS Company names
+		"BEBANG ENTERPRISE INC.": "Head Office",
+		"BEBANG KITCHEN INC.": "Commissary",
 		"BEBANG FRANCHISE CORP.": "Franchisor",
-		"Bebang Franchise Corporation": "Franchisor",
-		"BFC": "Franchisor",
-		"Irresistible Infusions Inc.": "Holding Company",
-		"DMD HOLDINGS INC.": "Holding Company",
-		"DMD Holdings Inc": "Holding Company",
-		"Resto Tech Inc": "Head Office",
+		"IRRESISTIBLE INFUSIONS INC.": "Holding Company",
 	}
 
 	# Companies not in S037 that are Stores — Sam confirmed 2026-04-13.
