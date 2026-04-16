@@ -18,7 +18,7 @@ import requests
 
 import frappe
 
-from hrms.utils.sales_location_mapping import lookup_location_id, normalize_store_key
+from hrms.utils.sales_location_mapping import lookup_location_id, lookup_sales_location, normalize_store_key
 from hrms.utils.sentry import set_backend_observability_context
 
 MANILA_TZ = ZoneInfo("Asia/Manila")
@@ -501,20 +501,22 @@ def _get_warehouse_rows(filters: dict[str, Any] | None = None) -> list[dict[str,
 def _filter_sales_warehouses(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
 	filtered = []
 	for row in rows:
-		location_id = lookup_location_id(row.get("warehouse_name"), row.get("name"))
-		if not location_id:
+		match = lookup_sales_location(row.get("warehouse_name"), row.get("name"))
+		if not match:
 			wh_name = row.get("name") or row.get("warehouse_name") or "(unknown)"
 			frappe.log_error(
 				title="Sales Dashboard: unmapped warehouse dropped",
 				message=f"Warehouse {wh_name!r} (company={row.get('company')!r}) has no mosaic_location_id on its Company — excluded from Analytics scope.",
 			)
 			continue
+		# S200: Use warehouse_name from mapping (derived from Company store prefix)
+		# instead of the raw Warehouse.warehouse_name field which may be stale.
 		filtered.append(
 			{
 				"warehouse": row.get("name"),
-				"warehouse_name": row.get("warehouse_name") or row.get("name"),
+				"warehouse_name": match.get("warehouse_name") or row.get("warehouse_name") or row.get("name"),
 				"company": row.get("company"),
-				"location_id": location_id,
+				"location_id": int(match["location_id"]),
 			}
 		)
 	return filtered
