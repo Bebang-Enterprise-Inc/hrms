@@ -155,9 +155,9 @@ We chose a **backend hook + frontend queue + notification** combination over the
 - [ ] Have you read `output/l3/s192/SUMMARY.md` end-to-end so you understand why the predecessor failed?
 - [ ] Will the WR auto-create live INSIDE `create_stock_transfer` (single transaction), not as a hook on `Stock Entry.on_submit`? (D-1)
 - [ ] Are you using existing `BEI Warehouse Receiving` doctype, not creating a new one? (Existing path: `hrms/hr/doctype/bei_warehouse_receiving/`)
-- [ ] Are you using existing `Notification Log` doctype, not creating a new one? (D-3)
+- [ ] Are you using Google Chat notification via `_notify_warehouse_handoff` pattern, not Notification Log? (D-3)
 - [ ] Does every new `@frappe.whitelist()` call `set_backend_observability_context()` as its first line? (DM-7)
-- [ ] Are the two new list pages using `useSWR` with `revalidateOnFocus: true`? (D-5)
+- [ ] Are the two new list pages using `usePendingInternalReceipts` (wraps SWR) with `revalidateOnFocus: true`? (D-5)
 - [ ] Are list rows tagged `data-testid={`delivery-row-${receiving_name}`}`? (D-6)
 - [ ] Does the L3 retry use ONLY browser clicks for workflow steps (no `page.request.*` for approve/dispatch/receive)?
 - [ ] Did you cleanup all test data via `CleanupLedger`?
@@ -200,15 +200,15 @@ We chose a **backend hook + frontend queue + notification** combination over the
 
 | Phase | Description | Units | Notes |
 |---|---|---|---|
-| 0 | Preflight: env probe, library audit, branch + coordination | 4 | |
-| 1 | Backend: auto-create WR in `create_stock_transfer` + Sentry instrumentation + 4 unit tests | 10 | hrms PR |
-| 2 | Frontend: 2 receiving queue list pages + SWR config + testids + RBAC verification | 12 | bei-tasks PR |
-| 3 | Notification: Notification Log emission on dispatch + recipient resolution + in-app surface check | 6 | hrms — same PR as Phase 1 |
+| 0 | Preflight: env probe, library audit, branch + coordination + S197 registry backfill | 5 | |
+| 1 | Backend: auto-create WR in `create_stock_transfer` + BKI scope guard + Sentry instrumentation + 4 unit tests | 10 | hrms PR |
+| 2 | Frontend: 2 receiving queue list pages + existing hook reuse + testids + RBAC verification + detail page RoleGuard + redirect fix | 12 | bei-tasks PR |
+| 3 | Notification: Google Chat notification on dispatch + recipient resolution + GChat surface check | 3 | hrms — same PR as Phase 1 |
 | 4A | L3 library extraction: 3 new Page Objects + 2 new assertions + 1 new support helper | 8 | bei-tasks — same PR as Phase 2 |
 | 4B | L3 retry: full S190 chain browser-only, all 7 S192 scenarios, real SI evidence | 12 | bei-tasks — separate L3 evidence commit |
-| 5 | Closeout: plan + registry to COMPLETED, evidence files, PR comments, S192 status flip | 4 | |
+| 5 | Closeout: plan + registry to COMPLETED, evidence files, PR comments, S192 status flip | 3 | |
 
-**Total: 56 units** (within the 80-unit ceiling). No phase exceeds 12 units.
+**Total: 53 units** (within the 80-unit ceiling). No phase exceeds 12 units.
 
 ---
 
@@ -286,7 +286,7 @@ Required artifact (write at start of execution): `output/s198/state/REMOTE_TRUTH
 
 ---
 
-## Phase 0 — Preflight + Library Audit (4 units)
+## Phase 0 — Preflight + Library Audit (5 units)
 
 ### P0-T1 — Branch + remote-truth baseline (1 unit)
 **Action:**
@@ -342,12 +342,15 @@ Verify Pinnacle stock from S192 seed run still has FG001/FG002/FG010/FG023/PM002
 **MUST_MODIFY:** `hrms/api/warehouse.py`
 **MUST_CONTAIN:** `def _create_warehouse_receiving_for_se(`
 **MUST_CONTAIN:** `# S198: auto-create BEI Warehouse Receiving`
+**MUST_CONTAIN:** `_get_commissary_company`
+**MUST_CONTAIN:** `frappe.db.set_value`
 
 **Logic:**
-1. Build the items payload from `se.items` (item_code, qty, uom).
-2. Call `create_warehouse_receiving(source_warehouse=se.from_warehouse, target_warehouse=contract['destination_warehouse'], items=json.dumps(items), remarks=f"Auto-created from {se.name}")`.
-3. Set the new WR's `stock_entry` field to `se.name` (idempotent — if WR already exists for this SE, return its name).
-4. Catch and `frappe.log_error` any exception so a WR failure does not roll back the SE submit. WR can be retried by a follow-up.
+1. **BKI scope guard (CRIT-4):** Before doing anything, check `if resolve_warehouse_company(se.from_warehouse) != _get_commissary_company(): return None`. Non-BKI dispatches skip WR auto-create entirely — their WR flow is out of S198 scope.
+2. Build the items payload from `se.items` (item_code, qty, uom).
+3. Call `create_warehouse_receiving(source_warehouse=se.from_warehouse, target_warehouse=contract['destination_warehouse'], items=json.dumps(items), remarks=f"Auto-created from {se.name}")`.
+4. Stamp the new WR's `stock_entry` field using direct DB write (CRIT-15 — field is `read_only: 1`, ORM set fails silently): `frappe.db.set_value("BEI Warehouse Receiving", wr_name, "stock_entry", se.name)`. Idempotent — if WR already exists for this SE, return its name.
+5. Catch and `frappe.log_error` any exception so a WR failure does not roll back the SE submit. WR can be retried by a follow-up.
 
 **HARD BLOCKER:** the helper MUST NOT raise. If the WR creation fails, the SE is already submitted; throwing here would be a half-state. (DM-2 logic — atomicity inside the helper, observability via Sentry on failure.)
 
@@ -400,7 +403,7 @@ This makes a retry of `create_stock_transfer` on the same MR safe.
 **MUST_CONTAIN:** `def test_dispatch_creates_wr_alongside_se`
 **MUST_CONTAIN:** `def test_idempotent_redispatch_returns_same_wr`
 **MUST_CONTAIN:** `def test_wr_failure_does_not_rollback_se`
-**MUST_CONTAIN:** `def test_wr_status_starts_draft`
+**MUST_CONTAIN:** `def test_wr_status_starts_pending_warehouse_receive`
 
 Each test seeds an MR + calls `create_stock_transfer` + asserts WR existence/state. Use `frappe.db.savepoint("s198_test")` + `frappe.db.rollback(save_point="s198_test")` for cleanup.
 
@@ -415,15 +418,17 @@ Each test seeds an MR + calls `create_stock_transfer` + asserts WR existence/sta
 
 **MUST_MODIFY:** `bei-tasks/app/dashboard/store-ops/receiving/page.tsx`
 **MUST_CONTAIN:** `data-testid={`delivery-row-`}`
-**MUST_CONTAIN:** `useSWR`
+**MUST_CONTAIN:** `usePendingInternalReceipts`
 **MUST_CONTAIN:** `revalidateOnFocus: true`
 **MUST_CONTAIN:** `RoleGuard`
+**MUST_CONTAIN:** `MODULES.RECEIVING`
 
 **Behavior:**
-- Fetches `/api/warehouse?action=get_pending_warehouse_receivings&for_store=<currentUser.default_store>` via SWR.
+- Gets `defaultStore` from `useUserStore()` hook (`hooks/use-user-store.ts:42`).
+- Fetches pending receivings via `usePendingInternalReceipts(defaultStore)` from existing `hooks/use-warehouse.ts:264` (DRY — no parallel SWR call). This hook wraps `get_pending_warehouse_receivings` with `target_warehouse` param.
 - Lists each WR as a Card containing: source warehouse, dispatch date, items count, source-MR link, "Receive" button.
 - Card has `data-testid={`delivery-row-${receiving.name}`}` AND `onClick={() => router.push(`/dashboard/warehouse/internal-receiving/${receiving.name}`)}`.
-- Uses `RoleGuard` from `@/components/layout/role-guard` with `MODULES.RECEIVING_STORE` (add to roles.ts).
+- Uses `RoleGuard` from `@/components/layout/role-guard` with `MODULES.RECEIVING` (already exists at roles.ts:103 — includes STORE_STAFF + STORE_SUPERVISOR + WAREHOUSE_USER + AREA_SUPERVISOR).
 - Empty state: "No pending deliveries" with refresh button bound to SWR `mutate`.
 - Header includes a manual Refresh button (`mutate()`) for operators.
 
@@ -432,31 +437,33 @@ Each test seeds an MR + calls `create_stock_transfer` + asserts WR existence/sta
 
 **MUST_MODIFY:** `bei-tasks/app/dashboard/warehouse/internal-receiving/page.tsx`
 **MUST_CONTAIN:** `data-testid={`delivery-row-`}`
-**MUST_CONTAIN:** `useSWR`
+**MUST_CONTAIN:** `usePendingInternalReceipts`
 **MUST_CONTAIN:** `revalidateOnFocus: true`
 
 **Behavior:**
-- Same shape as P2-T1 but filter is `&for_warehouse=<currentUser.warehouse_assignment>` (or all if test.scm role).
+- Fetches pending receivings via `usePendingInternalReceipts(null)` from existing `hooks/use-warehouse.ts:264` — passing `null` shows all warehouses (warehouse staff see everything; no per-user warehouse filter).
 - Card → `/dashboard/warehouse/internal-receiving/${name}` (existing detail page).
-- RBAC: `MODULES.RECEIVING_WAREHOUSE` (add to roles.ts).
+- RBAC: `MODULES.RECEIVING` (already exists at roles.ts:103 — includes WAREHOUSE_USER + AREA_SUPERVISOR). No new module keys.
 
 ### P2-T3 — RBAC + ROUTES wiring (2 units)
 **Files:**
-- `bei-tasks/lib/roles.ts` — add `RECEIVING_STORE` and `RECEIVING_WAREHOUSE` to `MODULES`. Map roles: store crew (Store Supervisor + Crew) → STORE; warehouse staff (Warehouse Manager + SCM) → WAREHOUSE.
+- `bei-tasks/lib/roles.ts` — Verify `MODULES.RECEIVING` (roles.ts:103) already grants access to STORE_STAFF, STORE_SUPERVISOR, WAREHOUSE_USER, AREA_SUPERVISOR. No new module keys needed. Do NOT create `RECEIVING_STORE` or `RECEIVING_WAREHOUSE`.
 - `bei-tasks/lib/constants.ts` — add `STORE_RECEIVING_QUEUE: "/dashboard/store-ops/receiving"` and confirm `WAREHOUSE_INTERNAL_RECEIVING` already maps to the new list path.
 - Sidebar profile (`bei-tasks/lib/sidebar-role-profiles.ts`) — add the two new routes to the relevant role profiles so operators can navigate to them.
+- **Detail page RoleGuard fix (CRIT-9):** Change the RoleGuard on the existing detail page at `bei-tasks/app/dashboard/warehouse/internal-receiving/[receiving_name]/page.tsx:334` from `MODULES.WAREHOUSE` to `MODULES.RECEIVING` (so store crew are not blocked).
+- **Post-accept redirect fix (CRIT-10):** On the detail page, fix post-accept redirect from `ROUTES.WAREHOUSE_RECEIVE` (which points to the procurement GR page — wrong) to a role-based redirect using `searchParams.get("returnTo")` or `document.referrer` fallback. Store crew (came from `/dashboard/store-ops/receiving`) redirect back to store queue. Warehouse staff (came from `/dashboard/warehouse/internal-receiving`) redirect back to warehouse queue.
 
-**MUST_CONTAIN (roles.ts):** `RECEIVING_STORE`
-**MUST_CONTAIN (roles.ts):** `RECEIVING_WAREHOUSE`
+**MUST_CONTAIN (roles.ts):** `MODULES.RECEIVING`
 **MUST_CONTAIN (constants.ts):** `STORE_RECEIVING_QUEUE`
+**MUST_CONTAIN ([receiving_name]/page.tsx):** `MODULES.RECEIVING`
+**MUST_CONTAIN ([receiving_name]/page.tsx):** `returnTo`
 
-### P2-T4 — Confirm `get_pending_warehouse_receivings` returns `for_store` and `for_warehouse` filters (2 units)
+### P2-T4 — Confirm `get_pending_warehouse_receivings` accepts `target_warehouse` (2 units)
 **File:** `bei-tasks/app/api/warehouse/route.ts`
 
-If the existing proxy already accepts these filters and forwards them, no change. If not, extend the route to forward `for_store` / `for_warehouse` query params to the Frappe call. Backend `hrms.api.warehouse.get_pending_warehouse_receivings` also needs to accept these — if it doesn't, add the filter logic to the backend (one-line `frappe.get_all` filter addition).
+Confirm `get_pending_warehouse_receivings(target_warehouse=None)` at warehouse.py:651 returns WRs filtered by `target_warehouse`. The frontend passes `defaultStore` (from `useUserStore()` hook at `hooks/use-user-store.ts:42`) as the `target_warehouse` param via the existing `usePendingInternalReceipts` hook. No new API kwargs needed — the API already accepts `target_warehouse` as its only filter.
 
-**MUST_CONTAIN (route.ts):** `for_store`
-**MUST_CONTAIN (route.ts):** `for_warehouse`
+**MUST_CONTAIN (route.ts):** `target_warehouse`
 
 ### P2-T5 — Visual + Sentry (1 unit)
 - Add Sentry breadcrumbs via `captureExceptionWithContext` on any caught error in the new pages.
@@ -464,56 +471,53 @@ If the existing proxy already accepts these filters and forwards them, no change
 
 ---
 
-## Phase 3 — Notification on Dispatch (6 units)
+## Phase 3 — Notification on Dispatch (3 units)
 
 > **Same branch as Phase 1** (hrms `s198-warehouse-receiving-flow-completion`).
 
-### P3-T1 — Recipient resolution helper (2 units)
+### P3-T1 — Recipient resolution helper (1 unit)
 **File:** `hrms/api/warehouse.py`
 
 Add `_get_store_crew_recipients(target_warehouse)`:
-- Returns list of emails: users where `User.default_store == target_warehouse` OR `User.custom_area_supervisor` table contains `target_warehouse`.
-- Cap at 20 users to avoid blast radius.
+- Resolve the area supervisor by querying `Warehouse.custom_area_supervisor WHERE name = target_warehouse` (custom field defined at `custom_field.json:75-80`).
+- Resolve store crew emails by querying `Employee WHERE branch = <target_warehouse_name>` (standard HR link — `branch` holds the store/warehouse name).
+- Combine area supervisor email + crew emails. Cap at 20 users to avoid blast radius.
 - Return empty list if no matches (don't error).
 
 **MUST_CONTAIN:** `def _get_store_crew_recipients(`
+**MUST_CONTAIN:** `Warehouse.custom_area_supervisor`
 
-### P3-T2 — Notification emit on dispatch (2 units)
+### P3-T2 — Google Chat notification on dispatch (1 unit)
 **File:** `hrms/api/warehouse.py`
 
-Inside `_create_warehouse_receiving_for_se` (Phase 1 helper), after WR is created successfully:
+Inside `_create_warehouse_receiving_for_se` (Phase 1 helper), after WR is created successfully, send a Google Chat notification reusing the existing `_notify_warehouse_handoff` pattern from `commissary.py`. Use absolute URL `https://my.bebang.ph/dashboard/warehouse/internal-receiving/{wr_name}` for the link.
+
 ```python
 recipients = _get_store_crew_recipients(target_warehouse)
-for email in recipients:
-    notif = frappe.get_doc({
-        "doctype": "Notification Log",
-        "subject": f"Delivery {wr_name} dispatched to your store",
-        "for_user": email,
-        "type": "Alert",
-        "document_type": "BEI Warehouse Receiving",
-        "document_name": wr_name,
-        "from_user": "Administrator",
-        "email_content": f"<p>A delivery has been dispatched. Acknowledge at <a href='/dashboard/warehouse/internal-receiving/{wr_name}'>this link</a>.</p>",
-    })
-    notif.insert(ignore_permissions=True)
+_notify_warehouse_handoff(
+    recipients=recipients,
+    subject=f"Delivery {wr_name} dispatched to your store",
+    link=f"https://my.bebang.ph/dashboard/warehouse/internal-receiving/{wr_name}",
+    wr_name=wr_name,
+)
 ```
 Wrap in try/except — notification failures must not roll back the SE/WR.
 
-**MUST_CONTAIN:** `"doctype": "Notification Log"`
-**MUST_CONTAIN:** `"document_type": "BEI Warehouse Receiving"`
+**MUST_CONTAIN:** `_notify_warehouse_handoff` or `google_chat`
 
-### P3-T3 — Frontend in-app notification surface check (1 unit)
+### P3-T3 — Confirm GChat message delivered to target store's Chat space (1 unit)
 **File:** read-only verification.
 
-Frappe's `Notification Log` is surfaced in the bell icon in any Frappe-rendered page. For `bei-tasks` (Next.js) the notification appears via the existing `useSWR` notification hook (if present) OR can be polled by the destination store-receiving queue page on focus. Confirm the SWR `revalidateOnFocus: true` (D-5) covers the operator's mental model: "I focus the tab, my queue refreshes."
+After triggering a test dispatch, confirm the Google Chat message is delivered to the target store's Chat space (the same space used by `_notify_warehouse_handoff` for commissary handoffs). Verify the message body contains the WR name and the absolute URL to the receiving detail page. Also confirm the SWR `revalidateOnFocus: true` (D-5) on the queue page covers the operator's mental model: "I focus the tab, my queue refreshes."
 
-**Evidence:** `output/s198/state/NOTIFICATION_SURFACE_CHECK.md` — note where store crew sees the alert.
+**Evidence:** `output/s198/state/GCHAT_NOTIFICATION_CHECK.md` — note which Chat space received the message and confirm link format.
+**MUST_CONTAIN:** `gchat` or `google_chat`
 
 ### P3-T4 — Unit test (1 unit)
 **File:** `hrms/tests/test_s198_dispatch_notification.py` (new)
 
-**MUST_CONTAIN:** `def test_dispatch_creates_notification_log_for_recipients`
-**MUST_CONTAIN:** `def test_notification_failure_does_not_rollback_dispatch`
+**MUST_CONTAIN:** `def test_dispatch_sends_gchat_notification`
+**MUST_CONTAIN:** `def test_gchat_failure_does_not_rollback_dispatch`
 
 ---
 
@@ -605,7 +609,7 @@ Cleanup: every order, MR, SE, WR, SI created during the run is cancelled/deleted
 
 ---
 
-## Phase 5 — Closeout (4 units)
+## Phase 5 — Closeout (3 units)
 
 ### P5-T1 — Verify all evidence + all PASS (1 unit)
 Re-read `output/l3/s198/state_verification.json`. Confirm `score.pass === 7 && score.fail === 0`. If not, return to Phase 4B.
@@ -637,7 +641,7 @@ Every row must pass browser-only. Real SI docnames captured.
 | # | User | Action sequence | Expected SI / outcome | Failure means |
 |---|---|---|---|---|
 | S1 | test.area → test.area → test.scm → test.scm → test.supervisor | Submit order on SM Tanza → Single/Dual approval → MR approve at /warehouse/approve → Dispatch at /warehouse/dispatch → Open `/dashboard/store-ops/receiving` → tap delivery → click Accept | Real `ACC-SINV-YYYY-NNNNN` with customer = BEBANG MEGA INC., TIN = 010-885-436-00000, 12% VAT (exact ratio), 8% markup, GL has Customer party row | Backend auto-create WR broken OR queue page doesn't show |
-| S2 | same chain | Same on SM Megamall | Real SI with customer = `SM Megamall - Bebang Enterprise Inc.` (S196 STORE-FIRST naming), JV markup = value from live `BEI Settings.bki_markup_jv_percent` (default 2.75% per bei_settings.json:360-365 — do NOT hardcode), 12% VAT | S188 child resolution / S196 rename broken |
+| S2 | same chain | Same on SM Megamall | Real SI with customer = `SM Megamall - Bebang Enterprise Inc.` (S196 STORE-FIRST naming), JV markup = value from BEI Settings.bki_markup_jv_percent (default 2.75% per bei_settings.json:360-365 — do NOT hardcode), 12% VAT | S188 child resolution / S196 rename broken |
 | S3 | same chain | Same on The Grid - Rockwell | **NEGATIVE PATH:** order + approve + dispatch SUCCEED, but SI is NOT built because The Grid - Rockwell has `active_with_billing_hold` status (commissary.py:1033 `buyer_entity_requires_billing_hold` returns True). Test asserts: (a) order.company = TASTECARTEL CORP., (b) MR approved + SE created, (c) WR auto-created, (d) `complete_receiving` returns billing-hold response, (e) no ACC-SINV created. This validates the billing-hold guard works. | Billing hold guard broken (SI created when it shouldn't be) |
 | S4 | same chain (single FG item at suggested qty) | Same on Ayala Evo | Real SI; SI customer doc IDENTICAL to S1's SI customer doc (multi-store same-entity dedupe) | S190 same-entity Customer dedupe broken |
 | F1 | test.area | Open `/dashboard/store-ops/ordering`, set no qty, attempt submit | Review/Submit controls hidden; no order created | S0 deviation gate or empty-order guard broken |
@@ -673,7 +677,7 @@ If ≥3 library fixes happen during execution, write `output/l3/s198/LIBRARY_IMP
 - Implementing happy path only, skipping edge cases (F1/F2/F3)
 - Calling `page.request.*` / `fetch()` / `curl` for any workflow step (approve/dispatch/receive/SI)
 - Using `waitForTimeout` to mask a missing wait condition
-- Calling the L3 retry "passed" without producing real `ACC-SINV-YYYY-NNNNN` docnames in `state_verification.json` for S1/S2/S3/S4
+- Calling the L3 retry "passed" without producing real `ACC-SINV-YYYY-NNNNN` docnames in `state_verification.json` for S1/S2/S4 (S3 is negative-path — must have `si_name: null`)
 
 ### Per-phase verification scripts (FAIL blocks progress)
 
@@ -682,18 +686,18 @@ After each phase, the agent runs a verification script. If any assertion fails, 
 `output/s198/verify_phase1.py` — checks:
 1. `git diff --name-only origin/production..HEAD` includes `hrms/api/warehouse.py` and `hrms/tests/test_s198_warehouse_receiving_auto_create.py`
 2. `grep -c "_create_warehouse_receiving_for_se" hrms/api/warehouse.py >= 2` (definition + call)
-3. `grep -c "doctype.*Notification Log" hrms/api/warehouse.py >= 1`
+3. `grep -c "_notify_warehouse_handoff\|google_chat" hrms/api/warehouse.py >= 1`
 4. `grep -c "def test_" hrms/tests/test_s198_warehouse_receiving_auto_create.py >= 4`
 
 `output/s198/verify_phase2.py` — checks:
 1. `git diff --name-only origin/main..HEAD` includes the two new `page.tsx` files and `lib/roles.ts`
 2. `grep -c "data-testid={`delivery-row-" bei-tasks/app/dashboard/store-ops/receiving/page.tsx >= 1`
 3. `grep -c "data-testid={`delivery-row-" bei-tasks/app/dashboard/warehouse/internal-receiving/page.tsx >= 1`
-4. `grep -c "RECEIVING_STORE\|RECEIVING_WAREHOUSE" bei-tasks/lib/roles.ts >= 2`
+4. `grep -c "MODULES.RECEIVING\|usePendingInternalReceipts" bei-tasks/app/dashboard/store-ops/receiving/page.tsx >= 2`
 
 `output/s198/verify_phase4b.py` — checks:
 1. `output/l3/s198/state_verification.json` has `score.pass === 7 && score.fail === 0`
-2. Every S1/S2/S3/S4 entry has a non-null `si_name` matching `^ACC-SINV-\d{4}-\d{5}$`
+2. Every S1/S2/S4 entry has a non-null `si_name` matching `^ACC-SINV-\d{4}-\d{5}$`; S3 entry has `si_name === null` (negative-path: billing-hold blocks SI)
 3. `output/l3/s198/cleanup_report.json` has `failed === []`
 
 **HARD BLOCKER:** If any verification script FAILs, do not proceed to the next phase. Fix the failure first.
@@ -828,7 +832,7 @@ Before declaring COMPLETED:
 python -c "import json; d=json.load(open('output/l3/s198/state_verification.json')); assert d['score']['pass']==7 and d['score']['fail']==0, d['score']"
 
 # 2. Real SI docnames present
-python -c "import json,re; d=json.load(open('output/l3/s198/state_verification.json')); [print(s['scenario'], s.get('si_name')) for s in d['scenarios']]; assert all(re.match(r'^ACC-SINV-\d{4}-\d{5}$', s.get('si_name','')) for s in d['scenarios'] if s['scenario'] in ('S1','S2','S3','S4'))"
+python -c "import json,re; d=json.load(open('output/l3/s198/state_verification.json')); [print(s['scenario'], s.get('si_name')) for s in d['scenarios']]; assert all(re.match(r'^ACC-SINV-\d{4}-\d{5}$', s.get('si_name','')) for s in d['scenarios'] if s['scenario'] in ('S1','S2','S4')); s3=[s for s in d['scenarios'] if s['scenario']=='S3'][0]; assert s3.get('si_name') is None, f'S3 should have no SI (billing-hold), got {s3.get(\"si_name\")}'"
 
 # 3. Cleanup ledger reversed
 python -c "import json; d=json.load(open('output/l3/s198/cleanup_report.json')); assert d['failed']==[]"
