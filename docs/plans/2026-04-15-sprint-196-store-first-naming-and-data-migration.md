@@ -4,15 +4,18 @@ display: Sprint 196 — Store-First Naming + Data Migration + Delivery Schedule 
 branch: s196-store-first-naming-and-migration
 branch_v2_note: "Renamed from s195-store-universe-company-ssot at start of Phase 5 (W-7). Before rename, branch had zero commits on top of origin/production."
 repo: hrms
-status: DEPLOYED_PENDING_MERGE
+status: COMPLETED
 created: 2026-04-15
 audit_v3_date: 2026-04-15
 audit_v3_summary: |
   5-agent audit (frappe-backend + deployment-qa + system-arch + design-review + governance) identified 7 CRITICAL + 12 WARNING gaps. All applied below — nothing deferred, nothing removed. Unit budget 59 → 73 (still ≤ 80). See "Audit v3 Amendments" section for traceability; authoritative phase tables below updated in same edit per S028 normalization rule.
-completed_date: 2026-04-15
+completed_date: 2026-04-16
 backend_pr: hrms#585
+followup_prs:
+  - hrms#588 — SJDM attribution fix (JL Trade OPC store-first + Legacy77 archive)
+  - hrms#590 — Data hygiene (Items #2 + #3): delete 3 archived BEBANG Companies + rename 35 legacy `- BEI` warehouses to store-first + fixture regeneration
 execution_summary: |
-  Phase 1 code prep (26 hardcoded refs + normalizer regex), Phase 2 LIVE data migration via SSM (12 Co renames + 5 wh renames + 3 new Co + 4 wh re-points w/ SLE+GL backfill + 3 Co archive + 5 wh deletes), Phase 3 helpers + get_weekly_schedule rewire, Phase 4 tests (12 unit + 5 integration) — all shipped in PR hrms#585. Final grid count: 7 → 49 orderable warehouses verified via Step J. JL TRADE OPC preserved (Phase 1 finding — real BIR TIN for SM SJDM). 3 BEBANG legacy Companies archived (operational_status=Permanently Closed) rather than deleted — delete blocked by 109 Accounts + 2 Cost Centers + 1 Customer each; follow-up data-hygiene sprint reserved in SPRINT_REGISTRY.md "Deferred Follow-ups". Sweet Harmony restructure also reserved (pending SM San Pablo BIR registration — Frappe Comment n6gqgqltuq captures context). Awaiting Sam merge + deploy + L3 in fresh session.
+  Phase 1 code prep (26 hardcoded refs + normalizer regex), Phase 2 LIVE data migration via SSM (12 Co renames + 5 wh renames + 3 new Co + 4 wh re-points w/ SLE+GL backfill + 3 Co archive + 5 wh deletes), Phase 3 helpers + get_weekly_schedule rewire, Phase 4 tests (12 unit + 5 integration) — all shipped in PR hrms#585. Final grid count: 7 → 49 orderable warehouses verified via Step J. Follow-ups: PR hrms#588 fixed SJDM attribution (JL Trade OPC is real operator, renamed store-first, Legacy77 archived); PR hrms#590 completed Items #2 + #3 (migrated 3 Customer rows, cascade-deleted 327 Accounts + 6 Cost Centers + 15 Warehouses, deleted 3 archived BEBANG Companies; renamed 35 legacy `- BEI` warehouses; regenerated 2 fixtures). Final verified state: 50 orderable Companies / 50 orderable warehouses / 0 `- BEI` non-BEI leaf warehouses remaining. SHFC restructure remains DEFERRED pending SM San Pablo BIR registration.
 depends_on:
   - S181 (Company Master Extension — DEPLOYED, custom fields exist)
   - S188 (Per-Store Company Restructure — DEPLOYED)
