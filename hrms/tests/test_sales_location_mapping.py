@@ -1,24 +1,19 @@
 from __future__ import annotations
 
-import importlib.util
-from pathlib import Path
+from hrms.utils.sales_location_mapping import (
+	_warehouse_name_base,
+	normalize_store_key,
+)
 
 
-ROOT = Path(__file__).resolve().parents[2]
+def test_normalize_store_key_collapses_whitespace():
+	assert normalize_store_key("  SM  Manila  ") == "sm manila"
 
 
-def _load_mapping_module():
-	spec = importlib.util.spec_from_file_location(
-		"sales_location_mapping_under_test",
-		ROOT / "hrms" / "utils" / "sales_location_mapping.py",
-	)
-	module = importlib.util.module_from_spec(spec)
-	assert spec and spec.loader
-	spec.loader.exec_module(module)
-	return module
+def test_normalize_store_key_curly_quote():
+	assert normalize_store_key("D\u2019verde Laguna") == "d'verde laguna"
 
 
-def test_lookup_location_id_accepts_record_name_base_without_company_suffix():
-	module = _load_mapping_module()
-
-	assert module.lookup_location_id("Robisons Galleria South") == 2515
+def test_warehouse_name_base_strips_suffix():
+	assert _warehouse_name_base("SM Megamall - Bebang Enterprise Inc.") == "SM Megamall"
+	assert _warehouse_name_base("NAIA T3") == "NAIA T3"
