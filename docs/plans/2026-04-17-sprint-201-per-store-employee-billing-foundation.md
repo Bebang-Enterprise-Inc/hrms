@@ -3,7 +3,11 @@ sprint: S201
 title: Per-Store Employee Billing Foundation
 branch: s201-per-store-employee-billing
 base: production
-status: GO
+status: DEPLOYED_PENDING_L3_AND_FINANCE_SIGNOFF
+audit_date: 2026-04-17
+audit_version: v2
+audit_findings_path: output/plan-audit/s201/verified_blockers.md
+open_policy_blockers: [B1, B2, B3, B4, B5, B15]  # Sam/Finance must sign off before S201_APPLY=1
 planned_date: 2026-04-17
 planned_by: Claude (BEI-ERP)
 owner: Sam Karazi (CEO)
@@ -277,3 +281,129 @@ If backfill patch causes payroll regression:
 - `my.bebang.ph` frontend: no changes expected in S201. Company field on Employee Detail Dialog already reads from backend. Backfill makes it show correct value automatically.
 - Frappe desk Employee form: Company field becomes read-only after Phase 4 hook is live, unless user has HR Manager role (manual override allowed).
 - Backfill assumes EMPLOYEE_MASTER.csv counts are approximately correct — Phase 0 pre-counts are the authoritative baseline.
+
+---
+
+## POST-AUDIT AMENDMENTS (v2 — 2026-04-17)
+
+Full audit report: `output/plan-audit/s201/verified_blockers.md`
+Raw counts: 17 CRITICAL / 42 WARNING / 16 INFO across 5 domain agents.
+After code verification: 7 CRITICAL / 18 WARNING CONFIRMED, 5 new code-level gaps.
+
+### B5 — CORRECTED S201_APPLY invocation syntax
+
+The original plan's Phase 6/7 instructions showed `S201_APPLY=1 bench --site hq.bebang.ph execute ...` in a plain shell. On production, `bench` runs inside a Docker container. Setting the env var in the host shell does NOT propagate through `docker exec`.
+
+**Correct apply command (run from the EC2/host shell, not inside the container):**
+```bash
+docker exec -e S201_APPLY=1 $BACKEND_CONTAINER \
+  bench --site hq.bebang.ph execute \
+  hrms.patches.v16_0.s201_rename_branches.execute
+
+docker exec -e S201_APPLY=1 $BACKEND_CONTAINER \
+  bench --site hq.bebang.ph execute \
+  hrms.patches.v16_0.s201_backfill_employee_company.execute
+```
+
+The `-e` flag is mandatory. Without it, `S201_APPLY` remains empty inside the container and the patch stays in dry-run mode silently.
+
+### B9 — Commissary classification two-stage rule (plan text clarification)
+
+The plan's Phase 4 task said "department == Commissary → BKI". Accurate description of the shipped code:
+
+**Stage 1:** `is_non_store_billing(employee)` evaluates (bio_id in roving dict) → (designation keyword) → (department in HO_DEPARTMENTS) → (branch category == HO per map). If any returns True → `BEBANG ENTERPRISE INC.` (parent) and stop.
+
+**Stage 2:** Otherwise, `resolve_branch_to_company(branch, department)` runs:
+- Branch category `HO` → BEI parent (unreachable here because Stage 1 caught it)
+- Branch category `Commissary`:
+  - hint != `DEPT_DRIVEN` → the deterministic hint (BKI for SHAW COMMISSARY - PRODUCTION)
+  - hint == `DEPT_DRIVEN` AND dept=Commissary → BKI
+  - hint == `DEPT_DRIVEN` AND dept≠Commissary → BEI parent (SCM/R&D at commissary per Sam 2026-04-17)
+- Branch category `Store` → live Frappe lookup for `<STORE_PREFIX> - <CORP>` Company
+
+The rule is first-match-wins across Stage 1, then branch-driven in Stage 2. Department alone does NOT route to BKI in isolation — a "Commissary" dept employee at a store branch would route to that store's Company, and a "Commissary" dept employee at `SHAW COMMISSARY - LOGISTICS` routes to BEI parent (LOGISTICS branch is HO category per SCM rule).
+
+### B10 — HR Manager override flag is unwired (known)
+
+`flags.company_manual_override` is read in `hrms/overrides/employee_master.py::derive_company_from_branch` but never set anywhere. There is no Custom Field, no Form JS, no API to set it. Accepted as known limitation for S201:
+
+- No employee today needs an override that the classifier can't handle.
+- When the first real override case arises, wire it via (a) a boolean Custom Field on Employee set by HR Manager before save, OR (b) a Form JS that toggles `cur_frm.doc.flags.company_manual_override = 1` when HR Manager edits the Company field manually.
+
+### B11 — Zero-Skip Enforcement (S154 — retrofit)
+
+**PHASE COMPLETION GATE (mandatory per phase):**
+
+Before advancing to Phase N+1, the executing agent MUST:
+
+1. Run the phase's `Verification` bullet to PASS.
+2. Run `git diff --name-only origin/production...HEAD` and confirm every file in the phase's "Files To Be Modified" table appears in the diff.
+3. Append to `output/s201/phase_status.md`:
+   ```
+   ## Phase N — <title>
+   - Status: DONE
+   - Verification: <result of Verification step>
+   - Files modified: <list from git diff>
+   - Timestamp: <ISO>
+   ```
+
+If ANY verification fails, the agent MUST fix the failing task before advancing. Skipping a phase's Verification = corrupt success per S092.
+
+### B12 — Machine-verifiable MUST_MODIFY / MUST_CONTAIN (S154 — retrofit)
+
+Per-phase assertions the executing agent MUST check via `grep` before marking Phase done:
+
+| Phase | MUST_MODIFY | MUST_CONTAIN |
+|---|---|---|
+| P2 | `hrms/utils/company_lookup.py` | `def resolve_branch_to_company`, `UnknownBranch`, `_CACHE_TTL` |
+| P3 | `hrms/utils/non_store_billing.py` | `is_non_store_billing`, `HO_DEPARTMENTS`, `REGIONAL MANAGER` |
+| P4 | `hrms/overrides/employee_master.py` | `derive_company_from_branch`, `is_non_store_billing_doc` |
+| P4 | `hrms/hooks.py` | `hrms.overrides.employee_master.derive_company_from_branch`, `Branch.*on_update.*company_lookup.clear_cache`, `Company.*on_update.*company_lookup.clear_cache` |
+| P5 | `hrms/api/transfers.py` | `_derive_new_company`, `resolve_branch_to_company`, `new_company = _derive_new_company(emp_doc, new_branch)` |
+| P6 | `hrms/patches/v16_0/s201_rename_branches.py` | `S201_APPLY`, `savepoint("s201_rename_branches")`, `frappe.rename_doc("Branch"`, `frappe.log_error` |
+| P7 | `hrms/patches/v16_0/s201_backfill_employee_company.py` | `S201_APPLY`, `savepoint("s201_backfill_employee_company")`, `UPDATE \`tabEmployee\` SET company`, `frappe.log_error` |
+| P7 | `hrms/patches.txt` | `s201_rename_branches`, `s201_backfill_employee_company` |
+
+### B13 — Protected Surfaces (S087 — retrofit)
+
+Files the S201 executing agent and any follow-up agent MUST NOT touch:
+
+- `hrms/utils/roving_employees.py` — 27-employee authoritative registry (IT Biometric Audit). Only HR/IT adds new roving entries, NOT code refactors.
+- `hrms/overrides/employee_master.py::EmployeeMaster.validate` — contains S172 BEI-EMP-YYYY-NNNNN preservation logic. Do NOT refactor; the class-based override must continue to snapshot + restore `self.employee`.
+- Existing Transfer DocType fields (`company`, `new_company`, `transfer_details` schema) — only WRITE via the API, do NOT alter DocType definition.
+- Any Salary Slip / Payroll Entry created BEFORE S201 apply date — backfill MUST NOT touch their `company` field.
+
+### B14 — L3 delivery contract
+
+Current state (2026-04-17): `output/l3/s201/` does not exist and there is no Playwright script for S201 scenarios.
+
+**L3 delivery path (either A or B, not both):**
+
+- **Path A — Playwright:** Author `../bei-tasks/tests/playwright/s201-per-store-billing.spec.ts` covering the 6 scenarios. Run via `npm test -- s201`. Evidence: Playwright's JSON report piped to `output/l3/s201/form_submissions.json`.
+- **Path B — Python + Frappe API:** Author `scripts/l3/s201_employee_company.py` that uses the Frappe REST API (session token auth) to create test employees, transfer employees, verify responses. Evidence: script writes to `output/l3/s201/{form_submissions,api_mutations,state_verification}.json`.
+
+Either path MUST run in a FRESH agent session (not the builder session) per S092 corrupt-success rule.
+
+### B15 — S202 maximum tolerable gap
+
+S201 ships Employee.company = home-store. Relievers who cover OTHER stores have their labor billed to HOME store (not covered store) between S201 apply and S202 deploy. Estimated exposure: ~27 roving + AS employees × ~PHP 30K avg monthly = ~PHP 810K/month mis-allocated.
+
+**Hard deadline:** S202 MUST ship before **May 15, 2026** payroll cutoff (half-month for May 1-15). After that date the April + early-May mis-allocation becomes financially material and may require manual JV reclassification.
+
+If S202 slips past May 15: Sam must either (a) accept the mis-allocation as non-material and let it flow through, or (b) run a manual reclassification JE for April-May.
+
+### Open policy blockers (Sam + Finance sign-off required BEFORE running S201_APPLY=1)
+
+These are NOT code issues — they are policy decisions the plan didn't address.
+
+- **B1:** SSS/PhilHealth/HDMF 49 employer registrations confirmed live? (If not, remittance filings post-backfill are ambiguous.)
+- **B2:** BIR Form 2316 treatment for mid-year employer change (issue one from parent through April, one per child from May? or one consolidated across parent+children?).
+- **B3:** Pre-existing April 2026 Draft/Submitted Salary Slips — cancel + regenerate post-backfill, or accept the discontinuity?
+- **B4:** Apply timing — wait for next cutoff boundary (e.g., April 30 → May 1), or apply now and regenerate mid-period slips?
+- **B15:** S202 deadline confirmed for May 15 or different date?
+
+### Audit-driven code fixes (shipped in follow-up PR)
+
+- Added `hrms.utils.company_lookup.clear_cache` to `Company.on_update` hook list (cache invalidation gap).
+- Wrapped both patches (`s201_rename_branches`, `s201_backfill_employee_company`) in `frappe.db.savepoint()` with rollback-on-partial-failure — prevents torn batch commits.
+- Routed patch failures through `frappe.log_error()` instead of `frappe.logger().error()` so Sentry captures them per DM-7.

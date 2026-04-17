@@ -190,6 +190,11 @@ doc_events = {
 			# S200 — clear Analytics store mapping cache so new Companies
 			# appear in the Store Leaderboard within 30 seconds
 			"hrms.utils.sales_location_mapping.clear_cache",
+			# S201 audit fix — invalidate branch->Company resolver cache when
+			# Company docs change (rename, entity_category flip). Only Branch
+			# hook was wired originally; a Company rename could leave the
+			# resolver returning the old full name for up to 60s.
+			"hrms.utils.company_lookup.clear_cache",
 		],
 		"on_trash": "hrms.overrides.company.handle_linked_docs",
 	},

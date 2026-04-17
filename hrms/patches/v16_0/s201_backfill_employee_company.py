@@ -170,8 +170,12 @@ def execute() -> None:
 	# Apply changes via direct SQL to avoid re-firing the Employee.validate
 	# hook we just shipped (it would compute the same target anyway, but
 	# direct SQL is faster and keeps the patch deterministic).
+	# S201 audit fix: wrap the entire batch in a savepoint so a mid-loop
+	# failure rolls back all partial UPDATEs instead of committing a torn
+	# batch (DM-2 atomic multi-doc rule).
 	applied = 0
 	errors = []
+	frappe.db.savepoint("s201_backfill_employee_company")
 	for ch in changes:
 		try:
 			frappe.db.sql(
@@ -182,13 +186,31 @@ def execute() -> None:
 		except Exception as exc:
 			errors.append({"employee": ch["employee"], "error": str(exc)})
 
-	frappe.db.commit()
-
 	summary["totals"]["applied"] = applied
 	summary["totals"]["errors"] = len(errors)
 	summary["errors"] = errors
+
+	if errors:
+		# Any row failure => rollback all, do NOT commit a partial batch.
+		frappe.db.rollback(save_point="s201_backfill_employee_company")
+		# Route through frappe.log_error so Sentry captures (DM-7). logger().error
+		# only hits the server log file.
+		frappe.log_error(
+			title="S201 backfill rolled back on partial failure",
+			message=(
+				f"applied={applied} before failure; errors={len(errors)}; "
+				f"first_error={errors[0] if errors else None}"
+			),
+		)
+		report_path = _write_report(summary)
+		frappe.logger().error(
+			f"[S201] ROLLBACK. {len(errors)} errors. Report: {report_path}"
+		)
+		return
+
+	frappe.db.release_savepoint("s201_backfill_employee_company")
+	frappe.db.commit()
 	report_path = _write_report(summary)
 	frappe.logger().info(
-		f"[S201] APPLIED. {applied} company reassignments. "
-		f"{len(errors)} errors. Report: {report_path}"
+		f"[S201] APPLIED. {applied} company reassignments. Report: {report_path}"
 	)
