@@ -3,10 +3,20 @@ sprint_id: S205
 branch: s205-s194-cert-finalization
 repo_primary: bei-tasks
 repo_secondary: hrms (only if backend fix needed)
-status: PLANNED
+status: COMPLETED_PARTIAL
 created_date: 2026-04-17
-completed_date: null
-execution_summary: null
+completed_date: 2026-04-17
+execution_summary: |
+  iter9 final: 11 PASS / 17 FAIL / 3 SKIP (target was 18 PASS). Net +2 from baseline.
+  Fixed (6): S194-7, 8 (REST reframe S193 guard on Invoice/RFP), S194-14 (backend poll),
+  S194-15 (TIN REST), S194-18 (MX approveViaRest), S194-23 (hrms #608 ensure-user).
+  Regressed (3): S194-5, 25, 26 — all simple PO-reject tests blocked by same PO approval
+  chain UI flake that blocks 11 other chain-dependent tests. Root cause: cross-browser
+  Mae/Butch/CEO UI clicks produce no Sonner toast within 15s intermittently. REST bypass
+  blocked because approve_po_mae/butch/ceo enforce frappe.session.user == cpo_email.
+  Deferred (3): S194-20 → S209, S194-24 → S207, S194-31 → S208 (all reserved in registry).
+  14 non-deferred FAILs tracked to S210 candidate (PO approval admin-bypass REST).
+  10 library members shipped + 30+ spec call sites updated. All validated.
 depends_on:
   - bei-tasks PR #413 (open) — iter8 REST sendToSupplier + invoice + GR inspection
   - hrms PR #608 (open) — ensure-user REST implementation
