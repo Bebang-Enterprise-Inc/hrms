@@ -779,6 +779,12 @@ def complete_warehouse_receiving(
 			"message": f"Warehouse receiving {receiving.name} already completed",
 		}
 
+	# S203: capture the ORIGINAL dispatch SE before the block below overwrites
+	# receiving.stock_entry with the new Material Transfer/Issue SE. The
+	# dispatch SE carries the `custom_sales_invoice_draft` link we need to
+	# submit on store acceptance.
+	dispatch_se_name = receiving.stock_entry
+
 	item_map = {item.item_code: item for item in receiving.items}
 	accepted_items = []
 	has_issues = False
@@ -906,16 +912,82 @@ def complete_warehouse_receiving(
 	receiving.status = "With Issues" if has_issues else "Completed"
 	receiving.save(ignore_permissions=True)
 
+	# S203: submit the Draft SI created at dispatch time. This closes the gap
+	# surfaced by the S198/S192 L3 runs — previously the WR path stamped stock
+	# without ever submitting the SI, leaving BKI→store deliveries without
+	# revenue recognition. The stock transfer above has already succeeded, so
+	# any failure here MUST NOT roll back stock; we log and continue (mirrors
+	# store.complete_receiving's outer guard).
+	si_name = None
+	try:
+		si_name = _submit_dispatch_draft_si(dispatch_se_name, receiving.name)
+	except Exception:
+		frappe.log_error(
+			f"S203: Outer guard tripped submitting Draft SI for receiving {receiving.name}: {frappe.get_traceback()}",
+			"S203 Submit SI Guard",
+		)
+
+	result_data: dict[str, Any] = {
+		"name": stock_entry.name,
+		"receiving_name": receiving.name,
+		"items_count": len(stock_entry.items),
+		"total_qty": sum(flt(item.qty) for item in stock_entry.items),
+	}
+	if si_name:
+		result_data["sales_invoice"] = si_name
+
 	return {
 		"success": True,
-		"data": {
-			"name": stock_entry.name,
-			"receiving_name": receiving.name,
-			"items_count": len(stock_entry.items),
-			"total_qty": sum(flt(item.qty) for item in stock_entry.items),
-		},
+		"data": result_data,
 		"message": f"Warehouse receiving {receiving.name} completed successfully",
 	}
+
+
+def _submit_dispatch_draft_si(dispatch_se_name: str | None, receiving_name: str) -> str | None:
+	"""S203: Submit the Draft Sales Invoice that was created at dispatch time
+	(by ``create_stock_transfer``'s Draft SI hook, itself introduced in S203
+	to mirror the S168 pattern used by ``commissary.fulfill_store_order``).
+
+	Looks up the Draft SI via ``Stock Entry.custom_sales_invoice_draft``
+	on the dispatch SE, then submits it if still in Draft state.
+
+	Returns the submitted SI name, or None if no Draft SI exists (e.g.,
+	billing hold at fulfillment, same-company transfer, non-BKI source).
+	Wrapped in a savepoint — SI failures never roll back stock posting.
+	"""
+	if not dispatch_se_name:
+		return None
+	if not frappe.db.exists("Stock Entry", dispatch_se_name):
+		return None
+	if not frappe.get_meta("Stock Entry").has_field("custom_sales_invoice_draft"):
+		return None
+
+	draft_si_name = frappe.db.get_value(
+		"Stock Entry", dispatch_se_name, "custom_sales_invoice_draft"
+	)
+	if not draft_si_name or not frappe.db.exists("Sales Invoice", draft_si_name):
+		return None
+
+	si_doc = frappe.get_doc("Sales Invoice", draft_si_name)
+	if si_doc.docstatus != 0:
+		# Already submitted (idempotent re-run) or cancelled — return as-is.
+		return si_doc.name if si_doc.docstatus == 1 else None
+
+	try:
+		frappe.db.savepoint("s203_submit_si")
+		si_doc.submit()
+		frappe.db.release_savepoint("s203_submit_si")
+		return si_doc.name
+	except Exception:
+		try:
+			frappe.db.rollback(save_point="s203_submit_si")
+		except Exception:
+			pass
+		frappe.log_error(
+			f"S203: Draft SI {draft_si_name} submit failed for receiving {receiving_name}: {frappe.get_traceback()}",
+			"S203 Submit SI Error",
+		)
+		return None
 
 
 # ============================================================
@@ -1463,6 +1535,45 @@ def create_stock_transfer(
 		# S198: auto-create BEI Warehouse Receiving so the destination store's
 		# crew has an acknowledgment doc the moment dispatch packs the truck.
 		wr_name = _create_warehouse_receiving_for_se(se, contract)
+
+		# S203: create a Draft Sales Invoice at dispatch time for every BKI
+		# intercompany transfer (mirrors the S168 pattern from
+		# commissary.fulfill_store_order). The SI stays Draft until
+		# complete_warehouse_receiving submits it on store acceptance.
+		# Failure here is logged but never raised — billing errors must not
+		# block stock dispatch.
+		if mr_name and finance_treatment == FINANCE_TREATMENT_INTERCOMPANY:
+			try:
+				frappe.db.savepoint("s203_draft_si_create")
+				from hrms.api.commissary import build_bki_store_sale_invoice
+
+				store_order_name = frappe.db.get_value(
+					"Material Request", mr_name, "custom_store_order"
+				)
+				draft_si_name = build_bki_store_sale_invoice(
+					stock_entry=se,
+					store_order_name=store_order_name,
+				)
+				if draft_si_name and frappe.get_meta("Stock Entry").has_field(
+					"custom_sales_invoice_draft"
+				):
+					frappe.db.set_value(
+						"Stock Entry",
+						se.name,
+						"custom_sales_invoice_draft",
+						draft_si_name,
+					)
+				frappe.db.release_savepoint("s203_draft_si_create")
+			except Exception:
+				try:
+					frappe.db.rollback(save_point="s203_draft_si_create")
+				except Exception:
+					pass
+				frappe.log_error(
+					f"S203: Draft SI creation failed for SE {se.name}: {frappe.get_traceback()}",
+					"S203 Draft SI Error",
+				)
+				# DO NOT raise — dispatch must not block on billing errors.
 	except frappe.ValidationError as e:
 		import re
 
