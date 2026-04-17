@@ -90,7 +90,7 @@ Canonical post-rename suffixes:
 | `STA LUCIA GRAND MALL` | Sta. Lucia East Grand Mall | `STA. LUCIA EAST GRAND MALL` (merge) | HIGH |
 | `MARKET MARKET` | Ayala Market! Market! | `AYALA MARKET MARKET` (merge) | HIGH |
 | `ROBINSON GENTRI` | Robinsons Place Gen. Trias | `ROBINSONS GENERAL TRIAS` (merge) | HIGH |
-| `BGC` | Uptown BGC | `UPTOWN BGC` (merge) | HIGH |
+| `BGC` | **Brittany Hotel (HO)** — Edlice Dela Cruz Regional Area Manager, confirmed office-based via ADMS probe 2026-04-17 (0 punches, 0 enrollments) | `BRITTANY HOTEL` (rename, HO category) | RESOLVED |
 
 ## Summary
 
@@ -105,9 +105,10 @@ Canonical post-rename suffixes:
 **Per sprint plan:** `branch_rename_map.csv` handles the rename migration; `branch_company_map.csv` is the post-rename canonical store list.
 
 ## Sam clarifications 2026-04-17 (locked)
-- **BGC = 3 HOs + 3 stores**: Brittany Hotel/Capital House/MyTown are HOs. Stores are UPTOWN BGC + VENICE GRAND CANAL + AYALA MARKET MARKET (best inference — confirm).
+- **3 HOs in BGC**: Brittany Hotel, Capital House, MyTown. All three → `BEBANG ENTERPRISE INC.` (parent). Each gets a dedicated branch value after rename (`BRITTANY HOTEL` / `CAPITAL HOUSE` / `MY TOWN`).
+- **3 stores in BGC**: UPTOWN BGC, VENICE GRAND CANAL, AYALA MARKET MARKET.
 - **SCM team at commissary → BEI parent** (not BKI). Branch `SHAW COMMISSARY - Logistics` routes to BEI.
-- **`BGC` (1 employee)** → flag for manual review. Too ambiguous without the employee's name/dept/designation.
+- **Ambiguous `BGC` branch RESOLVED 2026-04-17**: the single employee (Edlice Dela Cruz, Bio 9001812, REGIONAL AREA MANAGER) is office-based — 0 punches + 0 enrollments in ADMS (Sam instructed her not to punch for now). Renamed to `BRITTANY HOTEL`, routes to BEI parent via HO category + Regional Area Manager designation keyword.
 
 ## Still pending for Phase 0 live diagnostic
 1. `SM MOA`, `SM SJDM`, `SM PULILAN`, `CTTM TOMAS MORATO`, `PITX`, `ALABANG TOWN CENTER`, `GRAND CENTRAL`, `MEGAWORLD PASEO CENTER` — confirm each has a Frappe Company (`entity_category='Store'`).

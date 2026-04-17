@@ -51,6 +51,13 @@ class NonStoreBillingTests(unittest.TestCase):
             non_store_billing.is_non_store_billing(designation="Projects Manager")
         )
 
+    def test_regional_area_manager_designation(self):
+        # Edlice Dela Cruz (bio 9001812) — real BEI title. Zero punches in ADMS,
+        # confirmed office-based regional manager per 2026-04-17 probe.
+        self.assertTrue(
+            non_store_billing.is_non_store_billing(designation="REGIONAL AREA MANAGER")
+        )
+
     def test_ceo_chief_keyword(self):
         self.assertTrue(
             non_store_billing.is_non_store_billing(designation="Chief Executive Officer")

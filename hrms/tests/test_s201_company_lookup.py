@@ -23,6 +23,7 @@ MOCK_STORE_INDEX = {
     "XENTROMALL MONTALBAN": "XENTROMALL MONTALBAN - BEBANG ENTERPRISE INC.",
     "ORTIGAS ESTANCIA": "ORTIGAS ESTANCIA - BB ESTANCIA FOOD CORP.",
     "ORTIGAS GREENHILLS": "ORTIGAS GREENHILLS - BEIFRANCHISE FOOD OPC",
+    "BRITTANY HOTEL": "BRITTANY HOTEL - BEBANG ENTERPRISE INC.",
     "BF HOMES PARANAQUE": "BF HOMES PARANAQUE - BEBANG BF HOMES INC.",
     "AYALA MARKET MARKET": "AYALA MARKET MARKET - BEBANG MARKET MARKET INC.",
     "UPTOWN BGC": "UPTOWN BGC - BEBANG UPTOWN BGC INC.",
@@ -208,11 +209,14 @@ class CompanyLookupTests(unittest.TestCase):
             with self.assertRaises(UnknownBranch):
                 resolve_branch_to_company("NOPE NOT A REAL BRANCH")
 
-    def test_manual_review_flag_raises(self):
-        # The bare "BGC" branch is flagged NEEDS_MANUAL_REVIEW in the CSV.
+    def test_bgc_resolves_to_brittany_hotel_ho(self):
+        # BGC lone employee (Edlice Dela Cruz, REGIONAL AREA MANAGER) verified
+        # via ADMS probe 2026-04-17 as office-based HO — maps to Brittany Hotel HO.
         with self._patch_store_index():
-            with self.assertRaises(UnknownBranch):
-                resolve_branch_to_company("BGC")
+            self.assertEqual(
+                resolve_branch_to_company("BGC"),
+                "BEBANG ENTERPRISE INC.",
+            )
 
     def test_store_missing_from_frappe_index_raises(self):
         # Branch maps to a store prefix that doesn't exist in the live Company
