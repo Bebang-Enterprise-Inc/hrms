@@ -13,41 +13,15 @@ from hrms.utils.api_helpers import (
     _check_hr_permission,
     _paginate,
 )
-from hrms.utils.company_lookup import (
-    UnknownBranch,
-    get_non_store_parent,
-    resolve_branch_to_company,
-)
-from hrms.utils.non_store_billing import is_non_store_billing_doc
 from hrms.utils.sentry import set_backend_observability_context
 
 
-def _derive_new_company(emp_doc, new_branch: str) -> str:
-    """S201: compute `new_company` for an Employee Transfer.
-
-    Roving / AS / HO / non-store employees stay on BEI parent regardless of
-    the new branch. Store employees follow the branch to its store Company.
-    """
-    # Build a shadow doc with the new_branch so is_non_store_billing_doc picks
-    # up the branch category check (e.g. new_branch == SHAW COMMISSARY - LOGISTICS
-    # which is HO per the map).
-    class _Shadow:
-        pass
-    shadow = _Shadow()
-    shadow.attendance_device_id = getattr(emp_doc, "attendance_device_id", None)
-    shadow.new_attendance_device_id = getattr(emp_doc, "new_attendance_device_id", None)
-    shadow.department = emp_doc.department
-    shadow.designation = emp_doc.designation
-    shadow.branch = new_branch
-
-    if is_non_store_billing_doc(shadow):
-        return get_non_store_parent()
-    try:
-        return resolve_branch_to_company(new_branch, department=emp_doc.department)
-    except UnknownBranch:
-        # Unresolvable branch — do not silently pivot; keep current company and
-        # let HR investigate. The validate hook will log on employee save.
-        return emp_doc.company
+# S201 Option X (2026-04-17): `_derive_new_company` was removed — transfers no
+# longer auto-change `Employee.company`. Legal employer stays stable; internal
+# per-store billing is handled by S202 allocation JE engine (punch-based). If
+# HR genuinely needs to move an employee between legal entities (rare), they
+# can edit Company directly on the Employee form (Link dropdown) before
+# creating the transfer, or after approval via a separate HR Personnel Action.
 
 
 @frappe.whitelist()
@@ -101,16 +75,11 @@ def create_transfer(employee, new_branch, transfer_date, reason,
         "new": new_branch,
     })
 
-    # S201: derive new_company from new_branch unless employee is non-store billing
-    new_company = _derive_new_company(emp_doc, new_branch)
-
-    # Company change row (only when company actually changes)
-    if new_company and new_company != emp_doc.company:
-        transfer_details.append({
-            "property": "Company",
-            "current": emp_doc.company or "",
-            "new": new_company,
-        })
+    # S201 Option X (2026-04-17): new_company stays on the employee's current
+    # legal employer. HR changes legal employer manually (Frappe Desk Company
+    # dropdown) when there's a real legal move; the Transfer API does not
+    # infer this from branch.
+    new_company = emp_doc.company
 
     # Reports To change (optional)
     if new_reports_to and new_reports_to != emp_doc.reports_to:

@@ -1,17 +1,24 @@
-"""S201 Phase 7: backfill Employee.company based on branch + non-store rules.
+"""S201 Phase 7: (DEPRECATED under Option X) backfill Employee.company.
 
-For every Active Employee, computes the target Company (same logic as the
-Employee.validate hook) and UPDATEs tabEmployee.company via direct SQL
-(bypasses validate to avoid hook re-firing and to keep the patch fast).
+**IMPORTANT: This patch is kept for reference only. DO NOT RUN.**
 
-Safety:
-  - DRY-RUN by default. Writes a line-by-line change list to
-    output/s201/diagnostics/backfill_report_<timestamp>.json and exits.
-  - To apply: S201_APPLY=1 env var.
-  - Idempotent: rerunning after apply is a no-op (everyone already at target).
-  - Emits per-Company before/after counts for audit.
+Original intent (Option A / Y): walk every Active Employee and UPDATE
+tabEmployee.company to the store's child Company derived from branch.
 
-Run directly:
+Why deprecated (Sam 2026-04-17):
+- Employees should NOT change their legal employer on paper just because
+  they work at a store. Legal employer (Employee.company) stays stable for
+  SSS/PhilHealth/HDMF/BIR 2316 compliance.
+- Internal per-store billing is delivered by S202 via punch-based allocation
+  JEs (month-end inter-Company labor cost reclassification).
+
+The execute() function is hard-gated: even with S201_APPLY=1 it now raises
+so the patch cannot silently move production data down the wrong path.
+
+DRY-RUN mode is preserved so anyone curious can still see "what would have
+happened" under Option A, but no actual UPDATEs are issued.
+
+Run directly (dry-run inspection only):
     bench --site hq.bebang.ph execute \\
       hrms.patches.v16_0.s201_backfill_employee_company.execute
 """
@@ -162,33 +169,27 @@ def execute() -> None:
 	if not apply_mode:
 		report_path = _write_report(summary)
 		frappe.logger().info(
-			f"[S201] DRY-RUN. {len(changes)} changes planned; "
+			f"[S201] DRY-RUN (Option X: apply is disabled). "
+			f"{len(changes)} changes planned under Option A; "
 			f"{len(unresolvable)} unresolvable. Report: {report_path}"
 		)
 		return
 
-	# Apply changes via direct SQL to avoid re-firing the Employee.validate
-	# hook we just shipped (it would compute the same target anyway, but
-	# direct SQL is faster and keeps the patch deterministic).
-	applied = 0
-	errors = []
-	for ch in changes:
-		try:
-			frappe.db.sql(
-				"UPDATE `tabEmployee` SET company=%s WHERE name=%s",
-				(ch["new_company"], ch["employee"]),
-			)
-			applied += 1
-		except Exception as exc:
-			errors.append({"employee": ch["employee"], "error": str(exc)})
-
-	frappe.db.commit()
-
-	summary["totals"]["applied"] = applied
-	summary["totals"]["errors"] = len(errors)
-	summary["errors"] = errors
+	# S201 Option X (2026-04-17) hard gate: the apply path was removed because
+	# Sam decided Employee.company stays stable; per-store billing goes
+	# through S202 allocation JEs instead. Writing the dry-run report for
+	# audit, then raising so nobody accidentally moves legal employers.
 	report_path = _write_report(summary)
-	frappe.logger().info(
-		f"[S201] APPLIED. {applied} company reassignments. "
-		f"{len(errors)} errors. Report: {report_path}"
+	frappe.log_error(
+		title="S201 backfill apply attempt blocked (Option X)",
+		message=(
+			f"{len(changes)} planned changes were NOT applied because Option X "
+			f"keeps Employee.company stable. Dry-run report: {report_path}."
+		),
+	)
+	raise RuntimeError(
+		"S201 Option X: Employee.company backfill is intentionally disabled. "
+		"Per-store billing is delivered via S202 allocation JE engine. "
+		"If you really need to move legal employers, do it manually in Frappe "
+		"Desk one employee at a time (use the Company dropdown on Employee)."
 	)

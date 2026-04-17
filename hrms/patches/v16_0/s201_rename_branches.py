@@ -123,6 +123,10 @@ def execute() -> None:
 		return
 
 	# Execute renames. Merge when target already exists.
+	# S201 audit fix: wrap in savepoint so a mid-batch failure rolls back the
+	# partial renames (DM-2). Errors route through log_error so Sentry catches
+	# them (DM-7).
+	frappe.db.savepoint("s201_rename_branches")
 	for entry in plan:
 		old = entry["old"]
 		new = entry["new"]
@@ -141,11 +145,27 @@ def execute() -> None:
 			errors.append({"old": old, "new": new, "reason": str(exc)})
 			entry["status"] = f"failed: {exc}"
 
-	frappe.db.commit()
-
 	summary["errors"] = errors
+
+	if errors:
+		frappe.db.rollback(save_point="s201_rename_branches")
+		frappe.log_error(
+			title="S201 rename_branches rolled back on partial failure",
+			message=(
+				f"planned={len(plan)}, errors={len(errors)}; "
+				f"first_error={errors[0]}"
+			),
+		)
+		report_path = _write_report(summary)
+		frappe.logger().error(
+			f"[S201] ROLLBACK. {len(errors)} errors. Report: {report_path}"
+		)
+		return
+
+	frappe.db.release_savepoint("s201_rename_branches")
+	frappe.db.commit()
 	report_path = _write_report(summary)
 	frappe.logger().info(
 		f"[S201] APPLIED. {len([p for p in plan if p.get('status')=='renamed'])} renames. "
-		f"{len(errors)} errors. Report: {report_path}"
+		f"Report: {report_path}"
 	)

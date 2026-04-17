@@ -3,7 +3,21 @@ sprint: S201
 title: Per-Store Employee Billing Foundation
 branch: s201-per-store-employee-billing
 base: production
-status: GO
+status: SUPERSEDED_BY_OPTION_X
+option_x_branch: fix/s201-option-x-billing-layer
+option_x_pr: (pending)
+audit_date: 2026-04-17
+audit_version: v3
+architectural_pivot_date: 2026-04-17
+architectural_pivot: |
+  Sam chose Option X (2026-04-17 PHT) after audit:
+  - Employee.company stays on the legal employer (stable for statutory filings)
+  - Per-store internal billing delivered by S202 allocation JE engine
+    (month-end inter-Company labor cost reclassification by punch share)
+  - Frappe Desk Company dropdown remains the HR-driven manual change path
+    (already a Link field — no code needed)
+  - The shipped validate hook, Transfer API company-derivation, and Phase 7
+    backfill patch are DEPRECATED and hard-gated under Option X.
 planned_date: 2026-04-17
 planned_by: Claude (BEI-ERP)
 owner: Sam Karazi (CEO)
@@ -274,6 +288,73 @@ If backfill patch causes payroll regression:
 
 ## Notes
 
-- `my.bebang.ph` frontend: no changes expected in S201. Company field on Employee Detail Dialog already reads from backend. Backfill makes it show correct value automatically.
-- Frappe desk Employee form: Company field becomes read-only after Phase 4 hook is live, unless user has HR Manager role (manual override allowed).
-- Backfill assumes EMPLOYEE_MASTER.csv counts are approximately correct — Phase 0 pre-counts are the authoritative baseline.
+- `my.bebang.ph` frontend: Company field on Employee Detail Dialog is currently READ-ONLY (`FieldRow`). Under Option X, HR changes Company via Frappe Desk (hq.bebang.ph) — the Employee doctype's Company field is a standard Link→Company, auto-rendered as typeahead dropdown of all 49+ Companies. my.bebang.ph Company editability is OUT OF SCOPE for S201.
+- Frappe desk Employee form: Company field is a standard Link dropdown. HR can change Employee.company manually when a real legal employer change happens.
+- Backfill assumes EMPLOYEE_MASTER.csv counts are approximately correct — retained here for historical reference but SUPERSEDED by Option X (no auto-reassignment).
+
+---
+
+## POST-AUDIT AMENDMENTS v3 — OPTION X PIVOT (2026-04-17)
+
+Full audit report: `output/plan-audit/s201/verified_blockers.md`
+Raw counts: 17 CRITICAL / 42 WARNING / 16 INFO across 5 domain agents.
+
+### Why Option X
+
+The audit's PH Finance domain surfaced 5 CRITICAL statutory blockers (B1-B4 + unresolved apply timing). When asked, Sam clarified the actual business intent:
+
+> "Employees will not change company on Paper. What I need is to know where to bill employees internally so stores are charged based on the manpower deployed in it, but for compliance we can handle reporting differently while minimizing tax exposure per store."
+
+This is **transfer pricing**, not employer reassignment. The correct architecture:
+
+| Layer | Value |
+|---|---|
+| Legal employer (`Employee.company`) | Stable — one legal entity per employee, drives SSS/PhilHealth/HDMF/BIR 2316 |
+| Internal billing | Punch-based — where labor cost flows for per-store P&L |
+| Tax reporting | Per-store optimization — handled by allocation policy, not legal reassignment |
+
+### What Option X changes in the SHIPPED code
+
+| File | Option A/Y behavior (shipped via PR #603) | Option X behavior |
+|---|---|---|
+| `hrms/hooks.py` Employee.validate | Invokes `derive_company_from_branch` | Hook commented out (function kept for reference) |
+| `hrms/api/transfers.py::create_transfer` | Computes `new_company` from branch via `_derive_new_company` helper | `new_company = emp_doc.company` — legal stays stable. Helper deleted. |
+| `hrms/patches/v16_0/s201_backfill_employee_company.py` | `S201_APPLY=1` runs UPDATE on 510 employees | Apply path raises RuntimeError with Option X rationale; dry-run inspection still works |
+| `hrms/patches/v16_0/s201_rename_branches.py` | Renames branches to match Company prefix | **UNCHANGED — still active.** Cosmetic rename (Analytics/ordering naming) has no legal impact. |
+| `hrms/utils/company_lookup.py` + `non_store_billing.py` + `branch_company_map.csv` | Drives validate hook | **KEPT as libraries** — S202 allocation engine will consume them to classify punches without touching Employee.company. |
+
+### What Option X delivers
+
+- Branch rename (Phase 6) stays — branches align with Analytics/ordering naming.
+- `company_lookup` + `non_store_billing` modules stay — S202 uses them for punch classification.
+- Cache invalidation on Branch + Company updates stays wired.
+- Savepoint + Sentry improvements in both patches stay (B7+B8 audit fixes).
+
+### What Option X punts to S202
+
+Everything that actually moves money between Companies per store:
+- Punch-based monthly allocation JE engine
+- Per-store labor cost attribution
+- Reliever/roving cost flow-through based on actual punch location
+
+S202 hard deadline remains **May 15, 2026** payroll cutoff — beyond that date April and early-May labor mis-allocation would require manual JV cleanup.
+
+### Open policy questions — STATUS AFTER OPTION X
+
+- **B1** (SSS/PhilHealth/HDMF registrations live): Sam confirmed registrations exist in the real world; I need a separate task to verify Frappe Company docs have the IDs populated (`custom_sss_employer_id`, `custom_philhealth_employer_id`, `custom_hdmf_employer_id` or whatever BEI uses). NOT A BLOCKER under Option X because Employee.company isn't moving.
+- **B2** (BIR 2316 mid-year change): RESOLVED by Option X — no mid-year change happens.
+- **B3** (existing Draft Salary Slips): RESOLVED by Option X — slips stay on legal employer.
+- **B4** (apply timing): RESOLVED by Option X — no apply happens.
+- **B15** (S202 deadline): May 15, 2026 stands.
+
+### Audit-driven code fixes (still apply under Option X)
+
+- `Company.on_update` now also calls `company_lookup.clear_cache` (B6 — cache invalidation gap found by code verifier).
+- Branch rename patch wraps batches in `frappe.db.savepoint()` with rollback on partial failure (B7 — DM-2 compliance).
+- Patch failures route through `frappe.log_error()` so Sentry captures them (B8 — DM-7).
+
+### Plan status trail
+
+- v1 (2026-04-17 morning): GO — Option A (home-store = Employee.company) with S202 allocation layered on top.
+- v2 (2026-04-17 afternoon): post-audit amendments — 17 CRITICAL findings surfaced, PH Finance raised statutory red flags.
+- v3 (2026-04-17 evening): SUPERSEDED_BY_OPTION_X — Sam clarified actual intent (transfer pricing, not reassignment), plan pivots, backfill deprecated.
