@@ -190,6 +190,11 @@ doc_events = {
 			# S200 — clear Analytics store mapping cache so new Companies
 			# appear in the Store Leaderboard within 30 seconds
 			"hrms.utils.sales_location_mapping.clear_cache",
+			# S201 audit fix — invalidate branch->Company resolver cache when
+			# Company docs change (rename, entity_category flip). Branch hook
+			# was wired originally but not Company; a Company rename could leave
+			# the resolver returning the old full name for up to 60s.
+			"hrms.utils.company_lookup.clear_cache",
 		],
 		"on_trash": "hrms.overrides.company.handle_linked_docs",
 	},
@@ -236,8 +241,13 @@ doc_events = {
 		"validate": [
 			"hrms.overrides.employee_master.validate_onboarding_process",
 			"hrms.utils.bio_id_validation.validate_employee_bio_id",
-			# S201 — derive company from branch (store child / BEI parent / BKI)
-			"hrms.overrides.employee_master.derive_company_from_branch",
+			# S201 Option X (2026-04-17): derive_company_from_branch hook is
+			# DISABLED. Employee.company stays on the legal employer and is
+			# only changed manually by HR via the Frappe Desk Company dropdown.
+			# Per-store internal billing is handled by S202 allocation JE engine
+			# (punch-based), NOT by moving Employee.company. Keeping the
+			# function in employee_master.py for reference / future use.
+			# "hrms.overrides.employee_master.derive_company_from_branch",
 		],
 		"on_update": [
 			"hrms.overrides.employee_master.update_approver_role",
