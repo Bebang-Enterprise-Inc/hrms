@@ -288,8 +288,10 @@ These documents contain sprint-like naming but are not part of the canonical seq
 
 | `S203` | Sprint 203 | `s203-warehouse-receiving-si-unification` (hrms) | TBD | GO 2026-04-17 — **Warehouse Receiving SI Unification.** Closes the CRIT-1 gap from the S198 deployment: `warehouse.complete_warehouse_receiving` stamped stock on store acceptance but never submitted the S168 Draft Sales Invoice, leaving every browser-path BKI→store dispatch without revenue recognition. Two changes in `hrms/api/warehouse.py`: (a) `create_stock_transfer` now creates the Draft SI at dispatch time via `build_bki_store_sale_invoice` (mirrors the S168 pattern from `commissary.fulfill_store_order`); (b) `complete_warehouse_receiving` now looks up the Draft SI from the dispatch SE's `custom_sales_invoice_draft` link and submits it, guarded so billing failures never roll back stock. Unblocks the S198 L3 retry — every S1/S2/S4 happy-path acceptance now produces a real `ACC-SINV-YYYY-NNNNN`. 7 unit tests in `hrms/tests/test_s203_warehouse_receiving_si_submit.py`. | `docs/plans/SPRINT_REGISTRY.md` (no plan doc — minimal sprint, spec lives in this row) |
 
+| `S205` | Sprint 205 | `s205-s194-cert-finalization` (bei-tasks primary); `s205-s194-cert-backend` (hrms only if needed) | bei-tasks #413 (open, iter8 pending merge), hrms #608 (open, ensure-user pending merge) | PLANNED 2026-04-17 — **S194 Procurement Cert Finalization (iter8 handoff, cold-start-friendly).** Resumes S194 procurement-chain E2E sweep from 9/31 PASS baseline after 9 iterations (iter7d→iter8). Indexes every spec/Page Object/fixture/assertion/builder and every existing PR (#402/#403/#409/#411/#413/#587/#608). Remaining 22 failures sorted into: 7 test-infra fixes, 8 REST-extension tests (invoice/RFP chain), 5 product-gap defers (S206-S209), 2 test-design reframes (S194-7/8). Target 18-20/31 PASS. Enforces library-first, real-browser-only, cleanupLedger, data-testid discipline. | `docs/plans/2026-04-17-sprint-205-s194-cert-finalization.md` |
+
 ## Next Sprint Reservation
-1. Next canonical sprint ID to assign: `S204`.
+1. Next canonical sprint ID to assign: `S206`.
 2. Reserve branch name: `s203-{slug}` (fill slug from plan filename).
 3. Create new sprint plan only after adding row here first.
 4. **Agent MUST `git checkout -b <branch>` before writing any code.**
