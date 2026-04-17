@@ -288,9 +288,11 @@ These documents contain sprint-like naming but are not part of the canonical seq
 
 | `S203` | Sprint 203 | `s203-warehouse-receiving-si-unification` (hrms) | TBD | GO 2026-04-17 — **Warehouse Receiving SI Unification.** Closes the CRIT-1 gap from the S198 deployment: `warehouse.complete_warehouse_receiving` stamped stock on store acceptance but never submitted the S168 Draft Sales Invoice, leaving every browser-path BKI→store dispatch without revenue recognition. Two changes in `hrms/api/warehouse.py`: (a) `create_stock_transfer` now creates the Draft SI at dispatch time via `build_bki_store_sale_invoice` (mirrors the S168 pattern from `commissary.fulfill_store_order`); (b) `complete_warehouse_receiving` now looks up the Draft SI from the dispatch SE's `custom_sales_invoice_draft` link and submits it, guarded so billing failures never roll back stock. Unblocks the S198 L3 retry — every S1/S2/S4 happy-path acceptance now produces a real `ACC-SINV-YYYY-NNNNN`. 7 unit tests in `hrms/tests/test_s203_warehouse_receiving_si_submit.py`. | `docs/plans/SPRINT_REGISTRY.md` (no plan doc — minimal sprint, spec lives in this row) |
 
+| `S204` | Sprint 204 | `s204-s198-l3-resume-plan` (hrms) | TBD | PLANNED 2026-04-17 — **S198 L3 Resume Plan (cold-start-friendly, compaction handoff).** Documents what S203 + S203 followup delivered, the live-patch state (BEI Settings.commissary_company, 37 customer BKI allowlists), the S1 proof (ACC-SINV-2026-00003 submitted via browser), and the exact scenarios still to run (fresh S1 post-#610 merge, S2 SM Megamall, S3 The Grid negative-path, S4 Ayala Evo same-entity, F1/F2/F3). Indexes every test spec and helper script. Enforces HB-4 browser-only + cleanupLedger + data-testid discipline. | `docs/plans/2026-04-17-sprint-204-s198-l3-resume-plan.md` |
+
 ## Next Sprint Reservation
-1. Next canonical sprint ID to assign: `S204`.
-2. Reserve branch name: `s203-{slug}` (fill slug from plan filename).
+1. Next canonical sprint ID to assign: `S205`.
+2. Reserve branch name: `s205-{slug}` (fill slug from plan filename).
 3. Create new sprint plan only after adding row here first.
 4. **Agent MUST `git checkout -b <branch>` before writing any code.**
 5. **MANDATORY cross-check before reserving any S###:** run `git branch -a | grep -iE 's(17[5-9]|18[0-9]|19[0-9])'` on BOTH `hrms` and `bei-tasks` AND `ls docs/plans/ | grep -E 'sprint-(17[5-9]|18[0-9]|19[0-9])'` — if any match the ID you're about to reserve, pick the next free number. The local registry is not authoritative; remote branches and plan files are.
