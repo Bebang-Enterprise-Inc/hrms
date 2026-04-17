@@ -284,13 +284,19 @@ These documents contain sprint-like naming but are not part of the canonical seq
 
 | `S201` | Sprint 201 | `s201-per-store-employee-billing` (hrms) | TBD | GO 2026-04-17 — Per-Store Employee Billing Foundation. Branch rename to Company prefix, Employee.company auto-derived from branch (non-store/AS/Regional/IT/Marketing→BEI parent; Commissary→BKI; rest→store child Company), Transfer API updates new_company, backfill patch. Precursor to S202 reliever allocation. | `docs/plans/2026-04-17-sprint-201-per-store-employee-billing-foundation.md` |
 
-| `S202` | Sprint 202 | TBD | TBD | PLANNED — Reliever Punch-Based Allocation Engine. Depends on S201. Month-end inter-Company JE reclassifying labor cost by punch share from Employee Checkin. Data starts April 01, 2026 (LD-6). | — |
+| `S202` | Sprint 202 | `fix/s202-mosaic-credentials-update` (hrms) | hrms#609 | COMPLETED 2026-04-17 — Per-store Mosaic OAuth credential fields on Company. PR #609 merged. **Note:** S202 was originally reserved for Reliever Punch-Based Allocation Engine but that reservation was overwritten by the Mosaic credentials sprint. Reliever allocation moved to S206. |
 
-| `S203` | Sprint 203 | `s203-warehouse-receiving-si-unification` (hrms) | TBD | GO 2026-04-17 — **Warehouse Receiving SI Unification.** Closes the CRIT-1 gap from the S198 deployment: `warehouse.complete_warehouse_receiving` stamped stock on store acceptance but never submitted the S168 Draft Sales Invoice, leaving every browser-path BKI→store dispatch without revenue recognition. Two changes in `hrms/api/warehouse.py`: (a) `create_stock_transfer` now creates the Draft SI at dispatch time via `build_bki_store_sale_invoice` (mirrors the S168 pattern from `commissary.fulfill_store_order`); (b) `complete_warehouse_receiving` now looks up the Draft SI from the dispatch SE's `custom_sales_invoice_draft` link and submits it, guarded so billing failures never roll back stock. Unblocks the S198 L3 retry — every S1/S2/S4 happy-path acceptance now produces a real `ACC-SINV-YYYY-NNNNN`. 7 unit tests in `hrms/tests/test_s203_warehouse_receiving_si_submit.py`. | `docs/plans/SPRINT_REGISTRY.md` (no plan doc — minimal sprint, spec lives in this row) |
+| `S203` | Sprint 203 | `s203-warehouse-receiving-si-unification` + `s203-followup-legal-entity` (hrms) | hrms#607 + #610 | COMPLETED 2026-04-17 — Warehouse Receiving SI Unification + legal_entity fix. | `docs/plans/SPRINT_REGISTRY.md` |
+
+| `S204` | Sprint 204 | `s204-s198-l3-resume-plan` (hrms) | TBD | PLANNED 2026-04-17 — S198 L3 Resume Plan (cold-start friendly). | `docs/plans/2026-04-17-sprint-204-s198-l3-resume-plan.md` |
+
+| `S205` | Sprint 205 | `s205-s194-cert-finalization-plan` (hrms) + `s205-s194-cert-finalization` (bei-tasks) | TBD | PLANNED 2026-04-17 — S194 certification finalization. | `docs/plans/2026-04-17-sprint-205-s194-cert-finalization.md` |
+
+| `S206` | Sprint 206 | `s206-reliever-allocation-engine` (hrms) | TBD | GO 2026-04-17 — **Reliever Punch-Based Labor Allocation Engine (S201 follow-on).** Monthly inter-Company JE that reclassifies labor cost from legal employer's Salaries-Expense account to the punch-in store's Salaries-Expense, weighted by attendance share. Uses `hrms.utils.company_lookup` + `hrms.utils.non_store_billing` from S201. Data starts April 01, 2026 (LD-6). Deadline May 15, 2026 (first cutoff where April mis-allocation becomes material). Does NOT move Employee.company (Option X). | `docs/plans/2026-04-17-sprint-206-reliever-allocation-engine.md` |
 
 ## Next Sprint Reservation
-1. Next canonical sprint ID to assign: `S204`.
-2. Reserve branch name: `s203-{slug}` (fill slug from plan filename).
+1. Next canonical sprint ID to assign: `S207`.
+2. Reserve branch name: `s207-{slug}` (fill slug from plan filename).
 3. Create new sprint plan only after adding row here first.
 4. **Agent MUST `git checkout -b <branch>` before writing any code.**
 5. **MANDATORY cross-check before reserving any S###:** run `git branch -a | grep -iE 's(17[5-9]|18[0-9]|19[0-9])'` on BOTH `hrms` and `bei-tasks` AND `ls docs/plans/ | grep -E 'sprint-(17[5-9]|18[0-9]|19[0-9])'` — if any match the ID you're about to reserve, pick the next free number. The local registry is not authoritative; remote branches and plan files are.
