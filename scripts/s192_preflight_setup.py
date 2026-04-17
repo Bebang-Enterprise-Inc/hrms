@@ -253,6 +253,103 @@ def cmd_rename_doc(args) -> dict[str, Any]:
     return json.loads(res["stdout"][idx + 7:])
 
 
+_UA = (
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+    "AppleWebKit/537.36 (KHTML, like Gecko) "
+    "Chrome/132.0.0.0 Safari/537.36"
+)
+
+
+def _frappe_rest_headers() -> dict:
+    """Read FRAPPE_URL/KEY/SECRET from env (Doppler-injected)."""
+    url = os.environ.get("FRAPPE_URL", "").rstrip("/")
+    key = os.environ.get("FRAPPE_API_KEY", "")
+    secret = os.environ.get("FRAPPE_API_SECRET", "")
+    if not url or not key or not secret:
+        raise RuntimeError(
+            "FRAPPE_URL / FRAPPE_API_KEY / FRAPPE_API_SECRET missing. "
+            "Invoke via: doppler run -p bei-erp -c dev -- python scripts/s192_preflight_setup.py ..."
+        )
+    return {"__base": url, "Authorization": f"token {key}:{secret}",
+            "User-Agent": _UA, "Accept": "application/json"}
+
+
+def _frappe_get(headers: dict, path: str):
+    import urllib.request
+    import urllib.error
+    base = headers.pop("__base") if "__base" in headers else os.environ["FRAPPE_URL"].rstrip("/")
+    h = {k: v for k, v in headers.items() if k != "__base"}
+    req = urllib.request.Request(f"{base}{path}", method="GET", headers=h)
+    headers["__base"] = base  # restore
+    try:
+        with urllib.request.urlopen(req, timeout=30) as resp:
+            return resp.status, json.loads(resp.read().decode())
+    except urllib.error.HTTPError as e:
+        return e.code, e.read().decode(errors="replace")
+
+
+def _frappe_write(headers: dict, method: str, path: str, body: dict):
+    import urllib.request
+    import urllib.error
+    base = headers.pop("__base") if "__base" in headers else os.environ["FRAPPE_URL"].rstrip("/")
+    h = {k: v for k, v in headers.items() if k != "__base"}
+    h["Content-Type"] = "application/json"
+    data = json.dumps(body).encode("utf-8")
+    req = urllib.request.Request(f"{base}{path}", method=method, headers=h, data=data)
+    headers["__base"] = base
+    try:
+        with urllib.request.urlopen(req, timeout=30) as resp:
+            return resp.status, json.loads(resp.read().decode())
+    except urllib.error.HTTPError as e:
+        return e.code, e.read().decode(errors="replace")
+
+
+def cmd_ensure_user(args) -> dict[str, Any]:
+    """Idempotent Frappe User create + role-add via REST.
+
+    - If User with `email` exists: add any missing roles, return rolesAdded.
+    - If missing: create with all roles and default password BeiTest2026!.
+    Emits JSON: {email, created: bool, rolesAdded: [...]}
+    """
+    if not args.email or not args.roles:
+        raise ValueError("ensure-user requires --email and --roles")
+    roles = json.loads(args.roles)
+    if not isinstance(roles, list):
+        raise ValueError("--roles must be JSON array of role names")
+
+    import urllib.parse as _up
+    headers = _frappe_rest_headers()
+    email_enc = _up.quote(args.email, safe="")
+
+    status, payload = _frappe_get(headers, f"/api/resource/User/{email_enc}")
+    if status == 404:
+        body = {
+            "email": args.email,
+            "first_name": args.email.split("@")[0],
+            "send_welcome_email": 0,
+            "new_password": "BeiTest2026!",
+            "enabled": 1,
+            "roles": [{"role": role} for role in roles],
+        }
+        st, resp = _frappe_write(headers, "POST", "/api/resource/User", body)
+        if st >= 400:
+            raise RuntimeError(f"ensure-user create failed: HTTP {st} {str(resp)[:400]}")
+        return {"email": args.email, "created": True, "rolesAdded": roles}
+    if status >= 400:
+        raise RuntimeError(f"ensure-user lookup failed: HTTP {status} {str(payload)[:400]}")
+
+    existing = {row.get("role") for row in (payload.get("data") or {}).get("roles", [])}
+    missing = [r for r in roles if r not in existing]
+    if missing:
+        new_roles = [{"role": r} for r in sorted(existing | set(roles)) if r]
+        st, resp = _frappe_write(
+            headers, "PUT", f"/api/resource/User/{email_enc}", {"roles": new_roles}
+        )
+        if st >= 400:
+            raise RuntimeError(f"ensure-user role-add failed: HTTP {st} {str(resp)[:400]}")
+    return {"email": args.email, "created": False, "rolesAdded": missing}
+
+
 # Simple stubs for remaining commands — full implementation deferred until
 # Phase 1 execution surfaces concrete needs.
 
@@ -270,7 +367,7 @@ DISPATCHERS: dict[str, Any] = {
     "revert-bin-seed": cmd_stub("revert-bin-seed"),
     "ensure-delivery-schedule": cmd_stub("ensure-delivery-schedule"),
     "ensure-route": cmd_stub("ensure-route"),
-    "ensure-user": cmd_stub("ensure-user"),
+    "ensure-user": cmd_ensure_user,
     "remove-user-roles": cmd_stub("remove-user-roles"),
     "cancel-doc": cmd_cancel_doc,
     "delete-doc": cmd_delete_doc,
