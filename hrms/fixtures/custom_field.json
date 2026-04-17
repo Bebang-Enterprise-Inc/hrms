@@ -1040,12 +1040,32 @@
     },
     {
         "doctype": "Custom Field",
+        "name": "Company-mosaic_client_id",
+        "dt": "Company",
+        "fieldname": "mosaic_client_id",
+        "fieldtype": "Data",
+        "label": "Mosaic Client ID",
+        "insert_after": "mosaic_location_id",
+        "description": "S202: Mosaic POS OAuth client ID (per-store credential group)"
+    },
+    {
+        "doctype": "Custom Field",
+        "name": "Company-mosaic_client_secret",
+        "dt": "Company",
+        "fieldname": "mosaic_client_secret",
+        "fieldtype": "Password",
+        "label": "Mosaic Client Secret",
+        "insert_after": "mosaic_client_id",
+        "description": "S202: Mosaic POS OAuth client secret (per-store credential group)"
+    },
+    {
+        "doctype": "Custom Field",
         "name": "Company-adms_devices_section",
         "dt": "Company",
         "fieldname": "adms_devices_section",
         "fieldtype": "Section Break",
         "label": "Biometric Devices (ADMS)",
-        "insert_after": "mosaic_location_id",
+        "insert_after": "mosaic_client_secret",
         "description": "S181: ZKTeco MB10-VL biometric devices assigned to this branch. Adding a device here auto-enrolls it in the ADMS receiver."
     },
     {
