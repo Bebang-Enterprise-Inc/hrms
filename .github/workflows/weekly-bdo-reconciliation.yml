@@ -1,0 +1,95 @@
+name: Weekly BDO → FPM Reconciliation
+
+on:
+  schedule:
+    # Every Tuesday through Friday 07:00 PHT (= Mon-Thu 23:00 UTC).
+    # Retries daily until a new BDO file appears. Juanna uploads Monday → processes Tuesday.
+    # Weekends off (nobody uploads).
+    - cron: "0 23 * * 1-4"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Run without writing to sheets"
+        required: false
+        default: "false"
+        type: choice
+        options:
+          - "false"
+          - "true"
+      force:
+        description: "Re-process the latest BDO file even if already archived"
+        required: false
+        default: "false"
+        type: choice
+        options:
+          - "false"
+          - "true"
+
+concurrency:
+  group: weekly-bdo-reconciliation
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  reconcile:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      BDO_RUN_CONTEXT: github
+      GOOGLE_CREDS_PATH: credentials/task-manager-service.json
+      BDO_IMPERSONATE: sam@bebang.ph
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          pip install --quiet \
+            google-api-python-client \
+            google-auth \
+            google-auth-httplib2 \
+            openpyxl \
+            pandas
+
+      - name: Write service account credentials
+        run: |
+          mkdir -p credentials
+          printf '%s' "${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}" > credentials/task-manager-service.json
+          if [ ! -s credentials/task-manager-service.json ]; then
+            echo "::error::GOOGLE_SERVICE_ACCOUNT_JSON secret is not set"
+            exit 1
+          fi
+
+      - name: Run weekly reconciliation
+        id: reconcile
+        run: |
+          ARGS=""
+          if [ "${{ github.event.inputs.dry_run }}" = "true" ]; then
+            ARGS="$ARGS --dry-run"
+          fi
+          if [ "${{ github.event.inputs.force }}" = "true" ]; then
+            ARGS="$ARGS --force"
+          fi
+          python scripts/weekly_bdo_reconciliation.py $ARGS
+
+      - name: Upload reconciliation report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bdo-weekly-report-${{ github.run_id }}
+          path: CEO/CashFlow/bdo_statements/weekly_report_*.md
+          retention-days: 90
+          if-no-files-found: warn
+
+      - name: Cleanup credentials
+        if: always()
+        run: rm -f credentials/task-manager-service.json
