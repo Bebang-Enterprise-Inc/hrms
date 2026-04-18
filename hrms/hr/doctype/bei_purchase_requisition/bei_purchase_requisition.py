@@ -143,6 +143,45 @@ class BEIPurchaseRequisition(Document):
         from hrms.api.procurement import _assert_supplier_active
         _assert_supplier_active(supplier_code, "purchase_order")
 
+        # S194-15 — TIN gate must fire on convert_to_po as well as direct create.
+        # Compute the projected PO value from PR items and check the supplier's
+        # TIN against the rolling 12-month annual-purchase threshold (default ₱250K).
+        from hrms.api.procurement import get_contracted_price
+        supplier_doc = frappe.get_doc("BEI Supplier", supplier_code)
+        projected_po_value = 0.0
+        for pr_item in self.items:
+            contracted = get_contracted_price(pr_item.item_code, supplier_code)
+            contracted_rate = contracted["contracted_rate"] if contracted else None
+            unit_cost = contracted_rate or flt(pr_item.estimated_unit_cost) or flt(
+                frappe.db.get_value("Item", pr_item.item_code, "standard_rate") or 0
+            )
+            projected_po_value += flt(unit_cost) * flt(pr_item.qty)
+
+        annual_purchases_row = frappe.db.sql(
+            """
+            SELECT COALESCE(SUM(grand_total), 0)
+            FROM `tabBEI Purchase Order`
+            WHERE supplier = %s
+              AND po_date >= DATE_SUB(CURDATE(), INTERVAL 12 MONTH)
+              AND status NOT IN ('Draft', 'Cancelled')
+            """,
+            (supplier_code,),
+        )
+        annual_purchases = flt(annual_purchases_row[0][0]) if annual_purchases_row else 0.0
+
+        from hrms.hr.doctype.bei_settings.bei_settings import get_procurement_settings
+        _tin_settings = get_procurement_settings()
+        _tin_threshold = flt(_tin_settings.get("tin_requirement_threshold", 250000))
+        if annual_purchases + projected_po_value > _tin_threshold and not supplier_doc.tin:
+            frappe.throw(
+                _("Supplier {0} requires TIN registration. "
+                  "Annual purchases (₱{1:,.2f}) + this PO (₱{2:,.2f}) exceed ₱{3:,.0f} threshold. "
+                  "Update supplier master data before proceeding.").format(
+                    supplier_doc.supplier_name, annual_purchases, projected_po_value, _tin_threshold,
+                ),
+                title=_("TIN Required"),
+            )
+
         # Create PO
         po = frappe.new_doc("BEI Purchase Order")
         po.pr_reference = self.name
@@ -151,8 +190,6 @@ class BEIPurchaseRequisition(Document):
         po.ship_to = self.delivery_to
 
         # Copy items — S104: use contracted price if available, fall back to PR estimate
-        from hrms.api.procurement import get_contracted_price
-
         for pr_item in self.items:
             contracted = get_contracted_price(pr_item.item_code, supplier_code)
             contracted_rate = contracted["contracted_rate"] if contracted else None
