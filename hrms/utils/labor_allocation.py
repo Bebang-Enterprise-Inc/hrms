@@ -341,17 +341,28 @@ def _resolve_company_accounts(company: str) -> dict:
 	Returns dict with keys: salaries_expense, due_from, due_to, cost_center.
 	Raises `frappe.ValidationError` if any required account is missing.
 	"""
-	# Salaries Expense — look up by LIKE pattern (S175 template names vary)
+	# Salaries Expense — account naming varies wildly across BEI Companies:
+	#   - Canonical BEI template: "Salaries and Wages - <abbr>"
+	#   - BKI pattern:            "CREW/STAFF SALARIES-BASIC PAY - BKI" etc.
+	#   - Minimal COA:            "Salary - <abbr>"
+	#   - Legacy upper:           "SALARIES AND WAGES - <abbr>"
+	# Match anything with "salar" or "wage" (case-insensitive), prefer canonical
+	# names, exclude payable accounts (we want expense, not liability).
 	salaries = frappe.db.sql(
 		"""
         SELECT name FROM tabAccount
         WHERE company = %(company)s
           AND is_group = 0
-          AND (name LIKE '%%Salaries and Wages%%' OR name LIKE '%%Salaries Expense%%' OR name LIKE '%%SALARIES AND WAGES%%')
+          AND (LOWER(name) LIKE '%%salar%%' OR LOWER(name) LIKE '%%wage%%')
+          AND LOWER(name) NOT LIKE '%%payable%%'
         ORDER BY
-          CASE WHEN name LIKE '%%Salaries and Wages%%' THEN 1
-               WHEN name LIKE '%%SALARIES AND WAGES%%' THEN 2
-               ELSE 3 END,
+          CASE
+            WHEN name LIKE '%%Salaries and Wages%%' THEN 1
+            WHEN name LIKE '%%SALARIES AND WAGES%%' THEN 2
+            WHEN name LIKE '%%Salaries Expense%%' THEN 3
+            WHEN LOWER(name) LIKE '%%basic pay%%' THEN 4
+            WHEN name LIKE 'Salary - %%' THEN 5
+            ELSE 9 END,
           name
         LIMIT 1
         """,
