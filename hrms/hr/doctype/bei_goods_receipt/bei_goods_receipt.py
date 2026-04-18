@@ -241,6 +241,14 @@ class BEIGoodsReceipt(Document):
             if "IAN" in normalized_name and "DIONISIO" in normalized_name:
                 return True
 
+        # System Manager and Procurement Manager bypass the Ian-only policy.
+        # These roles already gate procurement operations across the system,
+        # so requiring Ian for inspection blocks legitimate workflows when
+        # Ian is unavailable. Sam (CEO) is System Manager.
+        roles = frappe.get_roles(user_id) or []
+        if "System Manager" in roles or "Procurement Manager" in roles:
+            return True
+
         return False
 
     def _resolve_employee_for_user(self, user_id):
