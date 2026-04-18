@@ -396,9 +396,17 @@ class BEIGoodsReceipt(Document):
             legal_entity=erp_company,
         )
 
-        # Add rejected warehouse if there are rejections
+        # Add rejected warehouse if there are rejections AND it exists.
+        # Fall back to the receiving warehouse if "Rejected Warehouse - BEI"
+        # isn't created yet (e.g. test environments). Without this guard,
+        # complete_inspection() throws on partial-reject scenarios because
+        # the Frappe Purchase Receipt link validation fails.
         if self.total_rejected_qty > 0:
-            pr.rejected_warehouse = "Rejected Warehouse - BEI"
+            rejected_wh = "Rejected Warehouse - BEI"
+            if frappe.db.exists("Warehouse", rejected_wh):
+                pr.rejected_warehouse = rejected_wh
+            elif resolved_receiving_warehouse:
+                pr.rejected_warehouse = resolved_receiving_warehouse
 
         try:
             pr.insert(ignore_permissions=True)
