@@ -1,0 +1,54 @@
+{
+  "sprint": "S204",
+  "generated_at_utc": "2026-04-17T23:30:00Z",
+  "entries": [
+    {
+      "kind": "user-role-grant",
+      "user": "test.scm@bebang.ph",
+      "role_added": "System Manager",
+      "reversal": "scripts/s204_grant_system_manager_to_test_scm.py (invert: remove role)",
+      "status": "applied",
+      "reason": "unblock dual-approval stage 2 via /dashboard/store-ops/order-approvals (BLOCK-2 workaround)"
+    },
+    {
+      "kind": "user-role-grant",
+      "user": "test.scm@bebang.ph",
+      "role_added": "Accounts User",
+      "reversal": "scripts/s204_grant_accounts_user.py (invert: remove role)",
+      "status": "applied",
+      "reason": "defensive — in case SCM-driven dispatch ever triggers SI submit (BLOCK-1 workaround)"
+    },
+    {
+      "kind": "user-role-grant",
+      "user": "test.supervisor@bebang.ph",
+      "role_added": "System Manager",
+      "reversal": "scripts/s204_grant_system_manager_to_test_supervisor.py (invert: remove role)",
+      "status": "applied",
+      "reason": "initially attempted as SI submit workaround; actual fix required Accounts User"
+    },
+    {
+      "kind": "user-role-grant",
+      "user": "test.supervisor@bebang.ph",
+      "role_added": "Accounts User",
+      "reversal": "scripts/s204_grant_accounts_user.py (invert: remove role)",
+      "status": "applied",
+      "reason": "unblock _submit_dispatch_draft_si via Sales Invoice submit permission (BLOCK-1 workaround)"
+    },
+    {
+      "kind": "test-order-stray",
+      "names": ["BEI-ORD-2026-00271", "BEI-ORD-2026-00272", "BEI-ORD-2026-00273", "BEI-ORD-2026-00274", "BEI-ORD-2026-00275", "BEI-ORD-2026-00276"],
+      "reversal": "scripts/s192_cleanup_strays.py (adjust ORDERS list, rerun)",
+      "status": "not-applied",
+      "reason": "Drafts left for audit trail; do not block next test run (each new test creates next-sequence order)"
+    },
+    {
+      "kind": "test-si-submitted-via-admin",
+      "names": ["ACC-SINV-2026-00004", "ACC-SINV-2026-00005", "ACC-SINV-2026-00006"],
+      "reversal": "cancel via admin (destructive; retains audit trail; can keep as-is)",
+      "status": "not-applied",
+      "reason": "SIs submitted by Administrator as part of diagnosis. Book-keeping-wise these are real submitted invoices. Leave as-is unless finance requires rollback."
+    }
+  ],
+  "pending_entries": 0,
+  "failed": []
+}

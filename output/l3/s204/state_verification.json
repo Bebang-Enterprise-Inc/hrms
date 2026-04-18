@@ -1,0 +1,63 @@
+{
+  "sprint": "S204",
+  "generated_at_utc": "2026-04-17T23:30:00Z",
+  "scenarios": {
+    "S1_SM_Tanza_fresh": {
+      "verdict": "PASS",
+      "browser_only": true,
+      "order_id": "BEI-ORD-2026-00276",
+      "mr_name": "MAT-MR-2026-00133",
+      "wr_name": "BEI-WHR-2026-00011",
+      "si_name": "ACC-SINV-2026-00008",
+      "si_customer": "BEBANG MEGA INC.",
+      "si_company": "BEBANG KITCHEN INC.",
+      "si_bei_legal_entity": "BEBANG KITCHEN INC.",
+      "si_tax_id": "010-885-436-00000",
+      "si_grand_total": 16977.27,
+      "si_net_total": 15158.28,
+      "si_total_taxes": 1818.99,
+      "vat_rate": 0.12,
+      "docstatus": 1,
+      "gl_customer_party": "BEBANG MEGA INC.",
+      "gl_customer_account": "Debtors - BKI",
+      "dm1_compliant": true,
+      "evidence_file": "output/l3/s204/s1_fresh.json"
+    },
+    "S2_SM_Megamall": {
+      "verdict": "FAIL",
+      "blocker": "MASTER_DATA",
+      "reason": "SM Megamall (warehouse: BEBANG ENTERPRISE INC. - SM MEGAMALL - SMMM) returns zero orderable items via get_orderable_items endpoint. Without items to fill, Submit button stays hidden and the test times out.",
+      "investigation_required": "verify Item-Warehouse mapping + suggested_qty generation for SM Megamall store in BEI Store Order configuration. Likely missing: min/max stock levels at store, reorder rules, or item-to-store eligibility links."
+    },
+    "S3_Grid_Rockwell_negative": {
+      "verdict": "NOT_RUN",
+      "blocker": "CASCADE_OF_S2",
+      "reason": "S2 blocker likely affects The Grid as well (same API/master-data gap). Not attempted in this session after S2 hang."
+    },
+    "S4_Ayala_Evo_dedupe": {
+      "verdict": "NOT_RUN",
+      "blocker": "CASCADE_OF_S2",
+      "reason": "Same master-data gap suspected on AYALA EVO. Not attempted after S2 hang."
+    },
+    "F1_empty_order": {
+      "verdict": "NOT_RUN",
+      "reason": "Test block added to spec (see s198-l3-retry.spec.ts) but run cancelled when S2 blocked progress. F1 is low-risk and should PASS on a retry — tests UI-only (Submit button hidden when cart empty)."
+    },
+    "F2_missing_company_warehouse": {
+      "verdict": "NOT_RUN",
+      "reason": "Setup helper written (scripts/s204_f2_setup.py) but not executed. Requires SSM to create test warehouse with company=NULL. Deferred."
+    },
+    "F3_customer_rename_billing_hold": {
+      "verdict": "NOT_RUN",
+      "reason": "Requires live customer rename via SSM after S1 SI exists. Deferred — destructive on production data, would need careful cleanup."
+    }
+  },
+  "score": {
+    "pass": 1,
+    "fail": 1,
+    "not_run": 5,
+    "total": 7
+  },
+  "partial_verdict": "FAIL_RETRY_REQUIRED",
+  "zero_skip_compliance": "partial — Sam's 2026-04-16 rule says partial = fail. Plan stays FAIL_RETRY_REQUIRED until all 7 scenarios pass browser-only."
+}

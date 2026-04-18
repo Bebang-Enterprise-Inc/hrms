@@ -1,0 +1,52 @@
+{
+  "sprint": "S204",
+  "generated_at_utc": "2026-04-17T23:30:00Z",
+  "blockers": [
+    {
+      "id": "S204-BLOCK-1",
+      "severity": "HIGH",
+      "scope": "productCode",
+      "area": "hrms/api/warehouse.py",
+      "function": "_submit_dispatch_draft_si",
+      "title": "S203 SI submit on accept fails for non-Accounts users (permission gap)",
+      "description": "When a store crew user (e.g. Store Supervisor) clicks Accept on an internal receiving, the server-side helper `_submit_dispatch_draft_si` (hrms/api/warehouse.py:946-990) calls `si_doc.submit()` in the user's session context WITHOUT `ignore_permissions=True`. BEI's Custom DocPerm on Sales Invoice restricts write/submit to Accounts Manager and Accounts User roles only (System Manager is NOT on the allowlist). Result: submit raises PermissionError, the savepoint rolls back, the SI stays Draft, the WR completes anyway. The order's revenue is never recognized.",
+      "reproduction": "Store crew role without Accounts User/Manager submits via /dashboard/store-ops/receiving → /dashboard/warehouse/internal-receiving/<WR>. Check Sales Invoice: docstatus stays 0 despite successful WR completion.",
+      "fix_direction": "In `_submit_dispatch_draft_si`, wrap `si_doc.submit()` with `frappe.set_user('Administrator')` (save and restore original user) OR set `si_doc.flags.ignore_permissions = True` before submit. The accept-delivery action is a system-completion step, not a user accounting transaction — permission bypass is appropriate.",
+      "workaround_applied_in_session": "Granted test.supervisor the Accounts User role via SSM (scripts/s204_grant_accounts_user.py). This is a test-infrastructure workaround; production still needs the code fix."
+    },
+    {
+      "id": "S204-BLOCK-2",
+      "severity": "HIGH",
+      "scope": "productCode",
+      "area": "bei-tasks/lib/roles.ts",
+      "function": "MODULES.ORDER_APPROVALS allowlist",
+      "title": "SCM/Warehouse Manager cannot approve dual-approval stage 2 via browser",
+      "description": "Orders submitted after 12 NN for next-day delivery require Dual Approval (`requires_dual_approval=1`). Stage 1 = Area Supervisor, Stage 2 = Warehouse Manager (hardcoded to `ian@bebang.ph` in hrms/api/store.py:1000-1020 `_get_warehouse_manager_user`). The frontend RoleGuard on `/dashboard/store-ops/order-approvals` only allows [AREA_SUPERVISOR, SYSTEM_MANAGER, ADMINISTRATOR] (bei-tasks/lib/roles.ts:448-452). Warehouse Manager users can't access the page to approve stage 2, even though backend `_check_ordering_permission` admits them.",
+      "reproduction": "Submit order after 12 NN → approve as Area Supervisor. Login as Warehouse Manager (non-sys-admin) → navigate to /dashboard/store-ops/order-approvals → access denied.",
+      "fix_direction": "Add ROLES.WAREHOUSE_MANAGER (and ROLES.SUPPLY_CHAIN_MANAGER) to MODULES.ORDER_APPROVALS allowlist in bei-tasks/lib/roles.ts.",
+      "workaround_applied_in_session": "Granted test.scm the System Manager role via SSM (scripts/s204_grant_system_manager_to_test_scm.py). Test-infra-only fix."
+    },
+    {
+      "id": "S204-BLOCK-3",
+      "severity": "MEDIUM",
+      "scope": "masterData",
+      "area": "BEI Store Order / get_orderable_items endpoint",
+      "title": "SM Megamall / Ayala Evo / The Grid - Rockwell return zero orderable items",
+      "description": "The `hrms.api.ordering.get_orderable_items(store=<WAREHOUSE>)` endpoint returns an empty items list for three of the five stores assigned to test.area Area Supervisor. This blocks any ordering flow through these stores — the frontend Submit button stays hidden because nothing is filled.",
+      "reproduction": "Curl: `GET /api/method/hrms.api.ordering.get_orderable_items?store=<warehouse>` as Administrator. Only `SM TANZA - BEBANG MEGA INC.` returns a populated list when called by the browser's test.area session; the other 4 return zero items.",
+      "fix_direction": "Investigate how `get_orderable_items` builds its candidate list — likely tied to Item-Warehouse-Reorder bins OR BEI-specific item-to-store eligibility table. Seed the missing stores with (a) store-level reorder settings or (b) item master eligibility entries so tests can submit orders.",
+      "workaround_applied_in_session": "None. Blocks S2/S3/S4 execution."
+    },
+    {
+      "id": "S204-BLOCK-4",
+      "severity": "LOW",
+      "scope": "testInfrastructure",
+      "area": "tests/e2e/support/frappeReadback.ts",
+      "function": "findWarehouseReceivingForOrder",
+      "title": "Library helper uses non-queryable custom fields, silently returns null",
+      "description": "The library helper `findWarehouseReceivingForOrder(orderName)` filters Material Request by `custom_bei_store_order` (correct field is `custom_store_order`) and Stock Entry by header-level `material_request` (not permitted in query). Both filters return 403/417 errors. Helper returns null even when WR exists.",
+      "fix_direction": "Replace with the `wrForDispatch(testStartIso, storeCompany)` pattern added in-spec to s198-l3-retry.spec.ts: query Stock Entry by `from_warehouse` + `creation>=startTime`, then BEI Warehouse Receiving by `stock_entry=SE.name`. Promote this back into frappeReadback.ts on a follow-up PR.",
+      "workaround_applied_in_session": "In-spec helper `wrForDispatch` added (s198-l3-retry.spec.ts). Library change deferred to a follow-up PR."
+    }
+  ]
+}
