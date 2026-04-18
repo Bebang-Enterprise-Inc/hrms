@@ -1,0 +1,15 @@
+{
+  "scenario": "F1_empty_order",
+  "steps": [
+    "page_loaded",
+    "controls_hidden_verified",
+    "no_order_created"
+  ],
+  "started_at": "2026-04-18T16:01:46.276Z",
+  "orders_before": 20,
+  "review_visible": false,
+  "submit_visible": false,
+  "orders_after": 20,
+  "verdict": "PASS",
+  "completed_at": "2026-04-18T16:01:58.768Z"
+}

@@ -1,45 +1,43 @@
 {
-  "scenario": "S1_SM_Tanza_fresh",
+  "scenario": "S4_Ayala_Evo_dedupe",
   "steps": [
     "order_submitted",
     "area_approval=true",
-    "scm_order_approval=true",
     "mr_created",
     "mr_approve_toast_missed: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m fail",
     "mr_approved",
     "dispatched",
     "wr_auto_created",
-    "delivery_accepted",
-    "si_verified"
+    "delivery_accepted"
   ],
-  "started_at": "2026-04-18T15:56:48.654Z",
-  "started_frappe_iso": "2026-04-18 23:56:48",
-  "order_id": "BEI-ORD-2026-00311",
+  "started_at": "2026-04-18T16:01:59.186Z",
+  "started_frappe_iso": "2026-04-19 00:01:59",
+  "order_id": "BEI-ORD-2026-00314",
   "order_company": "BEBANG MEGA INC.",
-  "order_approval_stage": "Pending Area Supervisor",
-  "mr_name": "MAT-MR-2026-00161",
+  "order_approval_stage_initial": "Single Approval",
+  "mr_name": "MAT-MR-2026-00164",
   "mr_status_after_approval": "Ordered",
-  "wr_name": "BEI-WHR-2026-00040",
-  "dispatch_se": "MAT-STE-2026-00447",
-  "draft_si_at_dispatch": "ACC-SINV-2026-00025",
-  "si_name": "ACC-SINV-2026-00025",
+  "wr_name": "BEI-WHR-2026-00043",
+  "dispatch_se": "MAT-STE-2026-00453",
+  "draft_si_at_dispatch": "ACC-SINV-2026-00027",
+  "si_name": "ACC-SINV-2026-00027",
   "si_customer": "BEBANG MEGA INC.",
   "si_company": "BEBANG KITCHEN INC.",
   "si_bei_legal_entity": "BEBANG KITCHEN INC.",
   "si_tax_id": "010-885-436-00000",
-  "si_grand_total": 387251.85,
-  "si_net_total": 345760.58,
-  "si_total_taxes": 41491.27,
+  "si_grand_total": 362030.08,
+  "si_net_total": 323241.14,
+  "si_total_taxes": 38788.94,
   "si_docstatus": 1,
   "gl_customer_rows": [
     {
       "account": "Debtors - BKI",
       "party": "BEBANG MEGA INC.",
       "party_type": "Customer",
-      "debit": 387252,
+      "debit": 362030,
       "credit": 0
     }
   ],
   "verdict": "PASS",
-  "completed_at": "2026-04-18T15:58:33.236Z"
+  "completed_at": "2026-04-18T16:03:21.585Z"
 }

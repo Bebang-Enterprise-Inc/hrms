@@ -1,0 +1,11 @@
+
+Running 1 test using 1 worker
+
+S204 F3 PASS: {
+  "orderId": "BEI-ORD-2026-00315",
+  "submitted_si": 0,
+  "billing_hold_errors": 0
+}
+  ✓  1 [chromium] › tests\e2e\specs\s198-l3-retry.spec.ts:787:5 › S204 F3 — Customer rename billing-hold: SM Tanza dispatch produces no submitted SI (1.5m)
+
+  1 passed (1.5m)

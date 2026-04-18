@@ -1,50 +1,125 @@
 {
   "sprint": "S204",
-  "generated_at_utc": "2026-04-18T03:10:00Z",
+  "generated_at_utc": "2026-04-18T16:52:00Z",
+  "generated_at_pht": "2026-04-19T00:52:00+08:00",
   "scenarios": {
     "S1_SM_Tanza_fresh": {
       "verdict": "PASS",
       "browser_only": true,
-      "order_id": "BEI-ORD-2026-00277",
-      "notes": "Confirmed post-fix — no test.supervisor Accounts User grant needed. BLOCK-1 production code path works for real store crew.",
-      "evidence_file": "output/l3/s204/s1_fresh.json"
+      "order_id": "BEI-ORD-2026-00311",
+      "mr_name": "MAT-MR-2026-00161",
+      "wr_name": "BEI-WHR-2026-00040",
+      "si_name": "ACC-SINV-2026-00025",
+      "si_grand_total": 387251.85,
+      "si_customer": "BEBANG MEGA INC.",
+      "si_company": "BEBANG KITCHEN INC.",
+      "si_bei_legal_entity": "BEBANG KITCHEN INC.",
+      "evidence_file": "output/l3/s204/s1_fresh.json",
+      "run_log": "output/l3/s204/PHASE_A_RERUN_POST_633.log",
+      "verified_post_grant_revocation": true
     },
     "S2_SM_Megamall": {
-      "verdict": "FAIL",
-      "blocker": "TEST_SPEC",
-      "reason": "StoreOrderingPage.submit() fails to extract BEI-ORD-YYYY-NNNNN from page body after clicking Submit. 30s race-timeout returns body-len~22754 with no regex match. No new order persisted in the DB from this path. Likely SM Megamall's post-submit UI transition differs from SM Tanza (different success indicator, toast auto-dismiss, or redirect pattern).",
-      "fix_direction": "Harden submit() extraction: (a) fallback poll Frappe via queryDocs({owner, creation>=before_submit, docstatus:0}) when UI regex misses; (b) capture screenshot on miss for diagnosis; (c) expand success indicator regex."
+      "verdict": "PASS",
+      "browser_only": true,
+      "order_id": "BEI-ORD-2026-00312",
+      "si_name": "ACC-SINV-2026-00026",
+      "si_grand_total": 215465.14,
+      "si_customer": "BEBANG ENTERPRISE INC. (case-insensitive, via PR #429)",
+      "evidence_file": "output/l3/s204/s2_sm_megamall.json",
+      "run_log": "output/l3/s204/PHASE_A_RERUN_POST_633.log",
+      "verified_post_grant_revocation": true
     },
     "S3_Grid_Rockwell_negative": {
-      "verdict": "FAIL",
-      "blocker": "DISPATCH_OR_SPEC",
-      "reason": "Order BEI-ORD-2026-00280 created + approved + MR MAT-MR-2026-00135 Ordered. But dispatch never produced a Stock Entry — SEs=0, WRs=0. wrForDispatch polled 90s, returned null. No error in backend Error Log.",
-      "fix_direction": "Capture dispatch-dialog state (screenshot + dialog DOM) in the spec; verify the #sourceWarehouse fill step triggers onChange; confirm Create Transfer click hits backend. Possibly the dialog form silently fails validation when the spec sets source manually vs letting UI pre-fill."
+      "verdict": "PASS",
+      "browser_only": true,
+      "order_id": "BEI-ORD-2026-00313",
+      "submitted_si_count": 0,
+      "note": "Negative path: TASTECARTEL CORP. has no active billing config → billing hold → no SI submitted (expected).",
+      "evidence_file": "output/l3/s204/s3_grid_rockwell_negative.json",
+      "run_log": "output/l3/s204/PHASE_A_RERUN_POST_633.log",
+      "verified_post_grant_revocation": true
     },
     "S4_Ayala_Evo_dedupe": {
       "verdict": "PASS",
       "browser_only": true,
-      "order_id": "BEI-ORD-2026-00281",
-      "notes": "SI customer = BEBANG MEGA INC. (matches S1). Multi-store same-entity dedup confirmed.",
-      "evidence_file": "output/l3/s204/s4_ayala_evo.json"
+      "order_id": "BEI-ORD-2026-00314",
+      "si_name": "ACC-SINV-2026-00027",
+      "si_customer": "BEBANG MEGA INC.",
+      "note": "Multi-store same-entity dedup: SI customer docname matches S1 (BEBANG MEGA INC.) — confirmed via case-insensitive comparison (PR #429).",
+      "evidence_file": "output/l3/s204/s4_ayala_evo.json",
+      "run_log": "output/l3/s204/PHASE_A_RERUN_POST_633.log",
+      "verified_post_grant_revocation": true
     },
     "F1_empty_order": {
       "verdict": "PASS",
       "browser_only": true,
-      "notes": "Review/Submit controls hidden when cart empty; zero order created.",
-      "evidence_file": "output/l3/s204/f1_empty_order.json"
+      "note": "Review/Submit controls hidden when cart empty; zero order persisted.",
+      "evidence_file": "output/l3/s204/f1_empty_order.json",
+      "run_log": "output/l3/s204/PHASE_A_RERUN_POST_633.log",
+      "verified_post_grant_revocation": true
     },
-    "F2_missing_company_warehouse": {
-      "verdict": "NOT_RUN",
-      "reason": "Setup helper scripts/s204_f2_setup.py ready; not invoked this retry."
+    "F2_null_company_warehouse": {
+      "verdict": "PASS",
+      "browser_only": true,
+      "warehouse_docname": "S204-F2-TEST-NULL-CO - BEI",
+      "submit_error": "No orderable items at all for warehouse \"S204-F2-TEST-NULL-CO - BEI\" — get_orderable_items returned empty",
+      "orders_persisted": 0,
+      "note": "NULL-company warehouse yields no orderable items → Submit never clickable → zero orders. Setup + cleanup scripts executed cleanly.",
+      "evidence_file": "output/l3/s204/f2_null_company.json",
+      "run_log": "output/l3/s204/PHASE_B_F2_RUN.log",
+      "setup_script": "scripts/s204_f2_setup.py",
+      "cleanup_script": "scripts/s204_f2_cleanup.py"
     },
     "F3_customer_rename_billing_hold": {
-      "verdict": "NOT_RUN",
-      "reason": "Destructive on production customer data; deferred."
+      "verdict": "PASS",
+      "browser_only": true,
+      "order_id": "BEI-ORD-2026-00315",
+      "mr_name": "MAT-MR-2026-00165",
+      "wr_name": "BEI-WHR-2026-00044",
+      "dispatch_se": "MAT-STE-2026-00455",
+      "submitted_si_count": 0,
+      "note": "BEBANG MEGA INC. Customer renamed to BEBANG MEGA INC. RENAMED-S204 via scripts/s204_f3_rename_customer.py. Full chain drove through submit→approve→MR→dispatch→accept. Resolver's 4-step fallback returned missing → no SI submitted (expected). Customer restored after test via scripts/s204_f3_restore_customer.py.",
+      "evidence_file": "output/l3/s204/f3_customer_rename.json",
+      "rename_log": "output/l3/s204/PHASE_C_F3_RENAME.log",
+      "test_log": "output/l3/s204/PHASE_C_F3_TEST.log",
+      "restore_log": "output/l3/s204/PHASE_C_F3_RESTORE.log",
+      "rename_script": "scripts/s204_f3_rename_customer.py",
+      "restore_script": "scripts/s204_f3_restore_customer.py",
+      "wrapper_script": "scripts/s204_run_f3.py"
     }
   },
-  "score": {"pass": 3, "fail": 2, "not_run": 2, "total": 7},
-  "partial_verdict": "FAIL_RETRY_REQUIRED",
-  "session_delta": "Post BLOCK-1/2/3 deploy. Score 1/7 → 3/7. Product-side defects all resolved — remaining failures are test-spec Mode B fixes (S2 submit extraction, S3 dispatch form handling).",
-  "production_code_state": "All four BLOCK defects from session 1 have been addressed at product level (hrms#617 + bei-tasks#418 merged). Remaining scope is test-spec refinements."
+  "score": {"pass": 7, "fail": 0, "not_run": 0, "total": 7},
+  "partial_verdict": "PASS",
+  "final_verdict": "PASS",
+  "session_delta": "All 7 scenarios green browser-only against production. PR #633 (Warehouse Manager delegation at stage 2) closed the last product defect that surfaced after revoking the test-infra System Manager + Accounts User grants from test.scm + test.supervisor (scripts/s204_revoke_testinfra_grants.py). F2 + F3 implemented + run + cleaned. No live patches remain in production except the Pinnacle + 3MD stock seeds (legitimate operational data).",
+  "production_code_shas": {
+    "hrms": "d69546650 (PR #633 merged 2026-04-18T15:39Z)",
+    "bei-tasks_main": "ae3d229 (PR #429 — case-insensitive assertHappySI)"
+  },
+  "shipped_prs": {
+    "hrms": [
+      {"pr": 610, "title": "S203 followup: bei_legal_entity = bki_company (issuer)"},
+      {"pr": 617, "title": "BLOCK-1 admin wrap + BLOCK-3 S188 route normalizer"},
+      {"pr": 621, "title": "WR auto-create admin wrap + allowlist + log_error clamp v1"},
+      {"pr": 625, "title": "log_error clamp v2 (both positional args)"},
+      {"pr": 630, "title": "Data-driven buyer customer resolver with 4-step fallback"},
+      {"pr": 633, "title": "Warehouse Manager role delegates dual-approval stage 2"}
+    ],
+    "bei-tasks": [
+      {"pr": 418, "title": "Warehouse Manager + SCM in MODULES.ORDER_APPROVALS"},
+      {"pr": 426, "title": "Sustainable L3 retry spec + helper fixes"},
+      {"pr": 429, "title": "Case-insensitive assertHappySI customer match"}
+    ]
+  },
+  "test_infra_grants": {
+    "revoked": true,
+    "revoke_script": "scripts/s204_revoke_testinfra_grants.py",
+    "revoked_entries": [
+      "test.scm@bebang.ph :: System Manager",
+      "test.scm@bebang.ph :: Accounts User",
+      "test.supervisor@bebang.ph :: System Manager",
+      "test.supervisor@bebang.ph :: Accounts User"
+    ],
+    "verification": "S1-S4+F1 re-verified 5/5 PASS browser-only without these grants (PHASE_A_RERUN_POST_633.log)"
+  }
 }

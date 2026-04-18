@@ -1,0 +1,11 @@
+
+Running 1 test using 1 worker
+
+S204 F2 PASS: {
+  "warehouse": "S204-F2-TEST-NULL-CO",
+  "submit_error": "No orderable items at all for warehouse \"S204-F2-TEST-NULL-CO - BEI\" (store \"S204-F2-TEST-NULL-CO\"). Check get_orderable_items endpoint.",
+  "orders_against_f2": 0
+}
+  ✓  1 [chromium] › tests\e2e\specs\s198-l3-retry.spec.ts:676:5 › S204 F2 — NULL-company warehouse rejects order submission (26.4s)
+
+  1 passed (28.1s)
