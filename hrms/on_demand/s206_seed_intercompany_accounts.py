@@ -232,11 +232,20 @@ def _ensure_internal_customer(
 ) -> tuple[str, str]:
 	"""Ensure Internal Customer with represents_company=`company` exists.
 
-	Uses `customer_name` as the docname (Customer is autoname=field:customer_name).
-	Idempotent: if exists, ensures allowlist is complete.
+	Lookup order (first match wins):
+	  1. Existing Customer with represents_company=<company> (regardless of
+	     is_internal_customer flag or disabled state — mirrors Frappe's own
+	     uniqueness check, which fires on insert and throws "Internal Customer
+	     for company X already exists" when a non-internal customer for the
+	     same represents_company exists from legacy data).
+	  2. Existing Customer with customer_name=<customer_name> (prior seeder run).
+
+	Idempotent: existing customer has the allowlist completed if missing entries.
 	Returns (docname, 'created' | 'existed' | 'updated').
 	"""
-	existing = frappe.db.exists("Customer", {"customer_name": customer_name})
+	existing = frappe.db.get_value("Customer", {"represents_company": company}, "name") or frappe.db.exists(
+		"Customer", {"customer_name": customer_name}
+	)
 	if existing:
 		doc = frappe.get_doc("Customer", existing)
 		present = {row.company for row in (doc.companies or [])}
@@ -270,8 +279,14 @@ def _ensure_internal_supplier(
 	supplier_name: str,
 	allowlist_companies: list[str],
 ) -> tuple[str, str]:
-	"""Ensure Internal Supplier with represents_company=`company` exists. Idempotent."""
-	existing = frappe.db.exists("Supplier", {"supplier_name": supplier_name})
+	"""Ensure Internal Supplier with represents_company=`company` exists. Idempotent.
+
+	Lookup order matches _ensure_internal_customer: represents_company first
+	(mirrors Frappe's own uniqueness check), then supplier_name fallback.
+	"""
+	existing = frappe.db.get_value("Supplier", {"represents_company": company}, "name") or frappe.db.exists(
+		"Supplier", {"supplier_name": supplier_name}
+	)
 	if existing:
 		doc = frappe.get_doc("Supplier", existing)
 		present = {row.company for row in (doc.companies or [])}

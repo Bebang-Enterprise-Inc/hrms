@@ -119,23 +119,39 @@ def step_integration_smoke():
     except Exception as exc:
         return {"passed": False, "error": f"import_failed: {exc}"}
 
-    # Prefer a pair where BOTH sides have complete seeding.
-    pair_candidates = [
-        ("BEBANG KITCHEN INC.", "SM MEGAMALL - BEBANG ENTERPRISE INC."),
-        ("BEBANG KITCHEN INC.", "SM VALENZUELA - BEBANG SMV INC."),
-        ("BEBANG KITCHEN INC.", "SM BICUTAN - BEBANG SM BICUTAN INC."),
-    ]
-    home, covered = None, None
-    for h, c in pair_candidates:
-        try:
-            _resolve_company_accounts(h); _resolve_company_accounts(c)
-            _resolve_company_parties(h);  _resolve_company_parties(c)
-            home, covered = h, c
+    # Discover any pair where both sides have complete seeding by querying
+    # Companies that already have Due From + Due To + internal Customer + Supplier.
+    complete = frappe.db.sql(
+        """SELECT DISTINCT c.name, c.abbr FROM tabCompany c
+           WHERE EXISTS (SELECT 1 FROM tabAccount a WHERE a.name = CONCAT('1104200 - DUE FROM GROUP ENTITIES - ', c.abbr))
+             AND EXISTS (SELECT 1 FROM tabAccount a WHERE a.name = CONCAT('2104200 - DUE TO GROUP ENTITIES - ', c.abbr))
+             AND EXISTS (SELECT 1 FROM tabCustomer cu WHERE cu.represents_company = c.name AND cu.is_internal_customer = 1 AND cu.disabled = 0)
+             AND EXISTS (SELECT 1 FROM tabSupplier su WHERE su.represents_company = c.name AND su.is_internal_supplier = 1 AND su.disabled = 0)
+             AND (c.entity_category = 'Store' OR c.name IN ('BEBANG ENTERPRISE INC.', 'BEBANG KITCHEN INC.'))
+           ORDER BY c.name""",
+        as_dict=True,
+    )
+    if len(complete) < 2:
+        return {"passed": False, "error": "insufficient_fully_seeded_companies", "complete_count": len(complete)}
+
+    home, covered, tried = None, None, []
+    for c_home in complete:
+        for c_cov in complete:
+            if c_home["name"] == c_cov["name"]:
+                continue
+            try:
+                _resolve_company_accounts(c_home["name"])
+                _resolve_company_accounts(c_cov["name"])
+                _resolve_company_parties(c_home["name"])
+                _resolve_company_parties(c_cov["name"])
+                home, covered = c_home["name"], c_cov["name"]
+                break
+            except Exception as exc:
+                tried.append({"home": c_home["name"], "covered": c_cov["name"], "error": str(exc)[:200]})
+        if home:
             break
-        except Exception:
-            continue
     if not home:
-        return {"passed": False, "error": "no_valid_pair_found"}
+        return {"passed": False, "error": "no_valid_pair_found", "tried_count": len(tried), "tried_sample": tried[:5]}
 
     employee = frappe.db.get_value("Employee", {"status": "Active"}, "name")
     if not employee:
@@ -397,8 +413,9 @@ def main() -> int:
 	print(f"Summary written to: {summary}")
 	print(f"All passed: {result.get('all_passed')}")
 	for sid, step in sorted(result["steps"].items()):
-		mark = "✅" if step.get("passed") else "❌"
-		print(f"  {mark} {sid}")
+		# Plain ASCII for stdout (Windows cp1252-safe). Summary.md keeps emoji.
+		mark = "PASS" if step.get("passed") else "FAIL"
+		print(f"  [{mark}] {sid}")
 	return 0 if result.get("all_passed") else 1
 
 
