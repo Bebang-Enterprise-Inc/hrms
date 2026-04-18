@@ -119,12 +119,15 @@ class BEIGoodsReceipt(Document):
                     _("Item {0} must have a received quantity").format(item.item_code)
                 )
 
-        # Determine status based on rejections
+        # Determine status based on rejections.
+        # All-rejected at submit time = "With Issues" (semantic: shipment has
+        # problems the receiver flagged at the dock; inspector still has
+        # final say if inspection_required). S194-31 expects this status.
         if self.total_rejected_qty > 0:
             if self.total_accepted_qty > 0:
                 self.status = "Partially Accepted"
             else:
-                self.status = "Rejected"
+                self.status = "With Issues"
         else:
             if self.inspection_required:
                 self.status = "Pending Inspection"
@@ -174,7 +177,8 @@ class BEIGoodsReceipt(Document):
             # Create Frappe Purchase Receipt
             self.create_frappe_purchase_receipt()
         else:
-            self.status = "Rejected"
+            # Failed inspection = shipment has issues. S194-31 expects this.
+            self.status = "With Issues"
 
         self.save()
         self._append_validation_comment(

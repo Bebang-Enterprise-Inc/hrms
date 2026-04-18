@@ -3431,7 +3431,7 @@ def get_supplier_performance_report(months=6, sort_by="total_value", sort_order=
         LEFT JOIN (
             SELECT gr.supplier, COUNT(*) as gr_count,
                 SUM(gr.total_received_qty) as total_received,
-                SUM(CASE WHEN gr.status = 'Rejected' THEN 1 ELSE 0 END) as rejection_count
+                SUM(CASE WHEN gr.status IN ('Rejected', 'With Issues') THEN 1 ELSE 0 END) as rejection_count
             FROM `tabBEI Goods Receipt` gr
             WHERE gr.receipt_date >= DATE_SUB(CURDATE(), INTERVAL %s MONTH)
             GROUP BY gr.supplier
@@ -7827,7 +7827,7 @@ def get_supplier_grid(
                 COUNT(DISTINCT po.name) AS pending_gr_count
             FROM `tabBEI Purchase Order` po
             LEFT JOIN `tabBEI Goods Receipt` gr ON gr.purchase_order = po.name
-                AND gr.status NOT IN ('Draft', 'Cancelled', 'Rejected')
+                AND gr.status NOT IN ('Draft', 'Cancelled', 'Rejected', 'With Issues')
             WHERE po.status IN ('Approved', 'Sent to Supplier', 'Partially Received')
                 AND gr.name IS NULL
             GROUP BY po.supplier
@@ -7890,7 +7890,7 @@ def get_supplier_grid(
         SELECT COUNT(DISTINCT po.name) AS total_pending_grs
         FROM `tabBEI Purchase Order` po
         LEFT JOIN `tabBEI Goods Receipt` gr ON gr.purchase_order = po.name
-            AND gr.status NOT IN ('Draft', 'Cancelled', 'Rejected')
+            AND gr.status NOT IN ('Draft', 'Cancelled', 'Rejected', 'With Issues')
         WHERE po.status IN ('Approved', 'Sent to Supplier', 'Partially Received')
             AND gr.name IS NULL
     """)[0][0]
@@ -7974,7 +7974,7 @@ def get_supplier_overview(name=None, supplier=None):
         SELECT COUNT(DISTINCT po.name) AS cnt
         FROM `tabBEI Purchase Order` po
         LEFT JOIN `tabBEI Goods Receipt` gr ON gr.purchase_order = po.name
-            AND gr.status NOT IN ('Draft', 'Cancelled', 'Rejected')
+            AND gr.status NOT IN ('Draft', 'Cancelled', 'Rejected', 'With Issues')
         WHERE po.supplier = %(supplier)s
           AND po.status IN ('Approved', 'Sent to Supplier', 'Partially Received')
           AND gr.name IS NULL
@@ -8091,7 +8091,7 @@ def get_supplier_overview(name=None, supplier=None):
             po.delivery_date
         FROM `tabBEI Purchase Order` po
         LEFT JOIN `tabBEI Goods Receipt` gr ON gr.purchase_order = po.name
-            AND gr.status NOT IN ('Draft', 'Cancelled', 'Rejected')
+            AND gr.status NOT IN ('Draft', 'Cancelled', 'Rejected', 'With Issues')
         WHERE po.supplier = %(supplier)s
           AND po.status IN ('Approved', 'Sent to Supplier', 'Partially Received')
           AND gr.name IS NULL
