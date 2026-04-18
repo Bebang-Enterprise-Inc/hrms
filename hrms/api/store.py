@@ -349,7 +349,10 @@ def _designation_is_area_supervisor(designation):
 def _designation_is_admin(designation):
 	"""Return True if the designation indicates a company-wide admin role."""
 	d = str(designation or "").upper()
-	return any(t in d for t in ("CEO", "CHIEF", "DIRECTOR", "PRESIDENT", "REGIONAL MANAGER", "HR MANAGER", "HR OFFICER"))
+	return any(
+		t in d
+		for t in ("CEO", "CHIEF", "DIRECTOR", "PRESIDENT", "REGIONAL MANAGER", "HR MANAGER", "HR OFFICER")
+	)
 
 
 def _normalize_schedule_store_type(value: str | None) -> str:
@@ -1290,13 +1293,12 @@ def _get_next_deliveries(store_warehouse: str) -> dict:
 	  schedule_source                          ("published" | "fallback_last_week" | "default")
 	"""
 	today = getdate(nowdate())
-	tomorrow = add_days(today, 1)
 
 	defaults = {
 		"next_cold_delivery": None,
 		"next_dry_delivery": None,
-		"days_to_cold": 2,   # Frozen default
-		"days_to_dry": 3,    # Dry default
+		"days_to_cold": 2,  # Frozen default
+		"days_to_dry": 3,  # Dry default
 		"schedule_source": "default",
 	}
 
@@ -1314,7 +1316,6 @@ def _get_next_deliveries(store_warehouse: str) -> dict:
 	today_weekday = today.weekday()  # 0=Mon
 	this_monday = add_days(today, -today_weekday)
 
-	week_doc = None
 	schedule_source = "current"
 
 	# S159: publish gate removed — schedules are live immediately
@@ -1325,9 +1326,7 @@ def _get_next_deliveries(store_warehouse: str) -> dict:
 	)
 	if not week_name:
 		# Fallback: last available week (schedules are typically reused week to week)
-		week_name = frappe.db.get_value(
-			"BEI Delivery Schedule Week", {}, "name", order_by="week_start desc"
-		)
+		week_name = frappe.db.get_value("BEI Delivery Schedule Week", {}, "name", order_by="week_start desc")
 		schedule_source = "fallback_last_week" if week_name else "default"
 
 	if not week_name:
@@ -1511,11 +1510,12 @@ def _normalize_store_name_for_route(warehouse_name):
 	the ordering UI.
 	"""
 	import re
+
 	name = (warehouse_name or "").upper()
 
 	# S199: Strip S188-style leading entity prefix "BEBANG ENTERPRISE INC. - <STORE> - BEI-XXX"
 	if name.startswith("BEBANG ENTERPRISE INC. - "):
-		name = name[len("BEBANG ENTERPRISE INC. - "):]
+		name = name[len("BEBANG ENTERPRISE INC. - ") :]
 
 	# S199: Strip trailing S188 abbreviation suffixes "- BEI-XXX" / "- BKI-XXX"
 	name = re.sub(r" - BEI-[A-Z0-9]+$", "", name)
@@ -1534,6 +1534,7 @@ def _normalize_store_name_for_route(warehouse_name):
 	# → "SM MEGAMALL"). Covers S188 child warehouses that use a raw store-code
 	# suffix without the BEI-/BKI- prefix picked up by the earlier regexes.
 	import re as _re
+
 	name = _re.sub(r"\s+-\s+[A-Z][A-Z0-9]{2,6}$", "", name)
 	return name.strip()
 
@@ -1769,11 +1770,30 @@ def _coverage_window_days_for_lane(lane):
 
 
 # S128/B5: UOM whitelist for integer rounding.
-_INTEGER_UOMS = frozenset({
-	"Nos", "Pcs", "Box", "Pack", "Bag", "Piece", "Dozen", "Set", "Unit",
-	"Bundle", "Roll", "Can", "Bottle", "Sack", "Gallon",
-	"Kg", "KG", "Kilogram", "Liter", "L",
-})
+_INTEGER_UOMS = frozenset(
+	{
+		"Nos",
+		"Pcs",
+		"Box",
+		"Pack",
+		"Bag",
+		"Piece",
+		"Dozen",
+		"Set",
+		"Unit",
+		"Bundle",
+		"Roll",
+		"Can",
+		"Bottle",
+		"Sack",
+		"Gallon",
+		"Kg",
+		"KG",
+		"Kilogram",
+		"Liter",
+		"L",
+	}
+)
 
 
 def _round_suggested_qty(qty, uom):
@@ -1790,16 +1810,30 @@ _NON_ORDERABLE_WAREHOUSE_TYPES = frozenset({"3PL", "Commissary", "Cold Storage",
 
 # S133+S136/B1: Name-based filter for warehouses that are not real stores.
 _NON_ORDERABLE_NAME_PATTERNS = (
-	"Jentec", "Pinnacle", "Royal Cold", "RCS", "3MD",
-	"Commissary", "Kitchen", "TEST-COMMISSARY", "TEST-STORE",
-	"Finished Goods", "Work In Progress", "Raw Materials",
+	"Jentec",
+	"Pinnacle",
+	"Royal Cold",
+	"RCS",
+	"3MD",
+	"Commissary",
+	"Kitchen",
+	"TEST-COMMISSARY",
+	"TEST-STORE",
+	"Finished Goods",
+	"Work In Progress",
+	"Raw Materials",
 )
 
 # S133: Exact names for group/meta warehouses that may have is_group=0.
-_NON_ORDERABLE_EXACT_NAMES = frozenset({
-	"Stores", "Stores - BEI", "Stores - BK",
-	"All Warehouses", "All Warehouses - BEI",
-})
+_NON_ORDERABLE_EXACT_NAMES = frozenset(
+	{
+		"Stores",
+		"Stores - BEI",
+		"Stores - BK",
+		"All Warehouses",
+		"All Warehouses - BEI",
+	}
+)
 
 
 def _is_orderable_store(warehouse_dict):
@@ -2133,9 +2167,7 @@ def get_user_store(surface: str | None = None):
 	# S136: Admin roles see ALL stores, but only if they're a "pure admin"
 	# (CEO, Director, no Employee record, etc.) — not a store employee with SM role.
 	_is_admin_role = (
-		"System Manager" in user_roles
-		or "HR Manager" in user_roles
-		or "Regional Manager" in user_roles
+		"System Manager" in user_roles or "HR Manager" in user_roles or "Regional Manager" in user_roles
 	)
 	_is_pure_admin = (
 		user == "Administrator"
@@ -2349,9 +2381,7 @@ def _resolve_group_auto_allocation(
 		member_code = member.get("item_code")
 		if not member_code:
 			continue
-		source_wh = (
-			_resolve_store_order_source_warehouse(store_warehouse, cargo_category) or store_warehouse
-		)
+		source_wh = _resolve_store_order_source_warehouse(store_warehouse, cargo_category) or store_warehouse
 		bin_qty = frappe.db.get_value(
 			"Bin",
 			{"warehouse": source_wh, "item_code": member_code},
@@ -2385,7 +2415,9 @@ def _resolve_group_auto_allocation(
 			{
 				"member_item_code": first.get("item_code"),
 				"source_warehouse": source_wh,
-				"qty_stock_uom": flt(qty_requested_display / conv, 6) if conv else flt(qty_requested_display, 6),
+				"qty_stock_uom": flt(qty_requested_display / conv, 6)
+				if conv
+				else flt(qty_requested_display, 6),
 				"qty_display": flt(qty_requested_display, 6),
 				"conversion_to_display": conv,
 				"stock_uom": first.get("stock_uom"),
@@ -2396,12 +2428,16 @@ def _resolve_group_auto_allocation(
 	fully_resolved = remaining_display <= 0.0001
 	if not fully_resolved:
 		# Park the unresolved remainder on the last allocated row so SCM sees it
-		rows[-1]["qty_stock_uom"] = flt(rows[-1]["qty_stock_uom"] + remaining_display / (rows[-1]["conversion_to_display"] or 1.0), 6)
+		rows[-1]["qty_stock_uom"] = flt(
+			rows[-1]["qty_stock_uom"] + remaining_display / (rows[-1]["conversion_to_display"] or 1.0), 6
+		)
 		rows[-1]["qty_display"] = flt(rows[-1]["qty_display"] + remaining_display, 6)
 	return rows, fully_resolved
 
 
-def _aggregate_store_item_groups(items: list[dict], groups_by_code: dict[str, dict], groups_by_member: dict[str, dict]) -> list[dict]:
+def _aggregate_store_item_groups(
+	items: list[dict], groups_by_code: dict[str, dict], groups_by_member: dict[str, dict]
+) -> list[dict]:
 	"""S163: Replace member rows with virtual group rows summing stock + demand.
 
 	Non-grouped items pass through unchanged. For each active group, we create
@@ -2535,7 +2571,9 @@ def get_orderable_items(store: str, date: str | None = None, include_hidden: int
 	_has_store_orderable = _item_meta.has_field("custom_store_orderable")
 
 	_category_col = "COALESCE(i.custom_store_category, 'Other')" if _has_store_category else "'Other'"
-	_uom_col = "COALESCE(i.custom_store_ordering_uom, i.stock_uom)" if _has_store_ordering_uom else "i.stock_uom"
+	_uom_col = (
+		"COALESCE(i.custom_store_ordering_uom, i.stock_uom)" if _has_store_ordering_uom else "i.stock_uom"
+	)
 
 	items = frappe.db.sql(
 		f"""
@@ -2619,12 +2657,11 @@ def get_orderable_items(store: str, date: str | None = None, include_hidden: int
 	stock_map = source_stock_context["stock_map"]
 	source_item_exists = source_stock_context.get("source_item_exists", set())
 
-
-
 	# S161/W4B: Batch-fetch UOM conversion factors for items with store_ordering_uom != stock_uom.
 	uom_cf_map = {}  # {(item_code, uom): conversion_factor}
 	items_needing_cf = [
-		row.name for row in items
+		row.name
+		for row in items
 		if row.get("store_ordering_uom") and row.get("store_ordering_uom") != row.get("stock_uom")
 	]
 	if items_needing_cf:
@@ -2669,9 +2706,13 @@ def get_orderable_items(store: str, date: str | None = None, include_hidden: int
 			# If deliveries are weekly, store needs 7 days of stock, not 1 day.
 			cargo = _lane_to_cargo_category(lane)
 			if cargo == "FC":
-				coverage_window_days = store_deliveries.get("cold_interval") or store_deliveries.get("days_to_cold") or 2
+				coverage_window_days = (
+					store_deliveries.get("cold_interval") or store_deliveries.get("days_to_cold") or 2
+				)
 			else:
-				coverage_window_days = store_deliveries.get("dry_interval") or store_deliveries.get("days_to_dry") or 3
+				coverage_window_days = (
+					store_deliveries.get("dry_interval") or store_deliveries.get("days_to_dry") or 3
+				)
 
 		projected_sales = flt(snapshot.get("projected_sales"), 2)
 		bom_consumption = flt(snapshot.get("bom_consumption"), 2)
@@ -2716,7 +2757,13 @@ def get_orderable_items(store: str, date: str | None = None, include_hidden: int
 		item["uom"] = item.get("stock_uom")
 		item["source_warehouse"] = source_warehouse
 		# S136/B5: Short name for display (strip company suffix).
-		item["source_warehouse_short"] = (source_warehouse or "").replace(" - Bebang Enterprise Inc.", "").replace(" - BEI", "").replace(" - BKI", "").strip()
+		item["source_warehouse_short"] = (
+			(source_warehouse or "")
+			.replace(" - Bebang Enterprise Inc.", "")
+			.replace(" - BEI", "")
+			.replace(" - BKI", "")
+			.strip()
+		)
 		item["store_actual_qty"] = store_actual
 		item["last_order_qty"] = last_order_qty
 		item["available_stock"] = effective_atp if effective_atp >= 0 else 0
@@ -2760,8 +2807,16 @@ def get_orderable_items(store: str, date: str | None = None, include_hidden: int
 		if store_uom and store_uom != stock_uom:
 			cf = flt(uom_cf_map.get((item_code, store_uom), 0))
 			if cf > 0:
-				item["available_to_promise"] = flt(flt(item["available_to_promise"]) * cf, 2) if flt(item["available_to_promise"]) > 0 else item["available_to_promise"]
-				item["available_stock"] = flt(flt(item["available_stock"]) * cf, 2) if flt(item["available_stock"]) > 0 else item["available_stock"]
+				item["available_to_promise"] = (
+					flt(flt(item["available_to_promise"]) * cf, 2)
+					if flt(item["available_to_promise"]) > 0
+					else item["available_to_promise"]
+				)
+				item["available_stock"] = (
+					flt(flt(item["available_stock"]) * cf, 2)
+					if flt(item["available_stock"]) > 0
+					else item["available_stock"]
+				)
 				item["store_actual_qty"] = flt(flt(item["store_actual_qty"]) * cf, 2)
 				item["suggested_qty"] = _round_suggested_qty(flt(item["suggested_qty"]) * cf, store_uom)
 				item["recommended_qty"] = _round_suggested_qty(flt(item["recommended_qty"]) * cf, store_uom)
@@ -2778,7 +2833,9 @@ def get_orderable_items(store: str, date: str | None = None, include_hidden: int
 		# "critical" above actual high-demand ingredients like Frozen Milk.
 		has_signal = avg_daily_demand > 0 or flt(item.get("order_count", 0)) > 0
 		if has_signal:
-			urgency_score = 30 if store_actual <= 0 else (20 if flt(item.get("suggested_qty")) > store_actual else 0)
+			urgency_score = (
+				30 if store_actual <= 0 else (20 if flt(item.get("suggested_qty")) > store_actual else 0)
+			)
 		else:
 			urgency_score = 0
 		source_alert_score = 10 if (effective_atp == 0 and demand_score >= 20) else 0
@@ -2817,12 +2874,14 @@ def get_orderable_items(store: str, date: str | None = None, include_hidden: int
 		# Keep visible if any of: source has stock, store has stock, recent order,
 		# has demand signal, or has order history. Only hide truly dead items.
 		store_on_hand = flt(item.get("store_actual_qty", 0))
-		if (source_atp > 0
+		if (
+			source_atp > 0
 			or source_atp < 0
 			or store_on_hand > 0
 			or (last_ordered and str(last_ordered) >= str(cutoff_date))
 			or flt(item.get("avg_daily_demand")) > 0
-			or flt(item.get("order_count", 0)) > 0):
+			or flt(item.get("order_count", 0)) > 0
+		):
 			visible_items.append(item)
 		else:
 			item["_hidden"] = 1
@@ -3031,9 +3090,7 @@ def submit_order(
 	# S190: Resolve warehouse → Company and stamp on order
 	order_company = resolve_warehouse_company(warehouse)
 	if not order_company:
-		frappe.throw(
-			_("Store warehouse {0} has no Company set. Contact admin.").format(warehouse)
-		)
+		frappe.throw(_("Store warehouse {0} has no Company set. Contact admin.").format(warehouse))
 
 	if isinstance(items, str):
 		items = json.loads(items)
@@ -3138,7 +3195,9 @@ def submit_order(
 			)
 			if not allocations:
 				frappe.throw(
-					_("Group {0} has no members configured. Please configure members or remove the group.").format(item_code)
+					_(
+						"Group {0} has no members configured. Please configure members or remove the group."
+					).format(item_code)
 				)
 
 			resolution_status = "Auto" if fully_resolved else "Pending"
@@ -3230,9 +3289,7 @@ def submit_order(
 					)
 					queue_status = "created" if assigned else "failed"
 					if not assigned:
-						warning = (
-							f"Order {order.name} created, but first approver assignment failed."
-						)
+						warning = f"Order {order.name} created, but first approver assignment failed."
 				else:
 					queue_status = "unmapped"
 					warning = "Emergency order created but no approvers found for triple chain."
@@ -3376,20 +3433,40 @@ def approve_order(order_name: str, approved_quantities: list | str | None = None
 	is_fallback_override = bool(
 		fallback_approver and user == fallback_approver and assigned_approver and assigned_approver != user
 	)
+	# S204-followup: Warehouse Manager delegation at dual-approval stage 2.
+	# The ToDo is routed to WAREHOUSE_MANAGER_EMAIL (ian@bebang.ph) but the
+	# action is intended to be performable by ANY Warehouse Manager role
+	# holder. Without this, one person's absence stalls every stage-2
+	# order until a System Manager intervenes. Matches the frontend RBAC
+	# widened by bei-tasks#418.
+	user_roles_snapshot = set(frappe.get_roles(user))
+	is_stage2_warehouse_manager_delegate = (
+		str(getattr(order, "approval_stage", "") or "") == "Pending Warehouse Manager"
+		and "Warehouse Manager" in user_roles_snapshot
+	)
 	if assigned_approver:
-		if assigned_approver != user and not is_system_user and not is_fallback_override:
+		if (
+			assigned_approver != user
+			and not is_system_user
+			and not is_fallback_override
+			and not is_stage2_warehouse_manager_delegate
+		):
 			frappe.throw(
 				_("Order {0} is currently assigned to {1}.").format(order_name, assigned_approver),
 				frappe.PermissionError,
 			)
 	else:
-		user_roles = set(frappe.get_roles(user))
 		allowed_roles = {AREA_SUPERVISOR_ROLE}.union(SYSTEM_APPROVER_ROLES)
 		is_fallback_user = bool(fallback_approver and user == fallback_approver)
-		if not user_roles.intersection(allowed_roles) and not is_fallback_user:
+		if (
+			not user_roles_snapshot.intersection(allowed_roles)
+			and not is_fallback_user
+			and not is_stage2_warehouse_manager_delegate
+		):
 			frappe.throw(
 				_(
-					"Only assigned approvers, Area Supervisors, fallback approvers, or System Managers can approve."
+					"Only assigned approvers, Area Supervisors, fallback approvers, "
+					"Warehouse Managers (at stage 2), or System Managers can approve."
 				),
 				frappe.PermissionError,
 			)
@@ -3456,6 +3533,17 @@ def approve_order(order_name: str, approved_quantities: list | str | None = None
 			_("Fallback approval applied by {0}; original assigned approver was {1}.").format(
 				user, assigned_approver
 			),
+		)
+
+	# S204-followup: audit trail when a Warehouse Manager delegate (not the
+	# ToDo assignee) approves stage 2. Keeps the delegation visible in the
+	# order timeline so later reviewers can see who actually acted.
+	if is_stage2_warehouse_manager_delegate and assigned_approver and assigned_approver != user:
+		_append_order_comment(
+			order_name,
+			_(
+				"Warehouse Manager delegation: {0} approved stage 2 (original assigned approver was {1})."
+			).format(user, assigned_approver),
 		)
 
 	# S093: Dual approval workflow
@@ -3639,7 +3727,9 @@ def resolve_group_order_item(
 	if not group_members:
 		frappe.throw(_("Group {0} has no members defined.").format(group_code))
 	member_set = {m["item_code"] for m in group_members}
-	conv_by_member = {m["item_code"]: flt(m.get("conversion_to_display") or 1.0) or 1.0 for m in group_members}
+	conv_by_member = {
+		m["item_code"]: flt(m.get("conversion_to_display") or 1.0) or 1.0 for m in group_members
+	}
 	stock_uom_by_member = {m["item_code"]: m.get("stock_uom") for m in group_members}
 
 	# Validate input lines
@@ -3651,9 +3741,7 @@ def resolve_group_order_item(
 		if not member_item:
 			frappe.throw(_("Resolution line missing member_item"))
 		if member_item not in member_set:
-			frappe.throw(
-				_("Member {0} is not part of group {1}").format(member_item, group_code)
-			)
+			frappe.throw(_("Member {0} is not part of group {1}").format(member_item, group_code))
 		if not source_wh:
 			frappe.throw(_("Resolution line missing source_warehouse for {0}").format(member_item))
 		if qty < 0:
@@ -3677,9 +3765,7 @@ def resolve_group_order_item(
 		total_display += qty
 
 	if abs(total_display - qty_target) > 0.001:
-		frappe.throw(
-			_("Total {0} does not match required target {1}").format(total_display, qty_target)
-		)
+		frappe.throw(_("Total {0} does not match required target {1}").format(total_display, qty_target))
 
 	# Multi-row swap: remove existing siblings, append new rows
 	order.items = [r for r in order.items if cint(r.group_order_seq or 0) != seq]
@@ -3763,7 +3849,9 @@ def _create_mr_for_store_order(order):
 		buyer_entity_row = resolve_store_buyer_entity(warehouse_docname=store_warehouse)
 		source_company = resolve_warehouse_company(source_warehouse) or get_company()
 		# S190: Read company from order (set at submit time) instead of guessing
-		operational_target_company = getattr(order, "company", None) or resolve_warehouse_company(store_warehouse) or get_company()
+		operational_target_company = (
+			getattr(order, "company", None) or resolve_warehouse_company(store_warehouse) or get_company()
+		)
 		billing_target_company = (
 			str(buyer_entity_row.get("buyer_entity_name") or "").strip()
 			or operational_target_company
@@ -6687,6 +6775,7 @@ def get_store_stock(store: str = "", include_zero_stock: int = 0) -> dict:
 	this endpoint can view the stock of their own store.
 	"""
 	from hrms.utils.sentry import set_backend_observability_context
+
 	set_backend_observability_context(
 		module="store-ops",
 		action="get_store_stock",
@@ -6694,7 +6783,7 @@ def get_store_stock(store: str = "", include_zero_stock: int = 0) -> dict:
 	)
 
 	if not store:
-		user_store = _get_user_store()
+		user_store = get_user_store()
 		store = user_store.get("default_store") if user_store else ""
 	if not store:
 		return {"items": []}
@@ -6740,6 +6829,7 @@ def get_store_stock(store: str = "", include_zero_stock: int = 0) -> dict:
 def get_store_order_history(store: str = "", limit: int = 20, offset: int = 0) -> dict:
 	"""Return past BEI Store Orders for a store, newest first."""
 	from hrms.utils.sentry import set_backend_observability_context
+
 	set_backend_observability_context(
 		module="store-ops",
 		action="get_store_order_history",
@@ -6747,7 +6837,7 @@ def get_store_order_history(store: str = "", limit: int = 20, offset: int = 0) -
 	)
 
 	if not store:
-		user_store = _get_user_store()
+		user_store = get_user_store()
 		store = user_store.get("default_store") if user_store else ""
 	if not store:
 		return {"orders": []}
@@ -6758,8 +6848,7 @@ def get_store_order_history(store: str = "", limit: int = 20, offset: int = 0) -
 	orders = frappe.db.get_all(
 		"BEI Store Order",
 		filters={"store": store},
-		fields=["name", "creation as order_date", "status", "cargo_category",
-				"owner as submitted_by"],
+		fields=["name", "creation as order_date", "status", "cargo_category", "owner as submitted_by"],
 		order_by="creation desc",
 		start=offset,
 		page_length=limit,
@@ -6776,7 +6865,9 @@ def get_store_order_history(store: str = "", limit: int = 20, offset: int = 0) -
 		order["total_qty"] = sum(i.get("qty", 0) for i in items)
 		# Clean up submitted_by to show full name
 		if order.get("submitted_by"):
-			order["submitted_by"] = frappe.db.get_value("User", order["submitted_by"], "full_name") or order["submitted_by"]
+			order["submitted_by"] = (
+				frappe.db.get_value("User", order["submitted_by"], "full_name") or order["submitted_by"]
+			)
 
 	return {"orders": orders}
 
@@ -6803,6 +6894,7 @@ def verify_maintenance_from_closing(
 # ---------------------------------------------------------------------------
 # S154/S2: Delivery Schedule Management APIs
 # ---------------------------------------------------------------------------
+
 
 @frappe.whitelist()
 def get_weekly_schedule(
@@ -6852,13 +6944,15 @@ def get_weekly_schedule(
 
 		entries = []
 		for entry in doc.entries or []:
-			entries.append({
-				"name": entry.name,
-				"store": entry.store,
-				"day_of_week": entry.day_of_week,
-				"delivery_type": entry.delivery_type,
-				"route_name": entry.route_name,
-			})
+			entries.append(
+				{
+					"name": entry.name,
+					"store": entry.store,
+					"day_of_week": entry.day_of_week,
+					"delivery_type": entry.delivery_type,
+					"route_name": entry.route_name,
+				}
+			)
 
 	# Filter by warehouse parent or cluster if requested
 	if warehouse_filter:
@@ -6976,11 +7070,14 @@ def toggle_delivery(store: str, week_start: str, day: str, delivery_type: str) -
 		action = "removed"
 	else:
 		# Add (toggle on)
-		doc.append("entries", {
-			"store": store,
-			"day_of_week": day,
-			"delivery_type": delivery_type,
-		})
+		doc.append(
+			"entries",
+			{
+				"store": store,
+				"day_of_week": day,
+				"delivery_type": delivery_type,
+			},
+		)
 		action = "added"
 
 	doc.save(ignore_permissions=True)
@@ -7041,12 +7138,15 @@ def copy_week(source_week: str, target_week: str) -> dict:
 		target_doc.published = 1  # S159: schedules are live immediately
 
 		for entry in source_doc.entries or []:
-			target_doc.append("entries", {
-				"store": entry.store,
-				"day_of_week": entry.day_of_week,
-				"delivery_type": entry.delivery_type,
-				"route_name": entry.route_name,
-			})
+			target_doc.append(
+				"entries",
+				{
+					"store": entry.store,
+					"day_of_week": entry.day_of_week,
+					"delivery_type": entry.delivery_type,
+					"route_name": entry.route_name,
+				},
+			)
 
 		target_doc.save(ignore_permissions=True)
 		frappe.db.release_savepoint("copy_week")
@@ -7164,9 +7264,7 @@ def get_day_summary(date: str) -> dict:
 	)
 	if not week_name:
 		# Fallback: last available week (schedules are typically reused)
-		week_name = frappe.db.get_value(
-			"BEI Delivery Schedule Week", {}, "name", order_by="week_start desc"
-		)
+		week_name = frappe.db.get_value("BEI Delivery Schedule Week", {}, "name", order_by="week_start desc")
 
 	if not week_name:
 		return {"date": str(target), "day": day_abbr, "deliveries": [], "totals": {"COLD": 0, "DRY": 0}}
@@ -7215,9 +7313,7 @@ def get_store_schedule(store: str) -> dict:
 	schedule_source = "current"
 	if not week_name:
 		# Fallback: last available week (schedules are typically reused)
-		week_name = frappe.db.get_value(
-			"BEI Delivery Schedule Week", {}, "name", order_by="week_start desc"
-		)
+		week_name = frappe.db.get_value("BEI Delivery Schedule Week", {}, "name", order_by="week_start desc")
 		schedule_source = "fallback_last_week"
 
 	current_entries = []
@@ -7243,11 +7339,15 @@ def get_store_schedule(store: str) -> dict:
 			fields=["day_of_week", "delivery_type"],
 		)
 
-	wh_data = frappe.db.get_value(
-		"Warehouse", store_warehouse,
-		["name", "parent_warehouse", "custom_territory_cluster"],
-		as_dict=True,
-	) or {}
+	wh_data = (
+		frappe.db.get_value(
+			"Warehouse",
+			store_warehouse,
+			["name", "parent_warehouse", "custom_territory_cluster"],
+			as_dict=True,
+		)
+		or {}
+	)
 
 	return {
 		"store": store_warehouse,
@@ -7263,6 +7363,7 @@ def get_store_schedule(store: str) -> dict:
 # ---------------------------------------------------------------------------
 # S154/F11: SCM Order Review — qty_requested vs qty_dispatched
 # ---------------------------------------------------------------------------
+
 
 @frappe.whitelist()
 def get_orders_for_dispatch(
@@ -7301,8 +7402,14 @@ def get_orders_for_dispatch(
 		"BEI Store Order",
 		filters=filters,
 		fields=[
-			"name", "store", "order_date", "delivery_date", "cargo_category",
-			"status", "is_emergency", "is_bulk_order",
+			"name",
+			"store",
+			"order_date",
+			"delivery_date",
+			"cargo_category",
+			"status",
+			"is_emergency",
+			"is_bulk_order",
 		],
 		order_by="delivery_date desc, creation desc",
 		limit_page_length=100,
@@ -7319,11 +7426,20 @@ def get_orders_for_dispatch(
 			"BEI Store Order Item",
 			filters={"parent": order["name"]},
 			fields=[
-				"name", "item_code", "item_name", "uom",
-				"qty_requested", "qty_approved", "qty_dispatched",
+				"name",
+				"item_code",
+				"item_name",
+				"uom",
+				"qty_requested",
+				"qty_approved",
+				"qty_dispatched",
 				# S163: group resolution fields
-				"item_group_code", "group_order_seq", "group_resolution_status",
-				"group_qty_requested_total", "qty_in_store_uom", "store_uom",
+				"item_group_code",
+				"group_order_seq",
+				"group_resolution_status",
+				"group_qty_requested_total",
+				"qty_in_store_uom",
+				"store_uom",
 			],
 			order_by="idx asc",
 		)
@@ -7361,9 +7477,13 @@ def get_orders_for_dispatch(
 			grp: group_members_cache[grp]
 			for grp in {it.get("item_group_code") for it in order["items"] if it.get("item_group_code")}
 		}
-		order["store_short"] = (order.get("store") or "").replace(
-			" - Bebang Enterprise Inc.", ""
-		).replace(" - BEI", "").replace(" - BKI", "").strip()
+		order["store_short"] = (
+			(order.get("store") or "")
+			.replace(" - Bebang Enterprise Inc.", "")
+			.replace(" - BEI", "")
+			.replace(" - BKI", "")
+			.strip()
+		)
 
 	return orders
 
@@ -7500,9 +7620,7 @@ def _create_delivery_fee_billing_on_acceptance(receiving_doc):
 				as_dict=True,
 			)
 		trip_date = (
-			(trip_doc or {}).get("trip_date")
-			or getattr(receiving_doc, "acceptance_date", None)
-			or nowdate()
+			(trip_doc or {}).get("trip_date") or getattr(receiving_doc, "acceptance_date", None) or nowdate()
 		)
 		cargo_type = (trip_doc or {}).get("cargo_type") or None
 
@@ -7549,9 +7667,7 @@ def _create_delivery_fee_billing_on_acceptance(receiving_doc):
 
 		store_type = ""
 		try:
-			store_type = (
-				frappe.db.get_value("Department", store, "custom_store_type") or ""
-			)
+			store_type = frappe.db.get_value("Department", store, "custom_store_type") or ""
 		except Exception:
 			store_type = ""
 
@@ -7577,9 +7693,7 @@ def _create_delivery_fee_billing_on_acceptance(receiving_doc):
 		schedule.delivery_fee = delivery_fee
 		schedule.logistics_fee = logistics_fee
 		try:
-			schedule.billing_period = (
-				getdate(trip_date).strftime("%Y-%m") if trip_date else None
-			)
+			schedule.billing_period = getdate(trip_date).strftime("%Y-%m") if trip_date else None
 		except Exception:
 			pass
 		try:
@@ -7669,9 +7783,7 @@ def _submit_store_sale_invoice(receiving_doc):
 
 	draft_si_name = None
 	if _has_column("Stock Entry", "custom_sales_invoice_draft"):
-		draft_si_name = frappe.db.get_value(
-			"Stock Entry", fulfillment_se_name, "custom_sales_invoice_draft"
-		)
+		draft_si_name = frappe.db.get_value("Stock Entry", fulfillment_se_name, "custom_sales_invoice_draft")
 	if not draft_si_name and _has_column("Sales Invoice", "custom_stock_entry"):
 		draft_si_name = frappe.db.get_value(
 			"Sales Invoice",
