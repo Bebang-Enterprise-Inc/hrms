@@ -1,431 +1,437 @@
 ---
 sprint: S206
-title: Reliever Punch-Based Labor Allocation Engine
+title: Reliever Labor Cost-Sharing Engine (Paired JE, No VAT/EWT)
 branch: s206-reliever-allocation-engine
 base: production
 status: GO
+plan_version: v2
+plan_v1_reason_superseded: |
+  v1 used multi-company single JE (invalid in ERPNext) + Sales Invoice pattern would
+  trigger VAT/EWT per service-transaction treatment. Audit surfaced 10 architectural
+  blockers. Sam 2026-04-18 confirmed cost-sharing (no VAT/EWT) is the correct pattern
+  and paired JEs with Frappe native `inter_company_journal_entry_reference` is the
+  correct mechanism.
 planned_date: 2026-04-17
+revised_date: 2026-04-18
 planned_by: Claude (BEI-ERP)
 owner: Sam Karazi (CEO)
 depends_on: [S201]
 followed_by: []
-estimated_units: 52
+estimated_units: 54
 primary_repo: hrms
 touches_frontend: false
 l3_required: true
-hard_deadline: 2026-05-15  # first payroll cutoff where April mis-allocation is material
+hard_deadline: 2026-05-15
 completion_condition: |
-  - hrms/utils/punch_allocation.py shipped and unit-tested (shift-share per store)
-  - hrms/utils/labor_allocation.py shipped and unit-tested (JE generator per Salary Slip)
-  - hrms/api/labor_allocation.py::preview_monthly_allocation returns planned JEs for review
-  - hrms/api/labor_allocation.py::post_monthly_allocation commits JEs under savepoint (DM-2)
-  - All JEs satisfy DM-1 (party fields) + DM-6 (remarks, cost_center, reference)
-  - Inter-Company Due From/Due To account seeding patch runs dry-run default; S206_APPLY=1 to apply
-  - Sentry observability context on both whitelisted endpoints (DM-7)
-  - L3: April 2026 dry-run preview reviewed and posts cleanly for at least 3 store Companies
+  - docs/compliance/s206-transfer-pricing-policy.md exists and committed (MANDATORY)
+  - hrms/utils/device_store_bridge.py normalizes DEVICE_TO_STORE names to branch_company_map keys
+  - hrms/utils/punch_allocation.py uses correct Frappe fields (time, device_id — NOT event_time/device_sn)
+  - hrms/utils/labor_allocation.py produces PAIRED JEs via Frappe native inter_company_journal_entry_reference
+  - hrms/hr/doctype/bei_labor_allocation_log DocType for idempotency (unique on year+month+employee)
+  - hrms/api/labor_allocation.py preview + post with S206_APPLY=1 gate + Sentry context
+  - All JEs satisfy DM-1: party_type=Company on intercompany rows; party_type=Employee on Salaries rows
+  - All JEs satisfy DM-6: user_remark cites cost-sharing policy; reference fields; cost_center
+  - Intercompany account seeder is on_demand (NOT in patches.txt) — avoids dry-run-marked-DONE trap
+  - Production Apply Runbook documents `docker exec -e S206_APPLY=1` explicitly
+  - L3: April 2026 dry-run reviewed; apply posts paired JEs cleanly for 3+ store Companies
   - Plan YAML status -> COMPLETED and SPRINT_REGISTRY.md updated
 stop_only_for:
-  - Missing intercompany accounts that require Sam/Finance decision on COA structure
-  - Destructive bulk mutation requires Sam approval (always dry-run first)
-  - Punch data gap > 10% of an employee's payroll period (insufficient attendance data)
+  - Missing intercompany accounts on >10 Companies requires Sam/Finance COA decision
+  - Finance declines Transfer Pricing Policy signoff (Phase 0 HARD BLOCKER)
+  - Punch data gap > 10% of any employee's payroll period (insufficient basis)
+  - Destructive apply requires Sam approval (always dry-run first)
   - Merge conflict on production during rebase
 ---
 
-# Sprint S206 — Reliever Punch-Based Labor Allocation Engine
+# Sprint S206 v2 — Reliever Labor Cost-Sharing Engine
+
+## Audit response summary (v1 -> v2)
+
+v1 plan failed audit with 10 architectural CRITICAL blockers. v2 addresses all:
+
+| v1 blocker | v1 (wrong) | v2 (correct) |
+|---|---|---|
+| B1 multi-company single JE invalid | Home+covered rows in one JE | **Paired JEs** via `inter_company_journal_entry_reference` (Frappe native) |
+| B2 wrong party_type | Employee on all rows | Company on Due From/To; Employee on Salaries only |
+| B3 no idempotency | None | New `BEI Labor Allocation Log` DocType, unique on (year, month, employee) |
+| B4 missing TPD | None | `docs/compliance/s206-transfer-pricing-policy.md` drafted; Finance signoff gate |
+| B5 docker env not propagated | Assumed local shell | Production Apply Runbook with `docker exec -e S206_APPLY=1` |
+| B6 patches.txt dry-run trap | In patches.txt | **on_demand script**, always-apply semantics |
+| B7 device->branch mismatch | Assumed direct | New `hrms/utils/device_store_bridge.py` normalizes names |
+| B8 wrong Checkin fields | event_time, device_sn | **time, device_id** (actual Frappe fields) |
+| B9 wrong default-account API | `frappe.defaults.get_default` | Query `tabCompany.default_payroll_payable_account` / COA template |
+| B10 no BEI JE precedent | Invented new pattern | Mirror S175 intercompany accounts; paired-JE linking is Frappe native |
+
+**Tax savings via cost-sharing (not Sales Invoice):** ~PHP 1.35M/year in avoided VAT + EWT.
 
 ## Background
 
-**Trigger:** S201 Option X decided Employee.company stays on the legal employer. Per-store internal billing must flow via monthly inter-Company labor cost reclassification. S206 delivers that engine.
+S201 Option X kept `Employee.company` on the legal employer. Per-store internal billing must flow via monthly inter-Company **cost-sharing reclassification** (NOT service transaction — see TP policy).
 
-**Why this matters:**
-- Without S206, per-store P&L is fiction — all labor cost sits on BEI parent and per-store Companies show zero labor.
-- Relievers (employees who cover multiple stores) need fair attribution to the store that actually consumed their hours.
-- Data starts April 01, 2026. Hard deadline: **May 15, 2026** (first half-month payroll cutoff where April allocation becomes material).
+Without S206, per-store P&L is fiction. Relievers who cover multiple stores need fair attribution. Data starts 2026-04-01. Deadline **2026-05-15** (first half-month cutoff where April becomes material).
 
-**Link to S201:**
-- `hrms/utils/company_lookup.py` — branch → Company resolver (used to map punches to store Companies)
-- `hrms/utils/non_store_billing.py` — classifier (used to skip roving/AS/HO/SCM/R&D employees whose cost stays on BEI parent)
-- `hrms/data_seed/branch_company_map.csv` — branch ↔ Company mapping (already applied to tabEmployee)
-- Employee.company = legal employer (UNTOUCHED, stable for statutory filings)
-
-## Architecture Summary
-
-Every month (or on-demand):
-
-1. **Find in-scope Salary Slips** — period ends in the target month, status = Submitted, employee NOT is_non_store_billing.
-2. **For each slip:**
-   a. Query `tabEmployee Checkin` for punches in the slip's period.
-   b. Map device_sn → store Company via `DEVICE_TO_STORE` + `company_lookup`.
-   c. Compute shift-share (or hour-share) per store.
-   d. If all punches at home store (= employee.company) → skip (no JE needed).
-   e. Else: build JE line per covered-store, prorated labor cost:
-      - DR `Salaries Expense - <covered-store>` × share, party=employee as Supplier-like
-      - CR `Salaries Expense - <home-store>` × share
-      - DR/CR "Due From / Due To" inter-Company control accounts (per S175 COA template)
-3. **Group JEs** by (home_company, posting_date) into a single Journal Entry with multiple pairs.
-4. **Preview mode:** return planned JEs as JSON for review, no DB writes.
-5. **Apply mode:** `S206_APPLY=1` + whitelisted function call → savepoint wrap → insert + submit JEs → commit.
-
-## Locked Decisions (from S201 pivot + Sam 2026-04-17)
+## Locked Decisions
 
 | ID | Decision | Source |
 |---|---|---|
-| LD-1 | Employee.company NOT touched by S206 (stable for SSS/BIR/HDMF) | S201 Option X |
-| LD-2 | Allocation is internal-only (reclassification JE within group books, no cash movement) | Sam B2 |
-| LD-3 | Non-store billers (roving/AS/RM/IT/Marketing/Finance/HR/Legal/Admin/Exec/R&D/BD/SCM) stay on BEI parent — no allocation runs for them | S201 LD-2 |
-| LD-4 | Commissary employees (dept=Commissary on SHAW COMMISSARY - PRODUCTION) stay on BKI — no allocation runs for them | S201 LD-3 |
-| LD-5 | Data starts April 01, 2026 — no retro before that | S201 LD-6 |
-| LD-6 | Deadline May 15, 2026 cutoff | S201 B15 |
-| LD-7 | Default runtime = preview (dry-run); apply requires `S206_APPLY=1` | S201 patch pattern |
-| LD-8 | Shift-share unit = counted IN/OUT pairs; hour-share (end-start) is optional v2 refinement if pairs are unreliable | Proposed — confirm during L3 |
+| LD-1 | Employee.company NOT touched by S206 | S201 Option X |
+| LD-2 | Internal cost allocation (NOT service). Zero VAT, zero EWT. | Sam 2026-04-18 |
+| LD-3 | Paired JEs via Frappe native inter_company_journal_entry_reference | Sam 2026-04-18 |
+| LD-4 | TP Policy drafted by Claude, Finance (Denise) signs off | Sam 2026-04-18 |
+| LD-5 | Non-store billers (roving/AS/RM/HO/Commissary producers) excluded | S201 LD-2/LD-3 |
+| LD-6 | Data starts 2026-04-01; no retro before | S201 LD-6 |
+| LD-7 | Deadline 2026-05-15 | S201 B15 |
+| LD-8 | Allocation unit = shift-share (IN/OUT pair counts) | Plan default |
+| LD-9 | Apply gated by docker exec -e S206_APPLY=1 documented in runbook | Audit B5 |
+| LD-10 | Intercompany balance settlement = quarterly non-cash JE (no EWT trigger) | TP policy S5.2 |
 
 ## Requirements Regression Checklist
 
-Before declaring COMPLETED, the executing agent MUST answer YES to each:
+Before COMPLETED, executing agent MUST answer YES:
 
-- [ ] Every generated JE has `party` + `party_type` on receivable/payable rows (DM-1)?
-- [ ] Every JE creation is wrapped in `frappe.db.savepoint()` with rollback on partial failure (DM-2)?
-- [ ] Every JE has `user_remark` citing source Salary Slip + period (DM-6)?
-- [ ] Every JE row has `cost_center` set to the target store's cost center (DM-6)?
-- [ ] Every new `@frappe.whitelist()` function calls `set_backend_observability_context()` (DM-7)?
-- [ ] Allocation skips employees where `is_non_store_billing()` returns True?
-- [ ] Allocation skips Commissary-dept employees on SHAW COMMISSARY - PRODUCTION branch (they stay on BKI)?
-- [ ] If an employee has zero punches for the period, allocation is skipped and logged (not error)?
-- [ ] If all punches are at home store, no JE is generated (shortcut)?
-- [ ] Apply mode uses direct SQL UPDATE on Salary Slip reference field OR inserts JE with reference to slip (audit trail)?
-- [ ] `S206_APPLY=1` is required for actual posting (dry-run is default)?
-- [ ] Plan YAML `status: COMPLETED` and SPRINT_REGISTRY.md row updated (S092 closeout rule)?
+- [ ] `docs/compliance/s206-transfer-pricing-policy.md` exists, committed?
+- [ ] TP Policy signed off by Finance (signature section filled) before first apply?
+- [ ] Every JE pair uses `voucher_type='Inter Company Journal Entry'` + `inter_company_journal_entry_reference`?
+- [ ] `party_type='Company'` + `party=<counterparty>` on Due From/To rows (DM-1)?
+- [ ] `party_type='Employee'` + `party=slip.employee` on Salaries rows (DM-1)?
+- [ ] Each JE's `user_remark` cites S206 cost-sharing + slip + period + share (DM-6)?
+- [ ] Each row has `cost_center` set to Company default (DM-6)?
+- [ ] Each JE has `reference_type='Salary Slip'` + `reference_name` (DM-6)?
+- [ ] Every `@frappe.whitelist()` calls `set_backend_observability_context()` (DM-7)?
+- [ ] `BEI Labor Allocation Log` per (year, month, employee) — re-run = 0 new JEs?
+- [ ] `is_non_store_billing` employees skipped?
+- [ ] Commissary producers (dept=Commissary + branch=SHAW COMMISSARY - PRODUCTION) skipped?
+- [ ] Zero-punches / all-home-store / zero-gross employees skipped (logged, not errored)?
+- [ ] Per-slip savepoint — one bad slip doesn't kill the batch (DM-2)?
+- [ ] Query uses `tabEmployee Checkin.time` + `device_id` (NOT event_time/device_sn)?
+- [ ] `device_store_bridge` resolves every DEVICE_TO_STORE value to a valid Company?
+- [ ] Production Apply Runbook present with `docker exec -e S206_APPLY=1` syntax?
+- [ ] Intercompany account seeder is `on_demand`, NOT in patches.txt?
+- [ ] Plan YAML status=COMPLETED and SPRINT_REGISTRY.md row updated?
 
-## Design Rationale (For Cold-Start Agents)
+## Design Rationale (Cold-Start)
 
-### Why monthly JE instead of per-slip?
+### Why cost-sharing JE, not Sales Invoice?
 
-Grouping all slips of a period into one JE per (home_company, period) reduces JE count (49 stores × 1 period = max 49 JEs vs 500+ slips × 49 stores = thousands of JEs). This matches how finance teams process month-end adjustments.
+- **SI** triggers Section 108 NIRC Output VAT (12%) + Input VAT + EWT 2% (RR 2-98). For ~PHP 810K/month reliever load = ~PHP 1.35M/year avoidable tax.
+- **Cost-sharing JE** per BIR RR 2-2013 Section 4(B): cost recharge at-cost = NOT a service. Zero-margin recharge between commonly-controlled entities is explicitly permitted. No VAT. No EWT.
+- Per-store P&L reflects consumed labor. Books stay clean.
 
-### Why shift-share (counted punch pairs), not hour-share?
+Source: `docs/compliance/s206-transfer-pricing-policy.md` Sections 2 + 6.
 
-- **Shift-share**: count IN/OUT pairs; each valid pair = one shift; share = store_shifts / total_shifts.
-- **Hour-share**: sum (OUT - IN) hours per store; share = store_hours / total_hours.
+### Why paired JEs via Frappe native intercompany linking?
 
-Shift-share is simpler and robust to missing punches (common per S043). Hour-share is "more accurate" but fails catastrophically when punches are missed. BEI already ran into this in S043 auto-attendance work. **Default: shift-share.** Hour-share is v2 refinement.
+- ERPNext Journal Entry has single `company` field — one JE books to one Company's books.
+- Frappe has built-in support: `voucher_type='Inter Company Journal Entry'` + `inter_company_journal_entry_reference` cross-links two JEs.
+- Both JEs auto-validate matching Due From/Due To accounts. No invented pattern.
 
-### Why not touch Employee.company?
+### Why BEI Labor Allocation Log DocType for idempotency?
 
-S201 Option X is the core architectural decision: legal employer stays stable for PH statutory compliance (single employer per SSS/PhilHealth/HDMF/BIR 2316 period). Internal billing flows via reclassification JE. See `output/plan-audit/s201/verified_blockers.md` for the full audit trail.
+- v1 had no duplicate-JE guard. Second call = double-booked costs.
+- Options considered:
+  - Salary Slip custom field — ties idempotency to Slip, messy on Slip amendment.
+  - SQL unique constraint on JE user_remark — fragile string match.
+  - **BEI Labor Allocation Log** ✓ — clean, queryable, standard Frappe.
+- Unique constraint on (year, month, employee).
 
-### Why inter-Company Due From / Due To accounts?
+### Why on_demand script (not patches.txt)?
 
-BEI's group structure has 49 store Companies + BEI parent + BKI commissary + 5 holding Companies. When labor cost shifts from Company A to Company B, the JE must balance across both books using standard intercompany accounts:
+- `patches.txt` runs patches ONCE per environment. A dry-run patch on first `bench migrate` gets marked DONE in `__PatchLog`, NEVER re-runs. Apply is unreachable.
+- On-demand scripts live in `hrms/on_demand/` and run only when explicitly invoked: `bench execute hrms.on_demand.<module>.execute`.
+- Always-apply semantics (no dry-run gate needed — invoker decides).
 
-- Company A (home, legal employer): CR `Salaries Expense` + DR `Due From Company B` → Company A now has a receivable from B for the reclassified labor.
-- Company B (covered store): DR `Salaries Expense` + CR `Due To Company A` → Company B now has a payable to A for the labor they consumed.
+### Why `docker exec -e` runbook?
 
-S175 created a master COA with `2104200 DUE TO BFC` and `1104200 DUE FROM BEI` for specific pairs. We may need to seed a generic "Due To/From Group Entities" per Company.
+- S201 had same gap. `S206_APPLY=1 bench ...` run from host shell doesn't propagate env into the container process.
+- Explicit `docker exec -e S206_APPLY=1 $CONTAINER bench ...` is mandatory on production.
 
-### Why preview + apply separation?
+### Known limitations (cold-start must know)
 
-Finance never wants an automated bot posting JEs without review. The preview mode lets Finance (or Sam) review the planned allocation BEFORE committing. Default is always dry-run. Apply is gated by `S206_APPLY=1` env var.
+- **Punch gaps:** <90% complete punches → allocation SKIPPED + logged. Finance handles manually.
+- **Amended Slips:** post-allocation amendments leave JEs as-is. Manual reversal (v2 enhancement deferred to S207).
+- **Part-time employees:** shift-share counts IN/OUT pairs equally regardless of shift length. Acceptable for BEI (~80% full-time).
 
-### Known limitations
+## Phase 0 — Preflight + TP Policy (8u)
 
-- Does not handle retro edits to Salary Slip (if a slip is amended post-allocation, the allocation JE should be reversed + regenerated — v2).
-- Does not handle part-time or multi-employer edge cases (rare in BEI).
-- Assumes DEVICE_TO_STORE mapping is current (maintained manually in `hrms/utils/device_mapping.py`).
+- [ ] P0-T1 **CONFIRM TP Policy** at `docs/compliance/s206-transfer-pricing-policy.md`. Drafted in same commit as v2 plan revision. Finance signs off (Sam + Denise signatures) BEFORE first `post_monthly_allocation` apply. HARD BLOCKER.
+  - MUST_MODIFY: `docs/compliance/s206-transfer-pricing-policy.md`
+  - MUST_CONTAIN: `Zero-margin`, `RR 2-2013`, `cost-sharing arrangement`, `No VAT`, `No EWT`
 
-## Ground-Truth Lock
+- [ ] P0-T2 **Company COA audit** — query live Frappe for each store Company + BEI parent + BKI. For each: verify `Salaries Expense` account + `Due From Group Entities - <abbr>` + `Due To Group Entities - <abbr>` + default `cost_center`. Output to `output/s206/diagnostics/company_coa_audit_<timestamp>.json`.
+  - MUST_MODIFY: `output/s206/diagnostics/company_coa_audit_*.json`
+  - MUST_CONTAIN: entries for all 49 store Companies + parent + BKI
 
-- **Evidence sources:**
-  - `hrms/utils/company_lookup.py` → store prefix → Company resolver
-  - `hrms/utils/non_store_billing.py` → HO/roving classifier
-  - `hrms/utils/device_mapping.py` → DEVICE_TO_STORE dict (48 devices)
-  - `hrms/data_seed/branch_company_map.csv` → branch taxonomy
-  - `tabEmployee Checkin` → ADMS punch records (pin, device_id, event_time, log_type)
-  - `tabSalary Slip` → payroll cost basis
-  - `tabCompany` → 49 store Companies + parents
-- **Count method:**
-  - metric: shifts per store per employee per period
-  - basis: IN/OUT pair count from tabEmployee Checkin grouped by device→store
-  - method: SQL aggregate over `status='Submitted' AND employee=X AND start_date<=event_time<=end_date`
-- **Authoritative sections:** Phase 0-6 are execution source of truth. Amendment history is traceability.
-- **Unresolved value policy:** `[UNVERIFIED — requires resolution]` for any Company/account path not found in live Frappe.
+- [ ] P0-T3 **Gap report** — missing accounts flagged to `output/s206/diagnostics/MISSING_ACCOUNTS.md`. If >10 Companies have gaps → HARD BLOCKER.
 
-## Phase 0 — Preflight & Account Audit (6u)
+## Phase 1 — device_store_bridge + punch_allocation (12u)
 
-Goal: confirm every store Company has the required accounts for JE posting.
+- [ ] P1-T1 **device_store_bridge.py** — new file:
+  - `DEVICE_STORE_BRIDGE: dict[str, str]` — normalizes DEVICE_TO_STORE values to branch_company_map keys.
+  - e.g. `'BGC CAPITAL HOUSE' -> 'CAPITAL HOUSE'`, `'GREENHILLS' -> 'ORTIGAS GREENHILLS'`.
+  - `resolve_device_company(device_sn) -> str` wraps DEVICE_TO_STORE + bridge + `resolve_branch_to_company`. Raises `UnknownDeviceCompany` on miss.
+  - MUST_MODIFY: `hrms/utils/device_store_bridge.py`
+  - MUST_CONTAIN: `DEVICE_STORE_BRIDGE`, `resolve_device_company`, `UnknownDeviceCompany`
 
-- [ ] P0-T1 Query live Frappe for each store Company's COA — confirm presence of:
-  - `Salaries Expense` (or equivalent — use `frappe.defaults.get_default("default_salary_expense_account")` per Company)
-  - `Due From Group Entities` (or equivalent intercompany receivable)
-  - `Due To Group Entities` (or equivalent intercompany payable)
-  - Default cost center
-- [ ] P0-T2 Dump audit results to `output/s206/diagnostics/company_coa_audit.json` with columns `company | salaries_expense_account | due_from_account | due_to_account | default_cost_center | status`.
-- [ ] P0-T3 If any Company lacks the required accounts, log gaps to `output/s206/diagnostics/MISSING_ACCOUNTS.md` and create Phase 0.5 remediation (patch or manual seed via Sam).
+- [ ] P1-T2 **punch_allocation.py** — new file:
+  - `compute_shift_share(employee, start_date, end_date) -> dict[str, float]` returns normalized `{company: share}`.
+  - `_pair_punches(checkins)` pairs IN with next OUT per device.
+  - **SQL uses correct fields:** `tabEmployee Checkin.time`, `device_id`, `log_type`, `employee`.
+  - Edge cases: zero punches -> `{}`; all-at-one -> `{company: 1.0}`; orphan IN -> 0.5 shift; unknown device -> skip + log.
+  - MUST_MODIFY: `hrms/utils/punch_allocation.py`
+  - MUST_CONTAIN: `compute_shift_share`, `tabEmployee Checkin`, `time`, `device_id`, `log_type`, `resolve_device_company`
 
-**HARD BLOCKER:** If >10 store Companies lack required accounts, STOP and request Finance intervention. Do NOT proceed to code phases with unresolvable accounts.
+- [ ] P1-T3 **Tests** `hrms/tests/test_s206_punch_allocation.py` — 6+ tests covering bridge, shift-share math, edge cases.
+  - MUST_MODIFY: `hrms/tests/test_s206_punch_allocation.py`
 
-MUST_MODIFY: `output/s206/diagnostics/company_coa_audit.json` (created)
-MUST_CONTAIN: `output/s206/diagnostics/company_coa_audit.json` → entries for all 49 store Companies
+## Phase 2 — labor_allocation.py paired-JE generator (14u)
 
-## Phase 1 — `punch_allocation.py` (10u)
+- [ ] P2-T1 **labor_allocation.py** — new file:
+  - `allocate_slip(slip_name, dry_run=True) -> dict`
+  - `_skip_reason(slip_doc) -> str | None` (non_store_billing / commissary_producer / no_punches / all_home / zero_gross / already_allocated)
+  - `_build_paired_jes(slip, shares, home, covered, amount) -> tuple[dict, dict]` — constructs two JE dicts.
+  - `_insert_and_link(home_dict, covered_dict) -> tuple[str, str]` — inserts both, sets `inter_company_journal_entry_reference` cross-link, submits both.
 
-Goal: compute per-employee shift-share across stores for a given period.
+- [ ] P2-T2 **Paired JE rules (STRICT DM-1/DM-6):**
+  - **Home JE:** `voucher_type='Inter Company Journal Entry'`, `company=<home>`. Rows:
+    - CR `Salaries Expense - <home>`, `party_type='Employee'`, `party=slip.employee`, `cost_center=<home default>`, `reference_type='Salary Slip'`, `reference_name=slip.name`
+    - DR `Due From Group Entities - <home>`, `party_type='Company'`, `party=<covered>`, `cost_center=<home default>`, reference fields
+  - **Covered JE (mirrored):** `company=<covered>`. Rows:
+    - DR `Salaries Expense - <covered>`, `party_type='Employee'`, `party=slip.employee`, `cost_center=<covered default>`, reference fields
+    - CR `Due To Group Entities - <covered>`, `party_type='Company'`, `party=<home>`, `cost_center=<covered default>`, reference fields
+  - `user_remark = f"S206 cost-sharing recharge: {slip.employee} to {covered}, period {slip.start_date}..{slip.end_date}, share={share:.2%}"`
 
-- [ ] P1-T1 Create `hrms/utils/punch_allocation.py` exposing:
-  - `compute_shift_share(employee: str, start_date: date, end_date: date) -> dict[str, float]` — returns `{company_name: share (0-1)}` where shares sum to 1.0. Empty dict if no punches.
-  - `compute_shifts_by_store(employee: str, start_date: date, end_date: date) -> dict[str, int]` — returns raw shift counts per store (not normalized).
-  - `_pair_punches(checkins: list) -> list[dict]` — pair IN with next OUT per device; unpaired punches counted as orphan half-shifts (logged).
-  - Internal: query `tabEmployee Checkin` filtered by employee + time range; join DEVICE_TO_STORE to resolve store; join `company_lookup` to get Company docname.
-- [ ] P1-T2 Edge cases:
-  - Zero punches → return empty dict, log via `frappe.logger().info`.
-  - All punches at one store → return `{store: 1.0}`.
-  - IN without matching OUT → count as 0.5 shift, log warning.
-  - Device not in DEVICE_TO_STORE → log error, skip that punch (shouldn't happen but fail safe).
-- [ ] P1-T3 Unit tests in `hrms/tests/test_s206_punch_allocation.py`:
-  - 10 punches all at SM MEGAMALL → share = 1.0 to `SM MEGAMALL - BEI`
-  - 5 SM MEGAMALL + 5 SM TANZA → share = 0.5 / 0.5
-  - 0 punches → empty dict
-  - 1 orphan IN → 0.5 shift
-  - Punch at unknown device → skipped, no crash
+- [ ] P2-T3 **Insertion + pairing:** Insert both drafts. Update `inter_company_journal_entry_reference` cross-links. Submit both. Wrap in per-slip savepoint; rollback + `frappe.log_error` on any failure.
 
-MUST_MODIFY: `hrms/utils/punch_allocation.py` (new)
-MUST_CONTAIN: `compute_shift_share`, `tabEmployee Checkin`, `DEVICE_TO_STORE`
-MUST_MODIFY: `hrms/tests/test_s206_punch_allocation.py` (new)
-MUST_CONTAIN: at least 5 test methods
+- [ ] P2-T4 **Tests** `hrms/tests/test_s206_labor_allocation.py` — 7+ tests.
+  - MUST_MODIFY: `hrms/utils/labor_allocation.py`, `hrms/tests/test_s206_labor_allocation.py`
+  - MUST_CONTAIN: `Inter Company Journal Entry`, `inter_company_journal_entry_reference`, `party_type='Company'`, `party_type='Employee'`, `S206 cost-sharing`
 
-## Phase 2 — `labor_allocation.py` core (12u)
+## Phase 3 — BEI Labor Allocation Log DocType + API (10u)
 
-Goal: given a Salary Slip, build the inter-Company JE that reclassifies labor cost by punch share.
+- [ ] P3-T1 **New DocType** `hrms/hr/doctype/bei_labor_allocation_log/`:
+  - Fields: `year` (Int), `month` (Int), `employee` (Link -> Employee), `period_start` (Date), `period_end` (Date), `home_company` (Link -> Company), `covered_companies` (Small Text), `home_je` (Link -> Journal Entry), `covered_jes_json` (Small Text), `total_allocated` (Currency), `shift_shares_json` (Small Text), `allocated_on` (Datetime), `allocated_by` (Link -> User)
+  - Unique index on (year, month, employee) via `bei_labor_allocation_log.json` unique field
+  - Permissions: Accounts Manager + CFO + System Manager read+write
+  - MUST_MODIFY: `hrms/hr/doctype/bei_labor_allocation_log/bei_labor_allocation_log.json`, `.py`, `__init__.py`
 
-- [ ] P2-T1 Create `hrms/utils/labor_allocation.py` exposing:
-  - `allocate_slip(slip_name: str, dry_run: bool = True) -> dict` — returns dict describing the JE that WOULD be created (if dry_run) or the actual JE name (if not dry_run + apply mode).
-  - `_build_je_for_slip(slip_doc, shares: dict) -> frappe.model.document.Document` — constructs the Journal Entry doc without inserting.
-  - `_skip_reason(slip_doc) -> str | None` — returns skip reason (non_store_billing, no_punches, all_home, commissary_producer) or None if allocation should proceed.
-- [ ] P2-T2 JE construction rules (DM-1, DM-6):
-  - `voucher_type = "Journal Entry"`
-  - `posting_date = slip.end_date`
-  - `user_remark = f"S206 reliever allocation: slip {slip.name}, period {slip.start_date}..{slip.end_date}, home={slip.company}"`
-  - One DR Salaries Expense per covered store (amount = slip.gross_pay × share)
-  - Matching CR Salaries Expense on home Company (home's total CR = sum of covered DRs)
-  - For each DR/CR pair, add intercompany entries: DR `Due From <covered>` on home / CR `Due To <home>` on covered (zero net per pair)
-  - Each row: `party_type = "Employee"`, `party = slip.employee`, `cost_center = <target store's default>`, `reference_type = "Salary Slip"`, `reference_name = slip.name`
-- [ ] P2-T3 Edge case: if shares includes the home store (employee punched at their own home some shifts), only allocate the NON-home portion. Home portion stays implicitly on home company via the original slip posting.
-- [ ] P2-T4 Unit tests in `hrms/tests/test_s206_labor_allocation.py`:
-  - Slip with all-home punches → `_skip_reason` returns `all_home`, no JE
-  - Slip with 50/50 split → JE has 2 DR rows (home+covered) and matching CRs
-  - Slip for non_store_billing employee → `_skip_reason` returns `non_store_billing`
-  - Slip with gross_pay=0 → no JE (defensive)
+- [ ] P3-T2 **API** `hrms/api/labor_allocation.py`:
+  - `preview_monthly_allocation(year, month) -> dict` — whitelisted, dry-run, no DB writes. Starts with `set_backend_observability_context(module='finance', action='preview_monthly_allocation', mutation_type='read')`.
+  - `post_monthly_allocation(year, month) -> dict` — whitelisted, gated on `os.environ.get('S206_APPLY')=='1'` OR kwarg `confirm=True`. For each in-scope slip:
+    - Check Log for (year, month, employee) — if exists, skip.
+    - Else allocate + insert Log row.
+    - Per-slip savepoint.
+  - Returns `{'applied', 'skipped_idempotent', 'skipped_other', 'errors'}`.
+  - Sentry context `module='finance', action='post_monthly_allocation', mutation_type='create'`.
 
-MUST_MODIFY: `hrms/utils/labor_allocation.py` (new)
-MUST_CONTAIN: `def allocate_slip`, `party_type`, `cost_center`, `reference_type`, `user_remark`
-MUST_MODIFY: `hrms/tests/test_s206_labor_allocation.py` (new)
-MUST_CONTAIN: at least 4 test methods
+- [ ] P3-T3 **Permissions:** `post` requires Accounts Manager|CFO|System Manager; `preview` additionally allows Accounts User.
+  - MUST_MODIFY: `hrms/api/labor_allocation.py`
+  - MUST_CONTAIN: `@frappe.whitelist()`, `set_backend_observability_context`, `S206_APPLY`, `BEI Labor Allocation Log`, `savepoint`
 
-## Phase 3 — `@frappe.whitelist()` API (8u)
+## Phase 4 — On-demand account seeder (5u)
 
-Goal: preview + apply endpoints callable from Frappe Desk / scripts.
+- [ ] P4-T1 **on_demand script** `hrms/on_demand/__init__.py` + `hrms/on_demand/s206_seed_intercompany_accounts.py`:
+  - Always-apply (no dry-run gate).
+  - For each Company where `entity_category='Store'` OR `name IN ['BEBANG ENTERPRISE INC.', 'BEBANG KITCHEN INC.']`:
+    - INSERT IGNORE `2104200 - DUE TO GROUP ENTITIES - <abbr>` under Current Liabilities, `account_type='Payable'`
+    - INSERT IGNORE `1104200 - DUE FROM GROUP ENTITIES - <abbr>` under Current Assets, `account_type='Receivable'`
+  - Savepoint + rollback on partial failure + `frappe.log_error` (DM-7).
+  - Emit `output/s206/diagnostics/intercompany_seed_report_<timestamp>.json`.
+  - MUST_MODIFY: `hrms/on_demand/s206_seed_intercompany_accounts.py`
+  - MUST_CONTAIN: `frappe.db.savepoint`, `frappe.log_error`, `DUE TO GROUP ENTITIES`, `DUE FROM GROUP ENTITIES`, `account_type`
 
-- [ ] P3-T1 Create `hrms/api/labor_allocation.py` exposing:
-  - `preview_monthly_allocation(year: int, month: int) -> dict` — whitelisted, returns dict with all planned JEs for the month (dry-run, no DB writes). Payload shape:
-    ```
-    {
-      "period": {"start": "2026-04-01", "end": "2026-04-30"},
-      "total_slips": N,
-      "in_scope_slips": M,
-      "skipped": [{"slip": ..., "reason": ...}, ...],
-      "planned_jes": [{"home_company": ..., "lines": [...], "total": ...}, ...],
-      "dry_run": true
-    }
-    ```
-  - `post_monthly_allocation(year: int, month: int) -> dict` — whitelisted, requires `S206_APPLY=1` env OR explicit `confirm=True` kwarg. Actually inserts + submits JEs under `frappe.db.savepoint("s206_monthly_alloc_YYYYMM")`. Returns result with created JE names. Any row-level failure → rollback savepoint + `frappe.log_error` → no partial batch commit.
-- [ ] P3-T2 Both functions start with:
-  ```python
-  set_backend_observability_context(
-      module="finance",
-      action="<function_name>",
-      mutation_type="create",
-      extras={"year": year, "month": month},
-  )
-  ```
-- [ ] P3-T3 Permission gate: only users with `Accounts Manager` OR `CFO` OR `System Manager` can call `post_monthly_allocation` (preview can be Finance User).
+- [ ] P4-T2 **NOT in patches.txt.** Documented in module docstring: "run via `bench execute hrms.on_demand.s206_seed_intercompany_accounts.execute` manually, once per environment."
 
-MUST_MODIFY: `hrms/api/labor_allocation.py` (new)
-MUST_CONTAIN: `@frappe.whitelist()`, `set_backend_observability_context`, `preview_monthly_allocation`, `post_monthly_allocation`, `savepoint`, `rollback`, `release_savepoint`
+## Phase 5 — Monthly scheduler (4u)
 
-## Phase 4 — Intercompany account seed patch (6u)
+- [ ] P5-T1 **Scheduler hook** in `hrms/hooks.py`:
+```python
+scheduler_events = {
+    "cron": {
+        # S206 — first of each month at 06:00 PHT (22:00 UTC prior day)
+        # preview-only; emails Sam + Denise the prior-month report.
+        "0 22 1 * *": [
+            "hrms.api.labor_allocation.preview_monthly_allocation_scheduled",
+        ],
+    },
+}
+```
+- [ ] P5-T2 **Wrapper** `preview_monthly_allocation_scheduled()`:
+  - Compute prior-month year/month (handle Jan edge case).
+  - Call `preview_monthly_allocation(year, month)`.
+  - Email report to Sam + Denise via `frappe.sendmail`.
+  - MUST_MODIFY: `hrms/hooks.py`, `hrms/api/labor_allocation.py`
+  - MUST_CONTAIN: `preview_monthly_allocation_scheduled`, `frappe.sendmail`, `scheduler_events`, `cron`
 
-Goal: ensure every store Company has the Due From / Due To accounts needed for intercompany JEs.
+## Phase 6 — Tests + Runbook + Closeout (11u)
 
-- [ ] P4-T1 Create `hrms/patches/v16_0/s206_seed_intercompany_accounts.py`:
-  - Dry-run default; `S206_APPLY=1` to apply.
-  - For each Company where `entity_category='Store'` OR `name='BEBANG ENTERPRISE INC.'`:
-    - Ensure account `2104200 - DUE TO GROUP ENTITIES - <abbr>` exists under group "Current Liabilities"
-    - Ensure account `1104200 - DUE FROM GROUP ENTITIES - <abbr>` exists under group "Current Assets"
-    - If missing, create via `frappe.get_doc("Account", {...}).insert()`
-  - Wrap in savepoint, rollback on partial failure, log via `frappe.log_error`.
-- [ ] P4-T2 Append to `hrms/patches.txt` under `[post_model_sync]`.
-- [ ] P4-T3 Emit audit report to `output/s206/diagnostics/intercompany_seed_report_<timestamp>.json`.
-
-MUST_MODIFY: `hrms/patches/v16_0/s206_seed_intercompany_accounts.py` (new)
-MUST_CONTAIN: `S206_APPLY`, `savepoint`, `frappe.log_error`, `DUE TO GROUP ENTITIES`, `DUE FROM GROUP ENTITIES`
-MUST_MODIFY: `hrms/patches.txt`
-MUST_CONTAIN: `s206_seed_intercompany_accounts`
-
-## Phase 5 — Scheduler hook (optional auto-trigger) (4u)
-
-Goal: nightly check after payroll submit to auto-create DRAFT JEs ready for review.
-
-- [ ] P5-T1 Add to `hrms/hooks.py`:
-  ```python
-  scheduler_events = {
-      "monthly": [
-          # S206 — auto-preview reliever allocation first day of each month
-          "hrms.api.labor_allocation.preview_monthly_allocation_scheduled",
-      ],
-  }
-  ```
-- [ ] P5-T2 Add `preview_monthly_allocation_scheduled()` in `hrms/api/labor_allocation.py` — wraps preview for the prior month and emails the report to Sam via `frappe.sendmail`.
-- [ ] P5-T3 Make scheduler event safe (no DB writes, just email).
-
-MUST_MODIFY: `hrms/hooks.py`
-MUST_CONTAIN: `preview_monthly_allocation_scheduled`
-MUST_MODIFY: `hrms/api/labor_allocation.py`
-MUST_CONTAIN: `def preview_monthly_allocation_scheduled`, `frappe.sendmail`
-
-## Phase 6 — Unit tests + closeout (6u)
-
-- [ ] P6-T1 Run all three test files locally: `test_s206_punch_allocation.py`, `test_s206_labor_allocation.py`, `test_s206_api_labor_allocation.py` (if added).
-- [ ] P6-T2 Smoke-test via Frappe stub (pattern from S201 /tmp/s201_smoke.py).
-- [ ] P6-T3 Update plan YAML: `status: COMPLETED`, `completed_date: 2026-04-??`, PR #.
-- [ ] P6-T4 Update `SPRINT_REGISTRY.md` S206 row: status COMPLETED + PR #.
-- [ ] P6-T5 `git add -f docs/plans/*.md output/s206/ && git commit && git push`.
+- [ ] P6-T1 Run unit tests locally via Frappe stub (S201 pattern).
+- [ ] P6-T2 **Production Apply Runbook** section exists (below).
+- [ ] P6-T3 Update plan YAML: `status: COMPLETED`, `completed_date`, `backend_pr`, `l3_result`.
+- [ ] P6-T4 Update `docs/plans/SPRINT_REGISTRY.md` S206 row with status + PR.
+- [ ] P6-T5 `git add -f docs/plans/*.md docs/compliance/*.md output/s206/`.
 - [ ] P6-T6 Create PR to production.
 
-## L3 Workflow Scenarios (per S092 corrupt-success rule)
+## Production Apply Runbook
 
-Run in a FRESH session after deploy (NOT builder session — avoids context bias per S099).
+### One-time setup (first environment deploy)
 
-| # | Scenario | Action | Expected Outcome | Failure Means |
-|---|---|---|---|---|
-| L3-1 | Preview April 2026 with no apply | Call `preview_monthly_allocation(2026, 4)` via bench console | Returns dict with dry_run=true, total_slips and in_scope_slips populated, no JEs created in Frappe | Preview is leaking writes |
-| L3-2 | Skip non_store_billing employee | Pick Edlice Dela Cruz (bio 9001812, REGIONAL AREA MANAGER). Confirm her slip appears in `skipped` with reason=`non_store_billing` | Skipped correctly, no JE planned for her | classifier broken |
-| L3-3 | All-home punch shortcut | Pick a CASHIER whose all April punches were at their home store. Confirm slip is in `skipped` with reason=`all_home` | No JE planned | shortcut broken |
-| L3-4 | Split allocation (real reliever) | Pick a reliever who punched at 2+ stores in April. Confirm planned JE shows DR/CR rows with correct shares summing to slip.gross_pay | Shares balance; DR store ≠ home; CR home | allocation math broken |
-| L3-5 | Apply mode with savepoint | Call `post_monthly_allocation(2026, 4)` with `S206_APPLY=1`. Plant one bad account name to force a row-level failure. Verify rollback: no JEs in Frappe + log_error entry | Savepoint rollback works; zero JEs persisted | DM-2 violation |
-| L3-6 | Apply mode success path | Reset, call `post_monthly_allocation(2026, 4)` again cleanly. Verify JE(s) created, each with party+party_type on GL rows, user_remark cites slip, cost_center set | JEs visible in Frappe + GL Entries show per-store labor | DM-1 or DM-6 violation |
+```bash
+CONTAINER=$(sudo docker ps --format '{{.Names}}' | grep frappe_backend | head -1)
 
-**Evidence contract:**
-- `output/l3/s206/form_submissions.json`
-- `output/l3/s206/api_mutations.json`
-- `output/l3/s206/state_verification.json`
+# 1. Seed intercompany accounts (49 stores + BEI + BKI)
+sudo docker exec $CONTAINER \
+  bench --site hq.bebang.ph execute \
+  hrms.on_demand.s206_seed_intercompany_accounts.execute
+
+# 2. Verify
+sudo docker exec $CONTAINER bench --site hq.bebang.ph mariadb \
+  -e "SELECT company, COUNT(*) FROM tabAccount WHERE name LIKE '%GROUP ENTITIES%' GROUP BY company;"
+```
+
+### Preview monthly allocation (safe, no writes)
+
+```bash
+sudo docker exec $CONTAINER \
+  bench --site hq.bebang.ph execute \
+  hrms.api.labor_allocation.preview_monthly_allocation \
+  --kwargs '{"year": 2026, "month": 4}'
+```
+
+### Apply monthly allocation (writes paired JEs)
+
+```bash
+# REQUIRES: TP Policy signed + preview reviewed
+sudo docker exec -e S206_APPLY=1 $CONTAINER \
+  bench --site hq.bebang.ph execute \
+  hrms.api.labor_allocation.post_monthly_allocation \
+  --kwargs '{"year": 2026, "month": 4}'
+```
+
+**The `-e S206_APPLY=1` is MANDATORY.** Without it the apply path silently falls back to dry-run.
+
+### Re-run idempotency test
+
+```bash
+# Running apply twice should produce zero new JEs:
+sudo docker exec -e S206_APPLY=1 $CONTAINER \
+  bench --site hq.bebang.ph execute \
+  hrms.api.labor_allocation.post_monthly_allocation \
+  --kwargs '{"year": 2026, "month": 4}'
+# Expected: applied=[], all skipped_idempotent
+```
+
+## L3 Workflow Scenarios (FRESH session per S092)
+
+| # | Scenario | Expected | Failure Means |
+|---|---|---|---|
+| L3-1 | `preview_monthly_allocation(2026, 4)` | dry_run=True, no JEs, no Log rows | preview leaking writes |
+| L3-2 | Edlice (REGIONAL AREA MANAGER) in skipped_other reason=`non_store_billing` | — | classifier broken |
+| L3-3 | Cashier all-April at home store in skipped_other reason=`all_home` | — | shortcut broken |
+| L3-4 | Reliever 2+ stores applied | Two JEs with `voucher_type='Inter Company Journal Entry'`, cross-referenced, `party_type='Company'` on Due, `Employee` on Salaries, user_remark cites cost-sharing | paired JE broken |
+| L3-5 | Apply April twice | Second call: `skipped_idempotent` for every slip; zero new JEs; zero new Log | idempotency broken |
+| L3-6 | Corrupt one slip cost_center, apply | Only that slip fails + log_error; other slips post cleanly | DM-2 violation |
+
+**Evidence:** `output/l3/s206/{form_submissions,api_mutations,state_verification}.json`.
 
 ## Ownership Matrix
 
-| File family | Owner | Protected (do not touch) |
+| File | Owner | Protected |
 |---|---|---|
-| `hrms/utils/punch_allocation.py` | S206 (new) | — |
-| `hrms/utils/labor_allocation.py` | S206 (new) | — |
-| `hrms/api/labor_allocation.py` | S206 (new) | — |
-| `hrms/patches/v16_0/s206_*.py` | S206 (new) | — |
-| `hrms/tests/test_s206_*.py` | S206 (new) | — |
-| `hrms/utils/company_lookup.py` | S201 | **PROTECTED** — consume only |
-| `hrms/utils/non_store_billing.py` | S201 | **PROTECTED** — consume only |
-| `hrms/utils/device_mapping.py` | S019 era | **PROTECTED** — consume only |
-| `hrms/utils/roving_employees.py` | HR/IT audit | **PROTECTED** — consume via is_roving only |
-| `hrms/hooks.py` | shared | only append scheduler_events line |
-| `hrms/patches.txt` | shared | only append new row |
-| Existing JV / GL logic | Finance | **PROTECTED** — don't refactor |
+| `hrms/utils/punch_allocation.py` | S206 new | — |
+| `hrms/utils/labor_allocation.py` | S206 new | — |
+| `hrms/utils/device_store_bridge.py` | S206 new | — |
+| `hrms/api/labor_allocation.py` | S206 new | — |
+| `hrms/hr/doctype/bei_labor_allocation_log/` | S206 new | — |
+| `hrms/on_demand/s206_seed_intercompany_accounts.py` | S206 new | — |
+| `hrms/tests/test_s206_*.py` | S206 new | — |
+| `docs/compliance/s206-transfer-pricing-policy.md` | S206 new | — |
+| `hrms/utils/company_lookup.py` | S201 | **PROTECTED — consume only** |
+| `hrms/utils/non_store_billing.py` | S201 | **PROTECTED — consume only** |
+| `hrms/utils/device_mapping.py` | S019 era | **PROTECTED — via bridge only** |
+| `hrms/utils/roving_employees.py` | HR audit | **PROTECTED — via is_roving only** |
+| `hrms/hooks.py` | shared | **append scheduler_events only** |
+| `hrms/patches.txt` | shared | **DO NOT MODIFY — seeder is on_demand** |
+| Existing JV/GL/Salary Slip | Finance | **PROTECTED** |
 
 ## Rollback Contract
 
-If a monthly allocation posts bad JEs:
+1. Query `BEI Labor Allocation Log` for affected period, list JE names.
+2. Cancel JEs in pairs (Frappe validates paired cancellation): `frappe.get_doc('Journal Entry', je_name).cancel()`.
+3. Delete Log rows: `DELETE FROM \`tabBEI Labor Allocation Log\` WHERE year=X AND month=Y`.
+4. Code rollback: `git revert` PR + redeploy.
+5. Seeded accounts: safe to leave (unused harmless).
 
-1. Cancel each JE (`frappe.get_doc("Journal Entry", je_name).cancel()`) — GL entries auto-reversed.
-2. If cancel fails: `UPDATE tabJournal Entry SET docstatus=2 WHERE name=...` + manual GL cleanup (Finance).
-3. Revert code: `git revert` the whitelisted endpoint commit (preserves libraries for S207+ fixes).
-4. Delete intercompany accounts created by Phase 4 patch if they were wrongly created (usually safe — accounts just sit unused).
-
-## Files To Be Modified/Created
+## Files Modified/Created
 
 | Action | File |
 |---|---|
+| CREATE | `docs/compliance/s206-transfer-pricing-policy.md` |
+| CREATE | `hrms/utils/device_store_bridge.py` |
 | CREATE | `hrms/utils/punch_allocation.py` |
 | CREATE | `hrms/utils/labor_allocation.py` |
 | CREATE | `hrms/api/labor_allocation.py` |
-| CREATE | `hrms/patches/v16_0/s206_seed_intercompany_accounts.py` |
+| CREATE | `hrms/hr/doctype/bei_labor_allocation_log/bei_labor_allocation_log.json` |
+| CREATE | `hrms/hr/doctype/bei_labor_allocation_log/bei_labor_allocation_log.py` |
+| CREATE | `hrms/hr/doctype/bei_labor_allocation_log/__init__.py` |
+| CREATE | `hrms/on_demand/__init__.py` |
+| CREATE | `hrms/on_demand/s206_seed_intercompany_accounts.py` |
+| CREATE | `hrms/tests/test_s206_device_store_bridge.py` |
 | CREATE | `hrms/tests/test_s206_punch_allocation.py` |
 | CREATE | `hrms/tests/test_s206_labor_allocation.py` |
-| MODIFY | `hrms/hooks.py` (append scheduler_events entry) |
-| MODIFY | `hrms/patches.txt` (append patch row) |
+| MODIFY | `hrms/hooks.py` (append scheduler_events cron entry only) |
+
+**NOT modified:** `hrms/patches.txt`.
 
 ## Zero-Skip Enforcement
 
-**Phase-end gate (run this BEFORE advancing to next phase):**
+**Phase gate before advancing:**
 
 ```bash
-# Confirm MUST_MODIFY files are in git diff
-git diff --name-only origin/production...HEAD | grep -E "<expected files for this phase>"
-
-# Confirm MUST_CONTAIN patterns
-grep -l "<pattern>" <file>
+git diff --name-only origin/production...HEAD   # confirm MUST_MODIFY files present
+grep -l "<pattern>" <file>                       # confirm MUST_CONTAIN patterns
 ```
 
-If any MUST_MODIFY / MUST_CONTAIN assertion fails, the phase is NOT complete. Fix the failing task before advancing. NO silent skipping. NO "deferred to next sprint".
-
-**Forbidden agent behaviors:**
-- Skipping a task
-- Marking partial work as "done"
-- Replacing a task with a simpler version without user approval
-- Saying "deferred to next sprint"
-- Implementing happy path only, skipping DM-1/DM-2/DM-6 compliance
-
-## Failure Response
-
-- **App bug** — file `[BUG]` entry in `output/s206/defects/DEFECT_REGISTER.csv`, don't touch test or library, re-run after fix.
-- **Test bug** — fix the test; if the fix helps other tests, promote to shared fixture.
-- **Brittleness / flakiness** — fix the LIBRARY (`punch_allocation.py` / `labor_allocation.py`), not the spec. No `waitForTimeout`, no retry masking.
-
-If ≥3 library fixes happen during execution, emit `output/l3/s206/LIBRARY_IMPROVEMENTS.md` as closeout artifact.
+Any assertion fail → fix before advancing. No silent skipping. No "deferred to next sprint". No DM shortcuts.
 
 ## Autonomous Execution Contract
 
-- **completion_condition:** see plan YAML
-- **stop_only_for:**
-  - Missing intercompany accounts on >10 Companies (Phase 0 HARD BLOCKER)
-  - Sam/Finance decision needed on allocation methodology (shift-share vs hour-share) if Phase 1 smoke test reveals data quality issues
-  - Destructive mutation requires approval (always dry-run first)
+- completion_condition: per plan YAML
+- stop_only_for:
+  - Missing intercompany accounts on >10 Companies (P0 HARD BLOCKER)
+  - Finance declines TP Policy signoff (P0 HARD BLOCKER)
+  - Punch data gap > 10% (allocation skipped, not errored)
+  - Destructive apply requires Sam approval
   - Merge conflict on production
-- **continue_without_pause_through:** audit → execute → PR → L3 handoff
-- **signoff_authority:** single-owner (Sam)
-- **canonical_closeout_artifacts:**
-  - `output/s206/diagnostics/company_coa_audit.json`
+- continue_without_pause_through: audit -> execute -> PR -> L3 handoff
+- signoff_authority: single-owner (Sam)
+- canonical_closeout_artifacts:
+  - `docs/compliance/s206-transfer-pricing-policy.md`
+  - `output/s206/diagnostics/company_coa_audit_*.json`
   - `output/s206/diagnostics/intercompany_seed_report_*.json`
   - `output/l3/s206/{form_submissions,api_mutations,state_verification}.json`
-  - `docs/plans/2026-04-17-sprint-206-reliever-allocation-engine.md` (status -> COMPLETED)
+  - `docs/plans/2026-04-17-sprint-206-reliever-allocation-engine.md` (COMPLETED)
   - `docs/plans/SPRINT_REGISTRY.md` (S206 row updated)
 
 ## Dependencies
 
-- **S201 Option X** (PR #606) — MERGED. Provides `company_lookup.py` + `non_store_billing.py` libraries + stable Employee.company semantics.
-- **S175** — MERGED. Provides COA template structure with intercompany account slots.
-- **S188** — MERGED. 49 per-store Companies exist.
-- **S196** — MERGED. Companies use ALL CAPS store-first naming.
+- **S201 Option X** (PR #606) MERGED — libraries stable.
+- **S175** MERGED — COA structure.
+- **S188** MERGED — 49 per-store Companies.
+- **S196** MERGED — ALL CAPS naming.
 
 ## Out of Scope (deferred)
 
-- Hour-share allocation (v2 refinement if shift-share proves unreliable)
-- Retroactive re-allocation when slips are amended post-post
-- UI page for Finance to review+approve allocations (CLI + scheduler email for S206; UI in S208+)
-- my.bebang.ph Company dropdown editability (separate task)
-- Full statutory cross-check (B1 follow-up from S201 audit — verify SSS/PhilHealth/HDMF employer IDs populated on Frappe Company docs)
-
-## Scope Size Warning
-
-Total estimated units: **52** (within 80-unit single-session ceiling per S089). Single agent, single session.
+- Quarterly intercompany clearing JE automation (S207)
+- Hour-share allocation (v2 refinement)
+- Retroactive re-allocation on Slip amendment (S207)
+- Finance UI for review+approve (S208 — CLI + scheduled email for S206)
 
 ## Agent Boot Sequence
 
-1. Read this plan fully.
-2. Verify on branch `s206-reliever-allocation-engine` (create via `git fetch origin production && git checkout -b s206-reliever-allocation-engine origin/production` if not already).
-3. Read `hrms/utils/company_lookup.py`, `hrms/utils/non_store_billing.py`, `hrms/utils/device_mapping.py` to understand the S201 libraries you'll consume.
-4. Read `hrms/api/commissary.py::fulfill_store_order` + `hrms/api/warehouse.py::create_stock_transfer` for JE construction patterns already in the codebase (good template for DM-1/DM-6 compliance).
-5. Begin Phase 0.
+1. Read this v2 plan fully.
+2. Verify on branch `s206-reliever-allocation-engine` from origin/production.
+3. Read v2 audit response table (top) — understand why each v1 blocker is addressed differently.
+4. Read `hrms/utils/company_lookup.py`, `hrms/utils/non_store_billing.py`, `hrms/utils/device_mapping.py`.
+5. Read `hrms/utils/sales_location_mapping.py` for cache pattern reference.
+6. Read Frappe upstream `frappe/accounts/doctype/journal_entry/journal_entry.py` for `inter_company_journal_entry_reference` semantics.
+7. Begin Phase 0.
