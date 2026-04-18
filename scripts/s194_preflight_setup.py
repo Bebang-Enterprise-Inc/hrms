@@ -159,7 +159,10 @@ def cmd_set_supplier_status(args: argparse.Namespace) -> None:
 
 
 def cmd_set_supplier_field(args: argparse.Namespace) -> None:
-    value = None if args.value == "NULL" else args.value
+    # Frappe REST PUT ignores JSON null — use empty string to actually clear
+    # a field. S194-15: setSupplierField(..., tin, NULL) needs to empty the
+    # TIN so the gate fires. Sending {"tin": null} was a no-op.
+    value = "" if args.value == "NULL" else args.value
     _update_doc(SUPPLIER_DOCTYPE, args.code, {args.field: value})
     print(json.dumps({"code": args.code, "field": args.field, "value": value}))
 
