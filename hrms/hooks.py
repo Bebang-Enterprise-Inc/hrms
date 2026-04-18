@@ -426,6 +426,13 @@ scheduler_events = {
 		],
 		# Monthly billing generation: 6 AM on 1st of each month
 		"0 6 1 * *": ["hrms.api.billing.scheduled_monthly_billing"],
+		# S206: monthly reliever labor cost-sharing preview.
+		# Runs first-of-month 06:00 PHT = 22:00 UTC prior day. Preview-only —
+		# emails Sam the prior-month report. Apply is manual via
+		# `docker exec -e S206_APPLY=1 ... post_monthly_allocation`.
+		"0 22 1 * *": [
+			"hrms.api.labor_allocation.preview_monthly_allocation_scheduled",
+		],
 		# Morning sync health report: 8:15 AM PHT daily (00:15 UTC) after sync buffer
 		"15 0 * * *": [
 			"hrms.api.erp_sync.scheduled_generate_morning_sync_health_report",
