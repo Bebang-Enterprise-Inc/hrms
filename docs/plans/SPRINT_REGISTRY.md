@@ -290,9 +290,11 @@ These documents contain sprint-like naming but are not part of the canonical seq
 
 | `S204` | Sprint 204 | `s204-s198-l3-resume-plan` (hrms) | TBD | PLANNED 2026-04-17 — **S198 L3 Resume Plan (cold-start-friendly, compaction handoff).** Documents what S203 + S203 followup delivered, the live-patch state (BEI Settings.commissary_company, 37 customer BKI allowlists), the S1 proof (ACC-SINV-2026-00003 submitted via browser), and the exact scenarios still to run (fresh S1 post-#610 merge, S2 SM Megamall, S3 The Grid negative-path, S4 Ayala Evo same-entity, F1/F2/F3). Indexes every test spec and helper script. Enforces HB-4 browser-only + cleanupLedger + data-testid discipline. | `docs/plans/2026-04-17-sprint-204-s198-l3-resume-plan.md` |
 
+| `S205` | Sprint 205 | `s205-s194-cert-finalization` (bei-tasks); `s205-s194-cert-finalization-plan` (hrms) | hrms #614, bei-tasks #414 (merged 2026-04-18) | IN PROGRESS 2026-04-18 — **S194 Procurement Cert Finalization.** Per CEO directive, target is 31/31 PASS via PRODUCT fixes only (no test reframes, no skips/deferrals). Bei-tasks deployed 2026-04-18: Warehouse role-hide on supplier hub (S194-24), GR Reject-All button + testid (S194-31), Sonner toast duration 4s→20s (S194-6/15/17/19), convertToPO race fix, supplier picker on new-invoice + new-RFP forms (S194-7/8), MX list row exposes exception name + testid (S194-18), GR auto_submit Page Object flag, submit-verify testid. Hrms (PR #614 pending): TIN gate on convert_to_po (S194-15), create_goods_receipt accepts auto_submit flag (S194-9..30 unblock). | `docs/plans/2026-04-17-sprint-205-s194-cert-finalization.md` |
+
 ## Next Sprint Reservation
-1. Next canonical sprint ID to assign: `S205`.
-2. Reserve branch name: `s205-{slug}` (fill slug from plan filename).
+1. Next canonical sprint ID to assign: `S206`.
+2. Reserve branch name: `s206-{slug}` (fill slug from plan filename).
 3. Create new sprint plan only after adding row here first.
 4. **Agent MUST `git checkout -b <branch>` before writing any code.**
 5. **MANDATORY cross-check before reserving any S###:** run `git branch -a | grep -iE 's(17[5-9]|18[0-9]|19[0-9])'` on BOTH `hrms` and `bei-tasks` AND `ls docs/plans/ | grep -E 'sprint-(17[5-9]|18[0-9]|19[0-9])'` — if any match the ID you're about to reserve, pick the next free number. The local registry is not authoritative; remote branches and plan files are.

@@ -2216,14 +2216,21 @@ def create_goods_receipt(data: dict[str, Any] | str | None = None) -> dict[str, 
 
     # DM-2: Savepoint for atomic GR creation
     frappe.db.savepoint("goods_receipt_creation")
+    auto_submit = bool(data.pop("auto_submit", False))
     gr = frappe.get_doc({
         "doctype": "BEI Goods Receipt",
         **_sanitize_doc_data(data)
     })
     gr.insert()
+    # When called from API integrations (E2E tests, batch import), allow the
+    # caller to advance the GR straight to "Pending Inspection" so the
+    # downstream complete_inspection action is reachable in a single call
+    # chain. Default behaviour stays unchanged for the standard UI flow.
+    if auto_submit and gr.docstatus == 0:
+        gr.submit()
     frappe.db.release_savepoint("goods_receipt_creation")
 
-    return {"success": True, "name": gr.name, "message": _("GR created")}
+    return {"success": True, "name": gr.name, "status": gr.status, "message": _("GR created")}
 
 
 @frappe.whitelist()
