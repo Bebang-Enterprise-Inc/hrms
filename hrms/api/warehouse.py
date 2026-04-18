@@ -495,14 +495,42 @@ def _get_commissary_company() -> str:
 
 
 def _get_allowed_target_companies() -> set[str]:
-	"""Get allowed target companies from BEI Settings, falling back to defaults."""
+	"""Get allowed target companies.
+
+	S204: Auto-derive from the live `Company` master (every non-group,
+	non-disabled Company is a legitimate dispatch target) and union with the
+	`BEI Settings.allowed_target_companies` CSV so Finance can still
+	explicitly allow or add entries. This stops the allowlist drifting every
+	time S199 adds a store-first rename or a new entity is onboarded — the
+	source of truth is the Company master, not a manually-maintained string.
+	"""
+	companies: set[str] = set()
+
+	# Primary source: all active, non-group Company records
+	try:
+		rows = frappe.db.sql(
+			"""
+			SELECT name FROM `tabCompany`
+			WHERE COALESCE(is_group, 0) = 0
+			""",
+			as_dict=True,
+		)
+		companies.update(row["name"] for row in rows if row.get("name"))
+	except Exception:
+		pass
+
+	# Override / extension: BEI Settings CSV (kept for Finance-level overrides)
 	try:
 		val = frappe.db.get_single_value("BEI Settings", "allowed_target_companies")
 		if val:
-			return {c.strip() for c in val.split(",") if c.strip()}
+			companies.update(c.strip() for c in val.split(",") if c.strip())
 	except Exception:
 		pass
-	return _ALLOWED_TARGET_COMPANIES_DEFAULT
+
+	# Fallback if both above failed (fresh install, DB error, etc.)
+	if not companies:
+		companies.update(_ALLOWED_TARGET_COMPANIES_DEFAULT)
+	return companies
 
 
 def _get_3pl_patterns() -> tuple[str, ...]:
