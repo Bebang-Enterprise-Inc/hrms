@@ -7,13 +7,15 @@ PAIRED Journal Entries via Frappe native `inter_company_journal_entry_reference`
         CR Salaries Expense - <home>   (reduces home's expense)
         DR Due From Group Entities - <home>   (home now has receivable from covered)
         party_type='Employee' on Salaries row (DM-1)
-        party_type='Company' on Due From row (DM-1)
+        party_type='Customer' on Due From row (DM-1); party=internal Customer
+            that represents `covered` (ERPNext intercompany pattern)
 
     Covered Company JE:
         DR Salaries Expense - <covered>   (increases covered's expense)
         CR Due To Group Entities - <covered>   (covered now has payable to home)
         party_type='Employee' on Salaries row
-        party_type='Company' on Due To row
+        party_type='Supplier' on Due To row; party=internal Supplier that
+            represents `home`
 
 Both JEs:
     voucher_type = 'Inter Company Journal Entry'
@@ -21,6 +23,14 @@ Both JEs:
     user_remark = 'S206 cost-sharing recharge: <employee> to <covered>, ...'
     reference_type = 'Salary Slip', reference_name = slip.name
     cost_center = Company default
+
+Why Customer/Supplier and not party_type='Company':
+    ERPNext v15 `journal_entry.validate_party()` throws on Receivable/Payable
+    rows unless party_type is a registered Party Type whose account_type
+    matches. Standard install fixtures seed only Customer, Supplier, Employee,
+    Shareholder. 'Company' is not registered — so the canonical intercompany
+    pattern uses an internal Customer/Supplier with `represents_company=<peer>`
+    (see hrms/on_demand/s206_seed_intercompany_accounts).
 
 Cost-sharing arrangement per BIR RR 2-2013 Section 4(B) — zero-margin recharge,
 NOT a service. No VAT, no EWT. See `docs/compliance/s206-transfer-pricing-policy.md`.
@@ -206,6 +216,8 @@ def _build_paired_jes(*, slip, share: float, home: str, covered: str, amount: fl
 
     home_accounts = _resolve_company_accounts(home)
     covered_accounts = _resolve_company_accounts(covered)
+    home_parties = _resolve_company_parties(home)
+    covered_parties = _resolve_company_parties(covered)
 
     # Home JE
     home_je = {
@@ -227,8 +239,8 @@ def _build_paired_jes(*, slip, share: float, home: str, covered: str, amount: fl
             {
                 "account": home_accounts["due_from"],
                 "debit_in_account_currency": amount,
-                "party_type": "Company",
-                "party": covered,
+                "party_type": "Customer",
+                "party": covered_parties["internal_customer"],
                 "cost_center": home_accounts["cost_center"],
                 "reference_type": "Salary Slip",
                 "reference_name": slip.name,
@@ -256,8 +268,8 @@ def _build_paired_jes(*, slip, share: float, home: str, covered: str, amount: fl
             {
                 "account": covered_accounts["due_to"],
                 "credit_in_account_currency": amount,
-                "party_type": "Company",
-                "party": home,
+                "party_type": "Supplier",
+                "party": home_parties["internal_supplier"],
                 "cost_center": covered_accounts["cost_center"],
                 "reference_type": "Salary Slip",
                 "reference_name": slip.name,
@@ -266,6 +278,35 @@ def _build_paired_jes(*, slip, share: float, home: str, covered: str, amount: fl
     }
 
     return home_je, covered_je
+
+
+def _resolve_company_parties(company: str) -> dict:
+    """Resolve the internal Customer + Supplier records that represent `company`.
+
+    Used by other Companies when posting intercompany JEs:
+      - Home's DR Due From row references covered's internal Customer
+      - Covered's CR Due To row references home's internal Supplier
+
+    Both records are seeded by `hrms.on_demand.s206_seed_intercompany_accounts`.
+    Fails loud with an actionable error if either is missing.
+    """
+    customer = frappe.db.get_value(
+        "Customer",
+        {"represents_company": company, "is_internal_customer": 1, "disabled": 0},
+        "name",
+    )
+    supplier = frappe.db.get_value(
+        "Supplier",
+        {"represents_company": company, "is_internal_supplier": 1, "disabled": 0},
+        "name",
+    )
+    if not customer or not supplier:
+        frappe.throw(
+            f"S206 allocate: Company {company!r} missing internal Customer/Supplier "
+            f"(customer={customer!r}, supplier={supplier!r}). "
+            f"Run `bench execute hrms.on_demand.s206_seed_intercompany_accounts.execute` first."
+        )
+    return {"internal_customer": customer, "internal_supplier": supplier}
 
 
 def _insert_and_link(home_dict: dict, covered_dict: dict) -> tuple[str, str]:
