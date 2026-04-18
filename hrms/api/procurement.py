@@ -2225,9 +2225,12 @@ def create_goods_receipt(data: dict[str, Any] | str | None = None) -> dict[str, 
     # When called from API integrations (E2E tests, batch import), allow the
     # caller to advance the GR straight to "Pending Inspection" so the
     # downstream complete_inspection action is reachable in a single call
-    # chain. Default behaviour stays unchanged for the standard UI flow.
-    if auto_submit and gr.docstatus == 0:
-        gr.submit()
+    # chain. Use the BEI submit_receipt() business method (sets status to
+    # "Pending Inspection") rather than Frappe's bare gr.submit() which only
+    # flips docstatus and leaves status="Draft" — that broke S194-9 because
+    # complete_inspection() requires status="Pending Inspection".
+    if auto_submit and gr.status == "Draft":
+        gr.submit_receipt()
     frappe.db.release_savepoint("goods_receipt_creation")
 
     return {"success": True, "name": gr.name, "status": gr.status, "message": _("GR created")}
@@ -2518,7 +2521,7 @@ def create_invoice(data: dict[str, Any] | str) -> dict[str, Any]:
         # Note: GR status can be "Accepted" after the receive+inspect workflow
         gr_exists = frappe.db.exists("BEI Goods Receipt", {
             "purchase_order": purchase_order,
-            "status": ["in", ["Submitted", "Approved", "Inspected", "Accepted"]]
+            "status": ["in", ["Submitted", "Approved", "Inspected", "Accepted", "Partially Accepted"]]
         })
         if not gr_exists:
             # Check if an approved match exception exists for this PO
@@ -2945,7 +2948,7 @@ def create_payment_request(data: dict[str, Any] | str) -> dict[str, Any]:
             # Note: GR status can be "Accepted" after the receive+inspect workflow
             gr_exists = frappe.db.exists("BEI Goods Receipt", {
                 "purchase_order": purchase_order,
-                "status": ["in", ["Submitted", "Approved", "Inspected", "Accepted"]]
+                "status": ["in", ["Submitted", "Approved", "Inspected", "Accepted", "Partially Accepted"]]
             })
             if not gr_exists:
                 # Check if an approved match exception exists for this PO
