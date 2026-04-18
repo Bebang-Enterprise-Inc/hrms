@@ -3376,20 +3376,40 @@ def approve_order(order_name: str, approved_quantities: list | str | None = None
 	is_fallback_override = bool(
 		fallback_approver and user == fallback_approver and assigned_approver and assigned_approver != user
 	)
+	# S204-followup: Warehouse Manager delegation at dual-approval stage 2.
+	# The ToDo is routed to WAREHOUSE_MANAGER_EMAIL (ian@bebang.ph) but the
+	# action is intended to be performable by ANY Warehouse Manager role
+	# holder. Without this, one person's absence stalls every stage-2
+	# order until a System Manager intervenes. Matches the frontend RBAC
+	# widened by bei-tasks#418.
+	user_roles_snapshot = set(frappe.get_roles(user))
+	is_stage2_warehouse_manager_delegate = (
+		str(getattr(order, "approval_stage", "") or "") == "Pending Warehouse Manager"
+		and "Warehouse Manager" in user_roles_snapshot
+	)
 	if assigned_approver:
-		if assigned_approver != user and not is_system_user and not is_fallback_override:
+		if (
+			assigned_approver != user
+			and not is_system_user
+			and not is_fallback_override
+			and not is_stage2_warehouse_manager_delegate
+		):
 			frappe.throw(
 				_("Order {0} is currently assigned to {1}.").format(order_name, assigned_approver),
 				frappe.PermissionError,
 			)
 	else:
-		user_roles = set(frappe.get_roles(user))
 		allowed_roles = {AREA_SUPERVISOR_ROLE}.union(SYSTEM_APPROVER_ROLES)
 		is_fallback_user = bool(fallback_approver and user == fallback_approver)
-		if not user_roles.intersection(allowed_roles) and not is_fallback_user:
+		if (
+			not user_roles_snapshot.intersection(allowed_roles)
+			and not is_fallback_user
+			and not is_stage2_warehouse_manager_delegate
+		):
 			frappe.throw(
 				_(
-					"Only assigned approvers, Area Supervisors, fallback approvers, or System Managers can approve."
+					"Only assigned approvers, Area Supervisors, fallback approvers, "
+					"Warehouse Managers (at stage 2), or System Managers can approve."
 				),
 				frappe.PermissionError,
 			)
@@ -3456,6 +3476,22 @@ def approve_order(order_name: str, approved_quantities: list | str | None = None
 			_("Fallback approval applied by {0}; original assigned approver was {1}.").format(
 				user, assigned_approver
 			),
+		)
+
+	# S204-followup: audit trail when a Warehouse Manager delegate (not the
+	# ToDo assignee) approves stage 2. Keeps the delegation visible in the
+	# order timeline so later reviewers can see who actually acted.
+	if (
+		is_stage2_warehouse_manager_delegate
+		and assigned_approver
+		and assigned_approver != user
+	):
+		_append_order_comment(
+			order_name,
+			_(
+				"Warehouse Manager delegation: {0} approved stage 2 (original "
+				"assigned approver was {1})."
+			).format(user, assigned_approver),
 		)
 
 	# S093: Dual approval workflow
