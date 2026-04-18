@@ -1,0 +1,179 @@
+{
+ "actions": [],
+ "autoname": "hash",
+ "creation": "2026-04-18 12:00:00.000000",
+ "description": "S206 idempotency ledger: one row per (year, month, employee) recording the paired JEs created by the reliever labor cost-sharing engine. See docs/plans/2026-04-17-sprint-206-reliever-allocation-engine.md.",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "year",
+  "month",
+  "employee",
+  "column_break_idkey",
+  "period_start",
+  "period_end",
+  "home_company",
+  "section_break_details",
+  "covered_companies",
+  "home_jes_json",
+  "covered_jes_json",
+  "total_allocated",
+  "shift_shares_json",
+  "section_break_meta",
+  "allocated_on",
+  "allocated_by"
+ ],
+ "fields": [
+  {
+   "fieldname": "year",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Year",
+   "reqd": 1
+  },
+  {
+   "fieldname": "month",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Month",
+   "reqd": 1
+  },
+  {
+   "fieldname": "employee",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Employee",
+   "options": "Employee",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_idkey",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "period_start",
+   "fieldtype": "Date",
+   "label": "Period Start"
+  },
+  {
+   "fieldname": "period_end",
+   "fieldtype": "Date",
+   "label": "Period End"
+  },
+  {
+   "fieldname": "home_company",
+   "fieldtype": "Link",
+   "label": "Home Company",
+   "options": "Company"
+  },
+  {
+   "fieldname": "section_break_details",
+   "fieldtype": "Section Break",
+   "label": "Allocation Details"
+  },
+  {
+   "description": "JSON array of covered Company docnames",
+   "fieldname": "covered_companies",
+   "fieldtype": "Small Text",
+   "label": "Covered Companies"
+  },
+  {
+   "description": "JSON array of home-side JE names (one per covered Company)",
+   "fieldname": "home_jes_json",
+   "fieldtype": "Small Text",
+   "label": "Home JE Names (JSON)"
+  },
+  {
+   "description": "JSON array of covered-side JE names (one per covered Company)",
+   "fieldname": "covered_jes_json",
+   "fieldtype": "Small Text",
+   "label": "Covered JE Names (JSON)"
+  },
+  {
+   "fieldname": "total_allocated",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Total Allocated",
+   "precision": "2"
+  },
+  {
+   "description": "JSON dict {company_name: share_0_1}",
+   "fieldname": "shift_shares_json",
+   "fieldtype": "Small Text",
+   "label": "Shift Shares (JSON)"
+  },
+  {
+   "fieldname": "section_break_meta",
+   "fieldtype": "Section Break",
+   "label": "Audit"
+  },
+  {
+   "default": "Now",
+   "fieldname": "allocated_on",
+   "fieldtype": "Datetime",
+   "label": "Allocated On",
+   "read_only": 1
+  },
+  {
+   "default": "__user",
+   "fieldname": "allocated_by",
+   "fieldtype": "Link",
+   "label": "Allocated By",
+   "options": "User",
+   "read_only": 1
+  }
+ ],
+ "links": [],
+ "modified": "2026-04-18 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "HR",
+ "name": "BEI Labor Allocation Log",
+ "naming_rule": "Random",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 0,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Accounts Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 0,
+   "delete": 0,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Accounts User",
+   "share": 0,
+   "write": 0
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}
