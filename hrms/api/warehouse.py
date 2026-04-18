@@ -973,8 +973,17 @@ def _submit_dispatch_draft_si(dispatch_se_name: str | None, receiving_name: str)
 		# Already submitted (idempotent re-run) or cancelled — return as-is.
 		return si_doc.name if si_doc.docstatus == 1 else None
 
+	# S204 BLOCK-1 fix: accept-delivery is triggered by store crew (Store
+	# Supervisor / Warehouse User) who lack Sales Invoice write permission
+	# under BEI's Custom DocPerm (only Accounts User/Manager have it). The
+	# Draft SI was already created and validated at dispatch time by a
+	# different session — this is a system completion step that promotes
+	# docstatus 0 → 1. Switch to Administrator just for the submit, restore
+	# session user afterwards.
+	original_user = frappe.session.user
 	try:
 		frappe.db.savepoint("s203_submit_si")
+		frappe.set_user("Administrator")
 		si_doc.submit()
 		frappe.db.release_savepoint("s203_submit_si")
 		return si_doc.name
@@ -988,6 +997,8 @@ def _submit_dispatch_draft_si(dispatch_se_name: str | None, receiving_name: str)
 			"S203 Submit SI Error",
 		)
 		return None
+	finally:
+		frappe.set_user(original_user)
 
 
 # ============================================================
