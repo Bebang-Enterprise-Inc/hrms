@@ -76,7 +76,7 @@ PARENT_PAYABLE_GROUP_PATTERNS = ["%Accounts Payable%", "%Current Liabilities%"]
 def _in_scope_companies() -> list[dict]:
 	rows = frappe.db.sql(
 		"""
-        SELECT name, abbr, entity_category, default_currency
+        SELECT name, abbr, entity_category, default_currency, parent_company
         FROM tabCompany
         WHERE entity_category = 'Store'
            OR name IN ('BEBANG ENTERPRISE INC.', 'BEBANG KITCHEN INC.')
@@ -87,22 +87,71 @@ def _in_scope_companies() -> list[dict]:
 	return rows
 
 
-def _find_parent_group(company: str, patterns: list[str]) -> str | None:
+def _find_parent_group(company: str, patterns: list[str], root_type: str) -> str | None:
+	"""Find a parent is_group=1 Account in the given company.
+
+	Resolution order:
+	  1. Exact name match from `patterns` (e.g., "Accounts Receivable") within root_type.
+	  2. Any is_group=1 account with the target root_type (fallback: outermost group).
+
+	Both filters constrain by the company's own COA (no cross-company leakage).
+	"""
+	# 1. Try pattern match within root_type
 	for pat in patterns:
 		parent = frappe.db.sql(
 			"""
             SELECT name FROM tabAccount
             WHERE company = %(company)s
               AND is_group = 1
+              AND root_type = %(root_type)s
               AND name LIKE %(pat)s
             ORDER BY lft LIMIT 1
             """,
-			{"company": company, "pat": pat},
+			{"company": company, "pat": pat, "root_type": root_type},
 			as_dict=True,
 		)
 		if parent:
 			return parent[0]["name"]
+
+	# 2. Fallback: any is_group=1 under the target root_type, prefer innermost
+	#    (highest lft) to avoid placing leaf accounts directly under a root group.
+	parent = frappe.db.sql(
+		"""
+        SELECT name FROM tabAccount
+        WHERE company = %(company)s
+          AND is_group = 1
+          AND root_type = %(root_type)s
+        ORDER BY lft DESC LIMIT 1
+        """,
+		{"company": company, "root_type": root_type},
+		as_dict=True,
+	)
+	if parent:
+		return parent[0]["name"]
 	return None
+
+
+def _first_group_zero(doctype: str) -> str | None:
+	"""Return the first `is_group=0` record of a group doctype (Customer Group,
+	Supplier Group, Territory). Returns None if only group=1 roots exist.
+	"""
+	row = frappe.db.get_value(doctype, {"is_group": 0}, "name")
+	return row
+
+
+def _best_territory() -> str:
+	"""Territory that works for internal parties. Prefer a non-group leaf; fall
+	back to the group root "All Territories" (always exists in fresh installs).
+	"""
+	return _first_group_zero("Territory") or "All Territories"
+
+
+def _best_customer_group() -> str:
+	return _first_group_zero("Customer Group") or "All Customer Groups"
+
+
+def _best_supplier_group() -> str:
+	return _first_group_zero("Supplier Group") or "All Supplier Groups"
 
 
 def _ensure_account(
@@ -167,8 +216,8 @@ def _ensure_internal_customer(
 			"doctype": "Customer",
 			"customer_name": customer_name,
 			"customer_type": "Company",
-			"customer_group": frappe.db.get_value("Customer Group", {"is_group": 0}, "name") or "Commercial",
-			"territory": frappe.db.get_value("Territory", {"is_group": 0}, "name") or "Philippines",
+			"customer_group": _best_customer_group(),
+			"territory": _best_territory(),
 			"is_internal_customer": 1,
 			"represents_company": company,
 			"companies": [{"company": c} for c in allowlist_companies],
@@ -202,7 +251,7 @@ def _ensure_internal_supplier(
 			"doctype": "Supplier",
 			"supplier_name": supplier_name,
 			"supplier_type": "Company",
-			"supplier_group": frappe.db.get_value("Supplier Group", {"is_group": 0}, "name") or "Services",
+			"supplier_group": _best_supplier_group(),
 			"country": "Philippines",
 			"is_internal_supplier": 1,
 			"represents_company": company,
@@ -249,101 +298,99 @@ def execute() -> dict:
 	missing_parents: list[dict] = []
 	errors: list[dict] = []
 
-	frappe.db.savepoint(SAVEPOINT_NAME)
-	try:
-		for co in companies:
-			name = co["name"]
-			abbr = co["abbr"]
-			currency = co.get("default_currency") or "PHP"
+	# Per-company savepoint loop. One company's failure does NOT block others
+	# and does NOT roll back already-successful companies.
+	for co in companies:
+		name = co["name"]
+		abbr = co["abbr"]
+		currency = co.get("default_currency") or "PHP"
 
-			# Parent account groups
-			parent_rec = _find_parent_group(name, PARENT_RECEIVABLE_GROUP_PATTERNS)
-			parent_pay = _find_parent_group(name, PARENT_PAYABLE_GROUP_PATTERNS)
-			if not parent_rec:
-				missing_parents.append({"company": name, "missing": "Receivable group"})
-				continue
-			if not parent_pay:
-				missing_parents.append({"company": name, "missing": "Payable group"})
-				continue
+		# Parent account groups, constrained to the company's own COA.
+		parent_rec = _find_parent_group(name, PARENT_RECEIVABLE_GROUP_PATTERNS, "Asset")
+		parent_pay = _find_parent_group(name, PARENT_PAYABLE_GROUP_PATTERNS, "Liability")
+		if not parent_rec:
+			missing_parents.append({"company": name, "missing": "Asset-root parent group"})
+			continue
+		if not parent_pay:
+			missing_parents.append({"company": name, "missing": "Liability-root parent group"})
+			continue
 
-			try:
-				# Accounts
-				df_name, df_status = _ensure_account(
-					company=name,
-					abbr=abbr,
-					account_number=ACCOUNT_NUMBER_DUE_FROM,
-					account_label=ACCOUNT_LABEL_DUE_FROM,
-					account_type="Receivable",
-					root_type="Asset",
-					parent_group=parent_rec,
-					currency=currency,
-				)
-				(created_accounts if df_status == "created" else existed_accounts).append(
-					{"company": name, "account": df_name, "type": "Receivable"}
-				)
+		sp = f"s206_co_{co['abbr']}"
+		try:
+			frappe.db.savepoint(sp)
 
-				dt_name, dt_status = _ensure_account(
-					company=name,
-					abbr=abbr,
-					account_number=ACCOUNT_NUMBER_DUE_TO,
-					account_label=ACCOUNT_LABEL_DUE_TO,
-					account_type="Payable",
-					root_type="Liability",
-					parent_group=parent_pay,
-					currency=currency,
-				)
-				(created_accounts if dt_status == "created" else existed_accounts).append(
-					{"company": name, "account": dt_name, "type": "Payable"}
-				)
-
-				# Internal Customer (used by OTHER companies when billing this Company)
-				cust_display = internal_party_name(name)
-				cust_doc, cust_status = _ensure_internal_customer(
-					company=name,
-					customer_name=cust_display,
-					allowlist_companies=company_names,
-				)
-				bucket = {
-					"created": created_parties,
-					"existed": existed_parties,
-					"updated": updated_parties,
-				}[cust_status]
-				bucket.append({"company": name, "party": cust_doc, "type": "Customer"})
-
-				# Internal Supplier (used by OTHER companies when they owe this Company)
-				supp_display = internal_party_name(name)
-				supp_doc, supp_status = _ensure_internal_supplier(
-					company=name,
-					supplier_name=supp_display,
-					allowlist_companies=company_names,
-				)
-				bucket = {
-					"created": created_parties,
-					"existed": existed_parties,
-					"updated": updated_parties,
-				}[supp_status]
-				bucket.append({"company": name, "party": supp_doc, "type": "Supplier"})
-
-			except Exception as exc:
-				errors.append({"company": name, "error": str(exc)})
-
-		if errors or missing_parents:
-			frappe.db.rollback(save_point=SAVEPOINT_NAME)
-			frappe.log_error(
-				title="S206 intercompany seed rolled back",
-				message=(
-					f"errors={len(errors)}, missing_parents={len(missing_parents)}; "
-					f"first_error={errors[0] if errors else None}; "
-					f"first_missing={missing_parents[0] if missing_parents else None}"
-				),
+			# Accounts
+			df_name, df_status = _ensure_account(
+				company=name,
+				abbr=abbr,
+				account_number=ACCOUNT_NUMBER_DUE_FROM,
+				account_label=ACCOUNT_LABEL_DUE_FROM,
+				account_type="Receivable",
+				root_type="Asset",
+				parent_group=parent_rec,
+				currency=currency,
 			)
-		else:
-			frappe.db.release_savepoint(SAVEPOINT_NAME)
-			frappe.db.commit()
-	except Exception as exc:
-		frappe.db.rollback(save_point=SAVEPOINT_NAME)
-		errors.append({"stage": "batch", "error": str(exc)})
-		frappe.log_error(title="S206 intercompany seed batch failure", message=str(exc))
+			(created_accounts if df_status == "created" else existed_accounts).append(
+				{"company": name, "account": df_name, "type": "Receivable"}
+			)
+
+			dt_name, dt_status = _ensure_account(
+				company=name,
+				abbr=abbr,
+				account_number=ACCOUNT_NUMBER_DUE_TO,
+				account_label=ACCOUNT_LABEL_DUE_TO,
+				account_type="Payable",
+				root_type="Liability",
+				parent_group=parent_pay,
+				currency=currency,
+			)
+			(created_accounts if dt_status == "created" else existed_accounts).append(
+				{"company": name, "account": dt_name, "type": "Payable"}
+			)
+
+			# Internal Customer (used by OTHER companies when billing this Company)
+			cust_display = internal_party_name(name)
+			cust_doc, cust_status = _ensure_internal_customer(
+				company=name,
+				customer_name=cust_display,
+				allowlist_companies=company_names,
+			)
+			bucket = {
+				"created": created_parties,
+				"existed": existed_parties,
+				"updated": updated_parties,
+			}[cust_status]
+			bucket.append({"company": name, "party": cust_doc, "type": "Customer"})
+
+			# Internal Supplier (used by OTHER companies when they owe this Company)
+			supp_display = internal_party_name(name)
+			supp_doc, supp_status = _ensure_internal_supplier(
+				company=name,
+				supplier_name=supp_display,
+				allowlist_companies=company_names,
+			)
+			bucket = {
+				"created": created_parties,
+				"existed": existed_parties,
+				"updated": updated_parties,
+			}[supp_status]
+			bucket.append({"company": name, "party": supp_doc, "type": "Supplier"})
+
+			frappe.db.release_savepoint(sp)
+		except Exception as exc:
+			try:
+				frappe.db.rollback(save_point=sp)
+			except Exception:
+				pass
+			errors.append({"company": name, "error": str(exc)[:500]})
+			frappe.log_error(
+				title=f"S206 seed failed for {name}",
+				message=str(exc)[:1500],
+			)
+
+	# Commit the whole batch — any partial success on companies whose savepoints
+	# were released stays. Per-company savepoint already isolated failures.
+	frappe.db.commit()  # nosemgrep: frappe-manual-commit
 
 	summary = {
 		"companies_in_scope": len(companies),
