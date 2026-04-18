@@ -88,15 +88,21 @@ def _in_scope_companies() -> list[dict]:
 
 
 def _find_parent_group(company: str, patterns: list[str], root_type: str) -> str | None:
-	"""Find a parent is_group=1 Account in the given company.
+	"""Find a parent is_group=1 Account for creating a leaf account in `company`.
 
 	Resolution order:
-	  1. Exact name match from `patterns` (e.g., "Accounts Receivable") within root_type.
-	  2. Any is_group=1 account with the target root_type (fallback: outermost group).
+	  1. Exact name match from `patterns` within root_type, own COA.
+	  2. Any is_group=1 under root_type, own COA (outermost group).
+	  3. Same pattern match in parent_company's COA (for child Companies that
+	     share COA with a parent).
+	  4. Any is_group=1 under root_type in parent_company's COA.
 
-	Both filters constrain by the company's own COA (no cross-company leakage).
+	Combined with `frappe.local.flags.ignore_root_company_validation = True`,
+	this lets the child Company borrow the parent_company's group as the
+	parent_account for its own leaf insert (ERPNext auto-propagates the leaf
+	to each Company via its abbr suffix).
 	"""
-	# 1. Try pattern match within root_type
+	# 1 + 2. Company's own COA
 	for pat in patterns:
 		parent = frappe.db.sql(
 			"""
@@ -113,8 +119,6 @@ def _find_parent_group(company: str, patterns: list[str], root_type: str) -> str
 		if parent:
 			return parent[0]["name"]
 
-	# 2. Fallback: any is_group=1 under the target root_type, prefer innermost
-	#    (highest lft) to avoid placing leaf accounts directly under a root group.
 	parent = frappe.db.sql(
 		"""
         SELECT name FROM tabAccount
@@ -124,6 +128,39 @@ def _find_parent_group(company: str, patterns: list[str], root_type: str) -> str
         ORDER BY lft DESC LIMIT 1
         """,
 		{"company": company, "root_type": root_type},
+		as_dict=True,
+	)
+	if parent:
+		return parent[0]["name"]
+
+	# 3 + 4. parent_company's COA as fallback
+	parent_company = frappe.db.get_value("Company", company, "parent_company")
+	if not parent_company:
+		return None
+	for pat in patterns:
+		parent = frappe.db.sql(
+			"""
+            SELECT name FROM tabAccount
+            WHERE company = %(company)s
+              AND is_group = 1
+              AND root_type = %(root_type)s
+              AND name LIKE %(pat)s
+            ORDER BY lft LIMIT 1
+            """,
+			{"company": parent_company, "pat": pat, "root_type": root_type},
+			as_dict=True,
+		)
+		if parent:
+			return parent[0]["name"]
+	parent = frappe.db.sql(
+		"""
+        SELECT name FROM tabAccount
+        WHERE company = %(company)s
+          AND is_group = 1
+          AND root_type = %(root_type)s
+        ORDER BY lft DESC LIMIT 1
+        """,
+		{"company": parent_company, "root_type": root_type},
 		as_dict=True,
 	)
 	if parent:
@@ -298,6 +335,14 @@ def execute() -> dict:
 	missing_parents: list[dict] = []
 	errors: list[dict] = []
 
+	# S181 pattern: bypass ERPNext's group-company validator that fires
+	# "Please add the account to root level Company - <parent>" on child
+	# Companies that share COA with a parent_company. Without this, 15/51
+	# Companies (all with parent_company set) fail.
+	# See hrms/overrides/company.py:638-644 for the precedent.
+	original_root_flag = getattr(frappe.local.flags, "ignore_root_company_validation", False)
+	frappe.local.flags.ignore_root_company_validation = True
+
 	# Per-company savepoint loop. One company's failure does NOT block others
 	# and does NOT roll back already-successful companies.
 	for co in companies:
@@ -387,6 +432,9 @@ def execute() -> dict:
 				title=f"S206 seed failed for {name}",
 				message=str(exc)[:1500],
 			)
+
+	# Restore the root-company validation flag regardless of success/failure.
+	frappe.local.flags.ignore_root_company_validation = original_root_flag
 
 	# Commit the whole batch — any partial success on companies whose savepoints
 	# were released stays. Per-company savepoint already isolated failures.

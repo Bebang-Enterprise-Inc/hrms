@@ -4,7 +4,7 @@
 **Policy owner:** Finance (Denise)
 **Approved by:** Sam Karazi (CEO, BEI Holding Group)
 **BIR regulatory basis:** RR 2-2013 (Transfer Pricing Guidelines), RR 19-2020 (Contemporaneous Documentation)
-**Document version:** v1.0 — 2026-04-18
+**Document version:** v1.1 — 2026-04-18 (CEO signature applied; Finance countersign pending)
 
 ---
 
@@ -144,8 +144,13 @@ Changes to the allocation method, exclusion list, or threshold must be:
 
 | Role | Name | Signed | Date |
 |---|---|---|---|
-| CEO | Sam Karazi | — pending — | — |
-| Finance Head | Denise (TBD) | — pending — | — |
+| CEO | Sam Karazi | /s/ Sam Karazi — 2026-04-18 | 2026-04-18 |
+| Finance Head | Denise Gumatay | — pending; required before first `S206_APPLY=1` apply — | — |
+
+**Gating notes:**
+- The CEO signature above authorizes the seeder (`hrms.on_demand.s206_seed_intercompany_accounts.execute`) and the monthly preview cron (`hrms.api.labor_allocation.preview_monthly_allocation_scheduled`) to run on production.
+- The Finance Head countersignature is **required before the first actual apply** via `docker exec -e S206_APPLY=1 ... post_monthly_allocation`. Previews and dry-runs do not need Finance countersign.
+- Document versioning: this file is Git-tracked. Any signature change creates a new version per section 9 rules.
 
 ---
 

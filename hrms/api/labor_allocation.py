@@ -310,8 +310,10 @@ def preview_monthly_allocation_scheduled() -> None:
 		)
 		return
 
-	# Email to Sam + Denise (configurable via BEI Settings in future)
-	recipients = ["sam@bebang.ph"]
+	# Email to CEO + Finance. CEO gate authorizes preview cron; Finance reviews
+	# for countersign on TP Policy before any `S206_APPLY=1` run.
+	# Future: make configurable via BEI Settings.s206_preview_recipients (CSV).
+	recipients = ["sam@bebang.ph", "denise@bebang.ph"]
 	subject = f"S206 monthly allocation preview — {year:04d}-{month:02d}"
 	summary = (
 		f"Period: {report['period']['start']} to {report['period']['end']}\n"

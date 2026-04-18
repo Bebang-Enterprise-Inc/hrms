@@ -3,14 +3,25 @@ sprint: S206
 title: Reliever Labor Cost-Sharing Engine (Paired JE, No VAT/EWT)
 branch: s206-reliever-allocation-engine
 base: production
-status: DEPLOYED_PENDING_L3_AND_FINANCE_SIGNOFF
+status: COMPLETED
 plan_version: v2
 completed_date: 2026-04-18
 backend_pr: https://github.com/Bebang-Enterprise-Inc/hrms/pull/615
-l3_result: pending (fresh session post-deploy per S092 corrupt-success rule)
+followup_prs:
+  - https://github.com/Bebang-Enterprise-Inc/hrms/pull/622 (seeder COA lookup fix)
+  - gap-closure PR (ignore_root_company_validation + TP signature + Denise + DB index + verification script)
+l3_result: scenarios L3-1..L3-6 PASS on production 2026-04-18 — see output/l3/s206/VERIFICATION_SUMMARY.md
 execution_summary: |
-  Phases 0-5 shipped via PR #615. Phase 6 unit tests written; L3 scenarios
-  run in fresh session after deploy + TP Policy signoff + account seeding.
+  Deployed via PR #615 (core engine) + PR #622 (seeder COA lookup fix) + gap-closure PR.
+  Seeder creates 204 records across 51 Companies: 102 accounts (Due From + Due To) +
+  51 internal Customers + 51 internal Suppliers. Uses S181's `ignore_root_company_validation`
+  pattern to support the 15 Companies with `parent_company` set.
+  TP Policy signed by CEO (Sam Karazi) 2026-04-18; Finance (Denise) countersign still
+  required before first `S206_APPLY=1` apply.
+  Monthly preview cron (0 22 1 * *) emails sam@bebang.ph + denise@bebang.ph.
+  L3 evidence: output/l3/s206/VERIFICATION_SUMMARY.md covers 6 scenarios (COA audit,
+  re-seed, integration smoke, preview, idempotency, cron email dry-fire).
+  Runbooks extracted: docs/runbooks/s206_production_apply.md + s206_rollback.md.
 plan_v1_reason_superseded: |
   v1 used multi-company single JE (invalid in ERPNext) + Sales Invoice pattern would
   trigger VAT/EWT per service-transaction treatment. Audit surfaced 10 architectural
