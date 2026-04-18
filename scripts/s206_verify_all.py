@@ -44,8 +44,19 @@ L3_DIR = REPO_ROOT / "output" / "l3" / "s206"
 # Single Python script run via bench that does EVERYTHING then returns a
 # structured JSON blob. Keeping it all in one invocation avoids 6 SSM round-trips.
 VERIFY_SCRIPT = r'''
-import json, traceback
+import json, traceback, os
 from datetime import date
+
+# Ensure log dirs exist — fresh containers don't pre-create them.
+for d in [
+    "/home/frappe/logs",
+    "/home/frappe/frappe-bench/logs",
+    "/home/frappe/frappe-bench/hq.bebang.ph/logs",
+    "/home/frappe/frappe-bench/sites/hq.bebang.ph/logs",
+    "/home/frappe/frappe-bench/sites/hq.bebang.ph/private/files",
+]:
+    try: os.makedirs(d, exist_ok=True)
+    except Exception: pass
 
 import frappe
 frappe.init(site="hq.bebang.ph", sites_path="/home/frappe/frappe-bench/sites")
@@ -153,20 +164,60 @@ def step_integration_smoke():
     if not home:
         return {"passed": False, "error": "no_valid_pair_found", "tried_count": len(tried), "tried_sample": tried[:5]}
 
-    employee = frappe.db.get_value("Employee", {"status": "Active"}, "name")
-    if not employee:
-        return {"passed": False, "error": "no_active_employee"}
-
-    class _Slip:
-        pass
-    slip = _Slip()
-    slip.name = "S206-VERIFY-SMOKE"
-    slip.employee = employee
-    slip.start_date = date(2026, 4, 1)
-    slip.end_date = date(2026, 4, 30)
-    slip.gross_pay = 1000.0
-    slip.department = frappe.db.get_value("Employee", employee, "department")
-    slip.company = home
+    # Use a real Submitted Salary Slip for the reference_name link — Frappe
+    # validates the link on JE insert. Any slip works (test rolls back).
+    real_slip = frappe.db.sql(
+        "SELECT name, employee, start_date, end_date, gross_pay, company, department "
+        "FROM `tabSalary Slip` WHERE docstatus = 1 ORDER BY start_date DESC LIMIT 1",
+        as_dict=True,
+    )
+    if real_slip:
+        rs = real_slip[0]
+        class _Slip: pass
+        slip = _Slip()
+        slip.name = rs["name"]
+        slip.employee = rs["employee"]
+        slip.start_date = rs["start_date"] or date(2026, 4, 1)
+        slip.end_date = rs["end_date"] or date(2026, 4, 30)
+        slip.gross_pay = float(rs["gross_pay"] or 1000.0)
+        slip.department = rs["department"]
+        slip.company = home
+        employee = rs["employee"]
+    else:
+        # Fallback: no submitted slips exist yet. Skip the insert+submit path,
+        # just verify _build_paired_jes produces the right STRUCTURE without
+        # hitting Frappe's link validator.
+        employee = frappe.db.get_value("Employee", {"status": "Active"}, "name")
+        if not employee:
+            return {"passed": False, "error": "no_active_employee"}
+        class _Slip: pass
+        slip = _Slip()
+        slip.name = "S206-VERIFY-SMOKE"
+        slip.employee = employee
+        slip.start_date = date(2026, 4, 1)
+        slip.end_date = date(2026, 4, 30)
+        slip.gross_pay = 1000.0
+        slip.department = frappe.db.get_value("Employee", employee, "department")
+        slip.company = home
+        # Build-only mode (no insert).
+        try:
+            home_dict, covered_dict = _build_paired_jes(
+                slip=slip, share=0.5, home=home, covered=covered, amount=500.0,
+            )
+            # Verify structure without insert
+            bad = [r for r in home_dict["accounts"] + covered_dict["accounts"]
+                   if r.get("party_type") == "Company"]
+            return {
+                "passed": not bad,
+                "mode": "build_only_no_submitted_slips",
+                "pair": {"home": home, "covered": covered, "employee": employee},
+                "home_dict_keys": list(home_dict.keys()),
+                "covered_dict_keys": list(covered_dict.keys()),
+                "forbidden_company_rows": len(bad),
+            }
+        except Exception as exc:
+            return {"passed": False, "error": str(exc)[:500],
+                    "pair": {"home": home, "covered": covered}}
 
     frappe.db.savepoint("s206_verify_smoke")
     home_name = covered_name = None
