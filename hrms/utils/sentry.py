@@ -311,6 +311,18 @@ def _patch_log_error():
 		_original_log_error = frappe.log_error
 
 		def patched_log_error(*args, **kwargs):
+			# S204: Error-handler self-harm guard — Frappe's Error Log.method
+			# field is VARCHAR(140). When the title (second positional) or
+			# derived first-line-of-message exceeds that limit, the insert
+			# throws `throw_length_exceeded_error`, which PROPAGATES OUT of
+			# the except block the caller thought was silent. Callers across
+			# hrms/api pass long exception reprs as message; the first line
+			# becomes the title and trips the 140-char cap, masking the real
+			# root cause. Clamp title explicitly before forwarding.
+			if len(args) >= 2 and isinstance(args[1], str) and len(args[1]) > 135:
+				args = (args[0], args[1][:132] + "...", *args[2:])
+			if "title" in kwargs and isinstance(kwargs["title"], str) and len(kwargs["title"]) > 135:
+				kwargs["title"] = kwargs["title"][:132] + "..."
 			result = _original_log_error(*args, **kwargs)
 
 			try:
