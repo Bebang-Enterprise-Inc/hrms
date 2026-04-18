@@ -1,0 +1,45 @@
+{
+  "scenario": "S1_SM_Tanza_fresh",
+  "steps": [
+    "order_submitted",
+    "area_approval=true",
+    "scm_order_approval=true",
+    "mr_created",
+    "mr_approve_toast_missed: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m fail",
+    "mr_approved",
+    "dispatched",
+    "wr_auto_created",
+    "delivery_accepted",
+    "si_verified"
+  ],
+  "started_at": "2026-04-17T14:53:02.061Z",
+  "started_frappe_iso": "2026-04-17 22:53:02",
+  "order_id": "BEI-ORD-2026-00276",
+  "order_company": "BEBANG MEGA INC.",
+  "order_approval_stage": "Pending Area Supervisor",
+  "mr_name": "MAT-MR-2026-00133",
+  "mr_status_after_approval": "Ordered",
+  "wr_name": "BEI-WHR-2026-00011",
+  "dispatch_se": "MAT-STE-2026-00371",
+  "draft_si_at_dispatch": "ACC-SINV-2026-00008",
+  "si_name": "ACC-SINV-2026-00008",
+  "si_customer": "BEBANG MEGA INC.",
+  "si_company": "BEBANG KITCHEN INC.",
+  "si_bei_legal_entity": "BEBANG KITCHEN INC.",
+  "si_tax_id": "010-885-436-00000",
+  "si_grand_total": 16977.27,
+  "si_net_total": 15158.28,
+  "si_total_taxes": 1818.99,
+  "si_docstatus": 1,
+  "gl_customer_rows": [
+    {
+      "account": "Debtors - BKI",
+      "party": "BEBANG MEGA INC.",
+      "party_type": "Customer",
+      "debit": 16977,
+      "credit": 0
+    }
+  ],
+  "verdict": "PASS",
+  "completed_at": "2026-04-17T14:54:37.994Z"
+}

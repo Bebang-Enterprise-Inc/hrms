@@ -1,0 +1,39 @@
+{
+  "generated_at_utc": "2026-04-17T13:51:48.891726+00:00",
+  "hrms": {
+    "release_branch": "production",
+    "release_head_sha": "7cc719409ac1fa1954b8417dba57e9db192b8052",
+    "confirms": [
+      "S198 live",
+      "S203 live",
+      "S203 followup deployed (PR #610 merged 2026-04-17T04:17:24Z)"
+    ]
+  },
+  "bei_tasks": {
+    "release_branch": "main",
+    "release_head_sha": "f8e6142258cd22ab1062205543e0f5f2bb517522",
+    "recent_commits": [
+      "f8e6142 Merge pull request #413 from Bebang-Enterprise-Inc/s194-iter8-followups",
+      "646e338 fix(S194 iter8c): auto-pass GR inspection after API create \u00e2\u20ac\u201d invoice needs Accepted GR",
+      "184cc53 fix(S194 iter8b): create invoice via REST API (same pattern as GR)",
+      "e3328f3 fix(S194 iter8): sendToSupplier via REST + S194-4/24 reframe",
+      "4a2105d Merge pull request #412 from Bebang-Enterprise-Inc/s194-iter7o-cache-bust"
+    ]
+  },
+  "live_data_patches": {
+    "bei_settings.commissary_company": "BEBANG KITCHEN INC.",
+    "bei_settings.bki_markup_jv_percent": 2.75,
+    "internal_customers_with_bki_in_allowlist": [
+      "BEBANG MEGA INC.",
+      "BEBANG ENTERPRISE INC.",
+      "(+35 more patched on 2026-04-17)"
+    ]
+  },
+  "strays_noted_not_blocking": {
+    "test.area_draft_orders": 18,
+    "earliest": "BEI-ORD-2026-00247 (2026-04-15)",
+    "latest": "BEI-ORD-2026-00270 (today, S1 proof order)",
+    "blocking_for_new_run": false,
+    "reason": "each new test creates next-sequence order name; strays do not collide"
+  }
+}

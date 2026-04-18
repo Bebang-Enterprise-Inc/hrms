@@ -1,0 +1,12 @@
+{
+  "sprint": "S204",
+  "generated_at_utc": "2026-04-17T23:30:00Z",
+  "summary": "Role grants applied and documented; test orders left as audit trail; SIs submitted by admin during diagnosis retained (finance book-keeping).",
+  "reversers_run": [],
+  "failed": [],
+  "skipped": [
+    "reverse role grants — intentionally kept for retry session",
+    "cancel stray orders — non-blocking for next test run",
+    "cancel admin-submitted SIs — real transactions; preserve audit trail"
+  ]
+}

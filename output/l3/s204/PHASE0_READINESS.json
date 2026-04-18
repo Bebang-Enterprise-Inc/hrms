@@ -1,0 +1,150 @@
+{
+  "generated_at_utc": "2026-04-17T13:48:00.419434+00:00",
+  "deploy_marker": {
+    "pr_610_in_production_log": true,
+    "matches": [
+      "a5b746a03 fix(S203 followup): bei_legal_entity = bki_company (issuer), not buyer"
+    ]
+  },
+  "commissary_company": {
+    "commissary_company": "BEBANG KITCHEN INC.",
+    "expected": "BEBANG KITCHEN INC.",
+    "match": true,
+    "raw": {
+      "message": "BEBANG KITCHEN INC."
+    }
+  },
+  "bki_markup_jv_percent": {
+    "bki_markup_jv_percent": 2.75,
+    "raw": {
+      "message": 2.75
+    }
+  },
+  "customers": [
+    {
+      "customer": "BEBANG MEGA INC.",
+      "found": true,
+      "is_internal_customer": 1,
+      "companies": [
+        "BEBANG KITCHEN INC."
+      ],
+      "has_bki": true
+    },
+    {
+      "customer": "BEBANG ENTERPRISE INC.",
+      "found": true,
+      "is_internal_customer": 1,
+      "companies": [
+        "BEBANG KITCHEN INC."
+      ],
+      "has_bki": true
+    },
+    {
+      "customer": "TASTECARTEL CORP.",
+      "found": true,
+      "is_internal_customer": 0,
+      "companies": [],
+      "has_bki": false
+    }
+  ],
+  "pinnacle_stock": {
+    "FG001": {
+      "actual_qty": 12698.0,
+      "sufficient": true,
+      "raw_rows": [
+        {
+          "item_code": "FG001",
+          "warehouse": "PINNACLE COLD STORAGE SOLUTIONS - BKI",
+          "actual_qty": 12698.0,
+          "reserved_qty": 0.0,
+          "projected_qty": 8926.0
+        }
+      ]
+    },
+    "FG002": {
+      "actual_qty": 20000.0,
+      "sufficient": true,
+      "raw_rows": [
+        {
+          "item_code": "FG002",
+          "warehouse": "PINNACLE COLD STORAGE SOLUTIONS - BKI",
+          "actual_qty": 20000.0,
+          "reserved_qty": 0.0,
+          "projected_qty": 20000.0
+        }
+      ]
+    },
+    "FG010": {
+      "actual_qty": 20000.0,
+      "sufficient": true,
+      "raw_rows": [
+        {
+          "item_code": "FG010",
+          "warehouse": "PINNACLE COLD STORAGE SOLUTIONS - BKI",
+          "actual_qty": 20000.0,
+          "reserved_qty": 0.0,
+          "projected_qty": 20000.0
+        }
+      ]
+    },
+    "FG023": {
+      "actual_qty": 20000.0,
+      "sufficient": true,
+      "raw_rows": [
+        {
+          "item_code": "FG023",
+          "warehouse": "PINNACLE COLD STORAGE SOLUTIONS - BKI",
+          "actual_qty": 20000.0,
+          "reserved_qty": 0.0,
+          "projected_qty": 20000.0
+        }
+      ]
+    },
+    "PM002": {
+      "actual_qty": 20000.0,
+      "sufficient": true,
+      "raw_rows": [
+        {
+          "item_code": "PM002",
+          "warehouse": "PINNACLE COLD STORAGE SOLUTIONS - BKI",
+          "actual_qty": 20000.0,
+          "reserved_qty": 0.0,
+          "projected_qty": 20000.0
+        }
+      ]
+    },
+    "PM003": {
+      "actual_qty": 15068.0,
+      "sufficient": true,
+      "raw_rows": [
+        {
+          "item_code": "PM003",
+          "warehouse": "PINNACLE COLD STORAGE SOLUTIONS - BKI",
+          "actual_qty": 15068.0,
+          "reserved_qty": 0.0,
+          "projected_qty": 12475.0
+        }
+      ]
+    },
+    "PM007": {
+      "actual_qty": 12632.0,
+      "sufficient": true,
+      "raw_rows": [
+        {
+          "item_code": "PM007",
+          "warehouse": "PINNACLE COLD STORAGE SOLUTIONS - BKI",
+          "actual_qty": 12632.0,
+          "reserved_qty": 0.0,
+          "projected_qty": 8825.0
+        }
+      ]
+    }
+  },
+  "verdicts": {
+    "deploy_ok": true,
+    "commissary_setting_ok": true,
+    "customers_ok": true,
+    "stock_ok": true
+  },
+  "all_green": true
+}
