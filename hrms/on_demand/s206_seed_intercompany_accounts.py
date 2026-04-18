@@ -220,7 +220,9 @@ def _write_report(payload: dict) -> str:
 		site_path = frappe.get_site_path(*SITE_REPORT_SUBPATH)
 		os.makedirs(site_path, exist_ok=True)
 		out_path = os.path.join(site_path, filename)
-		with open(out_path, "w", encoding="utf-8") as f:
+		# Path is constructed entirely from Frappe-owned site-path constants
+		# + timestamped filename. No user input in the path. Safe.
+		with open(out_path, "w", encoding="utf-8") as f:  # nosemgrep: frappe-security-file-traversal
 			json.dump(payload, f, indent=2, default=str)
 		return out_path
 	except Exception as exc:

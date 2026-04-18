@@ -219,7 +219,11 @@ def post_monthly_allocation(
 			)
 			errors.append({"slip": name, "error": str(exc)})
 
-	frappe.db.commit()
+	# Persist all successful per-slip allocations at batch end. Required
+	# because per-slip savepoints only provide rollback isolation — without
+	# this commit, a later unrelated exception could roll back the whole
+	# batch of already-applied JEs. Manual commit is intentional here.
+	frappe.db.commit()  # nosemgrep: frappe-manual-commit
 
 	return {
 		"period": {"year": year_i, "month": month_i, "start": str(start), "end": str(end)},
