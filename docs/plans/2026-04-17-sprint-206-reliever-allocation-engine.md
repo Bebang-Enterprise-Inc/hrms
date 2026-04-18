@@ -35,9 +35,14 @@ completion_condition: |
   - hrms/utils/labor_allocation.py produces PAIRED JEs via Frappe native inter_company_journal_entry_reference
   - hrms/hr/doctype/bei_labor_allocation_log DocType for idempotency (unique on year+month+employee)
   - hrms/api/labor_allocation.py preview + post with S206_APPLY=1 gate + Sentry context
-  - All JEs satisfy DM-1: party_type=Company on intercompany rows; party_type=Employee on Salaries rows
+  - All JEs satisfy DM-1: party_type=Customer on Due From rows (party=internal Customer representing COVERED);
+    party_type=Supplier on Due To rows (party=internal Supplier representing HOME); party_type=Employee on
+    Salaries rows. NO party_type='Company' anywhere (ERPNext v15 journal_entry.validate_party rejects it).
   - All JEs satisfy DM-6: user_remark cites cost-sharing policy; reference fields; cost_center
-  - Intercompany account seeder is on_demand (NOT in patches.txt) — avoids dry-run-marked-DONE trap
+  - Intercompany account seeder is on_demand (NOT in patches.txt) — avoids dry-run-marked-DONE trap; seeds
+    102 accounts + 51 internal Customers + 51 internal Suppliers (204 total records) across 51 Companies
+  - hrms/tests/test_s206_integration.py runs on live test-site Frappe and actually inserts + submits a
+    paired JE (catches the kind of validator regressions that mocked tests miss)
   - Production Apply Runbook documents `docker exec -e S206_APPLY=1` explicitly
   - L3: April 2026 dry-run reviewed; apply posts paired JEs cleanly for 3+ store Companies
   - Plan YAML status -> COMPLETED and SPRINT_REGISTRY.md updated
@@ -58,7 +63,7 @@ v1 plan failed audit with 10 architectural CRITICAL blockers. v2 addresses all:
 | v1 blocker | v1 (wrong) | v2 (correct) |
 |---|---|---|
 | B1 multi-company single JE invalid | Home+covered rows in one JE | **Paired JEs** via `inter_company_journal_entry_reference` (Frappe native) |
-| B2 wrong party_type | Employee on all rows | Company on Due From/To; Employee on Salaries only |
+| B2 wrong party_type | Employee on all rows | Customer on Due From (party=covered's internal Customer); Supplier on Due To (party=home's internal Supplier); Employee on Salaries only. **NOT** party_type='Company' — ERPNext v15 validate_party rejects it (fixed post-execution per POST_EXECUTION_AUDIT_2026-04-18) |
 | B3 no idempotency | None | New `BEI Labor Allocation Log` DocType, unique on (year, month, employee) |
 | B4 missing TPD | None | `docs/compliance/s206-transfer-pricing-policy.md` drafted; Finance signoff gate |
 | B5 docker env not propagated | Assumed local shell | Production Apply Runbook with `docker exec -e S206_APPLY=1` |

@@ -81,12 +81,21 @@ For each reliever shift covered at a non-home store, the following pair of Journ
 **Home Company JE (e.g., BEI parent):**
 - CR `Salaries Expense - <Home>` × share (reduces home's expense)
 - DR `Due From Group Entities - <Home>` × share (records receivable from group)
-- `party_type = "Company"`, `party = <Covered Company>` on the Due From row
+- Due From row: `party_type = "Customer"`, `party = <internal Customer representing the Covered Company>`
+- Salaries row: `party_type = "Employee"`, `party = <employee>`
 
 **Covered Company JE (e.g., SM Megamall store):**
 - DR `Salaries Expense - <Covered>` × share (increases covered's expense)
 - CR `Due To Group Entities - <Covered>` × share (records payable to group)
-- `party_type = "Company"`, `party = <Home Company>` on the Due To row
+- Due To row: `party_type = "Supplier"`, `party = <internal Supplier representing the Home Company>`
+- Salaries row: `party_type = "Employee"`, `party = <employee>`
+
+The internal Customer and internal Supplier are standard ERPNext records with
+`is_internal_customer=1` / `is_internal_supplier=1` and `represents_company = <the Company they stand in for>`.
+They are seeded once by `hrms.on_demand.s206_seed_intercompany_accounts` (51 of each). ERPNext v15's
+Journal Entry validator rejects `party_type = "Company"` on Receivable/Payable rows — only registered
+Party Types (Customer, Supplier, Employee, Shareholder) pass validation — so the canonical intercompany
+pattern uses internal Customer/Supplier as the party.
 
 Both JEs carry:
 - `voucher_type = "Inter Company Journal Entry"` (Frappe native type)
