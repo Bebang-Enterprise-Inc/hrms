@@ -313,17 +313,24 @@ def write_summary(result: dict, ts: str) -> Path:
 	L3_DIR.mkdir(parents=True, exist_ok=True)
 	DIAG_DIR.mkdir(parents=True, exist_ok=True)
 
-	# Write per-step evidence files
+	# Write per-step evidence files. Paths are fully constructed from constants
+	# (REPO_ROOT from __file__ + hardcoded subdirs) — no user input reaches open().
+	# nosemgrep: frappe-security-file-traversal
 	with open(DIAG_DIR / f"company_coa_audit_{ts}.json", "w", encoding="utf-8") as f:
 		json.dump(result["steps"].get("1_coa_audit", {}), f, indent=2, default=str)
+	# nosemgrep: frappe-security-file-traversal
 	with open(L3_DIR / "seed_report.json", "w", encoding="utf-8") as f:
 		json.dump(result["steps"].get("2_reseed", {}), f, indent=2, default=str)
+	# nosemgrep: frappe-security-file-traversal
 	with open(L3_DIR / "integration_smoke.json", "w", encoding="utf-8") as f:
 		json.dump(result["steps"].get("3_integration_smoke", {}), f, indent=2, default=str)
+	# nosemgrep: frappe-security-file-traversal
 	with open(L3_DIR / "preview_2026-04.json", "w", encoding="utf-8") as f:
 		json.dump(result["steps"].get("4_preview", {}), f, indent=2, default=str)
+	# nosemgrep: frappe-security-file-traversal
 	with open(L3_DIR / "idempotency_check.json", "w", encoding="utf-8") as f:
 		json.dump(result["steps"].get("5_idempotency", {}), f, indent=2, default=str)
+	# nosemgrep: frappe-security-file-traversal
 	with open(L3_DIR / "cron_email_dry_fire.json", "w", encoding="utf-8") as f:
 		json.dump(result["steps"].get("6_cron_email", {}), f, indent=2, default=str)
 
