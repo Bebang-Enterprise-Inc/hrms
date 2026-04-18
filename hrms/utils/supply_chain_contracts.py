@@ -233,31 +233,118 @@ def _build_company_first_entity_row(
 	}
 
 
+def _resolve_buyer_customer_for_company(company: str) -> tuple[str | None, str | None]:
+	"""S204: Resolve the Customer that should be billed for a given Company.
+
+	Returns (customer_name_used, matched_company) — the customer_name_used
+	becomes buyer_entity_name on the entity_row, and matched_company is the
+	Company the customer was found under (for audit).
+
+	Resolution order (each step is a data-driven lookup, no hardcoded maps):
+	  1. Customer.customer_name == company  (parent-entity warehouses like
+	     "BEBANG MEGA INC." — exact match works for legacy stores).
+	  2. Customer.represents_company == company  (Frappe's native internal
+	     customer linkage — handles manually-seeded store-first customers).
+	  3. Follow Company.parent_company → Customer.customer_name == parent
+	     (S199 store-first companies like "SM MEGAMALL - BEBANG ENTERPRISE
+	     INC." → parent_company=BEBANG ENTERPRISE INC. → Customer exists).
+	  4. Strip trailing " - <legal suffix>" from the company name → Customer
+	     whose customer_name matches the stripped part (unblocks stores whose
+	     Company has NULL parent_company but whose legal suffix names a
+	     Customer — e.g. "THE GRID ROCKWELL - TASTECARTEL CORP." → strip to
+	     "TASTECARTEL CORP." → Customer exists).
+	"""
+	import re as _re
+
+	# Step 1: exact name match
+	exact = frappe.db.get_value("Customer", {"customer_name": company}, "name")
+	if exact:
+		return exact, company
+
+	# Step 2: represents_company link
+	internal = frappe.db.get_value(
+		"Customer", {"represents_company": company}, "name"
+	)
+	if internal:
+		return internal, company
+
+	# Step 3: parent_company fallback
+	parent_company = frappe.db.get_value("Company", company, "parent_company")
+	if parent_company:
+		via_parent = frappe.db.get_value(
+			"Customer", {"customer_name": parent_company}, "name"
+		) or frappe.db.get_value(
+			"Customer", {"represents_company": parent_company}, "name"
+		)
+		if via_parent:
+			return via_parent, parent_company
+
+	# Step 4: strip trailing " - <legal suffix>" (INC./CORP./OPC/HOLDINGS OPC)
+	# Matches the tail used by S199 store-first names. Safe regex: only anchored
+	# to end of string, only matches explicit legal suffixes so we don't
+	# accidentally chop a store-specific name.
+	stripped = _re.sub(
+		r"\s+-\s+.+?(?:\s+INC\.|\s+CORP\.|\s+OPC|\s+HOLDINGS\s+OPC)$",
+		"",
+		company,
+	).strip()
+	if stripped and stripped != company:
+		via_stripped = frappe.db.get_value(
+			"Customer", {"customer_name": stripped}, "name"
+		) or frappe.db.get_value(
+			"Customer", {"represents_company": stripped}, "name"
+		)
+		if via_stripped:
+			return via_stripped, stripped
+
+	# Also try the opposite direction — the legal-suffix tail (after the dash)
+	# e.g. "THE GRID ROCKWELL - TASTECARTEL CORP." → "TASTECARTEL CORP."
+	tail_match = _re.search(
+		r"\s+-\s+(.+?(?:INC\.|CORP\.|OPC|HOLDINGS\s+OPC))$",
+		company,
+	)
+	if tail_match:
+		tail = tail_match.group(1).strip()
+		via_tail = frappe.db.get_value(
+			"Customer", {"customer_name": tail}, "name"
+		) or frappe.db.get_value(
+			"Customer", {"represents_company": tail}, "name"
+		)
+		if via_tail:
+			return via_tail, tail
+
+	return None, None
+
+
 def resolve_store_buyer_entity(
 	*,
 	warehouse_docname: str | None = None,
 	store_name: str | None = None,
 ) -> dict[str, Any]:
-	"""S190 Phase 5: Company Master is the only source of truth. No CSV fallback.
+	"""S190 Phase 5 + S204: Company Master is source of truth with principled
+	fallbacks (parent_company link + legal-suffix strip).
 
 	Resolution:
 	1. Resolve warehouse → Company (via Warehouse.company Link)
-	2. If Company has a matching Customer, build 14-key entity_row from Company
-	3. If no Company or no Customer, return the "missing" dict with billing hold
-	   (fail-safe — billing halts cleanly instead of throwing/guessing).
+	2. Resolve Company → Customer via a 4-step data-driven lookup:
+	     a. exact customer_name match
+	     b. represents_company link
+	     c. Company.parent_company → Customer
+	     d. stripped legal suffix → Customer
+	3. If no Company or no Customer across all steps, return the "missing" dict
+	   with billing hold (fail-safe — billing halts cleanly instead of
+	   throwing/guessing).
 	"""
 	if warehouse_docname:
 		company = resolve_warehouse_company(warehouse_docname)
 		if company:
-			# Company IS the buyer entity. Accept both per-store children and parent
-			# companies (S190 Phase 5: the 49 warehouses point to the correct billing
-			# target via Warehouse.company, whether that's a child or a direct entity).
-			customer = frappe.db.get_value(
-				"Customer", {"customer_name": company}, "name"
-			)
-			if customer:
+			customer_name, matched_company = _resolve_buyer_customer_for_company(company)
+			if customer_name:
+				# Use matched_company (the company whose name the customer actually
+				# matches) as buyer_entity_name. For parent-fallback cases, this
+				# ensures the SI lists the parent as buyer — the legal pay-er.
 				return _build_company_first_entity_row(
-					company, warehouse_docname, store_name
+					matched_company, warehouse_docname, store_name
 				)
 
 	# No Company or no Customer → fail-safe hold (caller's billing_hold check fires).
