@@ -33,7 +33,6 @@ from frappe import _
 from hrms.utils.labor_allocation import allocate_slip
 from hrms.utils.sentry import set_backend_observability_context
 
-
 APPLY_ENV_VAR = "S206_APPLY"
 LOG_DOCTYPE = "BEI Labor Allocation Log"
 
@@ -58,9 +57,7 @@ def _require_any_role(roles: set[str]) -> None:
 	user_roles = set(frappe.get_roles(frappe.session.user))
 	if not (user_roles & roles):
 		frappe.throw(
-			_("S206 labor allocation: user {0} lacks any of {1}").format(
-				frappe.session.user, sorted(roles)
-			),
+			_("S206 labor allocation: user {0} lacks any of {1}").format(frappe.session.user, sorted(roles)),
 			frappe.PermissionError,
 		)
 
@@ -182,7 +179,10 @@ def post_monthly_allocation(
 	for name in slip_names:
 		# Idempotency: peek at Log before doing anything
 		slip = frappe.db.get_value(
-			"Salary Slip", name, ["employee"], as_dict=True,
+			"Salary Slip",
+			name,
+			["employee"],
+			as_dict=True,
 		)
 		if not slip:
 			errors.append({"slip": name, "error": "Salary Slip not found"})
@@ -198,10 +198,12 @@ def post_monthly_allocation(
 			if result["status"] == "skipped":
 				# Still write a no-op Log row so re-runs don't re-evaluate
 				_record_log(year_i, month_i, slip["employee"], result)
-				skipped_other.append({
-					"slip": name,
-					"reason": result.get("reason"),
-				})
+				skipped_other.append(
+					{
+						"slip": name,
+						"reason": result.get("reason"),
+					}
+				)
 			elif result["status"] == "applied":
 				_record_log(year_i, month_i, slip["employee"], result)
 				applied.append(result)
@@ -250,24 +252,27 @@ def _record_log(year: int, month: int, employee: str, result: dict) -> None:
 
 	start_date, end_date = _period_bounds(year, month)
 
-	log = frappe.get_doc({
-		"doctype": LOG_DOCTYPE,
-		"year": year,
-		"month": month,
-		"employee": employee,
-		"period_start": start_date,
-		"period_end": end_date,
-		"home_company": result.get("home_company"),
-		"covered_companies": json.dumps(covered_companies),
-		"home_jes_json": json.dumps(home_jes),
-		"covered_jes_json": json.dumps(covered_jes),
-		"total_allocated": total,
-		"shift_shares_json": json.dumps(shares),
-	})
+	log = frappe.get_doc(
+		{
+			"doctype": LOG_DOCTYPE,
+			"year": year,
+			"month": month,
+			"employee": employee,
+			"period_start": start_date,
+			"period_end": end_date,
+			"home_company": result.get("home_company"),
+			"covered_companies": json.dumps(covered_companies),
+			"home_jes_json": json.dumps(home_jes),
+			"covered_jes_json": json.dumps(covered_jes),
+			"total_allocated": total,
+			"shift_shares_json": json.dumps(shares),
+		}
+	)
 	log.insert(ignore_permissions=True)
 
 
 # --- Scheduled wrapper -----------------------------------------------------
+
 
 def preview_monthly_allocation_scheduled() -> None:
 	"""Cron wrapper: preview prior-month allocation and email the report.
@@ -313,7 +318,7 @@ def preview_monthly_allocation_scheduled() -> None:
 		f"To apply:\n"
 		f"  docker exec -e S206_APPLY=1 $BACKEND bench --site hq.bebang.ph execute "
 		f"hrms.api.labor_allocation.post_monthly_allocation --kwargs "
-		f"'{{\"year\": {year}, \"month\": {month}}}'"
+		f'\'{{"year": {year}, "month": {month}}}\''
 	)
 	try:
 		frappe.sendmail(
