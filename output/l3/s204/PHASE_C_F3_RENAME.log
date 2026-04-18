@@ -1,0 +1,9 @@
+CommandId: e6faedb8-d44d-4b5d-b228-212d0782cfd8
+STATUS: Success
+pre-state: original_exists=True  renamed_exists=False
+snapshot: {"name": "BEBANG MEGA INC.", "customer_name": "BEBANG MEGA INC.", "represents_company": "BEBANG MEGA INC.", "tax_id": "010-885-436-00000"}
+RENAMED: BEBANG MEGA INC. -> BEBANG MEGA INC. RENAMED-S204
+post-rename lookup: [{'name': 'BEBANG MEGA INC. RENAMED-S204', 'customer_name': 'BEBANG MEGA INC. RENAMED-S204'}]
+post-rename: original 'BEBANG MEGA INC.' exists=False
+
+STATE_FILE: F:\Dropbox\Projects\BEI-ERP\.scratch\s204_f3_state.json

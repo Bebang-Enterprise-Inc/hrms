@@ -1,0 +1,32 @@
+{
+  "scenario": "F3_customer_rename_billing_hold",
+  "steps": [
+    "order_submitted",
+    "area_approval=true",
+    "mr_created",
+    "mr_approve_toast_missed: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m fail",
+    "mr_approved",
+    "dispatched",
+    "wr_auto_created",
+    "delivery_accepted"
+  ],
+  "started_at": "2026-04-18T16:49:32.987Z",
+  "started_frappe_iso": "2026-04-19 00:49:32",
+  "rename_state": {
+    "original_present": false,
+    "renamed_present": true
+  },
+  "order_id": "BEI-ORD-2026-00315",
+  "order_company": "BEBANG MEGA INC.",
+  "order_approval_stage_initial": "Single Approval",
+  "mr_name": "MAT-MR-2026-00165",
+  "mr_status_after_approval": "Ordered",
+  "wr_name": "BEI-WHR-2026-00044",
+  "dispatch_se": "MAT-STE-2026-00455",
+  "si_rows": [],
+  "submitted_si_count": 0,
+  "billing_hold_error_count": 0,
+  "billing_hold_error_titles": [],
+  "verdict": "PASS",
+  "completed_at": "2026-04-18T16:51:01.147Z"
+}

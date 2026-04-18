@@ -1,0 +1,25 @@
+{
+  "scenario": "S3_Grid_Rockwell_negative",
+  "steps": [
+    "order_submitted",
+    "area_approval=true",
+    "mr_created",
+    "mr_approve_toast_missed: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m fail",
+    "mr_approved",
+    "dispatched",
+    "wr_auto_created",
+    "delivery_accepted"
+  ],
+  "started_at": "2026-04-18T16:00:08.315Z",
+  "started_frappe_iso": "2026-04-19 00:00:08",
+  "order_id": "BEI-ORD-2026-00313",
+  "order_company": "THE GRID ROCKWELL - TASTECARTEL CORP.",
+  "order_approval_stage_initial": "Single Approval",
+  "mr_name": "MAT-MR-2026-00163",
+  "mr_status_after_approval": "Ordered",
+  "wr_name": "BEI-WHR-2026-00042",
+  "dispatch_se": "MAT-STE-2026-00451",
+  "submitted_si_count": 0,
+  "verdict": "PASS",
+  "completed_at": "2026-04-18T16:01:46.102Z"
+}
