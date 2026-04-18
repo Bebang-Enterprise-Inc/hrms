@@ -2521,7 +2521,7 @@ def create_invoice(data: dict[str, Any] | str) -> dict[str, Any]:
         # Note: GR status can be "Accepted" after the receive+inspect workflow
         gr_exists = frappe.db.exists("BEI Goods Receipt", {
             "purchase_order": purchase_order,
-            "status": ["in", ["Submitted", "Approved", "Inspected", "Accepted"]]
+            "status": ["in", ["Submitted", "Approved", "Inspected", "Accepted", "Partially Accepted"]]
         })
         if not gr_exists:
             # Check if an approved match exception exists for this PO
@@ -2948,7 +2948,7 @@ def create_payment_request(data: dict[str, Any] | str) -> dict[str, Any]:
             # Note: GR status can be "Accepted" after the receive+inspect workflow
             gr_exists = frappe.db.exists("BEI Goods Receipt", {
                 "purchase_order": purchase_order,
-                "status": ["in", ["Submitted", "Approved", "Inspected", "Accepted"]]
+                "status": ["in", ["Submitted", "Approved", "Inspected", "Accepted", "Partially Accepted"]]
             })
             if not gr_exists:
                 # Check if an approved match exception exists for this PO
