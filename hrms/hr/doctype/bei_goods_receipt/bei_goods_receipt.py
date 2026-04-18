@@ -119,15 +119,14 @@ class BEIGoodsReceipt(Document):
                     _("Item {0} must have a received quantity").format(item.item_code)
                 )
 
-        # Determine status based on rejections.
-        # All-rejected at submit time = "With Issues" (semantic: shipment has
-        # problems the receiver flagged at the dock; inspector still has
-        # final say if inspection_required). S194-31 expects this status.
+        # Determine status. ANY rejection at receipt requires inspector
+        # confirmation — the receiver flags issues, the inspector decides
+        # final disposition (Accepted/Partially Accepted/With Issues). Tests:
+        #   - S194-9 (no rejection): -> Pending Inspection if required, else Accepted
+        #   - S194-10 (partial rejection): -> Pending Inspection (inspector confirms)
+        #   - S194-31 (all rejected): -> Pending Inspection (inspector clicks Reject All)
         if self.total_rejected_qty > 0:
-            if self.total_accepted_qty > 0:
-                self.status = "Partially Accepted"
-            else:
-                self.status = "With Issues"
+            self.status = "Pending Inspection"
         else:
             if self.inspection_required:
                 self.status = "Pending Inspection"
@@ -173,8 +172,18 @@ class BEIGoodsReceipt(Document):
             self.inspector = inspector
 
         if passed:
-            self.status = "Accepted"
-            # Create Frappe Purchase Receipt
+            # Inspector confirmed; final status reflects line-item qty.
+            # If receiver flagged any rejections, the GR is Partially Accepted
+            # (some accepted, some rejected). Else fully Accepted.
+            if self.total_rejected_qty > 0 and self.total_accepted_qty > 0:
+                self.status = "Partially Accepted"
+            elif self.total_rejected_qty > 0 and self.total_accepted_qty == 0:
+                # Receiver flagged everything but inspector says "passed"
+                # (e.g. inspector overrides receiver). Treat as Partially.
+                self.status = "Partially Accepted"
+            else:
+                self.status = "Accepted"
+            # Create Frappe Purchase Receipt for accepted items.
             self.create_frappe_purchase_receipt()
         else:
             # Failed inspection = shipment has issues. S194-31 expects this.
