@@ -1529,6 +1529,12 @@ def _normalize_store_name_for_route(warehouse_name):
 	# Fallback: strip remaining legacy suffixes
 	for suffix in (" - BEI", " - BKI"):
 		name = name.replace(suffix, "")
+
+	# S204: Strip trailing 3-6 letter store abbreviation (e.g. "SM MEGAMALL - SMMM"
+	# → "SM MEGAMALL"). Covers S188 child warehouses that use a raw store-code
+	# suffix without the BEI-/BKI- prefix picked up by the earlier regexes.
+	import re as _re
+	name = _re.sub(r"\s+-\s+[A-Z][A-Z0-9]{2,6}$", "", name)
 	return name.strip()
 
 
