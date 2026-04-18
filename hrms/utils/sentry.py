@@ -312,17 +312,24 @@ def _patch_log_error():
 
 		def patched_log_error(*args, **kwargs):
 			# S204: Error-handler self-harm guard — Frappe's Error Log.method
-			# field is VARCHAR(140). When the title (second positional) or
-			# derived first-line-of-message exceeds that limit, the insert
-			# throws `throw_length_exceeded_error`, which PROPAGATES OUT of
-			# the except block the caller thought was silent. Callers across
-			# hrms/api pass long exception reprs as message; the first line
-			# becomes the title and trips the 140-char cap, masking the real
-			# root cause. Clamp title explicitly before forwarding.
-			if len(args) >= 2 and isinstance(args[1], str) and len(args[1]) > 135:
-				args = (args[0], args[1][:132] + "...", *args[2:])
-			if "title" in kwargs and isinstance(kwargs["title"], str) and len(kwargs["title"]) > 135:
-				kwargs["title"] = kwargs["title"][:132] + "..."
+			# field is VARCHAR(140). frappe.log_error's own auto-swap only
+			# fires when `"\n" in title`; single-line long strings (common
+			# for `frappe.ValidationError("...allowlist...")`) stay as title
+			# and trip the cap. This causes the insert to throw, which
+			# propagates OUT of the caller's silent except block and masks
+			# the real root cause. Clamp BOTH positional args + title kwarg
+			# defensively, regardless of argument order / intent.
+			new_args = list(args)
+			for idx in (0, 1):
+				if idx < len(new_args) and isinstance(new_args[idx], str) and len(new_args[idx]) > 135:
+					new_args[idx] = new_args[idx][:132] + "..."
+			args = tuple(new_args)
+			for key in ("title", "message"):
+				if key in kwargs and isinstance(kwargs[key], str) and len(kwargs[key]) > 135:
+					# Only clamp title; leave message alone unless it's also overlong
+					# enough to cause issues (Error Log.error is TEXT, no cap).
+					if key == "title":
+						kwargs[key] = kwargs[key][:132] + "..."
 			result = _original_log_error(*args, **kwargs)
 
 			try:
