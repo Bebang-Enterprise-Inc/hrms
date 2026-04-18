@@ -1545,7 +1545,13 @@ def create_stock_transfer(
 
 		# S198: auto-create BEI Warehouse Receiving so the destination store's
 		# crew has an acknowledgment doc the moment dispatch packs the truck.
-		wr_name = _create_warehouse_receiving_for_se(se, contract)
+		# S204: wrap in Administrator context — the SCM dispatcher who
+		# triggers `create_stock_transfer` typically lacks BEI Warehouse
+		# Receiving write permission, so the inner `frappe.new_doc`+insert
+		# (via `create_warehouse_receiving`) would silently fail and leave
+		# the destination store with no receiving acknowledgment.
+		with _run_as_system_user("Administrator"):
+			wr_name = _create_warehouse_receiving_for_se(se, contract)
 
 		# S203: create a Draft Sales Invoice at dispatch time for every BKI
 		# intercompany transfer (mirrors the S168 pattern from
