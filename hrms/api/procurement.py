@@ -250,7 +250,16 @@ def _is_ian_validator_user(user_id: str | None) -> bool:
     employee_name = frappe.db.get_value("Employee", {"user_id": user_id}, "employee_name")
     if employee_name:
         normalized_name = employee_name.strip().upper()
-        return "IAN" in normalized_name and "DIONISIO" in normalized_name
+        if "IAN" in normalized_name and "DIONISIO" in normalized_name:
+            return True
+
+    # Match doctype-side _is_ian_validator: System Manager + Procurement Manager
+    # bypass the Ian-only policy. Used by _decorate_goods_receipt_policy_fields
+    # to set can_validate=True for these roles, so the UI's Inspection Complete /
+    # Reject All buttons are enabled.
+    roles = frappe.get_roles(user_id) or []
+    if "System Manager" in roles or "Procurement Manager" in roles:
+        return True
 
     return False
 
