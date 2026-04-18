@@ -233,13 +233,19 @@ def post_monthly_allocation(
 
 
 def _record_log(year: int, month: int, employee: str, result: dict) -> None:
-	"""Insert a BEI Labor Allocation Log row for this (year, month, employee)."""
-	start = result.get("pairs", [{}])[0].get("home_je") or None
-	covered_jes = [p["covered_je"] for p in result.get("pairs", []) if p.get("covered_je")]
-	covered_companies = list({p["covered_company"] for p in result.get("pairs", [])})
-	total = sum(p.get("amount", 0) for p in result.get("pairs", []))
+	"""Insert a BEI Labor Allocation Log row for this (year, month, employee).
+
+	Stores ALL home JEs (one per covered Company) in home_jes_json. Earlier
+	version only stored the first pair's home_je, silently losing the rest
+	and breaking forensic traceability for multi-cover relievers.
+	"""
+	pairs = result.get("pairs", [])
+	home_jes = [p["home_je"] for p in pairs if p.get("home_je")]
+	covered_jes = [p["covered_je"] for p in pairs if p.get("covered_je")]
+	covered_companies = list({p["covered_company"] for p in pairs})
+	total = sum(p.get("amount", 0) for p in pairs)
 	shares: dict[str, float] = {}
-	for p in result.get("pairs", []):
+	for p in pairs:
 		shares[p["covered_company"]] = p.get("share", 0)
 
 	start_date, end_date = _period_bounds(year, month)
@@ -253,7 +259,7 @@ def _record_log(year: int, month: int, employee: str, result: dict) -> None:
 		"period_end": end_date,
 		"home_company": result.get("home_company"),
 		"covered_companies": json.dumps(covered_companies),
-		"home_je": start,
+		"home_jes_json": json.dumps(home_jes),
 		"covered_jes_json": json.dumps(covered_jes),
 		"total_allocated": total,
 		"shift_shares_json": json.dumps(shares),
@@ -278,6 +284,13 @@ def preview_monthly_allocation_scheduled() -> None:
 	if month == 0:
 		month = 12
 		year -= 1
+
+	set_backend_observability_context(
+		module="finance",
+		action="preview_monthly_allocation_scheduled",
+		mutation_type="read",
+		extras={"year": year, "month": month, "trigger": "cron"},
+	)
 
 	try:
 		report = preview_monthly_allocation(year, month)

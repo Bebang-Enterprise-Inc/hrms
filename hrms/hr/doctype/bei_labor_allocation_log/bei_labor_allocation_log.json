@@ -15,7 +15,7 @@
   "home_company",
   "section_break_details",
   "covered_companies",
-  "home_je",
+  "home_jes_json",
   "covered_jes_json",
   "total_allocated",
   "shift_shares_json",
@@ -81,16 +81,16 @@
    "label": "Covered Companies"
   },
   {
-   "fieldname": "home_je",
-   "fieldtype": "Link",
-   "label": "Home JE (first pair)",
-   "options": "Journal Entry"
+   "description": "JSON array of home-side JE names (one per covered Company)",
+   "fieldname": "home_jes_json",
+   "fieldtype": "Small Text",
+   "label": "Home JE Names (JSON)"
   },
   {
-   "description": "JSON array of paired JE names created for this slip",
+   "description": "JSON array of covered-side JE names (one per covered Company)",
    "fieldname": "covered_jes_json",
    "fieldtype": "Small Text",
-   "label": "Paired JE Names (JSON)"
+   "label": "Covered JE Names (JSON)"
   },
   {
    "fieldname": "total_allocated",
