@@ -343,6 +343,18 @@ class BEIGoodsReceipt(Document):
         )
         erp_company = resolve_warehouse_company(resolved_receiving_warehouse) or get_company()
 
+        # Determine if we have a usable, distinct rejected warehouse. ERPNext
+        # rejects when accepted_warehouse == rejected_warehouse, so we can only
+        # surface rejected_qty on the Frappe PR when a separate warehouse is
+        # configured. BEI Goods Receipt is the source of truth for rejections;
+        # the Frappe PR mirrors only the stock-affecting (accepted) movement
+        # when no Rejected Warehouse is set up.
+        rejected_warehouse_for_pr = None
+        if self.total_rejected_qty > 0:
+            candidate = "Rejected Warehouse - BEI"
+            if frappe.db.exists("Warehouse", candidate) and candidate != resolved_receiving_warehouse:
+                rejected_warehouse_for_pr = candidate
+
         # Prepare PR items - only accepted quantities
         pr_items = []
         for item in self.items:
@@ -365,9 +377,11 @@ class BEIGoodsReceipt(Document):
                 "rate": flt(item.unit_cost, 2),
                 "purchase_order": frappe_po,
                 "purchase_order_item": po_item,
-                "rejected_qty": flt(item.rejected_qty, 2),
                 "bei_gr_item": item.name,  # Reference back
             }
+            if rejected_warehouse_for_pr:
+                pr_row["rejected_qty"] = flt(item.rejected_qty, 2)
+                pr_row["rejected_warehouse"] = rejected_warehouse_for_pr
             if resolved_receiving_warehouse:
                 pr_row["warehouse"] = resolved_receiving_warehouse
 
@@ -390,23 +404,13 @@ class BEIGoodsReceipt(Document):
         })
         if resolved_receiving_warehouse:
             pr.set_warehouse = resolved_receiving_warehouse
+        if rejected_warehouse_for_pr:
+            pr.rejected_warehouse = rejected_warehouse_for_pr
         apply_standard_buying_context(
             pr,
             store_label=resolved_receiving_warehouse or self.warehouse or bei_po.ship_to,
             legal_entity=erp_company,
         )
-
-        # Add rejected warehouse if there are rejections AND it exists.
-        # Fall back to the receiving warehouse if "Rejected Warehouse - BEI"
-        # isn't created yet (e.g. test environments). Without this guard,
-        # complete_inspection() throws on partial-reject scenarios because
-        # the Frappe Purchase Receipt link validation fails.
-        if self.total_rejected_qty > 0:
-            rejected_wh = "Rejected Warehouse - BEI"
-            if frappe.db.exists("Warehouse", rejected_wh):
-                pr.rejected_warehouse = rejected_wh
-            elif resolved_receiving_warehouse:
-                pr.rejected_warehouse = resolved_receiving_warehouse
 
         try:
             pr.insert(ignore_permissions=True)
