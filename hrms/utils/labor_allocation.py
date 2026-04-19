@@ -231,11 +231,18 @@ def _build_paired_jes(*, slip, share: float, home: str, covered: str, amount: fl
 	"""Construct the two Journal Entry dicts for one home<->covered pair.
 
 	Does NOT insert. Returns (home_je_dict, covered_je_dict).
+
+	S207 Phase 3 change: ``posting_date`` is now the Bimonthly PAYOUT date per
+	CFO PNL-001 (``posting_date_for_slip``), not the slip's own ``end_date``.
+	A March 16-31 slip pays April 10 → posting_date = 2026-04-10 → expense hits
+	April P&L. Both paired JEs use the same payout date to keep the
+	intercompany books in lockstep.
 	"""
+	posting_date = posting_date_for_slip(slip.end_date)
 	remark = (
-		f"S206 cost-sharing recharge: {slip.employee} from {home} to {covered}, "
-		f"period {slip.start_date}..{slip.end_date}, share={share:.2%}, "
-		f"slip={slip.name}"
+		f"S206/S207 cost-sharing recharge: {slip.employee} from {home} to {covered}, "
+		f"period {slip.start_date}..{slip.end_date}, posting_date={posting_date}, "
+		f"share={share:.2%}, slip={slip.name}"
 	)
 
 	home_accounts = _resolve_company_accounts(home)
@@ -248,7 +255,7 @@ def _build_paired_jes(*, slip, share: float, home: str, covered: str, amount: fl
 		"doctype": "Journal Entry",
 		"voucher_type": INTER_COMPANY_VOUCHER_TYPE,
 		"company": home,
-		"posting_date": slip.end_date,
+		"posting_date": posting_date,
 		"user_remark": remark,
 		"accounts": [
 			{
@@ -277,7 +284,7 @@ def _build_paired_jes(*, slip, share: float, home: str, covered: str, amount: fl
 		"doctype": "Journal Entry",
 		"voucher_type": INTER_COMPANY_VOUCHER_TYPE,
 		"company": covered,
-		"posting_date": slip.end_date,
+		"posting_date": posting_date,
 		"user_remark": remark,
 		"accounts": [
 			{
