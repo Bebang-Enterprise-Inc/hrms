@@ -1,0 +1,11 @@
+# Dev / test-only dependencies for hrms (BEI fork).
+#
+# Install on dev machine:     pip install -r hrms/requirements-dev.txt
+# Install on prod container:  docker exec $BACKEND pip install -r /home/frappe/frappe-bench/apps/hrms/requirements-dev.txt
+#                             (or: bench pip install freezegun)
+#
+# Production runtime dependencies stay in setup.py → install_requires.
+# This file only holds tooling needed for pytest / local agent testing.
+
+# S207: freeze datetime.now() for day-guard tests (preview_scheduled UTC→PHT boundary).
+freezegun>=1.4.0

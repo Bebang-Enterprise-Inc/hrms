@@ -18,6 +18,16 @@ def _build_script(store_filter: str | None) -> str:
     filter_literal = "None" if not store_filter else f'"{store_filter}"'
     return f'''
 import os
+# Frappe logger crashes if these directories don't exist (/frappe-bulk-edits boilerplate)
+for d in [
+    "/home/frappe/logs",
+    "/home/frappe/frappe-bench/logs",
+    "/home/frappe/frappe-bench/hq.bebang.ph/logs",
+    "/home/frappe/frappe-bench/sites/hq.bebang.ph/logs",
+    "/home/frappe/frappe-bench/sites/hq.bebang.ph/private/files",
+]:
+    os.makedirs(d, exist_ok=True)
+
 import frappe
 frappe.init(site="hq.bebang.ph", sites_path="/home/frappe/frappe-bench/sites")
 frappe.connect()

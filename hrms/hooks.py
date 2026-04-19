@@ -426,13 +426,11 @@ scheduler_events = {
 		],
 		# Monthly billing generation: 6 AM on 1st of each month
 		"0 6 1 * *": ["hrms.api.billing.scheduled_monthly_billing"],
-		# S206: monthly reliever labor cost-sharing preview.
-		# Runs first-of-month 06:00 PHT = 22:00 UTC prior day. Preview-only —
-		# emails Sam the prior-month report. Apply is manual via
-		# `docker exec -e S206_APPLY=1 ... post_monthly_allocation`.
-		"0 22 1 * *": [
-			"hrms.api.labor_allocation.preview_monthly_allocation_scheduled",
-		],
+		# S206 monthly cron disabled in S207 P0-T5 (2026-04-20). The target
+		# `preview_monthly_allocation_scheduled` is removed in S207 Phase 1
+		# during the API refactor to `(period_start, period_end)`. The new daily
+		# `0 22 * * *` cron with Python day-guard gets installed in S207 Phase 5.
+		# During Phases 1-4 cron is intentionally OFF to avoid calling a removed function.
 		# Morning sync health report: 8:15 AM PHT daily (00:15 UTC) after sync buffer
 		"15 0 * * *": [
 			"hrms.api.erp_sync.scheduled_generate_morning_sync_health_report",
