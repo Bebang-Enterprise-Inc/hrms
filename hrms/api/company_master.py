@@ -583,25 +583,61 @@ def _resolve_company_for_s037_row(
 	if not buyer:
 		return None
 
-	# S188: per-store child company lookup — check if a child company
-	# exists for this specific store before falling back to the parent
+	# S188/S199: S037 store_name -> canonical per-store Company docname.
+	# Canonical 2026-04-19 post-migration: every S037 row maps to exactly one
+	# per-store Company (entity_category='Store'). Keys are the display names
+	# in S037 CSV; values are the canonical Company docnames.
+	# See docs/STORE_COMPANY_CANONICAL.md.
 	_STORE_TO_CHILD: dict[str, str] = {
-		# S199: ALL CAPS store-first Company names
-		"SM Megamall": "SM MEGAMALL - BEBANG ENTERPRISE INC.",
-		"SM Manila": "SM MANILA - BEBANG ENTERPRISE INC.",
-		"SM Southmall": "SM SOUTHMALL - BEBANG ENTERPRISE INC.",
-		"Robinsons Place Antipolo": "ROBINSONS ANTIPOLO - BEBANG ENTERPRISE INC.",
 		"Ayala Evo City": "AYALA EVO CITY - BEBANG MEGA INC.",
+		"Ayala Fairview Terraces": "AYALA FAIRVIEW TERRACES - BEBANG FT INC.",
+		"Ayala Market! Market!": "AYALA MARKET MARKET - BEBANG MARKET MARKET INC.",
+		"Ayala Solenad 2": "AYALA SOLENAD - HFFM SOLENAD FOOD SERVICES INC.",
+		"Ayala UP Town Center": "AYALA UP TOWN CENTER - BEBANG UP TOWN CENTER INC.",
 		"Ayala Vermosa": "AYALA VERMOSA - BEBANG MEGA INC.",
+		"BF Homes Paranaque (Aguirre Ave.)": "BF HOMES - BEBANG BF HOMES INC.",
+		"D'Verde Calamba": "D'VERDE CALAMBA - TAJ FOOD CORP.",
+		"Ever Gotesco Commonwealth": "EVER COMMONWEALTH - DLS DESSERT CRAFT INC.",
+		"Festival Mall Alabang": "FESTIVAL MALL ALABANG - BEBANG FESTIVAL INC.",
+		"Food Express (Gateway Mall)": "ARANETA GATEWAY - TUNGSTEN CAPITAL HOLDINGS OPC",
+		"Lucky China Town": "LUCKY CHINATOWN - BEBANG LCT INC.",
+		"NAIA T3 (Departure)": "NAIA T3 - HALO-HALO TERMINAL FOOD CORP.",
+		"Ortigas Estancia": "ORTIGAS ESTANCIA - BB ESTANCIA FOOD CORP.",
+		"Ortigas Greenhills": "ORTIGAS GREENHILLS - BEIFRANCHISE FOOD OPC",
+		"Paseo Center": "MEGAWORLD PASEO CENTER - BEBANG PASEO INC.",
+		"PITX Terminal": "MEGAWIDE PITX - BEBANG PITX INC.",
+		"Robinsons Galleria South": "ROBINSONS GALLERIA SOUTH - TUNGSTEN CAPITAL HOLDINGS OPC",
+		"Robinsons Place Antipolo": "ROBINSONS ANTIPOLO - BEBANG ENTERPRISE INC.",
+		"Robinsons Place Dasmarinas": "ROBINSONS PLACE DASMARINAS - FREEZE DELIGHT INC.",
 		"Robinsons Place Gen. Trias": "ROBINSONS GENERAL TRIAS - BEBANG MEGA INC.",
 		"Robinsons Place Imus": "ROBINSONS IMUS - BEBANG MEGA INC.",
-		"SM Tanza": "SM TANZA - BEBANG MEGA INC.",
-		"Sta. Lucia East Grand Mall": "STA. LUCIA EAST GRAND MALL - BEBANG SM MARIKINA INC.",
-		"D'Verde Calamba": "D'VERDE CALAMBA - TAJ FOOD CORP.",
-		"Food Express (Gateway Mall)": "ARANETA GATEWAY - TUNGSTEN CAPITAL HOLDINGS OPC",
+		"SM Bicutan": "SM BICUTAN - BEBANG SM BICUTAN INC.",
 		"SM Caloocan": "SM CALOOCAN - TAJ FOOD CORP.",
+		"SM Center Pulilan": "SM PULILAN - BEBANG SMM INC.",
+		"SM Clark": "SM CLARK - RED TALDAWA FOODS OPC",
+		"SM East Ortigas": "SM EAST ORTIGAS - BEBANG SMEO INC.",
+		"SM Grand Central": "SM GRAND CENTRAL - BEBANG GRAND CENTRAL INC.",
+		"SM Mall of Asia": "SM MALL OF ASIA - BEBANG SMOA INC.",
+		"SM Manila": "SM MANILA - BEBANG ENTERPRISE INC.",
+		"SM Marikina": "SM MARIKINA - BEBANG SM MARIKINA INC.",
+		"SM Marilao": "SM MARILAO - BEBANG MARILAO INC.",
+		"SM Megamall": "SM MEGAMALL - BEBANG ENTERPRISE INC.",
+		"SM North EDSA": "SM NORTH EDSA - BEBANG NORTH EDSA INC.",
+		"SM San Jose Del Monte": "SM SAN JOSE DEL MONTE - JL TRADE OPC",
 		"SM Sangandaan": "SM SANGANDAAN - TUNGSTEN CAPITAL HOLDINGS OPC",
-		"Robinsons Galleria South": "ROBINSONS GALLERIA SOUTH - TUNGSTEN CAPITAL HOLDINGS OPC",
+		"SM Southmall": "SM SOUTHMALL - BEBANG ENTERPRISE INC.",
+		"SM Sta. Rosa": "SM STA. ROSA - SWEET HARMONY FOOD CORP.",
+		"SM Tanza": "SM TANZA - BEBANG MEGA INC.",
+		"SM Taytay": "SM TAYTAY - DAY ONES FOOD AND DRINK ESTABLISHMENTS CORP.",
+		"SM Valenzuela": "SM VALENZUELA - BEBANG SMV INC.",
+		"Sta. Lucia East Grand Mall": "STA. LUCIA EAST GRAND MALL - BEBANG SM MARIKINA INC.",
+		"The Grid - Rockwell": "THE GRID ROCKWELL - TASTECARTEL CORP.",
+		"The Terminal Exchange": "THE TERMINAL - BEBANG STARMALL ALABANG INC.",
+		"Tomas Morato (CTTM Square)": "CTTM TOMAS MORATO - B CUBED VENTURES CORP.",
+		"Uptown Mall": "UP TOWN MALL BGC - DMD HOLDINGS INC.",
+		"Venice Grand Canal": "MEGAWORLD VENICE GRAND CANAL - BEBANG VENICE GRAND CANAL INC.",
+		"Vista Mall Taguig": "VISTA MALL TAGUIG - TRICERN FOOD CORP.",
+		"Xentromall Montalban": "XENTROMALL MONTALBAN - PERPETUAL FOOD CORP.",
 	}
 	if store_name and store_name in _STORE_TO_CHILD:
 		child = _STORE_TO_CHILD[store_name]
