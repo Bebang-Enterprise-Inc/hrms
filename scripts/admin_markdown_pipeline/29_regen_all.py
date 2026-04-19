@@ -272,6 +272,15 @@ def write_xlsx(rows: list[dict]) -> None:
                   ("Halo-Halo Alabang Food Corp", "CORP_HALO_ALABANG")]:
         if extra[1] not in seen:
             all_corps.append(extra); seen.add(extra[1])
+    # S208: append FRANCHISE_*/JV_* partner entities discovered in extracted docs
+    partner_codes = sorted(
+        ec for ec in by_ec_dt.keys()
+        if (ec.startswith("FRANCHISE_") or ec.startswith("JV_")) and ec not in seen
+    )
+    for ec in partner_codes:
+        display = ec.replace("FRANCHISE_", "Franchise: ").replace("JV_", "JV: ").replace("_", " ").title()
+        all_corps.append((display, ec))
+        seen.add(ec)
 
     for row_i, (corp_name, ec) in enumerate(all_corps, start=2):
         ws2.cell(row=row_i, column=1, value=corp_name).border = BORDER
