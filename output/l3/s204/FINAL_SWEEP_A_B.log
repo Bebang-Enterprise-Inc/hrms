@@ -1,0 +1,40 @@
+
+Running 6 tests using 1 worker
+
+S204 S1 PASS: {
+  "orderId": "BEI-ORD-2026-00316",
+  "mrName": "MAT-MR-2026-00166",
+  "wrName": "BEI-WHR-2026-00045",
+  "siName": "ACC-SINV-2026-00028",
+  "grand_total": 387251.85
+}
+  ✓  1 [chromium] › tests\e2e\specs\s198-l3-retry.spec.ts:315:5 › S198+S203 L3 — S1 SM Tanza full chain browser-only produces real SI (2.9m)
+S204 S2 PASS: {
+  "orderId": "BEI-ORD-2026-00317",
+  "siName": "ACC-SINV-2026-00029",
+  "grand_total": 215465.14
+}
+  ✓  2 [chromium] › tests\e2e\specs\s198-l3-retry.spec.ts:544:5 › S204 S2 — SM Megamall produces real SI with BEBANG ENTERPRISE INC. as customer (1.4m)
+S204 S3 PASS (negative): {
+  "orderId": "BEI-ORD-2026-00318",
+  "submitted": 0
+}
+  ✓  3 [chromium] › tests\e2e\specs\s198-l3-retry.spec.ts:562:5 › S204 S3 — The Grid - Rockwell billing-hold: no SI submitted (negative path) (1.6m)
+S204 F1 PASS (empty order rejected)
+  ✓  4 [chromium] › tests\e2e\specs\s198-l3-retry.spec.ts:590:5 › S204 F1 — empty order: Review/Submit hidden, zero order created (12.6s)
+S204 S4 PASS: {
+  "orderId": "BEI-ORD-2026-00319",
+  "siName": "ACC-SINV-2026-00030",
+  "customer": "BEBANG MEGA INC."
+}
+  ✓  5 [chromium] › tests\e2e\specs\s198-l3-retry.spec.ts:640:5 › S204 S4 — Ayala Evo dedupes to same customer docname as S1 (BEBANG MEGA INC.) (1.4m)
+S204 F2 PASS: {
+  "warehouse": "S204-F2-TEST-NULL-CO - BEI",
+  "submit_error": "No orderable items at all for warehouse \"S204-F2-TEST-NULL-CO - BEI\" (store \"S204-F2-TEST-NULL-CO\"). Check get_orderable_items endpoint.",
+  "orders_against_f2": 0
+}
+  ✓  6 [chromium] › tests\e2e\specs\s198-l3-retry.spec.ts:681:5 › S204 F2 — NULL-company warehouse rejects order submission (21.6s)
+
+  Slow test file: [chromium] › tests\e2e\specs\s198-l3-retry.spec.ts (7.8m)
+  Consider running tests from slow files in parallel. See: https://playwright.dev/docs/test-parallel
+  6 passed (7.9m)
