@@ -3,9 +3,10 @@
   "steps": [
     "submit_threw:No orderable items at all for warehouse \"S204-F2-TEST-NULL-CO - BEI\" (store \"S204-F2-TEST-NULL-CO\")."
   ],
-  "started_at": "2026-04-18T15:27:34.022Z",
-  "started_frappe_iso": "2026-04-18 23:27:34",
-  "f2_warehouse": "S204-F2-TEST-NULL-CO",
+  "started_at": "2026-04-19T00:10:10.683Z",
+  "started_frappe_iso": "2026-04-19 08:10:10",
+  "f2_warehouse_docname": "S204-F2-TEST-NULL-CO - BEI",
+  "f2_warehouse_label": "S204-F2-TEST-NULL-CO",
   "orders_before": 0,
   "select_store_succeeded": true,
   "submit_error": "No orderable items at all for warehouse \"S204-F2-TEST-NULL-CO - BEI\" (store \"S204-F2-TEST-NULL-CO\"). Check get_orderable_items endpoint.",
@@ -13,5 +14,5 @@
   "new_orders": [],
   "new_orders_against_f2": [],
   "verdict": "PASS",
-  "completed_at": "2026-04-18T15:28:00.212Z"
+  "completed_at": "2026-04-19T00:10:32.155Z"
 }

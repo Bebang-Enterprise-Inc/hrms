@@ -1,7 +1,31 @@
 {
   "sprint": "S204",
-  "generated_at_utc": "2026-04-18T16:52:00Z",
-  "generated_at_pht": "2026-04-19T00:52:00+08:00",
+  "generated_at_utc": "2026-04-18T17:15:00Z",
+  "generated_at_pht": "2026-04-19T01:15:00+08:00",
+  "post_merge_validation_run": {
+    "date_pht": "2026-04-19T01:00+08:00",
+    "trigger": "After hrms #633 + #634 + bei-tasks #429 + #431 all merged and deployed.",
+    "duration_minutes": 9.3,
+    "phases": [
+      {"phase": "A+B", "scenarios": "S1 S2 S3 S4 F1 F2", "duration_minutes": 7.9, "log": "output/l3/s204/FINAL_SWEEP_A_B.log"},
+      {"phase": "C", "scenarios": "F3", "duration_minutes": 1.4, "log": "output/l3/s204/FINAL_SWEEP_C.log"}
+    ],
+    "verdict": "PASS 7/7",
+    "fresh_order_ids": {
+      "S1": "BEI-ORD-2026-00316",
+      "S2": "BEI-ORD-2026-00317",
+      "S3": "BEI-ORD-2026-00318",
+      "S4": "BEI-ORD-2026-00319",
+      "F3": "BEI-ORD-2026-00320"
+    },
+    "fresh_sales_invoices": {
+      "S1": "ACC-SINV-2026-00028 (₱387,251.85)",
+      "S2": "ACC-SINV-2026-00029 (₱215,465.14)",
+      "S4": "ACC-SINV-2026-00030"
+    },
+    "grants_still_revoked": true,
+    "customer_restored_after_f3": true
+  },
   "scenarios": {
     "S1_SM_Tanza_fresh": {
       "verdict": "PASS",

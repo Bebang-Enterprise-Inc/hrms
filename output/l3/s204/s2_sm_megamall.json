@@ -3,7 +3,6 @@
   "steps": [
     "order_submitted",
     "area_approval=true",
-    "scm_order_approval=true",
     "mr_created",
     "mr_approve_toast_missed: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m fail",
     "mr_approved",
@@ -11,17 +10,17 @@
     "wr_auto_created",
     "delivery_accepted"
   ],
-  "started_at": "2026-04-18T15:58:33.788Z",
-  "started_frappe_iso": "2026-04-18 23:58:33",
-  "order_id": "BEI-ORD-2026-00312",
+  "started_at": "2026-04-19T00:05:36.218Z",
+  "started_frappe_iso": "2026-04-19 08:05:36",
+  "order_id": "BEI-ORD-2026-00317",
   "order_company": "SM MEGAMALL - BEBANG ENTERPRISE INC.",
-  "order_approval_stage_initial": "Pending Area Supervisor",
-  "mr_name": "MAT-MR-2026-00162",
+  "order_approval_stage_initial": "Single Approval",
+  "mr_name": "MAT-MR-2026-00167",
   "mr_status_after_approval": "Ordered",
-  "wr_name": "BEI-WHR-2026-00041",
-  "dispatch_se": "MAT-STE-2026-00449",
-  "draft_si_at_dispatch": "ACC-SINV-2026-00026",
-  "si_name": "ACC-SINV-2026-00026",
+  "wr_name": "BEI-WHR-2026-00046",
+  "dispatch_se": "MAT-STE-2026-00459",
+  "draft_si_at_dispatch": "ACC-SINV-2026-00029",
+  "si_name": "ACC-SINV-2026-00029",
   "si_customer": "Bebang Enterprise Inc.",
   "si_company": "BEBANG KITCHEN INC.",
   "si_bei_legal_entity": "BEBANG KITCHEN INC.",
@@ -40,5 +39,5 @@
     }
   ],
   "verdict": "PASS",
-  "completed_at": "2026-04-18T16:00:07.846Z"
+  "completed_at": "2026-04-19T00:06:58.092Z"
 }

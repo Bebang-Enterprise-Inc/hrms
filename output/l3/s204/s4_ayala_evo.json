@@ -10,17 +10,17 @@
     "wr_auto_created",
     "delivery_accepted"
   ],
-  "started_at": "2026-04-18T16:01:59.186Z",
-  "started_frappe_iso": "2026-04-19 00:01:59",
-  "order_id": "BEI-ORD-2026-00314",
+  "started_at": "2026-04-19T00:08:48.253Z",
+  "started_frappe_iso": "2026-04-19 08:08:48",
+  "order_id": "BEI-ORD-2026-00319",
   "order_company": "BEBANG MEGA INC.",
   "order_approval_stage_initial": "Single Approval",
-  "mr_name": "MAT-MR-2026-00164",
+  "mr_name": "MAT-MR-2026-00169",
   "mr_status_after_approval": "Ordered",
-  "wr_name": "BEI-WHR-2026-00043",
-  "dispatch_se": "MAT-STE-2026-00453",
-  "draft_si_at_dispatch": "ACC-SINV-2026-00027",
-  "si_name": "ACC-SINV-2026-00027",
+  "wr_name": "BEI-WHR-2026-00048",
+  "dispatch_se": "MAT-STE-2026-00463",
+  "draft_si_at_dispatch": "ACC-SINV-2026-00030",
+  "si_name": "ACC-SINV-2026-00030",
   "si_customer": "BEBANG MEGA INC.",
   "si_company": "BEBANG KITCHEN INC.",
   "si_bei_legal_entity": "BEBANG KITCHEN INC.",
@@ -39,5 +39,5 @@
     }
   ],
   "verdict": "PASS",
-  "completed_at": "2026-04-18T16:03:21.585Z"
+  "completed_at": "2026-04-19T00:10:10.507Z"
 }
