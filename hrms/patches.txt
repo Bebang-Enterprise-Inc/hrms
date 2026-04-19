@@ -58,3 +58,4 @@ hrms.patches.v16_0.s172_ensure_hr_employee_permissions #2026-04-09
 hrms.patches.v16_0.s201_rename_branches #2026-04-17 (dry-run default; S201_APPLY=1 to execute)
 hrms.patches.v16_0.s201_backfill_employee_company #2026-04-17 (dry-run default; S201_APPLY=1 to execute)
 hrms.patches.v16_0.s206_unique_labor_allocation_log #2026-04-18
+hrms.patches.v16_0.s207_labor_allocation_log_bimonthly #2026-04-20
