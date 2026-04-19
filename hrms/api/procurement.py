@@ -5083,14 +5083,18 @@ def approve_match_exception(name: str, comment: str | None = None):
     if exception.status == "Rejected":
         frappe.throw(_("This exception has been rejected and cannot be approved"))
 
-    # Validate the current user is the designated approver
+    # Validate the current user is the designated approver. System Manager
+    # and Procurement Manager roles bypass the per-tier email gate (S205
+    # follow-up — same policy as Ian validator bypass in PR #627).
     current_user = frappe.session.user
     if current_user != exception.approver and current_user != "Administrator":
-        frappe.throw(
-            _("Only {0} ({1} tier) can approve this exception. You are logged in as {2}.").format(
-                exception.approver, exception.approval_tier, current_user
+        roles = frappe.get_roles(current_user) or []
+        if "System Manager" not in roles and "Procurement Manager" not in roles:
+            frappe.throw(
+                _("Only {0} ({1} tier) can approve this exception. You are logged in as {2}.").format(
+                    exception.approver, exception.approval_tier, current_user
+                )
             )
-        )
 
     _prepare_trip_exception_for_approval(exception)
     approved_at = now_datetime()
