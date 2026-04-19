@@ -38,10 +38,31 @@ NOT a service. No VAT, no EWT. See `docs/compliance/s206-transfer-pricing-policy
 
 from __future__ import annotations
 
+from datetime import date
+
 import frappe
 
 from hrms.utils.non_store_billing import is_non_store_billing_doc
 from hrms.utils.punch_allocation import compute_shift_share
+
+
+def posting_date_for_slip(slip_end_date: date) -> date:
+	"""CFO PNL-001: payroll hits the P&L of its payout month, not the work month.
+
+	- Slip ending on/before 15th → payout on the 25th of the same month
+	- Slip ending on 16th–last-day → payout on the 10th of the next month
+
+	Used by :func:`_build_paired_jes` (S207 Phase 3) so every paired JE posts on
+	the Bimonthly payout date rather than the slip's own end date. Cross-month
+	example: a March 16-31 half-period slip pays April 10 → JE posting_date =
+	2026-04-10 → expense hits April P&L.
+	"""
+	d = slip_end_date
+	if d.day <= 15:
+		return date(d.year, d.month, 25)
+	if d.month == 12:
+		return date(d.year + 1, 1, 10)
+	return date(d.year, d.month + 1, 10)
 
 # Skip reason constants
 SKIP_NON_STORE_BILLING = "non_store_billing"
