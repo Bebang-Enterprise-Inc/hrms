@@ -75,7 +75,11 @@ class S206JournalEntryIntegrationTests(unittest.TestCase):
 			raise unittest.SkipTest(f"S206 seeder prerequisites missing: {exc}")
 
 	def _fake_slip(self):
-		"""Return a stand-in slip with enough attributes to build a JE pair."""
+		"""Return a stand-in slip with enough attributes to build a JE pair.
+
+		S207 Bimonthly cadence: use a FIRST-HALF period (April 1-15). That makes
+		posting_date_for_slip(April 15) == April 25 (same-month payout, 25th rule).
+		"""
 		# Use the first active Employee; fall back to a hard-coded test employee.
 		employee = frappe.db.get_value("Employee", {"status": "Active"}, "name")
 		if not employee:
@@ -88,8 +92,8 @@ class S206JournalEntryIntegrationTests(unittest.TestCase):
 		s.name = "S206-INT-TEST-SLIP"
 		s.employee = employee
 		s.start_date = date(2026, 4, 1)
-		s.end_date = date(2026, 4, 30)
-		s.gross_pay = 1000.0
+		s.end_date = date(2026, 4, 15)
+		s.gross_pay = 500.0
 		s.department = frappe.db.get_value("Employee", employee, "department")
 		s.company = self.HOME_COMPANY
 		return s
@@ -116,6 +120,13 @@ class S206JournalEntryIntegrationTests(unittest.TestCase):
 			covered_doc = frappe.get_doc("Journal Entry", covered_name)
 			self.assertEqual(home_doc.docstatus, 1, "Home JE should be submitted")
 			self.assertEqual(covered_doc.docstatus, 1, "Covered JE should be submitted")
+			# S207 CFO PNL-001: first-half (1-15) slip posts on 25th of same month.
+			self.assertEqual(
+				str(home_doc.posting_date),
+				"2026-04-25",
+				"posting_date must be the payout date (25th of same month for first-half slip), not slip.end_date",
+			)
+			self.assertEqual(str(covered_doc.posting_date), "2026-04-25")
 			self.assertEqual(
 				home_doc.inter_company_journal_entry_reference,
 				covered_name,
