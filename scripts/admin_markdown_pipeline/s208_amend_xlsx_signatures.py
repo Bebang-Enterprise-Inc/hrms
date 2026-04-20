@@ -124,6 +124,9 @@ STORE_NOTES: dict[str, tuple[str, str]] = {
     "SM PULILAN": ("MISSING", "❗ MISSING Franchise/Management Agreement — collect signed copy from franchisee."),
     "SM TAYTAY": ("MISSING", "❗ MISSING Franchise/Management Agreement — collect signed copy from Day Ones Food Corp."),
     "XENTROMALL MONTALBAN": ("MISSING", "❗ MISSING Franchise/Management Agreement — collect signed copy from Perpetual Food Corp."),
+    "SM SAN JOSE DEL MONTE": ("MISSING", "❗ MISSING Franchise/Management Agreement — collect signed copy from JL Trade OPC."),
+    # Fairview Terraces: dual-signed with DMD Holdings as JV counterparty
+    "AYALA MALLS FAIRVIEW TERRACES": ("CROSS_MAPPED", "✓ Signed Contract on file at CORP_FAIRVIEW_TERRACES/CONTRACT/CONTRACT_FAIRVIEW_NODATE_v1.md (BEI + DMD Holdings dual-signed, 2024-04-18)"),
     # Lease present but FA/MA missing (HFFM Solenad + BB Estancia)
     "AYALA SOLENAD": ("MISSING_FA", "❗ Lease on file (STORE_SOLENAD/LEASE/...) but MISSING signed Franchise/Management Agreement with HFFM Solenad Food Services Inc."),
     "ORTIGAS ESTANCIA": ("MISSING_FA", "❗ Lease on file (CORP_BB_ESTANCIA/LEASE/...) but MISSING signed Franchise/Management Agreement with BB Estancia Food Corp."),
