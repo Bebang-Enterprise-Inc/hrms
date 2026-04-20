@@ -35,6 +35,12 @@
       "type": "CLOCK",
       "target": "(global)",
       "frequency": "daily 07:00 Asia/Manila"
+    },
+    {
+      "handler": "handleSiUpload",
+      "type": "FORM_SUBMIT",
+      "target": "BEI Supplier SI Upload form",
+      "frequency": "on every submission"
     }
   ],
   "install_command": "Open Apps Script editor > Select setup() > Run",

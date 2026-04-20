@@ -353,18 +353,165 @@ function sendCeoDailyEmail() {
 }
 
 // ========================================================================
-// Phase 4 stub (body added in phase 4)
+// Phase 4 — Supplier SI Upload + matching
 // ========================================================================
 
+// SI Upload Form field question IDs (captured by phase4_create_si_upload_form.py)
+const SI_FORM_ITEM_IDS = {
+  supplierName: '3a0fe354',
+  poNumber: '52a3ede1',
+  siNumber: '29b75eda',
+  siDate: '7b642217',
+  amount: '5631c342',
+  siPdfLink: '2088304f',
+  notes: '4ba080ae',
+};
+
+/**
+ * handleSiUpload — onFormSubmit trigger for the BEI Supplier SI Upload form.
+ *
+ * Reads the latest form response (event param `e.namedValues` or `e.values`),
+ * writes a row into Sheet C 03_Supplier_SI_Uploads, and attempts to match
+ * against 02_All_Receipts_Consolidated by (PO#, SI#). On clean match, tags
+ * the DR row with SI_Matched=TRUE + drive link + match timestamp. On no match,
+ * writes the upload into 04_Match_Queue for manual resolution.
+ */
 function handleSiUpload(e) {
-  // Phase 4 body — onFormSubmit handler for the Supplier SI Upload form.
-  // Writes to 03_Supplier_SI_Uploads; attempts to match against
-  // 02_All_Receipts_Consolidated by (PO#, SI#); tags DR row if matched,
-  // otherwise writes to 04_Match_Queue.
   const masterSs = SpreadsheetApp.openById(SHEET_C);
+  const siUploads = masterSs.getSheetByName('03_Supplier_SI_Uploads');
+  const consolidated = masterSs.getSheetByName('02_All_Receipts_Consolidated');
+  const matchQueue = masterSs.getSheetByName('04_Match_Queue');
   const auditLog = masterSs.getSheetByName('09_Audit_Log');
-  _logAudit(auditLog, 'handleSiUpload', 'formSubmit', 0,
-            'Phase_4_stub', 'SKIP', 'body pending Phase 4');
+
+  // e.namedValues is keyed by form item title; e.values is array in item order
+  // Form items (in order): Supplier Name, PO Number, SI Number, SI Date,
+  //                        Amount (PHP), SI PDF Drive Link, Notes
+  let supplierName = '', poNumber = '', siNumber = '', siDate = '';
+  let amount = '', siPdfLink = '', notes = '';
+
+  if (e && e.namedValues) {
+    const nv = e.namedValues;
+    const first = function(key) {
+      const v = nv[key];
+      return v && v.length ? v[0] : '';
+    };
+    supplierName = first('Supplier Name');
+    poNumber = first('PO Number');
+    siNumber = first('SI Number');
+    siDate = first('SI Date');
+    amount = first('Amount (PHP)');
+    siPdfLink = first('SI PDF Drive Link') || first('SI PDF');
+    notes = first('Notes');
+  } else if (e && e.values) {
+    // Fallback: positional (index 0 is Timestamp from form)
+    supplierName = e.values[1] || '';
+    poNumber = e.values[2] || '';
+    siNumber = e.values[3] || '';
+    siDate = e.values[4] || '';
+    amount = e.values[5] || '';
+    siPdfLink = e.values[6] || '';
+    notes = e.values[7] || '';
+  }
+
+  const timestamp = new Date();
+
+  // Attempt match by (PO#, SI#) — normalize whitespace + case
+  const normPo = String(poNumber).trim().toUpperCase();
+  const normSi = String(siNumber).trim().toUpperCase();
+
+  let matchedRow = -1;
+  let matchedRRNumber = '';
+  if (normPo && normSi) {
+    const data = consolidated.getDataRange().getValues();
+    // col indexes (0-based in data): 3=RR, 4=PO, 10=SI Number
+    for (let i = 1; i < data.length; i++) {
+      const rowPo = String(data[i][4] || '').trim().toUpperCase();
+      const rowSi = String(data[i][10] || '').trim().toUpperCase();
+      if (rowPo === normPo && rowSi === normSi) {
+        matchedRow = i + 1;  // 1-based for setValue
+        matchedRRNumber = data[i][3];
+        break;
+      }
+    }
+  }
+
+  const matchStatus = matchedRow > 0 ? 'MATCHED' : 'ORPHAN';
+
+  // Write into 03_Supplier_SI_Uploads
+  siUploads.appendRow([
+    timestamp, supplierName, poNumber, siNumber, siDate,
+    amount, siPdfLink, notes, matchStatus, matchedRRNumber,
+    matchedRow > 0 ? timestamp : '',
+  ]);
+
+  if (matchedRow > 0) {
+    // Tag the matched DR row in consolidated:
+    // col T = SI_Matched (20), col U = SI_Upload_Link (21), col V = SI_Match_Timestamp (22)
+    consolidated.getRange(matchedRow, 20).setValue(true);
+    consolidated.getRange(matchedRow, 21).setValue(siPdfLink);
+    consolidated.getRange(matchedRow, 22).setValue(timestamp);
+
+    // Also tag Pending GR row if present
+    const pending = masterSs.getSheetByName('06_Pending_GR');
+    const pendingData = pending.getDataRange().getValues();
+    for (let i = 1; i < pendingData.length; i++) {
+      const rowPo = String(pendingData[i][3] || '').trim().toUpperCase();
+      const rowSi = String(pendingData[i][9] || '').trim().toUpperCase();
+      if (rowPo === normPo && rowSi === normSi) {
+        // Update SI PDF Link (col 11 = K, 1-based index 11)
+        pending.getRange(i + 1, 11).setValue(siPdfLink);
+        pending.getRange(i + 1, 12).setValue('READY');
+        break;
+      }
+    }
+
+    _logAudit(auditLog, 'handleSiUpload', supplierName, matchedRow,
+              'SI_matched_to_RR_' + matchedRRNumber, 'OK',
+              'PO=' + poNumber + ' SI=' + siNumber);
+  } else {
+    // Orphan: write to 04_Match_Queue for manual resolution
+    matchQueue.appendRow([
+      timestamp, 'Orphan SI — no matching DR found',
+      supplierName, poNumber, siNumber, siDate, amount, siPdfLink,
+      'Ian', 'OPEN', '',
+    ]);
+    _logAudit(auditLog, 'handleSiUpload', supplierName, 0,
+              'Orphan_SI_to_Match_Queue', 'WARN',
+              'PO=' + poNumber + ' SI=' + siNumber + ' — no DR match');
+  }
+}
+
+/**
+ * generateSupplierUrls — pulls Tier A supplier list from
+ * 07_Full_Suppliers_Master, builds pre-filled URLs for the SI Upload form,
+ * and writes them to 07's Tier A URL column (future extension) OR returns
+ * them as a batch for export.
+ *
+ * NOTE: Python script `phase4_create_si_upload_form.py` already generates the
+ * canonical SUPPLIER_URLS.csv. This Apps Script function exists for
+ * on-demand regeneration inside the script runtime (e.g., when Tier
+ * classification changes). It uses the form's internal entry ID for
+ * Supplier Name pre-fill.
+ */
+function generateSupplierUrls() {
+  const FORM_BASE = 'https://docs.google.com/forms/d/e/1FAIpQLSdsifYasH8h8_iBGkbsZyhssSmRQX-zXzvxeNVSfwhA2yPvTw/viewform';
+  const SUPPLIER_ENTRY_ID = SI_FORM_ITEM_IDS.supplierName;
+  const masterSs = SpreadsheetApp.openById(SHEET_C);
+  const suppliers = masterSs.getSheetByName('07_Full_Suppliers_Master');
+  const data = suppliers.getDataRange().getValues();
+  const urls = [];
+  for (let i = 1; i < data.length; i++) {
+    const name = data[i][1];
+    const tier = String(data[i][13] || '').trim().toUpperCase();
+    if (!name) continue;
+    if (tier === 'B' || tier === 'TIER B' || tier === 'C' || tier === 'TIER C') continue;
+    const url = FORM_BASE
+      + '?usp=pp_url&entry.' + SUPPLIER_ENTRY_ID + '='
+      + encodeURIComponent(name);
+    urls.push({ supplier: name, url: url });
+  }
+  console.log('Generated ' + urls.length + ' supplier URLs');
+  return urls;
 }
 
 // ========================================================================
@@ -431,7 +578,21 @@ function setup() {
     .timeBased().atHour(7).everyDays(1)
     .inTimezone('Asia/Manila').create();
 
-  console.log('setup complete: 6 triggers installed');
+  // 7. onFormSubmit — handleSiUpload (SI_UPLOAD_FORM_ID from SHEET_IDS.json)
+  // Note: installable onFormSubmit must be attached to the form. In the
+  // editor, open the SI Upload form, choose "Script editor" and add the
+  // handleSiUpload function with an onFormSubmit installable trigger. For
+  // a standalone script, we use Form ID programmatically:
+  const SI_UPLOAD_FORM_ID = '1DsT-IdDpW_p3XfpSevkyCZ7S-YVu3EWEK3SxD1lJ940';
+  try {
+    const form = FormApp.openById(SI_UPLOAD_FORM_ID);
+    ScriptApp.newTrigger('handleSiUpload')
+      .forForm(form).onFormSubmit().create();
+  } catch (err) {
+    console.error('Failed to install onFormSubmit trigger: ' + err);
+  }
+
+  console.log('setup complete: 7 triggers installed');
 
   // Audit log entry to confirm setup ran
   const masterSs = SpreadsheetApp.openById(SHEET_C);
