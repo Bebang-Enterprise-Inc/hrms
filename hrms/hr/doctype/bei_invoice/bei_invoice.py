@@ -223,6 +223,12 @@ class BEIInvoice(Document):
 
 		self.variance_notes = reason
 		self.status = "Match Failed"
+		# Surface rejection on the displayed match-status badge so operators
+		# (and S194-27 cert) can see the disposition without drilling into
+		# raw status. The "Match Failed" status keeps the existing semantics
+		# for downstream filters; "Rejected" on match_status is the
+		# user-visible decision label.
+		self.match_status = "Rejected"
 		self.save()
 
 		return {"success": True, "message": _("Invoice rejected due to variance")}

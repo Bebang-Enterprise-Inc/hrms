@@ -179,7 +179,7 @@
    "fieldname": "match_status",
    "fieldtype": "Select",
    "label": "Match Status",
-   "options": "Pending\nMatched\nVariance Detected\nApproved with Variance",
+   "options": "Pending\nMatched\nVariance Detected\nApproved with Variance\nRejected",
    "read_only": 1
   },
   {
