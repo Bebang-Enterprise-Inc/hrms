@@ -329,27 +329,276 @@ function ageVarianceQueue() {
 }
 
 // ========================================================================
-// Phase 5 stubs (full bodies added in phase 5)
+// Phase 5 — Daily master refresh + CEO daily email
 // ========================================================================
 
+// Procurement AppSheet source sheet (read-only, owned by sam@bebang.ph)
+const PROCUREMENT_APPSHEET_ID = '1QWdoZlT7XWLppfVKpJ2VRXhbMkYtE5TbUwg4lMbO03Q';
+
+/**
+ * refreshMasters — daily 06:00 cron. Pulls Suppliers + Purchase Order tabs
+ * from Procurement AppSheet and rebuilds Sheet C 07_Full_Suppliers_Master +
+ * 08_Full_Open_POs. Also regenerates Sheet A Suppliers_Visible +
+ * Open_POs_3MD_Only, and Sheet B Suppliers_Visible + Open_POs_Pinnacle_Only,
+ * by destination filter.
+ *
+ * Replace-in-place semantics: clears data rows (row 2 onwards), writes fresh.
+ */
 function refreshMasters() {
-  // Phase 5 body — pulls from Procurement AppSheet, rebuilds
-  // 07_Full_Suppliers_Master + 08_Full_Open_POs, regenerates
-  // Suppliers_Visible in A+B and Open_POs_3MD_Only / Open_POs_Pinnacle_Only
-  // by destination filter.
   const masterSs = SpreadsheetApp.openById(SHEET_C);
   const auditLog = masterSs.getSheetByName('09_Audit_Log');
+
+  let suppliersWritten = 0;
+  let openPosWritten = 0;
+  let errors = [];
+
+  try {
+    // Pull Suppliers
+    const srcSs = SpreadsheetApp.openById(PROCUREMENT_APPSHEET_ID);
+    const suppliersTab = srcSs.getSheetByName('Suppliers');
+    if (!suppliersTab) throw new Error('Procurement AppSheet missing Suppliers tab');
+    const supData = suppliersTab.getDataRange().getValues();
+    if (supData.length < 2) throw new Error('Suppliers tab empty');
+
+    // Map source columns to our master schema
+    const supHeaders = supData[0];
+    const supCol = function(name) {
+      const idx = supHeaders.indexOf(name);
+      return idx;
+    };
+    const supIdx = {
+      code: supCol('Supplier Code'),
+      name: supCol('Supplier Name'),
+      contactNo: supCol('Contact No'),
+      contactPerson: supCol('Contact Person'),
+      email: supCol('Email ID'),
+      address: supCol('Address'),
+      bankName: supCol('Bank Name'),
+      bankAccName: supCol('Bank Account Name'),
+      bankAccNo: supCol('Bank Account No'),
+      vatReg: supCol('VAT Registered'),
+      tin: supCol('TIN'),
+      ewt: supCol('EWT Rate'),
+      payTerms: supCol('Payment Terms'),
+      tier: supCol('Tier'),
+    };
+    const safe = function(row, i) {
+      return (i >= 0 && i < row.length) ? row[i] : '';
+    };
+    const suppliersRows = [];
+    for (let i = 1; i < supData.length; i++) {
+      const r = supData[i];
+      if (!safe(r, supIdx.name)) continue;
+      suppliersRows.push([
+        safe(r, supIdx.code), safe(r, supIdx.name), safe(r, supIdx.contactNo),
+        safe(r, supIdx.contactPerson), safe(r, supIdx.email), safe(r, supIdx.address),
+        safe(r, supIdx.bankName), safe(r, supIdx.bankAccName), safe(r, supIdx.bankAccNo),
+        safe(r, supIdx.vatReg), safe(r, supIdx.tin), safe(r, supIdx.ewt),
+        safe(r, supIdx.payTerms), safe(r, supIdx.tier),
+      ]);
+    }
+
+    const supMaster = masterSs.getSheetByName('07_Full_Suppliers_Master');
+    const lastRow = supMaster.getLastRow();
+    if (lastRow > 1) {
+      supMaster.getRange(2, 1, lastRow - 1, 14).clearContent();
+    }
+    if (suppliersRows.length > 0) {
+      supMaster.getRange(2, 1, suppliersRows.length, 14).setValues(suppliersRows);
+    }
+    suppliersWritten = suppliersRows.length;
+
+    // Pull Purchase Order
+    const poTab = srcSs.getSheetByName('Purchase Order');
+    if (!poTab) throw new Error('Procurement AppSheet missing Purchase Order tab');
+    const poData = poTab.getDataRange().getValues();
+    const poHeaders = poData[0];
+    const poCol = function() {
+      for (let i = 0; i < arguments.length; i++) {
+        const idx = poHeaders.indexOf(arguments[i]);
+        if (idx >= 0) return idx;
+      }
+      return -1;
+    };
+    const poIdx = {
+      poNum: poCol('PO Number', 'PO No', 'PO#'),
+      poDate: poCol('PO Date', 'Date', 'Timestamp'),
+      supCode: poCol('Supplier Code'),
+      supName: poCol('Supplier Name', 'Supplier'),
+      dest: poCol('Destination 3PL', 'Destination', 'Delivery to', 'Deliver To', 'Delivery Location'),
+      total: poCol('Total Amount', 'Grand Total', 'Total'),
+      balance: poCol('Balance', 'Outstanding Balance'),
+      delivNeed: poCol('Delivery Needed By', 'Delivery Date', 'Required Date', 'Date Required'),
+      status: poCol('Status', 'PO Status', 'Approval'),
+    };
+    const poRows = [];
+    for (let i = 1; i < poData.length; i++) {
+      const r = poData[i];
+      if (!safe(r, poIdx.poNum)) continue;
+      const status = String(safe(r, poIdx.status)).trim().toLowerCase();
+      if (['closed', 'cancelled', 'canceled', 'rejected', 'void'].indexOf(status) >= 0) continue;
+      poRows.push([
+        safe(r, poIdx.poNum), safe(r, poIdx.poDate), safe(r, poIdx.supCode),
+        safe(r, poIdx.supName), safe(r, poIdx.dest), safe(r, poIdx.total),
+        safe(r, poIdx.balance), safe(r, poIdx.delivNeed), safe(r, poIdx.status),
+      ]);
+    }
+
+    const poMaster = masterSs.getSheetByName('08_Full_Open_POs');
+    const poLast = poMaster.getLastRow();
+    if (poLast > 1) {
+      poMaster.getRange(2, 1, poLast - 1, 9).clearContent();
+    }
+    if (poRows.length > 0) {
+      poMaster.getRange(2, 1, poRows.length, 9).setValues(poRows);
+    }
+    openPosWritten = poRows.length;
+
+    // Regenerate Sheet A / B per-destination tabs
+    _refreshPerSheetFilteredTabs(masterSs, supMaster, poMaster);
+  } catch (e) {
+    errors.push(String(e));
+  }
+
+  const outcome = errors.length === 0 ? 'OK' : 'PARTIAL';
   _logAudit(auditLog, 'refreshMasters', 'cron', 0,
-            'Phase_5_stub', 'SKIP', 'body pending Phase 5');
+            'Refreshed_' + suppliersWritten + '_suppliers_' + openPosWritten + '_POs',
+            outcome, errors.join('; '));
 }
 
+function _refreshPerSheetFilteredTabs(masterSs, supMaster, poMaster) {
+  // Pull current master data
+  const supData = supMaster.getDataRange().getValues();
+  const poData = poMaster.getDataRange().getValues();
+
+  // Suppliers visible to 3PLs (subset): code, name, tin, contact_person, contact_no
+  const supVisible = [];
+  for (let i = 1; i < supData.length; i++) {
+    const r = supData[i];
+    if (!r[1]) continue;
+    supVisible.push([r[0], r[1], r[10], r[3], r[2]]);
+  }
+
+  const sheetA = SpreadsheetApp.openById(SHEET_A);
+  const sheetB = SpreadsheetApp.openById(SHEET_B);
+
+  // Sheet A / B: Suppliers_Visible tab (same list for both)
+  for (const ss of [sheetA, sheetB]) {
+    const tab = ss.getSheetByName('Suppliers_Visible');
+    if (!tab) continue;
+    const last = tab.getLastRow();
+    if (last > 1) {
+      tab.getRange(2, 1, last - 1, 5).clearContent();
+    }
+    if (supVisible.length > 0) {
+      tab.getRange(2, 1, supVisible.length, 5).setValues(supVisible);
+    }
+  }
+
+  // Sheet A: Open_POs_3MD_Only (filter destination contains 3MD)
+  _writeFilteredPOs(sheetA, 'Open_POs_3MD_Only', poData, '3MD');
+  _writeFilteredPOs(sheetB, 'Open_POs_Pinnacle_Only', poData, 'Pinnacle');
+}
+
+function _writeFilteredPOs(ss, tabName, poData, destFilter) {
+  const tab = ss.getSheetByName(tabName);
+  if (!tab) return;
+  const matchFilter = String(destFilter).toLowerCase();
+  const filtered = [];
+  for (let i = 1; i < poData.length; i++) {
+    const r = poData[i];
+    const dest = String(r[4] || '').toLowerCase();
+    if (dest.indexOf(matchFilter) >= 0) {
+      // PO Number, Supplier Code, Supplier Name, Destination 3PL, Total, Balance, PO Date, Delivery Needed By
+      filtered.push([r[0], r[2], r[3], r[4], r[5], r[6], r[1], r[7]]);
+    }
+  }
+  const last = tab.getLastRow();
+  if (last > 1) {
+    tab.getRange(2, 1, last - 1, 8).clearContent();
+  }
+  if (filtered.length > 0) {
+    tab.getRange(2, 1, filtered.length, 8).setValues(filtered);
+  }
+}
+
+/**
+ * sendCeoDailyEmail — daily 07:00 PHT cron. Pulls yesterday's KPIs from
+ * Sheet C 01_Dashboard and sends a summary email to sam@bebang.ph and
+ * ian@bebang.ph.
+ *
+ * Recipients (hard-coded per plan 5.1):
+ *   - sam@bebang.ph
+ *   - ian@bebang.ph
+ */
 function sendCeoDailyEmail() {
-  // Phase 5 body — pulls yesterday's KPIs from Dashboard; emails
-  // sam@bebang.ph + ian@bebang.ph at 07:00 PHT.
   const masterSs = SpreadsheetApp.openById(SHEET_C);
   const auditLog = masterSs.getSheetByName('09_Audit_Log');
-  _logAudit(auditLog, 'sendCeoDailyEmail', 'cron', 0,
-            'Phase_5_stub', 'SKIP', 'body pending Phase 5');
+
+  try {
+    const dash = masterSs.getSheetByName('01_Dashboard');
+    const values = dash.getRange('A1:B15').getValues();
+
+    // Build label/value map
+    const kpis = {};
+    for (let i = 0; i < values.length; i++) {
+      const label = String(values[i][0] || '').trim();
+      const val = values[i][1];
+      if (label) kpis[label] = val;
+    }
+
+    const yesterday = new Date(new Date().getTime() - 24 * 3600 * 1000);
+    const ymd = Utilities.formatDate(yesterday, 'Asia/Manila', 'yyyy-MM-dd');
+
+    const subject = '[BEI Receiving] Daily KPI digest — ' + ymd;
+    const bodyLines = [
+      'BEI Receiving Infrastructure — Daily KPI Digest',
+      'Snapshot: ' + new Date().toLocaleString('en-PH', { timeZone: 'Asia/Manila' }),
+      '',
+      "Today's receipts:",
+      '  • 3MD:      ' + (kpis["Today's receipts — 3MD"] || 0),
+      '  • Pinnacle: ' + (kpis["Today's receipts — Pinnacle"] || 0),
+      '  • Shaw:     ' + (kpis["Today's receipts — Shaw (transitional)"] || 0),
+      '',
+      'Quality:',
+      '  • SI match rate: ' + _pct(kpis['SI match rate (today\'s receipts)']),
+      '  • Stale DR count (>72h): ' + (kpis['Stale DR count (>72h, no SI match)'] || 0),
+      '',
+      'Queues:',
+      '  • Pending GR depth: ' + (kpis['Pending GR depth'] || 0),
+      '  • Orphan SI count: ' + (kpis['Orphan SI count (Match Queue)'] || 0),
+      '',
+      'Masters:',
+      '  • Suppliers: ' + (kpis['Full Suppliers Master — rows'] || 0),
+      '  • Open POs:  ' + (kpis['Full Open POs — rows'] || 0),
+      '',
+      'Events:',
+      '  • Audit log today: ' + (kpis['Audit log events today'] || 0),
+      '',
+      'Dashboard: https://docs.google.com/spreadsheets/d/' + SHEET_C + '/edit#gid=0',
+      '',
+      '— BEI Receiving Master handler (automated)',
+    ];
+
+    GmailApp.sendEmail(
+      'sam@bebang.ph, ian@bebang.ph',
+      subject,
+      bodyLines.join('\n'),
+      { name: 'BEI Receiving Bot' }
+    );
+
+    _logAudit(auditLog, 'sendCeoDailyEmail', 'cron', 0,
+              'Digest_sent', 'OK', 'to sam@bebang.ph, ian@bebang.ph');
+  } catch (e) {
+    _logAudit(auditLog, 'sendCeoDailyEmail', 'cron', 0,
+              'Digest_failed', 'FAIL', String(e));
+  }
+}
+
+function _pct(x) {
+  const n = Number(x);
+  if (isNaN(n)) return '0%';
+  return Math.round(n * 100) + '%';
 }
 
 // ========================================================================
