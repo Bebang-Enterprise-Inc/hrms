@@ -7,24 +7,34 @@ status: COMPLETED
 created_date: 2026-04-20
 completed_date: 2026-04-20
 execution_summary: |
-  6 phases executed end-to-end in one session. Deployed 4 Google Sheets:
-  A (BEI 3MD Receiving Log 2026, id 1dambmiLzSMWOQun7MCymK4nHpuqrarFCAOK0G9-6oIU),
-  B (BEI Pinnacle Receiving Log 2026, id 10fqnvF_uDl5ky3MkvXUmWvZ1fYat_p6XFGmVFc3vqrw),
+  6 phases executed end-to-end, then Phase 7 CEO UX patch same day.
+  Deployed 4 Google Sheets: A (BEI 3MD Receiving Log 2026,
+  id 1dambmiLzSMWOQun7MCymK4nHpuqrarFCAOK0G9-6oIU), B (BEI Pinnacle
+  Receiving Log 2026, id 10fqnvF_uDl5ky3MkvXUmWvZ1fYat_p6XFGmVFc3vqrw),
   C (BEI Receiving Master 2026, 9 tabs, id 1_Ir5O5AW7hOjcvCTXsP06cF3sai9hcefDFrBOTRHOh0),
   D (BEI Shaw Transitional Receiving, id 1mbJiLW9M9e-AmrXSRRTtbRP-xKI16ah5rakOt6qv2As).
-  Apps Script project deployed (id 1lsvOlv1rGEvXl_1zms4SURlsLUZk7CxRhg2NyBDrDHh4fDjuioFZhi2S,
-  33KB source, 12 functions including validateReceipt, 3 onEdit handlers,
-  postChatNotification, ageVarianceQueue, refreshMasters, sendCeoDailyEmail,
-  handleSiUpload, generateSupplierUrls, setup). Supplier SI Upload form
-  deployed (id 1DsT-IdDpW_p3XfpSevkyCZ7S-YVu3EWEK3SxD1lJ940) with 7 fields;
-  98 pre-filled URLs generated for Tier A suppliers in SUPPLIER_URLS.csv.
+  Apps Script project deployed (id 1lsvOlv1rGEvXl_1zms4SURlsLUZk7CxRhg2NyBDrDHh4fDjuioFZhi2S).
   Seeded masters from Procurement AppSheet: 98 suppliers + 652 open POs.
-  E2E tests 3/3 PASS: 3MD flow, Pinnacle flow, Supplier SI match. All 6
-  phase verifiers exit 0. Blockers encountered: Forms API lacks file_upload
-  support (resolved: fallback to Drive link text field); commissary.team
-  lacks Apps Script API (resolved: impersonation fallback to sam@bebang.ph).
-  External coordination pending: Martin (3MD) editor invite (Ian), Pinnacle
-  contact migration from Viber (Jay), setup() trigger install (Sam/commissary.team).
+  Phase 6 E2E tests 3/3 PASS (pre-patch).
+  PHASE 7 CEO COURSE CORRECTIONS (2026-04-20 PM): (1) Sheets A/B/D Receipts
+  tab reduced from 18 to 16 cols — "SI Photo" + "Delivery Photo" removed
+  because 3PLs will not paste image/drive links in a spreadsheet; (2)
+  Supplier SI Upload form rebuilt via Apps Script FormApp (native file
+  upload button) instead of Forms REST API (which does not support file
+  upload). Old REST-API form with Drive-link-paste text field was deleted.
+  .gs updated: COL_* indexes shifted, validateReceipt no longer requires
+  siPhoto, handleNewReceipt writes empty placeholders into consolidated's
+  SI Photo + Delivery Photo cols. Manifest expanded with drive/forms/gmail
+  scopes + executionApi.access=DOMAIN. Helper function
+  s210_rebuildSupplierForm pushed to script project — requires one-click
+  manual run in Apps Script editor (Apps Script API scripts.run not
+  available to our service account without publisher-approved deployment).
+  Full resume automation in output/s210/phase7_resume.py polls audit log
+  and finalises SUPPLIER_URLS.csv + SI_UPLOAD_FORM_ID.json once Sam clicks
+  Run. Plan + registry + RUN_STATUS patched to reflect reality.
+  External coordination still pending: Martin (3MD) editor invite (Ian),
+  Pinnacle contact migration from Viber (Jay), setup() trigger install
+  by Sam/commissary.team, AND the one-click Phase 7 form rebuild.
 canonical_scope: none
 canonical_scope_rationale: |
   Google Workspace automation only (Google Sheets + Apps Script + Google Forms).
@@ -490,6 +500,33 @@ If the verification script exits non-zero, the phase is not complete. Fix failur
 | 6.6 | Update this plan's YAML: `status: GO` → `status: COMPLETED`, add `completed_date`, write `execution_summary` summarizing: sheets created, triggers live, E2E results | MUST_MODIFY: plan YAML updated | 1 |
 | 6.7 | Update `docs/plans/SPRINT_REGISTRY.md` S210 row — `PLANNED 2026-04-20` → `COMPLETED YYYY-MM-DD` with sheet IDs appended; force-add committed | MUST_MODIFY: registry row changed | 1 |
 | 6.8 | `git add -f` + commit + push `s210-tier-a-receipt-payment-infrastructure` branch; create PR with `GH_TOKEN="" gh pr create ...` | PR URL captured in `output/s210/PR_URL.txt` | — |
+
+---
+
+### Phase 7 — CEO UX course-correction (2026-04-20 PM, added post-Phase-6)
+
+Triggered by CEO directive after reviewing the bare Sheet A during Phase 6
+closeout: "3pl are not going to paste a fucking image link in sheets, so
+only ask for SI number no need for photos. For suppliers form I need an
+upload button and not a link pasting as well, always aim for good UX.
+Patch your plan so we can track what the fuck we discussed."
+
+| # | Task | MUST_MODIFY / MUST_CONTAIN | Unit |
+|---|---|---|---|
+| 7.1 | Strip `SI Photo` + `Delivery Photo` columns from Sheets A, B, D `Receipts` tab (18 cols → 16 cols). Migrate existing rows. | Sheets A/B/D `Receipts` row 1 cols count = 16 | 2 |
+| 7.2 | Update `s210_master_handler.gs` COL_* constants (shift post-SI Number cols by -2); remove `siPhoto` check in `validateReceipt`; in `_handleNewReceipts`, write empty-string placeholders into consolidated's SI Photo + Delivery Photo positions (consolidated schema unchanged at 22 cols) | `.gs` `const COL_SI_PHOTO` REMOVED; `const COL_TRUCKER = 10` | 2 |
+| 7.3 | Delete the existing Forms-REST-API supplier form (bad UX — suppliers paste Drive link text). `drive_api.files().delete(old_form_id)` | Old form 404 | 1 |
+| 7.4 | Expand manifest: add `drive`, `forms`, `gmail.send` scopes; set `executionApi.access=DOMAIN`. Re-upload to script project. | manifest size increases; new scopes present | 1 |
+| 7.5 | Push helper function `s210_rebuildSupplierForm` to the script project. Helper uses `FormApp.create()` + `addFileUploadItem()` for native upload button. Helper persists result (formId, responderUri, entries) into Sheet C 09_Audit_Log under trigger=`phase7_form_rebuild`. | Script project has `s210_phase7_form_rebuild` file; helper appears in file listing | 1 |
+| 7.6 | Manual step: Sam opens Apps Script editor, selects `s210_rebuildSupplierForm`, clicks Run. Documented in `output/s210/PHASE7_MANUAL_STEP.md`. | PHASE7_MANUAL_STEP.md exists with exact steps | — |
+| 7.7 | `python output/s210/phase7_resume.py` (post-click) polls audit log, rewrites `SUPPLIER_URLS.csv` + `SI_UPLOAD_FORM_ID.json` + updates `SHEET_IDS.json` with new `si_upload_form_id` + `si_upload_form_uses_native_file_upload=true`. | new form id reflected; CSV has >=30 rows | 2 |
+| 7.8 | Update ONBOARDING doc: remove SI Photo instruction from 3PL steps; update form field list to say "tap to upload PDF" instead of "paste Drive link" | ONBOARDING doc reflects 16-col schema + native file upload | 1 |
+| 7.9 | Verify: `python output/s210/verify_phase_7.py` exits 0 | exits 0 | — |
+
+**Known friction:** Phase 7 requires one manual click because the service
+account's domain-wide delegation does not include `script.deployments`
+scope. To fully automate, either (a) admin adds `script.deployments` to
+DWD, or (b) publisher-approval deployment is done by a human once.
 
 ---
 

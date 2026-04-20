@@ -36,10 +36,13 @@ const SHEET_D = '1mbJiLW9M9e-AmrXSRRTtbRP-xKI16ah5rakOt6qv2As';  // BEI Shaw Tra
 const SCM_SPACE = 'spaces/AAQArCi8zjE';
 const PROCUREMENT_NOTIF_SPACE = 'spaces/AAQAYAYwPPk';
 
-// Sheet A/B/D Receipts tab column indexes (0-indexed)
+// Sheet A/B/D Receipts tab column indexes (0-indexed) — 16 cols post-Phase 7
+// (CEO directive 2026-04-20 PM: 3PLs will not paste image/drive links in a
+// spreadsheet. Photos were removed from the 3PL receiving sheets. SI PDFs
+// flow through the separate supplier SI upload form.)
 // Header row: Timestamp, 3PL, RR Number, PO Number, Supplier, Material Code,
-//             Material Description, Qty Received, UoM, SI Number, SI Photo,
-//             Delivery Photo, Trucker's Name, Plate Number, Production Date,
+//             Material Description, Qty Received, UoM, SI Number,
+//             Trucker's Name, Plate Number, Production Date,
 //             Expiration Date, Received By, Notes
 const COL_TIMESTAMP = 0;
 const COL_3PL = 1;
@@ -51,14 +54,12 @@ const COL_MATERIAL_DESC = 6;
 const COL_QTY = 7;
 const COL_UOM = 8;
 const COL_SI_NUM = 9;
-const COL_SI_PHOTO = 10;
-const COL_DELIVERY_PHOTO = 11;
-const COL_TRUCKER = 12;
-const COL_PLATE = 13;
-const COL_PROD_DATE = 14;
-const COL_EXP_DATE = 15;
-const COL_RECEIVED_BY = 16;
-const COL_NOTES = 17;
+const COL_TRUCKER = 10;
+const COL_PLATE = 11;
+const COL_PROD_DATE = 12;
+const COL_EXP_DATE = 13;
+const COL_RECEIVED_BY = 14;
+const COL_NOTES = 15;
 
 // Sheet C 02_All_Receipts_Consolidated — 22 cols
 // A=Timestamp, B=Source_Sheet, C=3PL, D=RR, E=PO, F=Supplier, G=Mat Code,
@@ -89,14 +90,13 @@ function validateReceipt(rowData) {
   const materialCode = String(rowData[COL_MATERIAL_CODE] || '').trim();
   const qty = parseFloat(rowData[COL_QTY]);
   const siNumber = String(rowData[COL_SI_NUM] || '').trim();
-  const siPhoto = String(rowData[COL_SI_PHOTO] || '').trim();
 
   if (!poNumber) errors.push('PO Number missing');
   if (!supplier) errors.push('Supplier missing');
   if (!materialCode) errors.push('Material Code missing');
   if (!(qty > 0)) errors.push('Qty must be > 0');
   if (!siNumber) errors.push('SI Number missing');
-  if (!siPhoto) errors.push('SI Photo missing (supplier can still upload via the SI Upload form — DR accepted, SI marked pending)');
+  // SI photo check removed post-Phase 7 — photos flow via supplier SI upload form.
 
   // Cross-check PO against Open POs master
   let poInfo = null;
@@ -173,12 +173,16 @@ function _handleNewReceipts(sourceSheetId, sourceLabel) {
 
     const validation = validateReceipt(row);
 
-    // Write to consolidated regardless — we want all receipts visible
+    // Write to consolidated regardless — we want all receipts visible.
+    // Consolidated schema retains SI Photo + Delivery Photo cols but they
+    // are always empty post-Phase 7; SI PDF link flows via handleSiUpload.
     const consolidatedRow = [
       row[COL_TIMESTAMP], sourceLabel, row[COL_3PL] || sourceLabel, row[COL_RR],
       row[COL_PO], row[COL_SUPPLIER], row[COL_MATERIAL_CODE], row[COL_MATERIAL_DESC],
-      row[COL_QTY], row[COL_UOM], row[COL_SI_NUM], row[COL_SI_PHOTO],
-      row[COL_DELIVERY_PHOTO], row[COL_TRUCKER], row[COL_PLATE],
+      row[COL_QTY], row[COL_UOM], row[COL_SI_NUM],
+      '',  // SI Photo placeholder (3PL no longer captures)
+      '',  // Delivery Photo placeholder
+      row[COL_TRUCKER], row[COL_PLATE],
       row[COL_PROD_DATE], row[COL_EXP_DATE], row[COL_RECEIVED_BY], row[COL_NOTES],
       false,  // SI_Matched
       '',     // SI_Upload_Link

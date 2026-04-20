@@ -9,28 +9,35 @@ automatically. Supplier SI upload is a separate parallel stream (see §5).
 
 ---
 
-## 0. One-time setup — DO THIS FIRST (CEO / commissary.team only)
+## 0. One-time setup — TWO clicks required (Sam / commissary.team)
 
-**Until this step is done, no onEdit automation will fire.** The 7 installable
-triggers are defined but not yet installed.
+Until these two clicks happen, automation will not fire.
 
-1. Open the Apps Script editor: https://script.google.com/d/1lsvOlv1rGEvXl_1zms4SURlsLUZk7CxRhg2NyBDrDHh4fDjuioFZhi2S/edit
-2. In the left file panel, click **s210_master_handler.gs**.
-3. In the function dropdown at the top of the editor, select **setup**.
-4. Click **Run**.
-5. First run triggers an OAuth consent screen — approve. Scopes requested:
-   - View/edit Google Sheets
-   - Send mail as yourself
-   - Access Google Drive (for SI uploads)
-   - Manage triggers
-   - Make external HTTP requests (for Chat notifications)
-6. After `setup complete: 7 triggers installed` appears in the execution log,
-   open any of the 4 sheets, add a test row to Receipts, and confirm within
-   30 seconds that a row appears in Sheet C `02_All_Receipts_Consolidated`
-   and a Chat post lands in the SCM space.
-7. If setup() finishes without errors but no Chat post appears, the service
-   account Chat app may need to be invited to both `spaces/AAQArCi8zjE` (SCM)
-   and `spaces/AAQAYAYwPPk` (Procurement App Notifications). Ian to verify.
+### 0a. Rebuild Supplier SI Upload form with native file upload button
+
+Old form (asked suppliers to paste a Drive link — bad UX) was deleted in
+Phase 7. New form must be created via Apps Script's FormApp to get the
+native file upload button (Forms REST API does not support file upload).
+
+1. Open https://script.google.com/d/1lsvOlv1rGEvXl_1zms4SURlsLUZk7CxRhg2NyBDrDHh4fDjuioFZhi2S/edit
+2. Left panel: click **s210_phase7_form_rebuild**
+3. Function dropdown (top) → **s210_rebuildSupplierForm** → **Run**
+4. Approve OAuth if prompted (FormApp + Drive + Sheets)
+5. In terminal: `python output/s210/phase7_resume.py` — picks up the new
+   form ID from Sheet C audit log and rewrites `SUPPLIER_URLS.csv` +
+   `SI_UPLOAD_FORM_ID.json`
+
+### 0b. Install the 7 installable triggers
+
+1. Same editor. Left panel: click **s210_master_handler.gs**
+2. Function dropdown → **setup** → **Run**
+3. Approve OAuth. Scopes: Sheets, Drive, Gmail send, Triggers, External HTTP
+4. When log says `setup complete: 7 triggers installed`, add a test row to
+   Sheet A Receipts and confirm within 30 seconds that a row appears in
+   Sheet C `02_All_Receipts_Consolidated` and a Chat post lands in SCM.
+5. If Chat post missing, the service account Chat app needs to be invited
+   to both `spaces/AAQArCi8zjE` (SCM) and `spaces/AAQAYAYwPPk` (Procurement
+   App Notifications). Ian to verify.
 
 ---
 
@@ -66,8 +73,9 @@ vice versa. Sheet C is internal BEI only.
 > only show suppliers + POs routed to 3MD — if the PO you expect is missing,
 > message me (ian@bebang.ph).
 >
-> Upload a photo of the supplier SI in the "SI Photo" column (phone → Insert
-> Image → Upload). Photo must be clear enough to read the SI number and total.
+> Type the SI Number from the paper SI exactly as printed. You do NOT need
+> to upload any photos — the supplier uploads their SI PDF through a
+> separate form. Your job is just the delivery record.
 >
 > For anything not routed to your warehouse, ignore. You will not be able to
 > see other warehouses' data.
@@ -138,25 +146,27 @@ handleSiUpload:
 
 ## 5. Supplier SI Upload form — rollout checklist
 
-- **Form:** https://docs.google.com/forms/d/1DsT-IdDpW_p3XfpSevkyCZ7S-YVu3EWEK3SxD1lJ940/edit
-- **Public responder URL:** https://docs.google.com/forms/d/e/1FAIpQLSdsifYasH8h8_iBGkbsZyhssSmRQX-zXzvxeNVSfwhA2yPvTw/viewform
-- **Pre-filled per-supplier URLs:** 98 rows in `output/s210/SUPPLIER_URLS.csv`
+**Form ID:** captured in `output/s210/SI_UPLOAD_FORM_ID.json` after the
+Phase 7 rebuild click (§0a). The form has a **native file upload button**
+— suppliers tap Upload, pick a PDF or photo from their device, done. No
+Drive-link-pasting friction.
+
+- **Pre-filled per-supplier URLs:** `output/s210/SUPPLIER_URLS.csv`
   (supplier_code, supplier_name, tin, email, tier, prefill_url, qr_url)
+- **Form fields:** Supplier Name (pre-filled), PO Number, SI Number, SI Date,
+  Amount (PHP), SI PDF (native file upload, max 10MB, PDF or image), Notes
 
 Rollout plan (Cayla owns):
 
 1. Email each supplier their dedicated `prefill_url` from
-   `output/s210/SUPPLIER_URLS.csv` — the URL auto-fills their Supplier Name so
-   they don't mistype it.
-2. Template: "For every delivery you make to BEI or our 3PL warehouses, upload
-   your SI PDF here: [prefill_url]. This is the fastest path to payment — we
-   process DR-based draft RFPs within the hour and release payment on your
-   contracted net terms (15/30/45/60). The SI copy speeds compliance but
-   doesn't gate payment."
-3. Suppliers who can't scan to PDF: give them the same URL, they upload a
-   JPEG from phone to Drive first, share the link, paste in the form. Document
-   in the form's description.
-4. Monitor 04_Match_Queue for orphan uploads — Ian reviews daily until
+   `output/s210/SUPPLIER_URLS.csv` — URL auto-fills their Supplier Name.
+2. Template: "For every delivery you make to BEI or our 3PL warehouses,
+   upload your SI PDF here: [prefill_url]. Tap Upload on the SI PDF field,
+   pick the file from your phone or computer, submit. This is the fastest
+   path to payment — we process DR-based draft RFPs within the hour and
+   release payment on your contracted net terms (15/30/45/60). The SI copy
+   speeds compliance but doesn't gate payment."
+3. Monitor 04_Match_Queue for orphan uploads — Ian reviews daily until
    suppliers settle into the pattern.
 
 ---
@@ -184,7 +194,7 @@ Rollout plan (Cayla owns):
 | No rows flowing from Sheet A/B into Sheet C | setup() not run OR onEdit trigger disabled | Re-run setup() in editor |
 | Chat notifications not posting | Service account Chat app not a member of the target space | Ian invites `bei-erp-chat-bot@...` to both spaces |
 | Dashboard formulas show 0 even with receipts | Timestamp format mismatch (Sheet A uses local time, formulas use TEXT) | Open Dashboard row 3 formula, adjust TEXT() format if needed |
-| SI upload form errors "file_upload not supported" | Suppliers trying UI file upload — we use text link field | Point them to the form description: upload PDF to Drive first |
+| SI upload form missing file upload button | Phase 7 one-click (§0a) not run yet — old Drive-link form was deleted | Run s210_rebuildSupplierForm in editor + `python phase7_resume.py` |
 | refreshMasters didn't run at 06:00 | Script API quota exceeded OR Apps Script outage | Manual run from editor: select refreshMasters → Run |
 | CEO daily email missing | GmailApp scope not granted during setup() OAuth consent | Re-run setup(), grant all scopes when prompted |
 
@@ -216,4 +226,5 @@ If the automation causes issues:
 
 ---
 
-_Last updated: 2026-04-20 (sprint S210 Phase 6 closeout)_
+_Last updated: 2026-04-20 PM (sprint S210 Phase 7 CEO UX patch —
+photos removed from 3PL sheets; supplier form rebuilt with native file upload)_
