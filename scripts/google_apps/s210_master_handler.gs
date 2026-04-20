@@ -653,7 +653,8 @@ function handleSiUpload(e) {
     siNumber = first('SI Number');
     siDate = first('SI Date');
     amount = first('Amount (PHP)');
-    siPdfLink = first('SI PDF Drive Link') || first('SI PDF');
+    // Field title set by Sam in UI is "Upload SI Copy"; legacy names kept as fallbacks.
+    siPdfLink = first('Upload SI Copy') || first('SI PDF') || first('SI PDF Drive Link');
     notes = first('Notes');
   } else if (e && e.values) {
     // Fallback: positional (index 0 is Timestamp from form)
