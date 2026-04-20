@@ -2925,7 +2925,13 @@ def create_payment_request(data: dict[str, Any] | str) -> dict[str, Any]:
                 _("Payment amount must be greater than zero."),
                 title=_("Invalid Payment Amount"),
             )
-        if payment_amount > flt(invoice.balance_due):
+        # Cash Advance RFPs are pre-payments against future deliveries (or
+        # multi-invoice settlements) so they're allowed to exceed the
+        # current invoice balance. The balance check still applies to
+        # regular Vendor Invoice / Reimbursement / etc. types.
+        rfp_type = (data.get("rfp_type") or "").strip()
+        is_advance = rfp_type == "Cash Advance"
+        if not is_advance and payment_amount > flt(invoice.balance_due):
             frappe.throw(
                 _(
                     "Payment amount (₱{0:,.2f}) exceeds the current invoice balance "
@@ -2959,7 +2965,13 @@ def create_payment_request(data: dict[str, Any] | str) -> dict[str, Any]:
             )[0][0]
         )
         remaining_invoice_balance = flt(invoice.balance_due) - pending_requested_total
-        if remaining_invoice_balance <= 0:
+        # Cash Advance bypasses the per-invoice remaining-balance guard for
+        # the same reason as the balance check above: advance payments
+        # represent committed funds that may settle multiple invoices or
+        # future deliveries, not a draw on the current invoice's open
+        # balance. The advance-vs-PO double-payment guard above (line 2882+)
+        # still protects against true over-advancing.
+        if not is_advance and remaining_invoice_balance <= 0:
             frappe.throw(
                 _(
                     "This invoice already has pending payment requests totaling "
@@ -2967,7 +2979,7 @@ def create_payment_request(data: dict[str, Any] | str) -> dict[str, Any]:
                 ).format(pending_requested_total),
                 title=_("Duplicate Payment Risk"),
             )
-        if payment_amount > remaining_invoice_balance:
+        if not is_advance and payment_amount > remaining_invoice_balance:
             frappe.throw(
                 _(
                     "Payment amount (₱{0:,.2f}) plus pending requests would exceed the "
