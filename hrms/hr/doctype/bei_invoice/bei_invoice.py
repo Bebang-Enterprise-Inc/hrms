@@ -116,8 +116,12 @@ class BEIInvoice(Document):
 			self.match_status = "Pending"
 			return
 
-		# Preserve approved variance status - don't recalculate after approval
-		if self.match_status == "Approved with Variance":
+		# Preserve terminal match dispositions — don't recalculate after a
+		# variance has been explicitly approved or rejected. Without this
+		# guard, every validate() (including the one triggered by
+		# reject_variance's self.save()) would reset match_status back to
+		# "Variance Detected" and overwrite the operator's decision.
+		if self.match_status in ("Approved with Variance", "Rejected"):
 			return
 
 		# Calculate variances
