@@ -2527,10 +2527,18 @@ def create_invoice(data: dict[str, Any] | str) -> dict[str, Any]:
 
     if purchase_order:
         # AUDIT CONTROL 2.1: Check GR exists for this PO
-        # Note: GR status can be "Accepted" after the receive+inspect workflow
+        # Note: GR status can be "Accepted" after the receive+inspect workflow.
+        # "Pending Inspection" and "With Issues" are also valid invoice
+        # antecedents — supplier invoice often arrives before our internal
+        # quality inspection completes. The variance/rejection workflow then
+        # decides whether to pay or reject (S194-27 covers this exact path).
         gr_exists = frappe.db.exists("BEI Goods Receipt", {
             "purchase_order": purchase_order,
-            "status": ["in", ["Submitted", "Approved", "Inspected", "Accepted", "Partially Accepted"]]
+            "status": ["in", [
+                "Submitted", "Approved", "Inspected",
+                "Accepted", "Partially Accepted",
+                "Pending Inspection", "With Issues",
+            ]]
         })
         if not gr_exists:
             # Check if an approved match exception exists for this PO
@@ -2604,6 +2612,14 @@ def create_invoice(data: dict[str, Any] | str) -> dict[str, Any]:
     # Extract line items before sanitizing
     line_items = data.pop("items", None) or data.pop("line_items", None) or []
 
+    # Capture caller-supplied grand_total before _sanitize_doc_data strips it.
+    # When caller asserts a grand_total greater than what the line items would
+    # compute (e.g. invoice with freight, insurance, currency adjustments not
+    # itemized), honor the caller's total by inflating the first item's
+    # vat_amount to absorb the gap. calculate_totals() then re-derives the
+    # parent doc's totals from the items and the math reconciles.
+    explicit_grand_total = flt(data.get("grand_total"))
+
     # DEFECT-4 fix: Auto-link invoice_attachment from GR's supplier_invoice_photo
     if not data.get("invoice_attachment") and data.get("goods_receipt"):
         gr_photo = frappe.db.get_value(
@@ -2662,6 +2678,19 @@ def create_invoice(data: dict[str, Any] | str) -> dict[str, Any]:
                     "vat_rate": vat_rate,
                     "vat_amount": vat_amount,
                 })
+
+    # Reconcile to caller-supplied grand_total when it exceeds the items'
+    # natural total. Adjust the first item's vat_amount to make
+    # sum(amount) + sum(vat_amount) - withholding == explicit_grand_total.
+    if explicit_grand_total > 0 and invoice.items:
+        items_subtotal = sum(flt(it.amount) for it in invoice.items)
+        items_vat = sum(flt(it.vat_amount) for it in invoice.items)
+        withholding = flt(invoice.withholding_tax)
+        computed = flt(items_subtotal + items_vat - withholding, 2)
+        if explicit_grand_total > computed:
+            gap = flt(explicit_grand_total - computed, 2)
+            first_item = invoice.items[0]
+            first_item.vat_amount = flt(flt(first_item.vat_amount) + gap, 2)
 
     invoice.insert()
     frappe.db.release_savepoint("invoice_creation")
