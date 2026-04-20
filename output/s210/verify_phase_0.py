@@ -2,7 +2,9 @@
 import json, pathlib, sys, csv
 
 FAILED = []
-ROOT = pathlib.Path(r'F:\Dropbox\Projects\BEI-ERP')
+# Resolve ROOT from this file's location so the verifier works in either
+# the main repo or the s210 worktree.
+ROOT = pathlib.Path(__file__).resolve().parents[2]
 
 def must_exist(rel, reason):
     p = ROOT / rel
