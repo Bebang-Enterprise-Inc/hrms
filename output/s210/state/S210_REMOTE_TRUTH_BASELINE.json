@@ -1,0 +1,16 @@
+{
+  "captured_utc": "2026-04-20T05:32:24.313617+00:00",
+  "repo": "hrms",
+  "sprint_branch": "s210-tier-a-receipt-payment-infrastructure",
+  "starting_sha_on_branch": "493967d858085c9ff7b8730bca294d7a0f01ed9b",
+  "origin_production_sha": "493967d858085c9ff7b8730bca294d7a0f01ed9b",
+  "live_evidence_basis": {
+    "procurement_appsheet_id": "1QWdoZlT7XWLppfVKpJ2VRXhbMkYtE5TbUwg4lMbO03Q",
+    "3md_dry_sheet_id": "1dNh1TnLRke7RfSavvjU1S2QP3rEJyFxf8RPURwI4rzg",
+    "3md_cold_sheet_id": "1u582KeN8OfnrvO4LPs1zjvFkJ0LnsVIjjoHPKqoq2IQ",
+    "pinnacle_channel": "Viber group \"Pinnacle x Bebang PH\" (15 participants)",
+    "master_workbook_2026_april": "1-QPBQ8B-iYWsqa1VbdF-g4LY3YsyxS5vAcQsqlpVeMM"
+  },
+  "canonical_scope": "none",
+  "canonical_scope_rationale": "Google Workspace automation; no Frappe mutations"
+}

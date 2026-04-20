@@ -304,6 +304,8 @@ These documents contain sprint-like naming but are not part of the canonical seq
 
 | `S209` | Sprint 209 | `s209-all-stores-ordering-billing-acceptance` (hrms) + `s209-all-stores-specs` (bei-tasks) | TBD | PLANNED 2026-04-20 — 49-Store Ordering + Billing + Receive-Variance Browser Acceptance. Post-canonical-cleanup (PR #638) full-fleet acceptance test: every store's happy chain (order → dual approve → dispatch → receive → SI) in browser, per-store billing assertion, V1 short-receive, V2 warehouse short-dispatch, canonical no-drift proof. | `docs/plans/2026-04-20-sprint-209-all-stores-ordering-billing-acceptance.md` |
 
+| `S210` | Sprint 210 | `s210-tier-a-receipt-payment-infrastructure` (hrms — Google Workspace Apps Script + docs only; no Frappe code) | TBD | PLANNED 2026-04-20 — **Tier A Receipt-Based Payment Infrastructure**. Four BEI-owned Google Sheets (A: 3MD-scoped for Martin; B: Pinnacle-scoped; C: BEI-internal master; D: Shaw transitional) + Supplier SI Upload Google Form + Apps Script automation (onEdit validation, consolidation, match/variance queues, Chat notifications, CEO daily email). Unblocks supplier payments by decoupling DR (receipt-based auto-RFP) from SI (supplier-uploaded compliance doc). CEO-locked policy 2026-04-20: payment on supplier terms, SI compliance-only, disputes post-payment. RCSI phased out. OR no longer required under EoPT Act. | `docs/plans/2026-04-20-sprint-210-tier-a-receipt-payment-infrastructure.md` |
+
 ## Next Sprint Reservation
 1. Next canonical sprint ID to assign: `S210` (S207 semi-monthly + S208 admin-dd + S209 all-stores all reserved).
 2. Reserve branch name: `s210-{slug}` (fill slug from plan filename).

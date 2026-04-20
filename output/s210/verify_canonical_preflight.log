@@ -1,0 +1,12 @@
+CommandId: 5f93ec2b-d8d8-4bfd-8128-99694cc7fbe4
+======================================================================
+CANONICAL STRUCTURE VERIFICATION
+Stores checked: 49
+Violations: 1
+======================================================================
+
+[BILLING_CUST_TIN_EMPTY] 1 stores:
+  ORTIGAS GREENHILLS - BEIFRANCHISE FOOD OPC: Billing Customer has no TIN and no TIN is derivable from Company master
+
+[RESULT] VIOLATIONS FOUND — see docs/STORE_COMPANY_CANONICAL.md to fix
+

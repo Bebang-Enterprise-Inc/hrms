@@ -1,0 +1,9 @@
+Surface,Why Protected,S210 Action
+hrms/api/*.py,No Frappe code changes,No modifications
+hrms/hr/doctype/bei_*,No DocType changes,No modifications
+bei-tasks/**,No frontend changes,No modifications
+3MD-owned Google Sheets,Owned by 3MD,Read-only via Sheets API
+Procurement AppSheet underlying sheet,Owned by Ashish/procurement,Read-only for dropdowns
+2026 APRIL BEBANG INVENTORY,Ian owns,Read-only reference
+Procurement App Notifications chat space,Shared space,Post notifications only
+SCM chat space,Shared team space,Post notifications only
