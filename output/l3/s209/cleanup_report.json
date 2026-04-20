@@ -1,0 +1,27 @@
+{
+  "success": [
+    {
+      "doctype": "Material Request",
+      "name": "MAT-MR-2026-00181",
+      "action": "cancelled"
+    },
+    {
+      "doctype": "BEI Store Order",
+      "name": "BEI-ORD-2026-00331",
+      "action": "deleted_draft"
+    },
+    {
+      "doctype": "BEI Store Order",
+      "name": "BEI-ORD-2026-00330",
+      "action": "deleted_draft"
+    },
+    {
+      "doctype": "BEI Store Order",
+      "name": "BEI-ORD-2026-00329",
+      "action": "deleted_draft"
+    }
+  ],
+  "failures": [],
+  "skipped": [],
+  "total": 4
+}

@@ -1,0 +1,5 @@
+{
+  "status": "partial_smoke_only",
+  "note": "Phase 5 smoke run attempted SM TANZA; blocked on dispatch-row visibility. No state verified for remaining 48 stores.",
+  "results": []
+}

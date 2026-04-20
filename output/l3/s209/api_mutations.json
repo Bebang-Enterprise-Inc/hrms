@@ -1,0 +1,5 @@
+{
+  "status": "partial_smoke_only",
+  "note": "Network recorder captured 3 smoke submissions; full sweep mutations pending fresh L3 session.",
+  "mutations": []
+}

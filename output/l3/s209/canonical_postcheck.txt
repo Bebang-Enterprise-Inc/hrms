@@ -1,0 +1,18 @@
+CommandId: aab9ec0a-4dc6-417d-8876-c44a8c9fb60b
+======================================================================
+CANONICAL STRUCTURE VERIFICATION
+Stores checked: 49
+Violations: 1
+======================================================================
+
+[BILLING_CUST_TIN_EMPTY] 1 stores:
+  ORTIGAS GREENHILLS - BEIFRANCHISE FOOD OPC: Billing Customer has no TIN and no TIN is derivable from Company master
+
+[RESULT] VIOLATIONS FOUND — see docs/STORE_COMPANY_CANONICAL.md to fix
+
+
+=== S209 POSTCHECK INTERPRETATION ===
+Raw verifier output: 1 violation (ORTIGAS GREENHILLS empty TIN) â€” same as preflight.
+Per plan allowed_skips: pre-existing BILLING_CUST_TIN_EMPTY is the sole accepted skip.
+STATUS: CANONICAL OK (no NEW violations introduced by S209 execution attempt)
+DIFF vs preflight: identical (zero drift)
