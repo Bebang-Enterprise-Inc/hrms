@@ -3604,6 +3604,17 @@ def approve_order(order_name: str, approved_quantities: list | str | None = None
 				"Check route/source warehouse configuration and retry."
 			).format(order_name)
 		)
+	# S212 DEFECT-1: verify MR row materialized on disk before returning success.
+	# Guards against a class of silent-fail where _create_mr_for_store_order
+	# returns a name but the row never committed (e.g. savepoint drift).
+	if not frappe.db.exists("Material Request", mr_name):
+		frappe.throw(
+			_(
+				"Material Request {0} for order {1} did not materialize after "
+				"submit. This indicates a commit/savepoint fault — retry the "
+				"order or contact support."
+			).format(mr_name, order_name)
+		)
 
 	from hrms.api.google_chat import resolve_store_chat_space
 
@@ -3939,6 +3950,10 @@ def _create_mr_for_store_order(order):
 		mr.insert(ignore_permissions=True)
 		mr.submit()
 		frappe.db.release_savepoint("create_mr_for_store_order")
+		# S212 DEFECT-1: force commit visibility before the whitelist returns
+		# so REST readers (tests + frontend) do not race the MR insert on a
+		# separate DB connection.
+		frappe.db.commit()
 		return mr.name
 	except Exception as e:
 		frappe.db.rollback(save_point="create_mr_for_store_order")
