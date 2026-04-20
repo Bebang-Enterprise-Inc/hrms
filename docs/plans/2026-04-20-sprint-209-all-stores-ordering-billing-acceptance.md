@@ -5,8 +5,20 @@ branch: s209-all-stores-ordering-billing-acceptance
 bei_tasks_branch: s209-all-stores-specs
 base: production
 status: GO
-plan_version: v1
+plan_version: v2
 plan_date: 2026-04-20
+plan_v2_amended: 2026-04-20
+plan_v1_gap_reason: |
+  v1 cold-start audit (per /write-plan-bei-erp S154 checklist) found 15
+  gaps: test-account passwords absent, SSM region/instance ID missing,
+  Playwright config + env vars not referenced, Frappe API endpoint
+  file:line refs not given, fixture JSON schema untyped, DRY cargo
+  category field definition missing, resolver file path unstated,
+  item-selection strategy for V1/V2 vague, s190 hardcoded store
+  constants not retired, inventory-delta SQL shape unspecified,
+  test.supervisor warehouse-coverage approach undefined, no cold-start
+  smoke test. v2 adds a Cold-Start Appendix (§A-§N) that closes every
+  gap with concrete file:line + env-var + credential references.
 ceo_directive_date: 2026-04-20
 canonical_scope: in
 canonical_model_reference: docs/STORE_COMPANY_CANONICAL.md
@@ -637,4 +649,335 @@ When Phase 6 closes, update in the same work unit:
 
 This sprint is intended for autonomous end-to-end execution. Do not stop for progress-only updates. Only pause for items listed in the `stop_only_for` section of the Autonomous Execution Contract.
 
-*Plan authored 2026-04-20 (Monday) PHT from session JSONL `a8898593-fd37-4b4b-be40-e619400da7e3`. All factual claims trace to cited JSONL line numbers or live file reads during plan authorship.*
+---
+
+## Cold-Start Appendix (v2 — added 2026-04-20)
+
+Every concrete value the executing agent needs, verified against live files on 2026-04-20. **No item in this appendix is "look it up yourself."** If a line here is stale when you execute, update the plan first.
+
+### A. Test accounts + passwords
+
+Source: `F:/Dropbox/Projects/bei-tasks/tests/e2e/support/session.ts` lines 8-33 (read directly, NOT from memory).
+
+| Role in plan | Email | Password | Env var override | Playwright fixture |
+|---|---|---|---|---|
+| Area Supervisor (submits order) | `test.area@bebang.ph` | `BeiTest2026!` | `E2E_AREA_EMAIL` / `E2E_PASSWORD` | `loggedInAreaSupervisor` |
+| SCM (stage-2 approver + dispatcher) | `test.scm@bebang.ph` | `BeiTest2026!` | `E2E_SCM_EMAIL` / `E2E_PASSWORD` | `loggedInSCM` |
+| Store Supervisor (receives delivery) | `test.supervisor@bebang.ph` | `BeiTest2026!` | `E2E_SUPERVISOR_EMAIL` / `E2E_PASSWORD` | `loggedInStoreSupervisor` |
+| Warehouse (dispatch fallback) | `test.warehouse@bebang.ph` | `BeiTest2026!` | `E2E_WAREHOUSE_EMAIL` / `E2E_PASSWORD` | `loggedInAsWarehouse` |
+| Administrator (SSM scripts only) | `Administrator` | via Frappe bench | `E2E_ADMIN_EMAIL` | n/a — SSM bypasses login |
+
+**Fixture import:**
+```ts
+import { test, expect } from "../fixtures";          // re-exports `test` from auth.ts
+// async ({ loggedInAreaSupervisor, loggedInSCM, loggedInStoreSupervisor }) => {...}
+```
+
+**Never hardcode passwords in specs.** Always use the fixture, which pulls from `support/session.ts::PASSWORD`. The CEO password (`sam@bebang.ph`) is different (`2289454`) — S209 does NOT need the CEO role.
+
+### B. SSM connection details (used by every `scripts/s209_*.py`)
+
+Source: pattern replicated from `scripts/canonical_*.py` (every canonical script uses the same boilerplate).
+
+```python
+import boto3, json, textwrap, time
+
+AWS_REGION = "ap-southeast-1"
+INSTANCE_ID = "i-026b7477d27bd46d6"
+FRAPPE_SITE = "hq.bebang.ph"
+FRAPPE_BENCH_PATH = "/home/frappe/frappe-bench"
+SITES_PATH = "/home/frappe/frappe-bench/sites"
+
+ssm = boto3.client("ssm", region_name=AWS_REGION)
+
+def run_on_frappe(python_script: str, timeout: int = 120) -> dict:
+    """Run a Python script inside the Frappe container via SSM. Returns {'stdout','stderr','status'}."""
+    cmd = textwrap.dedent(f"""
+        cd {FRAPPE_BENCH_PATH}
+        bench --site {FRAPPE_SITE} execute-script -s <<'PYEOF'
+{python_script}
+PYEOF
+    """).strip()
+    r = ssm.send_command(
+        InstanceIds=[INSTANCE_ID],
+        DocumentName="AWS-RunShellScript",
+        Parameters={"commands": [cmd]},
+    )
+    cid = r["Command"]["CommandId"]
+    deadline = time.time() + timeout
+    while time.time() < deadline:
+        inv = ssm.get_command_invocation(CommandId=cid, InstanceId=INSTANCE_ID)
+        if inv["Status"] in ("Success", "Failed", "Cancelled", "TimedOut"):
+            return {
+                "stdout": inv.get("StandardOutputContent", ""),
+                "stderr": inv.get("StandardErrorContent", ""),
+                "status": inv["Status"],
+            }
+        time.sleep(3)
+    raise TimeoutError(f"SSM command {cid} did not complete in {timeout}s")
+```
+
+**Auth:** SSM uses the caller's AWS SSO profile (Sam's default). If you hit `NoCredentialsError`, run `aws sso login` first.
+
+**Do NOT use boto3 to call Frappe REST directly.** Always tunnel through SSM + `bench execute-script`.
+
+### C. Frappe API file:line map
+
+Exact endpoint + helper locations, grepped from hrms on 2026-04-20. S209 does NOT modify any of these — reads only.
+
+| Function | File | Line | Purpose |
+|---|---|---|---|
+| `submit_order` (S037 store-first) | `hrms/api/store.py` | 3043 | Creates BEI Store Order with `custom_area_supervisor` gate. **Plan uses this.** |
+| `submit_order` (legacy) | `hrms/api/ordering.py` | 114 | Older path; do NOT call from new specs. |
+| `approve_order` (S037) | `hrms/api/store.py` | 3415 | Dual-approval stages 1+2; branches on before/after 12 NN PHT cutoff. |
+| `approve_order` (legacy) | `hrms/api/ordering.py` | 319 | Older path; do NOT use. |
+| `get_orderable_items` | `hrms/api/store.py` | 2545 | Returns orderable DRY/FC items per store+date with `suggested_qty`. |
+| `dispatch_transfer_sync` | `hrms/api/transfer_requests.py` | 1519 | Dispatch leg; accepts per-item dispatched quantity. Used by V2. |
+| `create_goods_receipt` | `hrms/api/procurement.py` | 2099 | Procurement path — NOT used by store-order flow. |
+| `complete_warehouse_receiving` | `hrms/api/warehouse.py` | 785 | Receive leg; enforces `accepted_qty <= dispatched_qty` (B2 guard). |
+| `resolve_store_buyer_entity` | `hrms/utils/supply_chain_contracts.py` | 319 | Canonical 4-step buyer resolver. S209 asserts Step 1 always wins post-PR #638. |
+| `resolve_warehouse_company` | `hrms/utils/supply_chain_contracts.py` | 164 | Per-store Company resolver. |
+
+**Protected — DO NOT MODIFY any of the 10 functions above during S209.** If the sweep surfaces a bug in one, classify as Failure Mode A (app bug): file `[BUG]` in registry, do NOT patch in this sprint.
+
+### D. Playwright config + env vars
+
+Source: `F:/Dropbox/Projects/bei-tasks/playwright.config.ts` (read 2026-04-20).
+
+```ts
+testDir: "./tests/e2e",
+timeout: 60_000,                       // per-test 60s
+expect: { timeout: 10_000 },
+fullyParallel: false,                  // CRITICAL: serial; auth state shared
+workers: process.env.CI ? 2 : 1,
+use: {
+  baseURL: process.env.E2E_BASE_URL || "https://my.bebang.ph",
+  trace: "retain-on-failure",
+},
+```
+
+| Env var | Default | S209 requirement |
+|---|---|---|
+| `E2E_BASE_URL` | `https://my.bebang.ph` | LEAVE DEFAULT (run against production) |
+| `E2E_HQ_URL` | `https://hq.bebang.ph` | LEAVE DEFAULT (Frappe backend URL for readback) |
+| `E2E_PASSWORD` | `BeiTest2026!` | LEAVE DEFAULT |
+| `E2E_AREA_EMAIL` | `test.area@bebang.ph` | LEAVE DEFAULT |
+| `E2E_SCM_EMAIL` | `test.scm@bebang.ph` | LEAVE DEFAULT |
+| `E2E_SUPERVISOR_EMAIL` | `test.supervisor@bebang.ph` | LEAVE DEFAULT |
+| `S192_STATE_DIR` | `.playwright-auth` under cwd | LEAVE DEFAULT (per-run auth cache) |
+| `EVIDENCE_ROOT` | — | SET to `F:/Dropbox/Projects/BEI-ERP/output/l3/s209` |
+| `S209_EVIDENCE_ROOT` | falls back to `EVIDENCE_ROOT` | same as above |
+
+**Run command template** (from bei-tasks repo root):
+```bash
+cd F:/Dropbox/Projects/bei-tasks
+EVIDENCE_ROOT=F:/Dropbox/Projects/BEI-ERP/output/l3/s209 \
+  S209_EVIDENCE_ROOT=F:/Dropbox/Projects/BEI-ERP/output/l3/s209 \
+  npx playwright test tests/e2e/specs/s209-all-stores.spec.ts --reporter=list
+```
+
+Playwright runs headless by default. Use `--ui` only for local debugging.
+
+### E. Fixture JSON schema (TypeScript typing)
+
+Add this interface to `bei-tasks/tests/e2e/fixtures/s209-types.ts` (new file) and import it in `s209-all-stores.spec.ts`:
+
+```ts
+// tests/e2e/fixtures/s209-types.ts
+export interface S209StoreConfig {
+  store: string;                      // "ARANETA GATEWAY" — StoreOrderingPage.selectStore arg
+  warehouse_docname: string;          // canonical Warehouse name
+  company: string;                    // per-store Company (tabCompany.name)
+  customer: string;                   // per-store Customer — EQUAL to company string post-PR #638
+  tin: string;                        // BIR TIN from tabCustomer.tax_id — empty ONLY for ORTIGAS GREENHILLS
+  expectBillingHold: boolean;         // true if SI should NOT post; false for all 49 canonical stores
+  buyer_entity_status: "confirmed_legal_entity" | "fallback_inferred" | "unresolved";
+                                      // MUST be "confirmed_legal_entity" for all 49 post-PR #638
+  parent_company: string | null;      // legal entity parent; null for TUNGSTEN CAPITAL HOLDINGS OPC stores
+  store_ownership_type: "Company Owned" | "Managed Franchise" | "Full Franchise";
+  current_area_supervisor: string;    // pre-sweep value; captured for revert
+  allowEmptyTin: boolean;             // true ONLY for ORTIGAS GREENHILLS - BEIFRANCHISE FOOD OPC
+}
+
+export type S209Fixture = S209StoreConfig[];
+```
+
+Phase 1's `scripts/s209_generate_fixture.py` MUST emit exactly this shape. Typecheck catches drift.
+
+### F. Cargo category field
+
+Source: `hrms/api/store.py:1210-1272` + `bei-tasks/tests/e2e/pages/StoreOrderingPage.ts:6`.
+
+```ts
+export type CargoCategory = "DRY" | "FC" | "FM";   // DRY=dry goods, FC=frozen/chilled, FM=frozen-meat
+```
+
+Backend normalizer `_normalize_cargo_category` at `hrms/api/store.py:1254`:
+- DRY ← `{"DRY", "DRY GOODS", "DRYGOODS"}` (line 1261)
+- FC ← `{"FC", "FROZEN", "FROZEN CHILLED", "CHILLED"}` (line 1257)
+
+**S209 specs always use `"DRY"`** (simpler stock model; FC needs cold-chain setup).
+
+### G. Item selection strategy for V1 / V2
+
+**Do NOT hardcode item codes.** The commissary catalogue evolves; hardcoded SKUs rot.
+
+Phase 1's `scripts/s209_generate_fixture.py` MUST also emit `bei-tasks/tests/e2e/fixtures/s209_variance_items.json` with selections derived live:
+
+```python
+def pick_variance_item(store_warehouse: str, cargo: str = "DRY") -> dict:
+    """Call get_orderable_items via SSM; return first DRY item with suggested_qty >= 10
+    so V1/V2 can order qty=10 without tripping the 10% deviation gate."""
+    result = run_on_frappe(f'''
+import json
+from hrms.api.store import get_orderable_items
+items = get_orderable_items("{store_warehouse}", None, 0)
+picks = [i for i in items.get("items", [])
+         if i.get("cargo_category") == "{cargo}" and i.get("suggested_qty", 0) >= 10]
+picks.sort(key=lambda x: -x.get("suggested_qty", 0))
+print(json.dumps(picks[0] if picks else None))
+''')
+    return json.loads(result["stdout"].strip() or "null")
+
+variance_items = {
+    "V1_SM_TANZA": pick_variance_item("SM TANZA - BEBANG MEGA INC."),
+    "V2_AYALA_VERMOSA": pick_variance_item("AYALA VERMOSA - BEBANG MEGA INC."),
+}
+json.dump(variance_items,
+          open("F:/Dropbox/Projects/bei-tasks/tests/e2e/fixtures/s209_variance_items.json", "w"),
+          indent=2)
+```
+
+Spec usage:
+```ts
+import variance from "../fixtures/s209_variance_items.json";
+// variance.V1_SM_TANZA.item_code, variance.V1_SM_TANZA.suggested_qty, etc.
+```
+
+**Guard:** if `get_orderable_items` returns nothing with `suggested_qty >= 10` (possible for AYALA EVO's empty-history case), `scripts/s209_seed_inventory_for_variance.py` (Phase 4) pre-seeds 20 units via `Stock Entry / Material Receipt`, then re-picks.
+
+### H. `custom_area_supervisor` field location
+
+Field: `Warehouse.custom_area_supervisor` — NOT `Company.custom_area_supervisor`.
+
+Snapshot capture SQL:
+```sql
+SELECT w.name, IFNULL(w.custom_area_supervisor, '') AS current_value
+FROM `tabWarehouse` w
+WHERE w.company IN (
+  SELECT name FROM `tabCompany` WHERE entity_category = 'Store' AND disabled = 0
+)
+  AND w.disabled = 0
+  AND w.is_group = 0;
+```
+
+Grant SQL (per warehouse, run inside a transaction):
+```sql
+UPDATE `tabWarehouse`
+SET custom_area_supervisor = %(supervisor)s, modified = NOW()
+WHERE name = %(warehouse_name)s;
+```
+
+Save the snapshot to `output/l3/s209/area_access_snapshot.json` as `[{"name":"<warehouse>", "current_value":"<orig>"}, ...]`. Revert iterates the list.
+
+### I. `test.supervisor` receiving-leg access
+
+Story: `loggedInStoreSupervisor` (test.supervisor@bebang.ph) accepts delivery on each iteration. `complete_warehouse_receiving` at `hrms/api/warehouse.py:785` gates on the supervisor being assigned to the destination warehouse.
+
+**Phase 0 probe (P0-T7 — added by v2):** grep `tabWarehouse` columns for a `custom_store_supervisor` field (or equivalent). Record finding in `output/l3/s209/supervisor_access_strategy.md`. Two decision branches:
+
+- **Field exists:** grant script sets `custom_store_supervisor = 'test.supervisor@bebang.ph'` on all 49 canonical warehouses, captures previous values for revert (parallel to `custom_area_supervisor` grant).
+- **Field does NOT exist:** grant script adds `System Manager` + `Accounts User` roles to the `test.supervisor@bebang.ph` User for the test window; Phase 6 revokes via `scripts/s204_revoke_testinfra_grants.py` pattern.
+
+Either path emits an audit log line into `output/l3/s209/access_changes.log` so Phase 6 can prove revert.
+
+### J. Inventory delta SQL (for new `assertInventoryDelta`)
+
+The new assertion queries `tabStock Ledger Entry` via `support/frappeReadback.ts`:
+
+```sql
+SELECT IFNULL(SUM(actual_qty), 0) AS delta
+FROM `tabStock Ledger Entry`
+WHERE warehouse = %(warehouse)s
+  AND item_code = %(item_code)s
+  AND posting_datetime BETWEEN %(window_start)s AND %(window_end)s
+  AND is_cancelled = 0;
+```
+
+Window: `windowStart = Date.now()` at test start, `windowEnd = Date.now()` after receive completes. PHT conversion helper in `frappeReadback.ts::withPhtWindow` (check if present in Phase 0; if not, add `withPhtWindow(ms: number): string` that returns `YYYY-MM-DD HH:MM:SS` in `Asia/Manila`).
+
+Spec assertion:
+```ts
+const delta = await assertInventoryDelta(
+  fixture.source_warehouse, item.code, -10, windowStart, windowEnd,
+);
+expect(Math.abs(delta - (-10))).toBeLessThan(0.001);  // float tolerance
+```
+
+### K. Forbidden patterns in `s209-*.spec.ts`
+
+The existing spec `tests/e2e/specs/s190-store-company-integration.spec.ts` has 4 hardcoded stores (SM_TANZA / SM_MEGAMALL / GRID_ROCKWELL / AYALA_EVO) at lines 35-68. **These must NOT be imported or duplicated in s209 specs.**
+
+Forbidden:
+- `import { SM_TANZA, SM_MEGAMALL, GRID_ROCKWELL, AYALA_EVO } from "./s190-*"` — reinstates hardcoding
+- Inline `const FOO = { store: "...", company: "...", tin: "..." }` — data must come from the fixture
+- String literals matching canonical Company names outside the fixture file
+
+Review-gate grep (must return 0):
+```bash
+rg -nE '"(SM TANZA|SM MEGAMALL|THE GRID|AYALA EVO|AYALA VERMOSA|ARANETA GATEWAY)\s*-\s*(BEBANG|TUNGSTEN|TASTECARTEL)' \
+   F:/Dropbox/Projects/bei-tasks/tests/e2e/specs/s209-*.spec.ts
+```
+
+Allowed: load fixture, type via `S209StoreConfig`, loop, reference `fixture[i].company` / `.customer` / `.tin`.
+
+### L. Nested-session limitation
+
+If any script the plan runs needs `claude --print` (it shouldn't — use `Agent` tool for subagents), that invocation must run in a **separate terminal**, not inside the current Claude Code session. Source: memory lesson #18.
+
+### M. Cold-Start Smoke Test (run BEFORE Phase 0)
+
+Before touching anything, run this 5-minute smoke test to confirm the environment is wired:
+
+```bash
+# 1. Canonical verifier reaches Frappe via SSM
+cd F:/Dropbox/Projects/BEI-ERP
+python scripts/verify_canonical_structure.py | head -5
+# Expect: "CANONICAL OK" or "[VIOLATION]" — either way, SSM + bench work.
+
+# 2. Playwright can log in as test.area
+cd F:/Dropbox/Projects/bei-tasks
+E2E_BASE_URL=https://my.bebang.ph \
+  npx playwright test tests/e2e/specs/s190-store-company-integration.spec.ts -g "S1" --reporter=list
+# Expect: S1 PASS or FAIL (NOT ConnectionError/AuthError — those prove env is broken)
+
+# 3. Fixture loader can read 49-store JSON
+python -c "import json; d = json.load(open('F:/Dropbox/Projects/bei-tasks/tests/e2e/fixtures/s204_all_stores.json')); print(f'stores: {len(d)}')"
+# Expect: stores: 49
+
+# 4. AWS SSO is live
+aws sts get-caller-identity --query 'Arn' --output text
+# Expect: arn:aws:... (NOT "Unable to locate credentials")
+```
+
+If ANY smoke test fails, STOP and fix the environment before starting Phase 0. The plan assumes all four pass.
+
+### N. v2 amendments to the RRC
+
+Extend the v1 Requirements Regression Checklist with three new items:
+
+- [ ] RR-21 — Cold-Start Smoke Test (Appendix §M) all 4 checks pass BEFORE Phase 0 starts
+- [ ] RR-22 — `rg` grep from Appendix §K returns 0 hits against `s209-*.spec.ts`
+- [ ] RR-23 — `s209_variance_items.json` exists; V1 + V2 keys both have `item_code` + `suggested_qty` populated
+
+Also add one new task to Phase 0:
+
+| ID | Unit | Task | MUST_MODIFY / MUST_CONTAIN |
+|---|---:|---|---|
+| P0-T7 | 1 | Probe `tabWarehouse` columns for `custom_store_supervisor` (or equivalent supervisor field). Decide receiving-access strategy per Appendix §I and write `output/l3/s209/supervisor_access_strategy.md` | file exists with strategy branch chosen |
+
+Phase 0 budget goes from 6 → 7 units (still ≤12).
+
+---
+
+*Plan authored 2026-04-20 (Monday) PHT from session JSONL `a8898593-fd37-4b4b-be40-e619400da7e3`. v2 Cold-Start Appendix added same day after v1 self-audit surfaced 15 gaps against the /write-plan-bei-erp S154 checklist. All factual claims trace to cited JSONL lines or live file reads on 2026-04-20.*
