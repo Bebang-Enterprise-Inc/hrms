@@ -1,11 +1,12 @@
 [
   {
-    "store": "XENTROMALL MONTALBAN - PERPETUAL FOOD CORP.",
-    "company": "XENTROMALL MONTALBAN - PERPETUAL FOOD CORP.",
-    "customer": "XENTROMALL MONTALBAN - PERPETUAL FOOD CORP.",
-    "tin": "698-838-619-00000",
+    "store": "ROBINSONS GALLERIA SOUTH - TUNGSTEN CAPITAL HOLDINGS OPC",
+    "company": "ROBINSONS GALLERIA SOUTH - TUNGSTEN CAPITAL HOLDINGS OPC",
+    "customer": "ROBINSONS GALLERIA SOUTH - TUNGSTEN CAPITAL HOLDINGS OPC",
+    "tin": "679-843-234-00000",
     "pass": false,
-    "failedAt": "precondition",
-    "error": "PRECONDITION_BLOCKED: No orderable items at all for warehouse \"XENTROMALL MONTALBAN - PERPETUAL FOOD CORP.\" (store \"XENTROMALL MONTALBAN - PERPETUAL FOOD CORP.\"). Check get_orderable_items endpoint."
+    "orderId": "BEI-ORD-2026-00357",
+    "failedAt": "approval",
+    "error": "locator.waitFor: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByText('BEI-ORD-2026-00357').first() to be visible\u001b[22m\n"
   }
 ]
