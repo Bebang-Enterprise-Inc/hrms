@@ -971,6 +971,50 @@ def complete_warehouse_receiving(
 	}
 
 
+def _reconcile_si_qty_from_wr(si_doc, receiving_name: str) -> int:
+	"""S212 DEFECT-2: reduce each SI item's qty to the accepted qty on the WR.
+
+	The Draft Sales Invoice is created at DISPATCH time, billed against the
+	dispatched qty on the Stock Entry. If the store accepts less than the
+	dispatched qty (short-receive), the SI should bill only what was
+	accepted — rejected items are a commissary write-off, not a store
+	billable. This helper mutates si_doc.items in place before submit.
+
+	Args:
+	    si_doc: Sales Invoice document in docstatus=0, mutable.
+	    receiving_name: BEI Warehouse Receiving docname whose accepted qtys
+	        drive the reconciliation.
+
+	Returns:
+	    Number of SI lines adjusted (0 if full-receive or WR not found).
+	"""
+	if not receiving_name or not frappe.db.exists("BEI Warehouse Receiving", receiving_name):
+		return 0
+	wr_doc = frappe.get_doc("BEI Warehouse Receiving", receiving_name)
+	accepted_by_item: dict[str, float] = {}
+	for wr_row in wr_doc.items or []:
+		code = wr_row.item_code
+		if not code:
+			continue
+		accepted_by_item[code] = accepted_by_item.get(code, 0.0) + flt(wr_row.accepted_qty or 0)
+
+	total_adjust = 0
+	for si_row in si_doc.items or []:
+		accepted = flt(accepted_by_item.get(si_row.item_code, si_row.qty))
+		dispatched = flt(si_row.qty)
+		if accepted < dispatched:
+			si_row.qty = accepted
+			si_row.amount = flt(si_row.qty) * flt(si_row.rate)
+			total_adjust += 1
+	if total_adjust:
+		si_doc.run_method("calculate_taxes_and_totals")
+		frappe.logger().info(
+			f"S212 DEFECT-2: reconciled {total_adjust} SI lines for WR {wr_doc.name} "
+			f"(SI {si_doc.name})"
+		)
+	return total_adjust
+
+
 def _submit_dispatch_draft_si(dispatch_se_name: str | None, receiving_name: str) -> str | None:
 	"""S203: Submit the Draft Sales Invoice that was created at dispatch time
 	(by ``create_stock_transfer``'s Draft SI hook, itself introduced in S203
@@ -1012,6 +1056,12 @@ def _submit_dispatch_draft_si(dispatch_se_name: str | None, receiving_name: str)
 	try:
 		frappe.db.savepoint("s203_submit_si")
 		frappe.set_user("Administrator")
+		# S212 DEFECT-2: reconcile SI item qty against WR accepted_qty BEFORE
+		# submit. On short-receive (accepted < dispatched), drop each SI line
+		# to the accepted qty and recompute taxes/totals. On full-receive
+		# (accepted == dispatched), this is a no-op. Guards against billing
+		# the store for items they rejected (surfaced by S209 V1 variance).
+		_reconcile_si_qty_from_wr(si_doc, receiving_name)
 		si_doc.submit()
 		frappe.db.release_savepoint("s203_submit_si")
 		return si_doc.name
