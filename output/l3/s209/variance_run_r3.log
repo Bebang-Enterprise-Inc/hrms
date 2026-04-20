@@ -1,0 +1,40 @@
+
+Running 2 tests using 1 worker
+
+[1A[2K[1/2] [chromium] › tests\e2e\specs\s209-variance.spec.ts:161:7 › S209 variance — V1 short-receive + V2 short-dispatch › V1 — SM TANZA short-receive: order 10, accept 8, SI bills 8
+[1A[2K[chromium] › tests\e2e\specs\s209-variance.spec.ts:161:7 › S209 variance — V1 short-receive + V2 short-dispatch › V1 — SM TANZA short-receive: order 10, accept 8, SI bills 8
+[S209 variance seed]   V2_TOPUP: receipt 8.0 of PM007 @ AYALA VERMOSA - BEBANG MEGA INC. (SE MAT-STE-2026-00614)
+
+[1A[2K[S209 variance revert] ok=true [S209] reverted 2 seed actions; snapshot cleared
+
+[1A[2K  1) [chromium] › tests\e2e\specs\s209-variance.spec.ts:161:7 › S209 variance — V1 short-receive + V2 short-dispatch › V1 — SM TANZA short-receive: order 10, accept 8, SI bills 8 
+
+    Error: [2mexpect([22m[31mreceived[39m[2m).[22mtoBe[2m([22m[32mexpected[39m[2m) // Object.is equality[22m
+
+    Expected: [32m8[39m
+    Received: [31m10[39m
+
+      256 |       expect(billed, `SI ${siName} items row for ${v1Pick.item_code}`).toBeTruthy();
+      257 |       rec.actualBilledQty = billed?.qty;
+    > 258 |       expect(billed?.qty).toBe(8);
+          |                           ^
+      259 |
+      260 |       // Company chain assertion (regular canonical check)
+      261 |       await assertCompanyChainCorrect(orderId, {
+        at F:\Dropbox\Projects\bei-tasks\tests\e2e\specs\s209-variance.spec.ts:258:27
+
+    Error Context: C:\Users\Sam\AppData\Local\Temp\bei-pw-artifacts\specs-s209-variance-S209-v-f0396-rder-10-accept-8-SI-bills-8-chromium\error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    C:\Users\Sam\AppData\Local\Temp\bei-pw-artifacts\specs-s209-variance-S209-v-f0396-rder-10-accept-8-SI-bills-8-chromium\trace.zip
+    Usage:
+
+        npx playwright show-trace C:\Users\Sam\AppData\Local\Temp\bei-pw-artifacts\specs-s209-variance-S209-v-f0396-rder-10-accept-8-SI-bills-8-chromium\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+[1A[2K[2/2] [chromium] › tests\e2e\specs\s209-variance.spec.ts:304:7 › S209 variance — V1 short-receive + V2 short-dispatch › V2 — AYALA VERMOSA short-dispatch: order 10, dispatch 8, SI bills 8
+[1A[2K  1 failed
+    [chromium] › tests\e2e\specs\s209-variance.spec.ts:161:7 › S209 variance — V1 short-receive + V2 short-dispatch › V1 — SM TANZA short-receive: order 10, accept 8, SI bills 8 
+  1 did not run
