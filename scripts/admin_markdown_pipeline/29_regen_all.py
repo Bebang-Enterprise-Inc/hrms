@@ -311,6 +311,23 @@ def write_xlsx(rows: list[dict]) -> None:
         c.alignment = Alignment(wrap_text=True, vertical="center", horizontal="center"); c.border = BORDER
     ws3.row_dimensions[1].height = 45
 
+    # S208: stores whose FA/JV/Management contract was ingested under a
+    # partner-side entity code instead of (or in addition to) the BEI CORP_*
+    # code. Listing them here lets the Stores sheet count those docs as
+    # covered instead of showing a misleading "—" (missing) dash.
+    STORE_PARTNER_CODES = {
+        "MEGAWIDE PITX": ["JV_EMPIRE77", "JV_TOPLEVEL"],
+        "MEGAWORLD PASEO CENTER": ["JV_PERPETUALLY_CANDID", "JV_TOPLEVEL"],
+        "SM EAST ORTIGAS": ["JV_PERPETUALLY_CANDID"],
+        "BF HOMES": ["JV_EDWARD_SY_RALPH_TY"],
+        "UP TOWN MALL BGC": ["JV_IMELDA"],
+        "AYALA VERMOSA": ["JV_TOPLEVEL"],
+        "AYALA EVO CITY": ["JV_TOPLEVEL"],
+        "ROBINSONS IMUS": ["JV_TOPLEVEL"],
+        "SM TANZA": ["JV_TOPLEVEL"],
+        "THE GRID ROCKWELL": ["FRANCHISE_TASTECARTEL"],
+    }
+
     def store_entity_codes(s):
         cands = []
         clean = re.sub(r"[^A-Z0-9]", "", s["store_prefix"].upper())
@@ -318,6 +335,12 @@ def write_xlsx(rows: list[dict]) -> None:
         if s["abbr"]: cands.append(f"STORE_{s['abbr'].upper()}")
         corp_ec = CORP_ALIAS.get(s["corp"])
         if corp_ec: cands.append(corp_ec)
+        # Add partner-side entity codes when the store has cross-mapped docs
+        store_name_upper = s["name"].upper()
+        for key, partners in STORE_PARTNER_CODES.items():
+            if key in store_name_upper:
+                cands.extend(partners)
+                break
         return cands
 
     for row_i, s in enumerate(stores, start=2):
