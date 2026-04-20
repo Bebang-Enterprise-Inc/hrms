@@ -32,7 +32,7 @@ execution_summary: |
   Full resume automation in output/s210/phase7_resume.py polls audit log
   and finalises SUPPLIER_URLS.csv + SI_UPLOAD_FORM_ID.json once Sam clicks
   Run. Plan + registry + RUN_STATUS patched to reflect reality.
-  External coordination still pending: Martin (3MD) editor invite (Ian),
+  External coordination still pending: 3MD editor invite (Ian),
   Pinnacle contact migration from Viber (Jay), setup() trigger install
   by Sam/commissary.team, AND the one-click Phase 7 form rebuild.
 canonical_scope: none
@@ -95,7 +95,7 @@ Routing SI through the 3PL was backwards — the 3PL has zero incentive to move 
 
 **CEO direction 2026-04-20 PM:** *"I do not want 3MD and Pinnacle Tabs to be in the same sheet to avoid accidents and to avoid giving them visibility on data that they should not see."*
 
-- Sheet A: 3MD-scoped. Martin (3MD) as editor. Sees only 3MD's data.
+- Sheet A: 3MD-scoped. 3MD as editor. Sees only 3MD's data.
 - Sheet B: Pinnacle-scoped. Pinnacle contact as editor (onboarding handled by Ian + Jay — NOT by sprint agent). Sees only Pinnacle's data.
 - Sheet C: BEI-internal master. No external access. Dashboards, variance queue, full masters.
 - Sheet D: Shaw transitional. BEI-only. Phased out when Shaw→3MD storage migration completes.
@@ -181,7 +181,7 @@ Routing SI through the 3PL was backwards — the 3PL has zero incentive to move 
 Executing agent MUST verify each assertion before calling a phase complete.
 
 1. `[ ]` Is the infrastructure built as FOUR separate Google Sheets (A/B/C/D), not one sheet with multiple tabs? (CEO direction 2026-04-20 PM)
-2. `[ ]` Does Sheet A show ONLY 3MD data to Martin — no Pinnacle rows, no payment terms, no dashboards, no variance queue?
+2. `[ ]` Does Sheet A show ONLY 3MD data to the 3MD editor — no Pinnacle rows, no payment terms, no dashboards, no variance queue?
 3. `[ ]` Does Sheet B show ONLY Pinnacle data to the Pinnacle contact — no 3MD rows, no sensitive data?
 4. `[ ]` Is Sheet C (master) strictly BEI-internal — zero external access (view, edit, comment)?
 5. `[ ]` Is RCSI completely excluded from the infrastructure (no RCSI tab, no RCSI supplier references, no RCSI automation)? (CEO direction 2026-04-18)
@@ -250,7 +250,7 @@ Hard ceiling: 15 units per phase. Preferred split threshold: 12 units.
 | 3 | Apps Script — validation + consolidation + Chat notifications | 12 | onEdit triggers, match logic, variance queue, Chat API |
 | 4 | Supplier SI Upload Form + pre-filled URLs + match Apps Script | 10 | Google Form, per-supplier URL generator, onFormSubmit handler |
 | 5 | CEO Daily Email + Dashboard formulas + verification scripts | 8 | 7 AM cron, KPI formulas, machine-verifiable closeout scripts |
-| 6 | Onboarding docs + E2E test + Closeout | 9 | 1-page how-to for Martin + Pinnacle, E2E test, registry update |
+| 6 | Onboarding docs + E2E test + Closeout | 9 | 1-page how-to for 3MD + Pinnacle comms (team-owned), E2E test, registry update |
 
 **Total: 66 units** (under 80 ceiling; single-session executable).
 
@@ -274,16 +274,16 @@ completion_condition:
   - All 4 Google Sheets (A, B, C, D) created with correct schema, permissions, protected ranges
   - Supplier SI Upload Google Form created + per-supplier URLs generated
   - Apps Script deployed + all 6 triggers wired (onEdit x2, onFormSubmit, hourly cron, daily 06:00, daily 07:00)
-  - End-to-end test passes: dummy Martin-authored receipt in Sheet A → Chat notification fires → row appears in Sheet C Pending GR → Supplier SI upload matches → Dashboard updates
+  - End-to-end test passes: dummy 3MD-authored receipt in Sheet A → Chat notification fires → row appears in Sheet C Pending GR → Supplier SI upload matches → Dashboard updates
   - All MUST_MODIFY and MUST_CONTAIN assertions in phase tables verify
   - Machine-verifiable `output/s210/verify_phase_6.py` returns 0 (all phases green)
   - Plan YAML updated: status GO -> COMPLETED, completed_date, execution_summary
   - SPRINT_REGISTRY.md row updated to COMPLETED with sheet IDs captured
-  - 1-page onboarding doc saved at `output/s210/ONBOARDING_MARTIN_PINNACLE.md` for Ian + Jay to use
+  - 1-page onboarding doc saved at `output/s210/ONBOARDING_3PL_COMMS.md` for Ian + Jay to use
   - All commits pushed to `s210-tier-a-receipt-payment-infrastructure` branch + PR created
 stop_only_for:
-  - Martin's email address (for Sheet A editor invite) — unresolved
-  - Pinnacle contact email (for Sheet B editor invite) — unresolved (per CEO: Ian+Jay handle)
+  - 3MD contact email (for Sheet A editor invite) — unresolved (per CEO: Ian handles)
+  - Pinnacle contact email (for Sheet B editor invite) — unresolved (per CEO: Jay handles)
   - Procurement AppSheet underlying sheet inaccessible (cannot read master data)
   - Chat API credentials rotation (unlikely)
   - Destructive action that would break an existing in-flight sprint
@@ -303,12 +303,12 @@ blocker_policy:
   - permission denial on a sheet create -> retry once, escalate if persists
   - evidence mismatch in plan -> normalize plan body AND continue
   - repeated Apps Script trigger failure x3 -> grounded research (quota check, scope check), then continue
-  - Martin/Pinnacle email missing -> generate invite URL but don't send; document for Ian to action; proceed with rest
+  - 3MD/Pinnacle contact email missing -> generate invite URL but don't send; document for Ian/Jay to action; proceed with rest
 signoff_authority: single-owner (Sam Karazi, CEO)
 canonical_closeout_artifacts:
   - output/s210/RUN_STATUS.json
   - output/s210/RUN_SUMMARY.md
-  - output/s210/ONBOARDING_MARTIN_PINNACLE.md
+  - output/s210/ONBOARDING_3PL_COMMS.md
   - output/s210/verify_phase_6.py
   - output/s210/state/S210_REMOTE_TRUTH_BASELINE.json
   - output/s210/state/S210_ACTIVE_RUN_COORDINATION.json
@@ -433,8 +433,8 @@ If the verification script exits non-zero, the phase is not complete. Fix failur
 | 1.2 | Create 5 tabs in Sheet A: `Receipts`, `Open_POs_3MD_Only`, `Suppliers_Visible`, `Materials`, `_Instructions` | Sheet A tab list MUST include exactly these 5 | 1 |
 | 1.3 | Write 18-column header in `Receipts` tab per schema in SOLUTION_DESIGN_2026-04-18.md §1.2 | Column A-R = exact spec | 1 |
 | 1.4 | Apply data validation: Supplier column = dropdown from `Suppliers_Visible` tab; PO Number column = dropdown from `Open_POs_3MD_Only`; Material Code = dropdown filtered by PO (via INDIRECT) | MUST_CONTAIN via Apps Script: `setDataValidation()` calls on columns E, F, G | 2 |
-| 1.5 | Apply protected ranges: lock `Open_POs_3MD_Only`, `Suppliers_Visible`, `Materials`, `_Instructions` tabs from external editor (Martin) — only BEI staff can modify | Protected range count MUST = 4 | 1 |
-| 1.6 | Write `_Instructions` tab — 1-page how-to for Martin (step-by-step: open URL, click Receipts tab, add row, cascade dropdowns, upload photo) | `_Instructions!A1:A30` MUST_CONTAIN at least 10 numbered steps | 1 |
+| 1.5 | Apply protected ranges: lock `Open_POs_3MD_Only`, `Suppliers_Visible`, `Materials`, `_Instructions` tabs from external editor (3MD contact) — only BEI staff can modify | Protected range count MUST = 4 | 1 |
+| 1.6 | Write `_Instructions` tab — 1-page how-to for the 3MD editor (step-by-step: open URL, click Receipts tab, add row, cascade dropdowns) | `_Instructions!A1:A30` MUST_CONTAIN at least 10 numbered steps | 1 |
 | 1.7 | Repeat steps 1.1-1.6 for Sheet B `BEI Pinnacle Receiving Log 2026` with `Open_POs_Pinnacle_Only` tab | `output/s210/SHEET_IDS.json` CONTAINS `"sheet_b_id"` | 2 |
 | 1.8 | Add internal editor access to Sheet A + B: Ian (`ian@bebang.ph`), Cayla (`cayla@bebang.ph`), Sam (`sam@bebang.ph`), Jay (`jay@bebang.ph`) | Sheet permissions list MUST include 4 BEI editors each | 1 |
 | 1.9 | Verify: `python output/s210/verify_phase_1.py` exits 0 | exits 0 | — |
@@ -492,8 +492,8 @@ If the verification script exits non-zero, the phase is not complete. Fix failur
 
 | # | Task | MUST_MODIFY / MUST_CONTAIN | Unit |
 |---|---|---|---|
-| 6.1 | Write `output/s210/ONBOARDING_MARTIN_PINNACLE.md` — 1-page doc for Ian + Jay to use with Martin (3MD) + Pinnacle contact. Screenshots placeholder + step-by-step | MUST_CONTAIN: at least 10 numbered steps + Sheet A + Sheet B URLs | 2 |
-| 6.2 | E2E test — script a dummy supplier receipt: add test row in Sheet A `Receipts` as if Martin logged it. Verify in order: (a) onEdit fires, (b) row appears in Sheet C `02_All_Receipts_Consolidated`, (c) row appears in `06_Pending_GR`, (d) Chat posts to SCM + Procurement App Notifications, (e) Dashboard KPIs update. Capture evidence in `output/l3/s210/e2e_test_3md.json` | MUST_MODIFY: evidence JSON with all 5 checks `"pass": true` | 2 |
+| 6.1 | Write `output/s210/ONBOARDING_3PL_COMMS.md` — 1-page doc for Ian + Jay to use with 3MD + Pinnacle contact. Screenshots placeholder + step-by-step | MUST_CONTAIN: at least 10 numbered steps + Sheet A + Sheet B URLs | 2 |
+| 6.2 | E2E test — script a dummy supplier receipt: add test row in Sheet A `Receipts` as if a 3MD editor logged it. Verify in order: (a) onEdit fires, (b) row appears in Sheet C `02_All_Receipts_Consolidated`, (c) row appears in `06_Pending_GR`, (d) Chat posts to SCM + Procurement App Notifications, (e) Dashboard KPIs update. Capture evidence in `output/l3/s210/e2e_test_3md.json` | MUST_MODIFY: evidence JSON with all 5 checks `"pass": true` | 2 |
 | 6.3 | E2E test — equivalent for Pinnacle (Sheet B). Evidence in `output/l3/s210/e2e_test_pinnacle.json` | MUST_MODIFY: evidence JSON | 1 |
 | 6.4 | E2E test — Supplier SI upload: submit test SI via the form; verify match against a known DR; verify SI_Matched=TRUE on the receipt row. Evidence in `output/l3/s210/e2e_test_supplier_si.json` | MUST_MODIFY: evidence JSON | 1 |
 | 6.5 | Write `output/s210/verify_phase_6.py` — runs all prior phase verifiers + asserts E2E evidence files exist and all `pass: true` | exits 0 | 1 |
@@ -534,14 +534,14 @@ DWD, or (b) publisher-approval deployment is done by a human once.
 
 | User | Action | Expected Outcome | Failure Means |
 |---|---|---|---|
-| Agent (simulating Martin) | Add row to Sheet A `Receipts`: PO=<any open 3MD PO>, Supplier=<that PO's supplier>, Material=<line item from PO>, Qty=5, SI#=`TEST-S210-001`, SI photo=attached | Within 10 sec: row in Sheet C `02_All_Receipts_Consolidated`, row in `06_Pending_GR`, Chat post in SCM space, Dashboard `today's receipts` increments | onEdit trigger broken or Chat API misconfigured |
+| Agent (simulating 3MD editor) | Add row to Sheet A `Receipts`: PO=<any open 3MD PO>, Supplier=<that PO's supplier>, Material=<line item from PO>, Qty=5, SI#=`TEST-S210-001` | Within 60 sec (Cloud Scheduler pollAll): row in Sheet C `02_All_Receipts_Consolidated`, row in `06_Pending_GR`, Chat post in SCM space, Dashboard `today's receipts` increments | pollAll trigger broken or Chat API misconfigured |
 | Agent (simulating Pinnacle staff) | Add row to Sheet B `Receipts` with valid data | Same as above for Pinnacle path | Pinnacle onEdit trigger broken |
 | Agent (simulating supplier) | Submit SI Upload form with PO=<matching prior DR's PO>, SI#=`TEST-S210-001`, PDF attached | Within 10 sec: row in Sheet C `03_Supplier_SI_Uploads`; DR row tagged SI_Matched=TRUE; Drive link to PDF attached | onFormSubmit broken OR match logic broken |
 | Agent (simulating supplier) | Submit SI Upload form with PO that does NOT match any DR | Row in `03_Supplier_SI_Uploads` but status = Orphan; row in `04_Match_Queue` | Match logic erroneously tagging |
 | Agent (simulating old DR) | Wait 72+ hours OR fast-forward timestamp; run `ageVarianceQueue()` manually | DR row moves to `05_Variance_Queue` | Aging cron broken |
 | Agent (simulating invalid entry) | Add Sheet A row with supplier that doesn't match the PO's supplier | Row flagged red; exception in `05_Variance_Queue`; NO Pending GR row written | Validation bypass |
 | Agent (simulating permission test) | Attempt to edit `Open_POs_3MD_Only` from a non-BEI account | Edit rejected by protected range | Protection not applied |
-| Agent (reading as 3MD) | Open Sheet A while logged in as Martin (or simulate by revoking own access to other sheets) | Can see only Sheet A; cannot see Sheet B, C, D | Access isolation broken |
+| Agent (reading as 3MD) | Open Sheet A while logged in as the 3MD editor (or simulate by revoking own access to other sheets) | Can see only Sheet A; cannot see Sheet B, C, D | Access isolation broken |
 
 Evidence files:
 ```
@@ -630,7 +630,7 @@ If ≥3 library fixes happen during execution, emit `output/s210/LIBRARY_IMPROVE
 - [ ] `scripts/verify_canonical_structure.py` returns zero violations post-sprint
 - [ ] Plan YAML status = COMPLETED
 - [ ] SPRINT_REGISTRY.md S210 row = COMPLETED with sheet IDs
-- [ ] Onboarding doc at `output/s210/ONBOARDING_MARTIN_PINNACLE.md`
+- [ ] Onboarding doc at `output/s210/ONBOARDING_3PL_COMMS.md`
 - [ ] PR created and URL captured
 - [ ] Touch preservation ledger reconciles all mutations
 
