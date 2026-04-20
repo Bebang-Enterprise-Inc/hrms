@@ -11,5 +11,6 @@
     "SI PDF (placeholder \u2014 replace in UI)": "1479809273",
     "Notes": "681001365"
   },
-  "created_via": "Apps Script FormApp (native file upload)"
+  "created_via": "Apps Script FormApp (file upload field pending UI add by Sam)",
+  "ui_step_pending": "Delete item '[REPLACE_ME ...]' + add File upload titled 'SI PDF' (see PHASE7_MANUAL_STEP.md)"
 }
