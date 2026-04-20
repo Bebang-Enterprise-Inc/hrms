@@ -1,0 +1,12 @@
+{
+  "pass": true,
+  "test_rr": "S210-E2E-3MD-1776668200",
+  "test_po": "PO-20252",
+  "validation_ok": true,
+  "validation_errors": [],
+  "consolidated_found": true,
+  "pending_gr_found": true,
+  "variance_found": false,
+  "audit_found": true,
+  "timestamp": "2026-04-20T14:56:40+08:00"
+}

@@ -1,0 +1,16 @@
+Surface,Type,Owner,Mutability,Notes
+docs/plans/2026-04-20-sprint-210-tier-a-receipt-payment-infrastructure.md,plan,S210,mutable-by-S210,This plan file
+docs/plans/SPRINT_REGISTRY.md,registry,shared,append-only-by-S210,Append S210 row + bump Next counter
+scripts/google_apps/s210_master_handler.gs,code,S210,mutable-by-S210,Bound to Sheet C
+scripts/google_apps/s210_common.gs,code,S210,mutable-by-S210,Shared helpers
+scripts/google_apps/s210_si_upload_handler.gs,code,S210,mutable-by-S210,Form submit handler
+output/s210/**,artifacts,S210,mutable-by-S210,"Baseline, state, evidence"
+output/l3/s210/**,artifacts,S210,mutable-by-S210,L3 test evidence
+Google Sheet A (3MD Receiving Log 2026),google-resource,commissary.team@bebang.ph,new-resource,3MD editor access
+Google Sheet B (Pinnacle Receiving Log 2026),google-resource,commissary.team@bebang.ph,new-resource,Pinnacle editor access
+Google Sheet C (Receiving Master 2026),google-resource,commissary.team@bebang.ph,new-resource,BEI-internal only
+Google Sheet D (Shaw Transitional),google-resource,commissary.team@bebang.ph,new-resource,BEI-internal only
+Google Form (BEI Supplier SI Upload),google-resource,commissary.team@bebang.ph,new-resource,Tier A suppliers
+Procurement AppSheet 1QWdoZlT Google Sheet,google-resource,sam@bebang.ph,READ-ONLY,We only READ for dropdowns
+3MD-owned sheets 1dNh1/1u582,google-resource,bebang3md@gmail.com,READ-ONLY,Never write
+2026 APRIL BEBANG INVENTORY 1-QPBQ,google-resource,ian@bebang.ph,READ-ONLY,Ian owns; reference

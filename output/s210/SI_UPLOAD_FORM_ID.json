@@ -1,0 +1,16 @@
+{
+  "form_id": "1gyijOzmjXJHlyil7wraQ8xjmPMu0q1eoqUcjwHXogPg",
+  "responder_uri": "https://docs.google.com/forms/d/e/1FAIpQLSc3UC9f_3gefDYNgpOqNx7UCw_5BDrRh9T8-GQeyHHWSxdITw/viewform",
+  "edit_url": "https://docs.google.com/forms/d/1gyijOzmjXJHlyil7wraQ8xjmPMu0q1eoqUcjwHXogPg/edit",
+  "item_ids": {
+    "Supplier Name": "916838180",
+    "PO Number": "1395377630",
+    "SI Number": "586011118",
+    "SI Date": "1849596212",
+    "Amount (PHP)": "1154066569",
+    "SI PDF (placeholder \u2014 replace in UI)": "1479809273",
+    "Notes": "681001365"
+  },
+  "created_via": "Apps Script FormApp (file upload field pending UI add by Sam)",
+  "ui_step_pending": "Delete item '[REPLACE_ME ...]' + add File upload titled 'SI PDF' (see PHASE7_MANUAL_STEP.md)"
+}

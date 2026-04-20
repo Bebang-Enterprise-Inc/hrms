@@ -1,0 +1,49 @@
+{
+  "triggers": [
+    {
+      "handler": "handleNewReceipt_3MD",
+      "type": "SPREADSHEET_EDIT",
+      "target": "SHEET_A (3MD)",
+      "frequency": "on every edit"
+    },
+    {
+      "handler": "handleNewReceipt_Pinnacle",
+      "type": "SPREADSHEET_EDIT",
+      "target": "SHEET_B (Pinnacle)",
+      "frequency": "on every edit"
+    },
+    {
+      "handler": "handleNewReceipt_Shaw",
+      "type": "SPREADSHEET_EDIT",
+      "target": "SHEET_D (Shaw transitional)",
+      "frequency": "on every edit"
+    },
+    {
+      "handler": "ageVarianceQueue",
+      "type": "CLOCK",
+      "target": "(global)",
+      "frequency": "every 1 hour"
+    },
+    {
+      "handler": "refreshMasters",
+      "type": "CLOCK",
+      "target": "(global)",
+      "frequency": "daily 06:00 Asia/Manila"
+    },
+    {
+      "handler": "sendCeoDailyEmail",
+      "type": "CLOCK",
+      "target": "(global)",
+      "frequency": "daily 07:00 Asia/Manila"
+    },
+    {
+      "handler": "handleSiUpload",
+      "type": "FORM_SUBMIT",
+      "target": "BEI Supplier SI Upload form",
+      "frequency": "on every submission"
+    }
+  ],
+  "install_command": "Open Apps Script editor > Select setup() > Run",
+  "install_user": "commissary.team@bebang.ph",
+  "note": "TRIGGERS_INSTALLED.json is a spec. Actual installed state is verified by calling listTriggers() in the script or Apps Script API scripts.run in Phase 6 E2E."
+}

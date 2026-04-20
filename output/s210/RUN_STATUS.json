@@ -1,0 +1,111 @@
+{
+  "sprint": "S210",
+  "plan": "docs/plans/2026-04-20-sprint-210-tier-a-receipt-payment-infrastructure.md",
+  "branch": "s210-tier-a-receipt-payment-infrastructure",
+  "pr": "https://github.com/Bebang-Enterprise-Inc/hrms/pull/649",
+  "status": "COMPLETED_WITH_PHASE7_UX_PATCH",
+  "phase_0_complete": true,
+  "phase_1_complete": true,
+  "phase_2_complete": true,
+  "phase_3_complete": true,
+  "phase_4_complete": true,
+  "phase_5_complete": true,
+  "phase_6_complete": true,
+  "phase_7_ux_patch_partial": true,
+  "phase_7_awaiting_one_click": true,
+  "sheets": {
+    "sheet_a_id": "1dambmiLzSMWOQun7MCymK4nHpuqrarFCAOK0G9-6oIU",
+    "sheet_a_name": "BEI 3MD Receiving Log 2026",
+    "sheet_a_cols": 16,
+    "sheet_b_id": "10fqnvF_uDl5ky3MkvXUmWvZ1fYat_p6XFGmVFc3vqrw",
+    "sheet_b_name": "BEI Pinnacle Receiving Log 2026",
+    "sheet_b_cols": 16,
+    "sheet_c_id": "1_Ir5O5AW7hOjcvCTXsP06cF3sai9hcefDFrBOTRHOh0",
+    "sheet_c_name": "BEI Receiving Master 2026",
+    "sheet_c_consolidated_cols": 22,
+    "sheet_d_id": "1mbJiLW9M9e-AmrXSRRTtbRP-xKI16ah5rakOt6qv2As",
+    "sheet_d_name": "BEI Shaw Transitional Receiving",
+    "sheet_d_cols": 16
+  },
+  "apps_script": {
+    "script_id": "1lsvOlv1rGEvXl_1zms4SURlsLUZk7CxRhg2NyBDrDHh4fDjuioFZhi2S",
+    "editor_url": "https://script.google.com/d/1lsvOlv1rGEvXl_1zms4SURlsLUZk7CxRhg2NyBDrDHh4fDjuioFZhi2S/edit",
+    "functions": [
+      "validateReceipt",
+      "handleNewReceipt_3MD",
+      "handleNewReceipt_Pinnacle",
+      "handleNewReceipt_Shaw",
+      "postChatNotification",
+      "ageVarianceQueue",
+      "refreshMasters",
+      "sendCeoDailyEmail",
+      "handleSiUpload",
+      "generateSupplierUrls",
+      "setup",
+      "listTriggers",
+      "s210_rebuildSupplierForm"
+    ],
+    "source_chars": 33722,
+    "triggers_specced": 7,
+    "setup_required": "Sam or commissary.team opens editor and runs setup() ONCE to install triggers",
+    "phase7_required": "Sam or commissary.team selects s210_rebuildSupplierForm -> Run ONCE to create the supplier SI upload form with native file upload button"
+  },
+  "si_upload_form": {
+    "old_form_id_deleted": "1DsT-IdDpW_p3XfpSevkyCZ7S-YVu3EWEK3SxD1lJ940",
+    "reason_deleted": "Old form asked suppliers to paste Drive link in a text field — bad UX. Phase 7 rebuild creates form with native file upload button.",
+    "new_form_id": "PENDING_PHASE7_CLICK",
+    "new_form_creation_method": "Apps Script FormApp via s210_rebuildSupplierForm helper",
+    "native_file_upload": "TRUE once phase 7 click runs"
+  },
+  "seeds": {
+    "suppliers_count": 98,
+    "open_pos_count": 652,
+    "supplier_urls_generated": 98,
+    "supplier_urls_file_pending_form_rebuild": true
+  },
+  "pending_external_coordination": {
+    "sheet_a_external_editor_3md": {
+      "status": "PENDING",
+      "owner": "Ian",
+      "note": "Add Martin (3MD) email once Ian confirms contact"
+    },
+    "sheet_b_external_editor_pinnacle": {
+      "status": "PENDING",
+      "owner": "Jay",
+      "note": "Pinnacle still on Viber; Jay coordinates migration to sheet editor access"
+    },
+    "setup_trigger_installation": {
+      "status": "PENDING",
+      "owner": "Sam or commissary.team",
+      "action": "Open Apps Script editor and run setup() ONCE"
+    },
+    "phase7_form_rebuild_click": {
+      "status": "PENDING",
+      "owner": "Sam",
+      "action": "Select s210_rebuildSupplierForm -> Run. See output/s210/PHASE7_MANUAL_STEP.md",
+      "why_manual": "Service account DWD does not include script.deployments scope; scripts.run blocked"
+    }
+  },
+  "schema_changes_phase_7": {
+    "sheets_a_b_d_receipts_cols": "18 -> 16 (removed SI Photo + Delivery Photo)",
+    "reason": "CEO directive 2026-04-20: 3PLs will not paste image/drive links in spreadsheets",
+    "gs_col_constants": "shifted -2 for post-SI-Number cols; removed COL_SI_PHOTO + COL_DELIVERY_PHOTO",
+    "validate_receipt_no_longer_requires_si_photo": true,
+    "consolidated_schema_unchanged": "Still 22 cols; handler writes empty strings into SI Photo + Delivery Photo positions",
+    "manifest_scopes_added": ["drive", "forms", "gmail.send"],
+    "manifest_execution_api": "access=DOMAIN"
+  },
+  "known_limitations": [
+    "Service account cannot create Apps Script API-executable deployments; scripts.run blocked without publisher-approved deployment",
+    "Forms REST API does not support file_upload question creation; Apps Script FormApp does — hence the one-click helper approach",
+    "Service account cannot access Chat API spaces directly; Apps Script runtime uses user-scoped OAuth token when script runs"
+  ],
+  "last_updated": "2026-04-20T16:50:00+08:00",
+  "e2e_results": {
+    "e2e_test_3md": "PASS (pre-Phase 7; 18-col schema)",
+    "e2e_test_pinnacle": "PASS (pre-Phase 7)",
+    "e2e_test_supplier_si": "PASS (pre-Phase 7; old form)",
+    "overall": "PASS",
+    "post_phase7_e2e_status": "PENDING until supplier form rebuild click"
+  }
+}

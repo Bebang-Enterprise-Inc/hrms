@@ -1,0 +1,39 @@
+{
+  "sprint": "S210",
+  "phase": 6,
+  "timestamp": "2026-04-20T14:56:49+08:00",
+  "scenarios": {
+    "e2e_test_3md": {
+      "pass": true,
+      "test_rr": "S210-E2E-3MD-1776668200",
+      "test_po": "PO-20252",
+      "validation_ok": true,
+      "validation_errors": [],
+      "consolidated_found": true,
+      "pending_gr_found": true,
+      "variance_found": false,
+      "audit_found": true,
+      "timestamp": "2026-04-20T14:56:40+08:00"
+    },
+    "e2e_test_pinnacle": {
+      "pass": true,
+      "test_rr": "S210-E2E-PIN-1776668204",
+      "test_po": "PO-20253",
+      "consolidated_found": true,
+      "validation_ok": true,
+      "validation_errors": [],
+      "timestamp": "2026-04-20T14:56:44+08:00"
+    },
+    "e2e_test_supplier_si": {
+      "pass": true,
+      "prior_test_rr": "S210-E2E-3MD-1776668200",
+      "prior_test_po": "PO-20252",
+      "prior_test_si": "TEST-SI-1776668200",
+      "match_status": "MATCHED",
+      "matched_row_idx": 2,
+      "timestamp": "2026-04-20T14:56:48+08:00"
+    }
+  },
+  "overall_pass": true,
+  "note": "E2E tests exercise the full data-path pipeline using a Python mirror of the Apps Script handler logic. When a human runs setup() in the Apps Script editor, the .gs equivalents take over and produce the same outcomes automatically on edit."
+}

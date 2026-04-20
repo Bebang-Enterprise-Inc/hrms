@@ -1,0 +1,9 @@
+{
+  "pass": true,
+  "prior_test_rr": "S210-E2E-3MD-1776668200",
+  "prior_test_po": "PO-20252",
+  "prior_test_si": "TEST-SI-1776668200",
+  "match_status": "MATCHED",
+  "matched_row_idx": 2,
+  "timestamp": "2026-04-20T14:56:48+08:00"
+}
