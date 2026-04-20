@@ -1,0 +1,9 @@
+{
+  "status": "partial_smoke_only",
+  "note": "3 orders submitted during SM TANZA smoke; cleaned up in Phase 6. Full 49-store capture pending fresh L3 session.",
+  "submissions": [
+    {"order": "BEI-ORD-2026-00329", "store": "SM TANZA - BEBANG MEGA INC.", "outcome": "draft, cleaned up"},
+    {"order": "BEI-ORD-2026-00330", "store": "SM TANZA - BEBANG MEGA INC.", "outcome": "auto-approved, draft, cleaned up"},
+    {"order": "BEI-ORD-2026-00331", "store": "SM TANZA - BEBANG MEGA INC.", "outcome": "auto-approved, MR created, cleaned up"}
+  ]
+}
