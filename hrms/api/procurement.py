@@ -3051,7 +3051,13 @@ def create_payment_request(data: dict[str, Any] | str) -> dict[str, Any]:
                     received_value = calculate_goods_receipt_gross_total(gr_items, po_items)
 
                 payable_cap = min(invoice_payable, received_value)
-                if payment_amount > payable_cap:
+                # Cash Advance RFPs are pre-payments against future deliveries
+                # (or multi-invoice settlements) and are expected to exceed the
+                # current received value. Skipping the partial-delivery guard
+                # here matches the same-rule bypass on the upstream balance
+                # checks; the advance-vs-PO double-payment guard (line 2882+)
+                # still protects against true over-advancing.
+                if not is_advance and payment_amount > payable_cap:
                     frappe.throw(
                         _("Payment amount (₱{0:,.2f}) exceeds the payable received value (₱{1:,.2f}). "
                           "You can only pay for goods actually accepted and invoiced.").format(
