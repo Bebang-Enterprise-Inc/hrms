@@ -1,6 +1,6 @@
 # S207 L3 Verification Summary
 
-**Run timestamp (UTC):** 2026-04-20T00:50:22+00:00
+**Run timestamp (UTC):** 2026-04-20T03:37:17+00:00
 **Totals:** passed=5 · skipped=4 · failed=0 · all_pass_or_skip=True
 
 | # | Scenario | Status | Detail |

@@ -26,9 +26,10 @@
     "output/l3/s207/**",
     "output/state/s207_active_run_claim.json"
   ],
-  "released_at": null,
+  "released_at": "2026-04-20T00:58:37.526853Z",
   "notes": [
     "Only one S207 runner may hold this claim at a time.",
     "Agent releases the claim at Phase 8 closeout (successful PR create) or on crash."
-  ]
+  ],
+  "pr": "https://github.com/Bebang-Enterprise-Inc/hrms/pull/644"
 }
