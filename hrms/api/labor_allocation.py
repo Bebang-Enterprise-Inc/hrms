@@ -283,7 +283,92 @@ def _record_log(slip_name: str, slip_info: dict, result: dict) -> None:
 
 
 # --- Scheduled wrapper -----------------------------------------------------
-# Installed by S207 Phase 5 (see hrms/hooks.py scheduler_events.cron
-# "0 22 * * *"). Phase 1 leaves the function undefined so nothing fires
-# during the phase-1-to-phase-4 gap; Phase 5 adds it back with the
-# Bimonthly day-guard and the new (period_start, period_end) signature.
+
+
+def preview_scheduled() -> None:
+	"""Cron wrapper: preview the just-closed half-period and email the report.
+
+	Registered in ``hrms/hooks.py`` scheduler_events.cron as ``"0 22 * * *"``
+	(daily 22:00 UTC = 06:00 PHT of the SAME PHT calendar day, since UTC+8
+	rolls us to the next date at UTC 22:00). The function is a no-op on
+	any PHT day whose ``day`` is not 1 or 16.
+
+	LD-17 rationale: cron fires at UTC 22:00. ``datetime.now(utc).astimezone(PHT)``
+	at fire time already gives us the TARGET PHT date — no ``+ timedelta(days=1)``
+	is needed. Adding a day = off-by-one; cron would never fire (3 independent
+	audits confirmed this with Python math).
+
+	Firing days:
+	  - PHT day 1  → period = 16-of-previous-month … end-of-previous-month
+	  - PHT day 16 → period = 1-of-current-month   … 15-of-current-month
+
+	Gives Finance 9-10 days to validate the preview before the Bimonthly
+	payroll runs (payouts on the 10th and 25th).
+	"""
+	pht_now = datetime.now(timezone.utc).astimezone(PHT)
+	pht_date = pht_now.date()
+	if pht_date.day not in (1, 16):
+		return  # no-op on non-firing days
+
+	set_backend_observability_context(
+		module="finance",
+		action="preview_scheduled",
+		mutation_type="read",
+		extras={"firing_pht_date": str(pht_date)},
+	)
+
+	# Derive period from the PHT date that just rolled over
+	if pht_date.day == 1:
+		# Firing PHT 1st -> preview second half of PREVIOUS month
+		prev_month_last = pht_date - timedelta(days=1)
+		period_start = prev_month_last.replace(day=16)
+		period_end = prev_month_last
+	else:
+		# Firing PHT 16th -> preview first half of CURRENT month
+		period_start = pht_date.replace(day=1)
+		period_end = pht_date.replace(day=15)
+
+	try:
+		report = preview_allocation(period_start, period_end)
+	except Exception as exc:
+		frappe.log_error(
+			title="S207 preview_scheduled failed",
+			message=f"period={period_start}..{period_end}, error={exc}",
+		)
+		return
+
+	_email_preview(report, period_start, period_end)
+
+
+def _email_preview(report: dict, period_start: date, period_end: date) -> None:
+	"""Send the preview report to CEO + Finance.
+
+	Future: make recipients configurable via a BEI Settings single DocType
+	field ``s207_preview_recipients`` (CSV). Hard-coded for now so the first
+	Bimonthly preview delivers without extra schema work.
+	"""
+	recipients = ["sam@bebang.ph", "denise@bebang.ph"]
+	subject = f"S207 reliever-labor preview — {period_start} to {period_end}"
+	summary = (
+		f"Period: {report['period']['start']} to {report['period']['end']}\n"
+		f"Total Slips: {report['total_slips']}\n"
+		f"Planned allocations: {report['planned_count']}\n"
+		f"Skipped: {report['skipped_count']}\n"
+		f"Errors: {report['errors_count']}\n\n"
+		f"To apply (after Finance review):\n"
+		f"  docker exec -e S206_APPLY=1 $BACKEND bench --site hq.bebang.ph execute "
+		f"hrms.api.labor_allocation.post_allocation --kwargs "
+		f"'{{\"period_start\":\"{period_start}\",\"period_end\":\"{period_end}\"}}'"
+	)
+	try:
+		frappe.sendmail(
+			recipients=recipients,
+			subject=subject,
+			message=f"<pre>{summary}</pre>",
+			now=True,
+		)
+	except Exception as exc:
+		frappe.log_error(
+			title="S207 preview_scheduled email failed",
+			message=str(exc),
+		)

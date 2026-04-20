@@ -426,11 +426,15 @@ scheduler_events = {
 		],
 		# Monthly billing generation: 6 AM on 1st of each month
 		"0 6 1 * *": ["hrms.api.billing.scheduled_monthly_billing"],
-		# S206 monthly cron disabled in S207 P0-T5 (2026-04-20). The target
-		# `preview_monthly_allocation_scheduled` is removed in S207 Phase 1
-		# during the API refactor to `(period_start, period_end)`. The new daily
-		# `0 22 * * *` cron with Python day-guard gets installed in S207 Phase 5.
-		# During Phases 1-4 cron is intentionally OFF to avoid calling a removed function.
+		# S207 reliever-labor cost-sharing preview (Bimonthly cadence).
+		# Daily 22:00 UTC = 06:00 PHT. The function internally checks pht_date.day
+		# and no-ops unless it's 1 or 16 — fires twice a month giving Finance
+		# 9-10 days to validate before Bimonthly payroll runs (10th / 25th).
+		# Daily firing with Python day-guard is robust across all month lengths
+		# and DST. See LD-2 + LD-17 in the S207 plan.
+		"0 22 * * *": [
+			"hrms.api.labor_allocation.preview_scheduled",
+		],
 		# Morning sync health report: 8:15 AM PHT daily (00:15 UTC) after sync buffer
 		"15 0 * * *": [
 			"hrms.api.erp_sync.scheduled_generate_morning_sync_health_report",
