@@ -4,7 +4,8 @@ Adds:
 - New sheet `Signature_Gaps` listing every FA/MA/JV/Contract doc that is NOT
   dual-signed by BEI CEO (or delegate) + counterparty.
 - New column on `Stores` sheet `Signature Status` with a note for stores that
-  need signature action (MISSING FA/JV or delegate-signed requires review).
+  need signature action. Uses explicit file paths for cross-mapped stores so
+  the team doesn't have to hunt.
 """
 from __future__ import annotations
 
@@ -24,11 +25,10 @@ from openpyxl.utils import get_column_letter
 ROOT = Path(__file__).resolve().parents[2]
 DD = ROOT / "CEO" / "Valuation" / "admin_compliance_dd"
 XLSX = DD / "_DD_COVERAGE_MATRIX.xlsx"
-MANIFEST = DD / "_MASTER_MANIFEST.csv"
 
 CONTRACT_TYPES = {"FRANCHISE_AGREEMENT", "JV_AGREEMENT", "CONTRACT"}
 BEI_CEO_TERMS = ["sam karazi", "samer karazi", "karazi"]
-BEI_DELEGATE_TERMS = ["manansala"]  # Andrew Rodel Manansala
+BEI_DELEGATE_TERMS = ["manansala"]
 CONTRACT_KEYWORDS = ["franchise", "jv", "management agreement",
                      "joint venture", "memorandum", "agreement", "contract"]
 
@@ -98,7 +98,6 @@ def scan_contracts() -> list[dict]:
 
 
 def classify(a: dict) -> tuple[str, str]:
-    """Return (status, note)."""
     sigs_lower = [s.lower() for s in a["sig_names"]]
     has_ceo = any(any(t in s for t in BEI_CEO_TERMS) for s in sigs_lower)
     has_delegate = any(any(t in s for t in BEI_DELEGATE_TERMS) for s in sigs_lower)
@@ -113,8 +112,25 @@ def classify(a: dict) -> tuple[str, str]:
         return ("DUAL_SIGNED_CEO", "Signed by BEI CEO + counterparty.")
     if has_delegate:
         return ("DUAL_SIGNED_DELEGATE", "Signed by BEI delegate (not Sam). Buyer's counsel may request CEO re-execution.")
-    # No CEO, no delegate — might be a third-party contract or OCR missed
     return ("BEI_SIG_MISSING", "No BEI signature captured — manual PDF re-review required.")
+
+
+# Stores that need action. Each entry: store-name-substring → (status, detailed note)
+STORE_NOTES: dict[str, tuple[str, str]] = {
+    # Truly missing — no FA/JV/Management contract anywhere
+    "AYALA MARKET MARKET": ("MISSING", "❗ MISSING JV Agreement — collect signed copy from partner."),
+    "SM GRAND CENTRAL": ("MISSING", "❗ MISSING JV Agreement — collect signed copy from partner."),
+    "NAIA T3": ("MISSING", "❗ MISSING Franchise/Management Agreement — collect signed copy from Halo-Halo Terminal Food Corp."),
+    "SM PULILAN": ("MISSING", "❗ MISSING Franchise/Management Agreement — collect signed copy from franchisee."),
+    "SM TAYTAY": ("MISSING", "❗ MISSING Franchise/Management Agreement — collect signed copy from Day Ones Food Corp."),
+    "XENTROMALL MONTALBAN": ("MISSING", "❗ MISSING Franchise/Management Agreement — collect signed copy from Perpetual Food Corp."),
+    # Lease present but FA/MA missing (HFFM Solenad + BB Estancia)
+    "AYALA SOLENAD": ("MISSING_FA", "❗ Lease on file (STORE_SOLENAD/LEASE/...) but MISSING signed Franchise/Management Agreement with HFFM Solenad Food Services Inc."),
+    "ORTIGAS ESTANCIA": ("MISSING_FA", "❗ Lease on file (CORP_BB_ESTANCIA/LEASE/...) but MISSING signed Franchise/Management Agreement with BB Estancia Food Corp."),
+    # Cross-mapped — show exact file paths so team doesn't hunt
+    "MEGAWIDE PITX": ("CROSS_MAPPED", "✓ Signed PITX JV Contract on file at JV_EMPIRE77/JV_AGREEMENT/PITX JV Contract.md + JV_TOPLEVEL/JV_AGREEMENT/PITX JV Contract.md"),
+    "MEGAWORLD PASEO CENTER": ("CROSS_MAPPED", "✓ Signed JV Contracts on file at JV_PERPETUALLY_CANDID/UNKNOWN/JV_Contract_Paseo_Center.md + JV_TOPLEVEL/JV_AGREEMENT/Paseo JV Agreement.md"),
+}
 
 
 def main() -> None:
@@ -122,7 +138,6 @@ def main() -> None:
     contracts = scan_contracts()
     print(f"scanned {len(contracts)} FA/MA/JV/Contract docs")
 
-    # Classify
     by_status: dict[str, list[dict]] = {}
     for a in contracts:
         status, note = classify(a)
@@ -149,25 +164,18 @@ def main() -> None:
     gap_rows = []
     for status, items in by_status.items():
         if status == "DUAL_SIGNED_CEO":
-            continue  # skip the fully-clean rows
+            continue
         gap_rows.extend(items)
 
-    # Order: BEI_SIG_MISSING first, then SINGLE_SIG, NO_SIGNATORIES, DELEGATE, TEMPLATE
     priority = {
-        "BEI_SIG_MISSING": 0,
-        "NO_SIGNATORIES": 1,
-        "SINGLE_SIG": 2,
-        "DUAL_SIGNED_DELEGATE": 3,
-        "BLANK_TEMPLATE": 4,
+        "BEI_SIG_MISSING": 0, "NO_SIGNATORIES": 1, "SINGLE_SIG": 2,
+        "DUAL_SIGNED_DELEGATE": 3, "BLANK_TEMPLATE": 4,
     }
     gap_rows.sort(key=lambda x: (priority.get(x["status"], 9), x["entity_code"]))
 
     status_fill = {
-        "BEI_SIG_MISSING": RED,
-        "NO_SIGNATORIES": RED,
-        "SINGLE_SIG": YELLOW,
-        "DUAL_SIGNED_DELEGATE": YELLOW,
-        "BLANK_TEMPLATE": YELLOW,
+        "BEI_SIG_MISSING": RED, "NO_SIGNATORIES": RED,
+        "SINGLE_SIG": YELLOW, "DUAL_SIGNED_DELEGATE": YELLOW, "BLANK_TEMPLATE": YELLOW,
     }
 
     for ri, a in enumerate(gap_rows, start=2):
@@ -192,39 +200,19 @@ def main() -> None:
     ws.freeze_panes = "B2"
     ws.auto_filter.ref = ws.dimensions
 
-    # --- Stores sheet: add "Signature Status" column ---
+    # --- Stores sheet: Signature Status ---
     ws_stores = wb["Stores"]
-    sig_col = ws_stores.max_column + 1
-    # Only add if column doesn't already exist
-    existing = [ws_stores.cell(row=1, column=c).value for c in range(1, ws_stores.max_column + 1)]
-    if "Signature Status" in existing:
-        sig_col = existing.index("Signature Status") + 1
+    hdr_row = [ws_stores.cell(row=1, column=c).value for c in range(1, ws_stores.max_column + 1)]
+    if "Signature Status" in hdr_row:
+        sig_col = hdr_row.index("Signature Status") + 1
     else:
+        sig_col = ws_stores.max_column + 1
         h = ws_stores.cell(row=1, column=sig_col, value="Signature Status")
         h.fill = HEADER_FILL; h.font = HEADER_FONT
         h.alignment = Alignment(wrap_text=True, vertical="center", horizontal="center")
         h.border = BORDER
 
-    # Build store → status map from canonical data
-    # "Truly missing" stores from earlier analysis:
-    TRULY_MISSING = {
-        "AYALA MARKET MARKET": "❗ MISSING JV agreement — collect signed copy",
-        "SM GRAND CENTRAL": "❗ MISSING JV agreement — collect signed copy",
-        "NAIA T3": "❗ MISSING Franchise Agreement — collect signed copy",
-        "SM PULILAN": "❗ MISSING Franchise Agreement — collect signed copy",
-        "SM TAYTAY": "❗ MISSING Franchise Agreement — collect signed copy",
-        "XENTROMALL MONTALBAN": "❗ MISSING Franchise Agreement — collect signed copy",
-    }
-    # Delegate-signed Sweet Harmony — Sweet Harmony maps to SM LAPU LAPU per registry?
-    # Actually CORP_SWEET_HARMONY is Sweet Harmony Food Corp — let's flag generically.
-    DELEGATE_FLAG = {
-        "CORP_SWEET_HARMONY": "⚠ Dual-signed by BEI delegate (Andrew Manansala), not CEO — confirm acceptable for DD",
-    }
-
-    # Find store-name + corp columns
-    hdr_row = [ws_stores.cell(row=1, column=c).value for c in range(1, ws_stores.max_column + 1)]
     store_idx = hdr_row.index("Store") + 1
-    corp_idx = hdr_row.index("Corp") + 1
     own_idx = hdr_row.index("Ownership") + 1
     fa_idx = hdr_row.index("Franchise / JV Agreement") + 1
 
@@ -232,40 +220,39 @@ def main() -> None:
         store = str(ws_stores.cell(row=row, column=store_idx).value or "")
         own = str(ws_stores.cell(row=row, column=own_idx).value or "")
         fa_val = ws_stores.cell(row=row, column=fa_idx).value
+
         note = ""
         fill = GREEN
-        # Find truly-missing
-        for key, msg in TRULY_MISSING.items():
+
+        # Explicit per-store notes first
+        for key, (status, msg) in STORE_NOTES.items():
             if key in store.upper():
                 note = msg
-                fill = RED
+                fill = RED if status.startswith("MISSING") else YELLOW
                 break
+
         if not note:
             if own == "Company Owned":
                 note = "N/A (Company Owned)"
                 fill = YELLOW
             elif fa_val in (None, "", "—", 0):
-                # Cross-mapped (partner side had doc) — add note
-                if any(k in store.upper() for k in ["PITX", "PASEO", "SOLENAD", "ESTANCIA"]):
-                    note = "✓ Contract on file under partner entity folder (see All_Docs)"
-                    fill = YELLOW
-                else:
-                    note = "⚠ No contract visible under BEI corp — verify in partner folder"
-                    fill = YELLOW
+                note = "⚠ No contract visible under BEI corp code — verify or collect."
+                fill = YELLOW
             else:
-                note = "✓ Dual-signed contract on file"
+                note = "✓ Dual-signed contract on file under BEI corp folder."
                 fill = GREEN
+
         cell = ws_stores.cell(row=row, column=sig_col, value=note)
         cell.alignment = Alignment(wrap_text=True, vertical="center")
         cell.border = BORDER
         cell.fill = fill
 
-    ws_stores.column_dimensions[get_column_letter(sig_col)].width = 55
+    ws_stores.column_dimensions[get_column_letter(sig_col)].width = 85
 
     wb.save(XLSX)
     print(f"\nSaved {XLSX}")
     print(f"  Signature_Gaps sheet: {len(gap_rows)} flagged docs")
-    print(f"  Stores sheet: added/updated 'Signature Status' column (col {sig_col})")
+    print(f"  Stores sheet: 'Signature Status' column (col {sig_col}) updated")
 
 
 if __name__ == "__main__":
