@@ -38,7 +38,7 @@ That plan is cold-start ready: Design Rationale, Requirements Regression Checkli
 - Owner: `commissary.team@bebang.ph`
 - BEI editors: ian, cayla, sam, jay, luwi (all @bebang.ph)
 - 5 tabs each: `Receipts` (18-col schema), `Open_POs_*_Only`, `Suppliers_Visible`, `Materials`, `_Instructions`
-- External editor (Martin for Sheet A, Pinnacle contact for Sheet B): pending from Ian/Jay
+- External editor (3MD contact for Sheet A, Pinnacle contact for Sheet B): pending from Ian/Jay
 
 Full sheet ID inventory: `output/s210/SHEET_IDS.json`
 
@@ -71,7 +71,7 @@ Full sheet ID inventory: `output/s210/SHEET_IDS.json`
 | 3 | Apps Script bound to Sheet C: `validateReceipt`, `handleNewReceipt_3MD`, `handleNewReceipt_Pinnacle`, `postChatNotification`, `ageVarianceQueue` + installable triggers on A/B + hourly cron + 06:00 cron | 12 |
 | 4 | Google Form `BEI Supplier SI Upload` + per-supplier pre-filled URL generator + `handleSiUpload` onFormSubmit trigger + match logic | 10 |
 | 5 | `sendCeoDailyEmail()` (07:00 PHT cron to sam + ian), Dashboard formulas, `refreshMasters()` (06:00 cron pulling from Procurement AppSheet), `verify_phase_5.py` | 8 |
-| 6 | `ONBOARDING_MARTIN_PINNACLE.md`, E2E test (3MD dummy, Pinnacle dummy, supplier SI upload), `verify_phase_6.py`, plan YAML flip to COMPLETED, SPRINT_REGISTRY.md update, PR creation | 9 |
+| 6 | `ONBOARDING_3PL_COMMS.md`, E2E test (3MD dummy, Pinnacle dummy, supplier SI upload), `verify_phase_6.py`, plan YAML flip to COMPLETED, SPRINT_REGISTRY.md update, PR creation | 9 |
 
 Every task in each phase has MUST_MODIFY / MUST_CONTAIN assertions in the plan — obey them. Write `output/s210/verify_phase_N.py` per phase, run it, require exit 0 before advancing.
 
@@ -177,7 +177,7 @@ Every phase requires `python output/s210/verify_phase_N.py` to exit 0. The scrip
 1. Plan YAML: `status: GO` → `status: COMPLETED`, `completed_date` + `execution_summary` filled
 2. `SPRINT_REGISTRY.md` S210 row: PLANNED → COMPLETED with all 4 sheet IDs captured in the description
 3. `output/s210/RUN_STATUS.json` and `output/s210/RUN_SUMMARY.md` reflect final state
-4. `output/s210/ONBOARDING_MARTIN_PINNACLE.md` is a 1-page doc Ian + Jay can share with Martin and Pinnacle
+4. `output/s210/ONBOARDING_3PL_COMMS.md` is a 1-page doc Ian + Jay use when onboarding the 3MD + Pinnacle editors
 5. `output/l3/s210/SUMMARY.md` attests all 8 L3 scenarios pass
 6. All commits pushed to `s210-tier-a-receipt-payment-infrastructure`
 7. PR created via `GH_TOKEN="" gh pr create` and URL captured in `output/s210/PR_URL.txt`
