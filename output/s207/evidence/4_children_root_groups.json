@@ -1,0 +1,50 @@
+{
+  "ROBINSONS ANTIPOLO - BEBANG ENTERPRISE INC.": {
+    "abbr": "ROA",
+    "asset_root": {
+      "action": "created",
+      "name": "1100000 - ASSETS - ROA"
+    },
+    "liability_root": {
+      "action": "existed_other_name",
+      "name": "2104000 - INTERCOMPANY PAYABLES - ROA"
+    },
+    "status": "ok"
+  },
+  "SM MANILA - BEBANG ENTERPRISE INC.": {
+    "abbr": "SMM",
+    "asset_root": {
+      "action": "created",
+      "name": "1100000 - ASSETS - SMM"
+    },
+    "liability_root": {
+      "action": "existed_other_name",
+      "name": "2104000 - INTERCOMPANY PAYABLES - SMM"
+    },
+    "status": "ok"
+  },
+  "SM MEGAMALL - BEBANG ENTERPRISE INC.": {
+    "abbr": "SMMM",
+    "asset_root": {
+      "action": "created",
+      "name": "1100000 - ASSETS - SMMM"
+    },
+    "liability_root": {
+      "action": "existed_other_name",
+      "name": "2104000 - INTERCOMPANY PAYABLES - SMMM"
+    },
+    "status": "ok"
+  },
+  "SM SOUTHMALL - BEBANG ENTERPRISE INC.": {
+    "abbr": "SMS",
+    "asset_root": {
+      "action": "created",
+      "name": "1100000 - ASSETS - SMS"
+    },
+    "liability_root": {
+      "action": "existed_other_name",
+      "name": "2104000 - INTERCOMPANY PAYABLES - SMS"
+    },
+    "status": "ok"
+  }
+}

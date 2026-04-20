@@ -1,0 +1,16 @@
+{
+  "top_level_counts": {
+    "companies_in_scope": 51,
+    "accounts_created_count": 0,
+    "accounts_existed_count": 102,
+    "parties_created_count": 0,
+    "parties_existed_count": 102,
+    "parties_updated_count": 0,
+    "missing_parents_count": 0,
+    "errors_count": 0,
+    "errors": [],
+    "report_path": "/home/frappe/frappe-bench/sites/hq.bebang.ph/private/files/s206_intercompany_seed_report_20260420_003748.json"
+  },
+  "four_children": {},
+  "full_report_path": "/home/frappe/frappe-bench/sites/hq.bebang.ph/private/files/s207_seed_full_report.json"
+}
