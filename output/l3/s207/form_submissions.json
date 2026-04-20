@@ -1,0 +1,70 @@
+{
+  "checks": [
+    {
+      "id": "L3-1_preview_first_half",
+      "passed": null,
+      "skipped_reason": "S207 preview_allocation not on container yet \u2014 re-run after merge + deploy"
+    },
+    {
+      "id": "L3-2_preview_second_half",
+      "passed": null,
+      "skipped_reason": "S207 preview_allocation not on container yet \u2014 re-run after merge + deploy"
+    },
+    {
+      "id": "L3-3_day_guard_day1",
+      "passed": true,
+      "fired": true,
+      "pht_date": "2026-05-01",
+      "day": 1,
+      "period_start": "2026-04-16",
+      "period_end": "2026-04-30"
+    },
+    {
+      "id": "L3-4_day_guard_day16",
+      "passed": true,
+      "fired": true,
+      "pht_date": "2026-04-16",
+      "day": 16,
+      "period_start": "2026-04-01",
+      "period_end": "2026-04-15"
+    },
+    {
+      "id": "L3-5_day_guard_noop",
+      "passed": true,
+      "fired": false,
+      "pht_date": "2026-04-08",
+      "day": 8
+    },
+    {
+      "id": "L3-6_idempotency",
+      "passed": null,
+      "skipped_reason": "Set S207_APPLY_L3=1 to enable destructive idempotency test"
+    },
+    {
+      "id": "L3-7_posting_date_is_payout_date",
+      "passed": null,
+      "skipped_reason": "Requires L3-6 posted JEs (set S207_APPLY_L3=1)"
+    },
+    {
+      "id": "L3-8_structures_bimonthly",
+      "passed": true,
+      "distinct_frequencies": [
+        "Bimonthly"
+      ]
+    },
+    {
+      "id": "L3-9_coa_coverage_all_stores",
+      "passed": true,
+      "total_stores": 49,
+      "complete_count": 49,
+      "incomplete_count": 0
+    }
+  ],
+  "summary": {
+    "total": 9,
+    "passed": 5,
+    "skipped": 4,
+    "failed": 0,
+    "all_passed_or_skipped": true
+  }
+}

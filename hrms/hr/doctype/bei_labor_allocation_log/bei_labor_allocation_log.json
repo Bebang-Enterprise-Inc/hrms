@@ -2,12 +2,11 @@
  "actions": [],
  "autoname": "hash",
  "creation": "2026-04-18 12:00:00.000000",
- "description": "S206 idempotency ledger: one row per (year, month, employee) recording the paired JEs created by the reliever labor cost-sharing engine. See docs/plans/2026-04-17-sprint-206-reliever-allocation-engine.md.",
+ "description": "S206/S207 idempotency ledger: one row per Salary Slip recording the paired JEs created by the reliever labor cost-sharing engine. See docs/plans/2026-04-19-sprint-207-semi-monthly-allocation-and-coa-completion.md.",
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
-  "year",
-  "month",
+  "slip_name",
   "employee",
   "column_break_idkey",
   "period_start",
@@ -25,20 +24,14 @@
  ],
  "fields": [
   {
-   "fieldname": "year",
-   "fieldtype": "Int",
+   "fieldname": "slip_name",
+   "fieldtype": "Link",
    "in_list_view": 1,
    "in_standard_filter": 1,
-   "label": "Year",
-   "reqd": 1
-  },
-  {
-   "fieldname": "month",
-   "fieldtype": "Int",
-   "in_list_view": 1,
-   "in_standard_filter": 1,
-   "label": "Month",
-   "reqd": 1
+   "label": "Salary Slip",
+   "options": "Salary Slip",
+   "reqd": 1,
+   "description": "S207 LD-14: idempotency keyed on Salary Slip — one Log row per Slip. Full-month re-runs skip Slips already logged by half-month runs."
   },
   {
    "fieldname": "employee",
@@ -56,12 +49,20 @@
   {
    "fieldname": "period_start",
    "fieldtype": "Date",
-   "label": "Period Start"
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Period Start",
+   "reqd": 1,
+   "description": "Informational (not unique) — copies the Salary Slip's start_date. Half-month cadence post-S207."
   },
   {
    "fieldname": "period_end",
    "fieldtype": "Date",
-   "label": "Period End"
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Period End",
+   "reqd": 1,
+   "description": "Informational (not unique) — copies the Salary Slip's end_date."
   },
   {
    "fieldname": "home_company",
@@ -127,7 +128,7 @@
   }
  ],
  "links": [],
- "modified": "2026-04-18 12:00:00.000000",
+ "modified": "2026-04-20 00:00:00.000000",
  "modified_by": "Administrator",
  "module": "HR",
  "name": "BEI Labor Allocation Log",

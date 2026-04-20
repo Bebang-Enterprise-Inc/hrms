@@ -1,0 +1,93 @@
+{
+  "run_timestamp_utc": "2026-04-19T23:46:25.495445Z",
+  "production_head_sha": "71ae0ea3e850531d0ea0ba80bf2a957e98aff529",
+  "cron_entries": [
+    {
+      "schedule": "0 6,10,14,18,22 * * *",
+      "target": "hrms.utils.weather_service.collect_all_weather"
+    },
+    {
+      "schedule": "0 0,6,12,18 * * *",
+      "target": "hrms.utils.adms_monitor.refresh_biometric_status"
+    },
+    {
+      "schedule": "0 23 * * *",
+      "target": "hrms.utils.biometric_alerts.send_daily_digest"
+    },
+    {
+      "schedule": "0 6 1 * *",
+      "target": "hrms.api.billing.scheduled_monthly_billing"
+    },
+    {
+      "schedule": "15 0 * * *",
+      "target": "hrms.api.erp_sync.scheduled_generate_morning_sync_health_report"
+    },
+    {
+      "schedule": "*/10 * * * *",
+      "target": "hrms.api.erp_sync.watch_store_inventory_shadow_sync_health"
+    },
+    {
+      "schedule": "42 16 * * *",
+      "target": "hrms.api.discount_abuse.scheduled_refresh_discount_benchmark_snapshots"
+    },
+    {
+      "schedule": "50 16 * * *",
+      "target": "hrms.api.discount_abuse.scheduled_generate_daily_discount_audit_report"
+    },
+    {
+      "schedule": "5 17 * * *",
+      "target": "hrms.api.discount_abuse.scheduled_send_critical_discount_alert_notifications"
+    },
+    {
+      "schedule": "0 16 * * *",
+      "target": "hrms.services.missing_punch_report.run_daily_missing_punch_report"
+    }
+  ],
+  "salary_structures_frequency": {
+    "Monthly": 4
+  },
+  "labor_allocation_log_columns": [
+    "name",
+    "creation",
+    "modified",
+    "modified_by",
+    "owner",
+    "docstatus",
+    "idx",
+    "year",
+    "month",
+    "employee",
+    "period_start",
+    "period_end",
+    "home_company",
+    "covered_companies",
+    "home_jes_json",
+    "covered_jes_json",
+    "total_allocated",
+    "shift_shares_json",
+    "allocated_on",
+    "allocated_by",
+    "_user_tags",
+    "_comments",
+    "_assign",
+    "_liked_by"
+  ],
+  "labor_allocation_log_unique_keys": [
+    "PRIMARY"
+  ],
+  "total_companies": 49,
+  "coverage_before_count": 45,
+  "coverage_incomplete_count": 4,
+  "uncovered_companies_fully_qualified": [
+    "ROBINSONS ANTIPOLO - BEBANG ENTERPRISE INC.",
+    "SM MANILA - BEBANG ENTERPRISE INC.",
+    "SM MEGAMALL - BEBANG ENTERPRISE INC.",
+    "SM SOUTHMALL - BEBANG ENTERPRISE INC."
+  ],
+  "uncovered_companies_all": [
+    "ROBINSONS ANTIPOLO - BEBANG ENTERPRISE INC.",
+    "SM MANILA - BEBANG ENTERPRISE INC.",
+    "SM MEGAMALL - BEBANG ENTERPRISE INC.",
+    "SM SOUTHMALL - BEBANG ENTERPRISE INC."
+  ]
+}

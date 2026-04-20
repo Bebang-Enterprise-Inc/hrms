@@ -1,0 +1,32 @@
+{
+  "structures": [
+    {
+      "name": "HO Staff - Regular",
+      "payroll_frequency": "Monthly",
+      "company": "BEBANG ENTERPRISE INC.",
+      "is_active": "Yes",
+      "modified": "2026-02-22 23:09:07"
+    },
+    {
+      "name": "S035 TEST HO Staff - Regular",
+      "payroll_frequency": "Monthly",
+      "company": "BEBANG ENTERPRISE INC.",
+      "is_active": "Yes",
+      "modified": "2026-03-13 02:53:07.447135"
+    },
+    {
+      "name": "S035 TEST Store Staff - Regular",
+      "payroll_frequency": "Monthly",
+      "company": "BEBANG ENTERPRISE INC.",
+      "is_active": "Yes",
+      "modified": "2026-03-13 02:53:06.901736"
+    },
+    {
+      "name": "Store Staff - Regular",
+      "payroll_frequency": "Monthly",
+      "company": "BEBANG ENTERPRISE INC.",
+      "is_active": "Yes",
+      "modified": "2026-02-22 23:09:07"
+    }
+  ]
+}

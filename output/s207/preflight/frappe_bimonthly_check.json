@@ -1,0 +1,13 @@
+{
+  "payroll_frequency_enum_options": [
+    "Monthly",
+    "Fortnightly",
+    "Bimonthly",
+    "Weekly",
+    "Daily"
+  ],
+  "bimonthly_accepted": true,
+  "distinct_values_in_use": [
+    "Monthly"
+  ]
+}

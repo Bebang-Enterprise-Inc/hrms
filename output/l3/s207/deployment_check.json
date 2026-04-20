@@ -1,0 +1,61 @@
+{
+  "s207_api": {
+    "present": false,
+    "error": "cannot import name 'preview_allocation' from 'hrms.api.labor_allocation' (/home/frappe/frappe-bench/apps/hrms/hrms/api/labor_allocation.py)"
+  },
+  "posting_date_helper": {
+    "present": false,
+    "error": "cannot import name 'posting_date_for_slip' from 'hrms.utils.labor_allocation' (/home/frappe/frappe-bench/apps/hrms/hrms/utils/labor_allocation.py)"
+  },
+  "labor_allocation_log_schema": {
+    "columns": [
+      "_assign",
+      "_comments",
+      "_liked_by",
+      "_user_tags",
+      "allocated_by",
+      "allocated_on",
+      "covered_companies",
+      "covered_jes_json",
+      "creation",
+      "docstatus",
+      "employee",
+      "home_company",
+      "home_jes_json",
+      "idx",
+      "modified",
+      "modified_by",
+      "month",
+      "name",
+      "owner",
+      "period_end",
+      "period_start",
+      "shift_shares_json",
+      "total_allocated",
+      "year"
+    ],
+    "unique_indexes": [
+      "PRIMARY"
+    ],
+    "year_column_dropped": false,
+    "month_column_dropped": false,
+    "slip_name_column_present": false,
+    "idx_slip_employee_present": false,
+    "idx_year_month_employee_absent": true
+  },
+  "salary_structures": {
+    "frequencies": {
+      "Bimonthly": 4
+    },
+    "all_bimonthly": true
+  },
+  "hooks_cron": {
+    "daily_0_22_targets": [],
+    "preview_scheduled_in_daily": false,
+    "old_monthly_cron_absent": true,
+    "old_monthly_cron_entries": [
+      "hrms.api.labor_allocation.preview_monthly_allocation_scheduled"
+    ]
+  },
+  "container_hrms_head": "error: Command '['git', '-C', '/home/frappe/frappe-bench/apps/hrms', 'rev-parse', 'HEAD']' returned non-zero exit status 128."
+}

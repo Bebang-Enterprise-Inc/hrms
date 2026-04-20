@@ -426,12 +426,14 @@ scheduler_events = {
 		],
 		# Monthly billing generation: 6 AM on 1st of each month
 		"0 6 1 * *": ["hrms.api.billing.scheduled_monthly_billing"],
-		# S206: monthly reliever labor cost-sharing preview.
-		# Runs first-of-month 06:00 PHT = 22:00 UTC prior day. Preview-only —
-		# emails Sam the prior-month report. Apply is manual via
-		# `docker exec -e S206_APPLY=1 ... post_monthly_allocation`.
-		"0 22 1 * *": [
-			"hrms.api.labor_allocation.preview_monthly_allocation_scheduled",
+		# S207 reliever-labor cost-sharing preview (Bimonthly cadence).
+		# Daily 22:00 UTC = 06:00 PHT. The function internally checks pht_date.day
+		# and no-ops unless it's 1 or 16 — fires twice a month giving Finance
+		# 9-10 days to validate before Bimonthly payroll runs (10th / 25th).
+		# Daily firing with Python day-guard is robust across all month lengths
+		# and DST. See LD-2 + LD-17 in the S207 plan.
+		"0 22 * * *": [
+			"hrms.api.labor_allocation.preview_scheduled",
 		],
 		# Morning sync health report: 8:15 AM PHT daily (00:15 UTC) after sync buffer
 		"15 0 * * *": [

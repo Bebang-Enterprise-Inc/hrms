@@ -1,36 +1,45 @@
-"""Whitelisted API for S206 reliever labor cost-sharing (Phase 3).
+"""Whitelisted API for BEI reliever labor cost-sharing (S206 + S207).
 
 Two endpoints:
 
-- ``preview_monthly_allocation(year, month)``
-    Dry-run. Returns planned paired JEs for every in-scope Salary Slip in the
-    period. No DB writes. Safe to call any time.
+- ``preview_allocation(period_start, period_end)``
+    Dry-run. Returns planned paired JEs for every in-scope Salary Slip whose
+    period overlaps [period_start, period_end]. No DB writes. Safe to call any
+    time. Accepts any date range — half-month for Bimonthly cadence, full
+    month for ad-hoc Q2 reporting.
 
-- ``post_monthly_allocation(year, month)``
+- ``post_allocation(period_start, period_end, confirm=False)``
     Apply path. Gated on ``S206_APPLY=1`` env var OR ``confirm=True`` kwarg.
-    For each in-scope slip: checks BEI Labor Allocation Log for duplicate
-    prevention (idempotency); creates paired JEs via
-    :func:`hrms.utils.labor_allocation.allocate_slip`; records Log row.
-    Per-slip savepoint — one bad slip does not kill the batch (DM-2).
+    Per-slip savepoint (DM-2). Idempotency keyed on ``slip_name`` (one Log row
+    per Salary Slip — LD-14): ad-hoc full-month runs see half-month runs'
+    Logs and skip them; no double-post.
 
-Requires: S206 on-demand account seeder already ran
-(hrms.on_demand.s206_seed_intercompany_accounts) + TP Policy signed by Finance.
+Phase ordering note: S207 Phase 1 replaces the S206 ``(year, month)`` API with
+this ``(period_start, period_end)`` form. There is no shim — CEO directive
+2026-04-19 ("I need long term solution that is sustainable"). The
+``preview_scheduled`` cron wrapper is installed in S207 Phase 5.
 
-Permission: Accounts Manager / CFO / System Manager for ``post_monthly_allocation``;
-additionally Accounts User can call ``preview_monthly_allocation``.
+Requires: S206 on-demand account seeder already ran on every in-scope Company
++ TP Policy v1.2 active (see docs/compliance/s206-transfer-pricing-policy.md).
+
+Permission: Accounts Manager / CFO / System Manager for ``post_allocation``;
+additionally Accounts User can call ``preview_allocation``.
 """
 
 from __future__ import annotations
 
-import calendar
 import json
 import os
-from datetime import date
+
+# Module-level datetime imports — function-local imports defeat unittest.mock
+# and freezegun, which S207 Phase 7 needs to test the preview_scheduled day
+# guard (LD-16). Keep these at the module top so tests can patch them.
+from datetime import date, datetime, timedelta, timezone
 
 import frappe
 from frappe import _
 
-from hrms.utils.labor_allocation import allocate_slip
+from hrms.utils.labor_allocation import allocate_slip, posting_date_for_slip
 from hrms.utils.sentry import set_backend_observability_context
 
 APPLY_ENV_VAR = "S206_APPLY"
@@ -39,6 +48,9 @@ LOG_DOCTYPE = "BEI Labor Allocation Log"
 POST_ROLES = {"Accounts Manager", "CFO", "System Manager"}
 PREVIEW_ROLES = POST_ROLES | {"Accounts User"}
 
+# Philippines Time offset — used by preview_scheduled day-guard.
+PHT = timezone(timedelta(hours=8))
+
 
 def _apply_mode(confirm: bool = False) -> bool:
 	if confirm:
@@ -46,11 +58,15 @@ def _apply_mode(confirm: bool = False) -> bool:
 	return os.environ.get(APPLY_ENV_VAR, "").strip() == "1"
 
 
-def _period_bounds(year: int, month: int) -> tuple[date, date]:
-	start = date(year, month, 1)
-	last_day = calendar.monthrange(year, month)[1]
-	end = date(year, month, last_day)
-	return start, end
+def _coerce_date(value) -> date:
+	"""Accept date / datetime / ISO string; return a ``date``."""
+	if isinstance(value, datetime):
+		return value.date()
+	if isinstance(value, date):
+		return value
+	if isinstance(value, str):
+		return date.fromisoformat(value[:10])
+	frappe.throw(_("S207 allocation: unparseable date value {0}").format(value))
 
 
 def _require_any_role(roles: set[str]) -> None:
@@ -62,10 +78,13 @@ def _require_any_role(roles: set[str]) -> None:
 		)
 
 
-def _in_scope_slip_names(start: date, end: date) -> list[str]:
-	"""Submitted Salary Slips whose period overlaps the month.
+def _in_scope_slip_names(period_start: date, period_end: date) -> list[str]:
+	"""Submitted Salary Slips whose period overlaps [period_start, period_end].
 
-	A slip is in-scope if its start_date <= period_end AND end_date >= period_start.
+	A slip is in-scope iff ``slip.start_date <= period_end`` AND
+	``slip.end_date >= period_start``. Matches S206 semantics; the caller
+	decides the period (half-month for Bimonthly cadence, full month for ad-hoc
+	Q2 reporting).
 	"""
 	rows = frappe.db.sql(
 		"""
@@ -76,36 +95,40 @@ def _in_scope_slip_names(start: date, end: date) -> list[str]:
 		  AND end_date >= %(start)s
 		ORDER BY employee, name
 		""",
-		{"start": start, "end": end},
+		{"start": period_start, "end": period_end},
 		as_dict=True,
 	)
 	return [r["name"] for r in rows]
 
 
-def _existing_log(year: int, month: int, employee: str) -> str | None:
-	return frappe.db.get_value(
-		LOG_DOCTYPE,
-		{"year": year, "month": month, "employee": employee},
-		"name",
-	)
+def _existing_log(slip_name: str) -> str | None:
+	"""LD-14: idempotency keyed on ``slip_name``, not period.
+
+	One Log row per Salary Slip — prevents double-posting when Sam runs ad-hoc
+	full-month queries (e.g. ``preview_allocation(2026-04-01, 2026-04-30)``)
+	after per-half-month runs (April 1-15, April 16-30). The full-month pass
+	iterates over the same Slips; each Slip already has a Log row and is
+	skipped as idempotent.
+	"""
+	return frappe.db.get_value(LOG_DOCTYPE, {"slip_name": slip_name}, "name")
 
 
 @frappe.whitelist()
-def preview_monthly_allocation(year: int | str, month: int | str) -> dict:
-	"""Dry-run: return planned paired JEs for every in-scope slip in the month.
+def preview_allocation(period_start, period_end) -> dict:
+	"""Dry-run: return planned paired JEs for every in-scope slip in the period.
 
 	Safe — no DB writes, no side effects.
 	"""
+	start = _coerce_date(period_start)
+	end = _coerce_date(period_end)
 	set_backend_observability_context(
 		module="finance",
-		action="preview_monthly_allocation",
+		action="preview_allocation",
 		mutation_type="read",
-		extras={"year": int(year), "month": int(month)},
+		extras={"period_start": str(start), "period_end": str(end)},
 	)
 	_require_any_role(PREVIEW_ROLES)
 
-	year_i, month_i = int(year), int(month)
-	start, end = _period_bounds(year_i, month_i)
 	slip_names = _in_scope_slip_names(start, end)
 
 	planned: list[dict] = []
@@ -124,7 +147,7 @@ def preview_monthly_allocation(year: int | str, month: int | str) -> dict:
 			planned.append(result)
 
 	return {
-		"period": {"year": year_i, "month": month_i, "start": str(start), "end": str(end)},
+		"period": {"start": str(start), "end": str(end)},
 		"total_slips": len(slip_names),
 		"planned_count": len(planned),
 		"skipped_count": len(skipped),
@@ -137,21 +160,20 @@ def preview_monthly_allocation(year: int | str, month: int | str) -> dict:
 
 
 @frappe.whitelist()
-def post_monthly_allocation(
-	year: int | str,
-	month: int | str,
-	confirm: bool | int | str = False,
-) -> dict:
-	"""Apply paired-JE allocation for every in-scope slip in the month.
+def post_allocation(period_start, period_end, confirm: bool | int | str = False) -> dict:
+	"""Apply paired-JE allocation for every in-scope slip in the period.
 
 	Gated by ``S206_APPLY=1`` env var OR ``confirm=True`` kwarg.
 	Per-slip savepoint; one bad slip does not kill the batch (DM-2).
+	Idempotent: Slips with an existing Log row are skipped (LD-14).
 	"""
+	start = _coerce_date(period_start)
+	end = _coerce_date(period_end)
 	set_backend_observability_context(
 		module="finance",
-		action="post_monthly_allocation",
+		action="post_allocation",
 		mutation_type="create",
-		extras={"year": int(year), "month": int(month)},
+		extras={"period_start": str(start), "period_end": str(end)},
 	)
 	_require_any_role(POST_ROLES)
 
@@ -160,13 +182,11 @@ def post_monthly_allocation(
 	if not _apply_mode(confirm=bool(confirm)):
 		frappe.throw(
 			_(
-				"S206 post_monthly_allocation requires S206_APPLY=1 env var "
-				"(or confirm=True kwarg). Use preview_monthly_allocation for dry-run."
+				"S207 post_allocation requires S206_APPLY=1 env var "
+				"(or confirm=True kwarg). Use preview_allocation for dry-run."
 			)
 		)
 
-	year_i, month_i = int(year), int(month)
-	start, end = _period_bounds(year_i, month_i)
 	slip_names = _in_scope_slip_names(start, end)
 
 	applied: list[dict] = []
@@ -174,38 +194,29 @@ def post_monthly_allocation(
 	skipped_other: list[dict] = []
 	errors: list[dict] = []
 
-	# Process each slip inside its own savepoint so one failure does not
-	# roll back already-applied slips.
 	for name in slip_names:
-		# Idempotency: peek at Log before doing anything
-		slip = frappe.db.get_value(
+		slip_info = frappe.db.get_value(
 			"Salary Slip",
 			name,
-			["employee"],
+			["employee", "start_date", "end_date"],
 			as_dict=True,
 		)
-		if not slip:
+		if not slip_info:
 			errors.append({"slip": name, "error": "Salary Slip not found"})
 			continue
-		if _existing_log(year_i, month_i, slip["employee"]):
-			skipped_idempotent.append({"slip": name, "employee": slip["employee"]})
+		if _existing_log(name):
+			skipped_idempotent.append({"slip": name, "employee": slip_info["employee"]})
 			continue
 
-		sp = f"s206_slip_{name.replace('-', '_')}"
+		sp = f"s207_slip_{name.replace('-', '_')}"
 		try:
 			frappe.db.savepoint(sp)
 			result = allocate_slip(name, dry_run=False)
 			if result["status"] == "skipped":
-				# Still write a no-op Log row so re-runs don't re-evaluate
-				_record_log(year_i, month_i, slip["employee"], result)
-				skipped_other.append(
-					{
-						"slip": name,
-						"reason": result.get("reason"),
-					}
-				)
+				_record_log(name, slip_info, result)
+				skipped_other.append({"slip": name, "reason": result.get("reason")})
 			elif result["status"] == "applied":
-				_record_log(year_i, month_i, slip["employee"], result)
+				_record_log(name, slip_info, result)
 				applied.append(result)
 			frappe.db.release_savepoint(sp)
 		except Exception as exc:
@@ -214,19 +225,17 @@ def post_monthly_allocation(
 			except Exception:
 				pass
 			frappe.log_error(
-				title=f"S206 post_monthly_allocation failed for slip {name}",
-				message=f"year={year_i}, month={month_i}, error={exc}",
+				title=f"S207 post_allocation failed for slip {name}",
+				message=f"period={start}..{end}, error={exc}",
 			)
 			errors.append({"slip": name, "error": str(exc)})
 
-	# Persist all successful per-slip allocations at batch end. Required
-	# because per-slip savepoints only provide rollback isolation — without
-	# this commit, a later unrelated exception could roll back the whole
-	# batch of already-applied JEs. Manual commit is intentional here.
-	frappe.db.commit()  # nosemgrep: frappe-manual-commit
+	# Batch commit — per-slip savepoints only give rollback isolation; without
+	# this commit a later unrelated exception could roll back the whole batch.
+	frappe.db.commit()  # nosemgrep: frappe-manual-commit -- intentional batch persist; see docstring
 
 	return {
-		"period": {"year": year_i, "month": month_i, "start": str(start), "end": str(end)},
+		"period": {"start": str(start), "end": str(end)},
 		"applied": applied,
 		"applied_count": len(applied),
 		"skipped_idempotent": skipped_idempotent,
@@ -238,12 +247,13 @@ def post_monthly_allocation(
 	}
 
 
-def _record_log(year: int, month: int, employee: str, result: dict) -> None:
-	"""Insert a BEI Labor Allocation Log row for this (year, month, employee).
+def _record_log(slip_name: str, slip_info: dict, result: dict) -> None:
+	"""Insert a BEI Labor Allocation Log row for this Salary Slip.
 
-	Stores ALL home JEs (one per covered Company) in home_jes_json. Earlier
-	version only stored the first pair's home_je, silently losing the rest
-	and breaking forensic traceability for multi-cover relievers.
+	LD-14: ``slip_name`` is the unique axis. ``period_start`` / ``period_end``
+	are informational — they match the slip's own period (not the API call's
+	period) so full-month and half-month API calls for the same slip converge
+	on identical Log row content.
 	"""
 	pairs = result.get("pairs", [])
 	home_jes = [p["home_je"] for p in pairs if p.get("home_je")]
@@ -254,16 +264,13 @@ def _record_log(year: int, month: int, employee: str, result: dict) -> None:
 	for p in pairs:
 		shares[p["covered_company"]] = p.get("share", 0)
 
-	start_date, end_date = _period_bounds(year, month)
-
 	log = frappe.get_doc(
 		{
 			"doctype": LOG_DOCTYPE,
-			"year": year,
-			"month": month,
-			"employee": employee,
-			"period_start": start_date,
-			"period_end": end_date,
+			"slip_name": slip_name,
+			"employee": slip_info["employee"],
+			"period_start": slip_info["start_date"],
+			"period_end": slip_info["end_date"],
 			"home_company": result.get("home_company"),
 			"covered_companies": json.dumps(covered_companies),
 			"home_jes_json": json.dumps(home_jes),
@@ -278,53 +285,80 @@ def _record_log(year: int, month: int, employee: str, result: dict) -> None:
 # --- Scheduled wrapper -----------------------------------------------------
 
 
-def preview_monthly_allocation_scheduled() -> None:
-	"""Cron wrapper: preview prior-month allocation and email the report.
+def preview_scheduled() -> None:
+	"""Cron wrapper: preview the just-closed half-period and email the report.
 
-	Registered in hooks.py scheduler_events.cron ``0 22 1 * *`` (first of month
-	at 06:00 PHT). See S206 plan Phase 5.
+	Registered in ``hrms/hooks.py`` scheduler_events.cron as ``"0 22 * * *"``
+	(daily 22:00 UTC = 06:00 PHT of the SAME PHT calendar day, since UTC+8
+	rolls us to the next date at UTC 22:00). The function is a no-op on
+	any PHT day whose ``day`` is not 1 or 16.
+
+	LD-17 rationale: cron fires at UTC 22:00. ``datetime.now(utc).astimezone(PHT)``
+	at fire time already gives us the TARGET PHT date — no ``+ timedelta(days=1)``
+	is needed. Adding a day = off-by-one; cron would never fire (3 independent
+	audits confirmed this with Python math).
+
+	Firing days:
+	  - PHT day 1  → period = 16-of-previous-month … end-of-previous-month
+	  - PHT day 16 → period = 1-of-current-month   … 15-of-current-month
+
+	Gives Finance 9-10 days to validate the preview before the Bimonthly
+	payroll runs (payouts on the 10th and 25th).
 	"""
-	from datetime import datetime
-
-	now = datetime.now()
-	# Prior month
-	year = now.year
-	month = now.month - 1
-	if month == 0:
-		month = 12
-		year -= 1
+	pht_now = datetime.now(timezone.utc).astimezone(PHT)
+	pht_date = pht_now.date()
+	if pht_date.day not in (1, 16):
+		return  # no-op on non-firing days
 
 	set_backend_observability_context(
 		module="finance",
-		action="preview_monthly_allocation_scheduled",
+		action="preview_scheduled",
 		mutation_type="read",
-		extras={"year": year, "month": month, "trigger": "cron"},
+		extras={"firing_pht_date": str(pht_date)},
 	)
 
+	# Derive period from the PHT date that just rolled over
+	if pht_date.day == 1:
+		# Firing PHT 1st -> preview second half of PREVIOUS month
+		prev_month_last = pht_date - timedelta(days=1)
+		period_start = prev_month_last.replace(day=16)
+		period_end = prev_month_last
+	else:
+		# Firing PHT 16th -> preview first half of CURRENT month
+		period_start = pht_date.replace(day=1)
+		period_end = pht_date.replace(day=15)
+
 	try:
-		report = preview_monthly_allocation(year, month)
+		report = preview_allocation(period_start, period_end)
 	except Exception as exc:
 		frappe.log_error(
-			title="S206 monthly preview cron failed",
-			message=str(exc),
+			title="S207 preview_scheduled failed",
+			message=f"period={period_start}..{period_end}, error={exc}",
 		)
 		return
 
-	# Email to CEO + Finance. CEO gate authorizes preview cron; Finance reviews
-	# for countersign on TP Policy before any `S206_APPLY=1` run.
-	# Future: make configurable via BEI Settings.s206_preview_recipients (CSV).
+	_email_preview(report, period_start, period_end)
+
+
+def _email_preview(report: dict, period_start: date, period_end: date) -> None:
+	"""Send the preview report to CEO + Finance.
+
+	Future: make recipients configurable via a BEI Settings single DocType
+	field ``s207_preview_recipients`` (CSV). Hard-coded for now so the first
+	Bimonthly preview delivers without extra schema work.
+	"""
 	recipients = ["sam@bebang.ph", "denise@bebang.ph"]
-	subject = f"S206 monthly allocation preview — {year:04d}-{month:02d}"
+	subject = f"S207 reliever-labor preview — {period_start} to {period_end}"
 	summary = (
 		f"Period: {report['period']['start']} to {report['period']['end']}\n"
 		f"Total Slips: {report['total_slips']}\n"
 		f"Planned allocations: {report['planned_count']}\n"
 		f"Skipped: {report['skipped_count']}\n"
 		f"Errors: {report['errors_count']}\n\n"
-		f"To apply:\n"
+		f"To apply (after Finance review):\n"
 		f"  docker exec -e S206_APPLY=1 $BACKEND bench --site hq.bebang.ph execute "
-		f"hrms.api.labor_allocation.post_monthly_allocation --kwargs "
-		f'\'{{"year": {year}, "month": {month}}}\''
+		f"hrms.api.labor_allocation.post_allocation --kwargs "
+		f"'{{\"period_start\":\"{period_start}\",\"period_end\":\"{period_end}\"}}'"
 	)
 	try:
 		frappe.sendmail(
@@ -335,6 +369,6 @@ def preview_monthly_allocation_scheduled() -> None:
 		)
 	except Exception as exc:
 		frappe.log_error(
-			title="S206 preview cron email failed",
+			title="S207 preview_scheduled email failed",
 			message=str(exc),
 		)

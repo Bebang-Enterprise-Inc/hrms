@@ -1,0 +1,31 @@
+{
+  "before": {
+    "Monthly": 4
+  },
+  "after": {
+    "Bimonthly": 4
+  },
+  "per_structure": [
+    {
+      "name": "HO Staff - Regular",
+      "payroll_frequency": "Bimonthly",
+      "company": "BEBANG ENTERPRISE INC."
+    },
+    {
+      "name": "S035 TEST HO Staff - Regular",
+      "payroll_frequency": "Bimonthly",
+      "company": "BEBANG ENTERPRISE INC."
+    },
+    {
+      "name": "S035 TEST Store Staff - Regular",
+      "payroll_frequency": "Bimonthly",
+      "company": "BEBANG ENTERPRISE INC."
+    },
+    {
+      "name": "Store Staff - Regular",
+      "payroll_frequency": "Bimonthly",
+      "company": "BEBANG ENTERPRISE INC."
+    }
+  ],
+  "intended_target_frequency": "Bimonthly"
+}

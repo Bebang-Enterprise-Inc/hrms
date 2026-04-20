@@ -1,0 +1,106 @@
+{
+  "ROBINSONS ANTIPOLO - BEBANG ENTERPRISE INC.": {
+    "abbr": "ROA",
+    "default_currency": "PHP",
+    "accounts": [
+      {
+        "name": "2104000 - INTERCOMPANY PAYABLES - ROA",
+        "account_name": "INTERCOMPANY PAYABLES",
+        "account_number": "2104000",
+        "root_type": "Liability",
+        "parent_account": null,
+        "is_group": 1,
+        "company": "ROBINSONS ANTIPOLO - BEBANG ENTERPRISE INC.",
+        "account_currency": "PHP"
+      },
+      {
+        "name": "2104200 - DUE TO BFC - ROA",
+        "account_name": "DUE TO BFC",
+        "account_number": "2104200",
+        "root_type": "Liability",
+        "parent_account": "2104000 - INTERCOMPANY PAYABLES - ROA",
+        "is_group": 0,
+        "company": "ROBINSONS ANTIPOLO - BEBANG ENTERPRISE INC.",
+        "account_currency": "PHP"
+      }
+    ]
+  },
+  "SM MANILA - BEBANG ENTERPRISE INC.": {
+    "abbr": "SMM",
+    "default_currency": "PHP",
+    "accounts": [
+      {
+        "name": "2104000 - INTERCOMPANY PAYABLES - SMM",
+        "account_name": "INTERCOMPANY PAYABLES",
+        "account_number": "2104000",
+        "root_type": "Liability",
+        "parent_account": null,
+        "is_group": 1,
+        "company": "SM MANILA - BEBANG ENTERPRISE INC.",
+        "account_currency": "PHP"
+      },
+      {
+        "name": "2104200 - DUE TO BFC - SMM",
+        "account_name": "DUE TO BFC",
+        "account_number": "2104200",
+        "root_type": "Liability",
+        "parent_account": "2104000 - INTERCOMPANY PAYABLES - SMM",
+        "is_group": 0,
+        "company": "SM MANILA - BEBANG ENTERPRISE INC.",
+        "account_currency": "PHP"
+      }
+    ]
+  },
+  "SM MEGAMALL - BEBANG ENTERPRISE INC.": {
+    "abbr": "SMMM",
+    "default_currency": "PHP",
+    "accounts": [
+      {
+        "name": "2104000 - INTERCOMPANY PAYABLES - SMMM",
+        "account_name": "INTERCOMPANY PAYABLES",
+        "account_number": "2104000",
+        "root_type": "Liability",
+        "parent_account": null,
+        "is_group": 1,
+        "company": "SM MEGAMALL - BEBANG ENTERPRISE INC.",
+        "account_currency": "PHP"
+      },
+      {
+        "name": "2104200 - DUE TO BFC - SMMM",
+        "account_name": "DUE TO BFC",
+        "account_number": "2104200",
+        "root_type": "Liability",
+        "parent_account": "2104000 - INTERCOMPANY PAYABLES - SMMM",
+        "is_group": 0,
+        "company": "SM MEGAMALL - BEBANG ENTERPRISE INC.",
+        "account_currency": "PHP"
+      }
+    ]
+  },
+  "SM SOUTHMALL - BEBANG ENTERPRISE INC.": {
+    "abbr": "SMS",
+    "default_currency": "PHP",
+    "accounts": [
+      {
+        "name": "2104000 - INTERCOMPANY PAYABLES - SMS",
+        "account_name": "INTERCOMPANY PAYABLES",
+        "account_number": "2104000",
+        "root_type": "Liability",
+        "parent_account": null,
+        "is_group": 1,
+        "company": "SM SOUTHMALL - BEBANG ENTERPRISE INC.",
+        "account_currency": "PHP"
+      },
+      {
+        "name": "2104200 - DUE TO BFC - SMS",
+        "account_name": "DUE TO BFC",
+        "account_number": "2104200",
+        "root_type": "Liability",
+        "parent_account": "2104000 - INTERCOMPANY PAYABLES - SMS",
+        "is_group": 0,
+        "company": "SM SOUTHMALL - BEBANG ENTERPRISE INC.",
+        "account_currency": "PHP"
+      }
+    ]
+  }
+}

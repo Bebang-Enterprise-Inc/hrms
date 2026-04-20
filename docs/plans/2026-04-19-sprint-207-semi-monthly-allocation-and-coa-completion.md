@@ -3,7 +3,27 @@ sprint: S207
 title: S206 Long-Term Completion — Bimonthly Cadence + Salary Structure Alignment + 4-Children COA Finish
 branch: s207-semi-monthly-allocation-and-coa-completion
 base: production
-status: GO
+status: DEPLOYED_PENDING_L3
+deployed_date: 2026-04-20
+backend_pr: TBD-pending-PR-creation
+execution_summary: |
+  All 8 phases delivered 2026-04-20 via 8 atomic commits on branch
+  s207-semi-monthly-allocation-and-coa-completion (pushed to remote). Built
+  inside worktree F:/Dropbox/Projects/BEI-ERP-s207 after a mid-session
+  concurrent-branch-switch incident (the /merge-bei-erp agent was rebasing
+  in the main repo). Phase 4 Salary Structure bulk-edit (4/4 Monthly ->
+  Bimonthly) and Phase 6 4-children COA seed (49/49 stores complete) are
+  already applied to live production data via SSM. Canonical postcheck
+  matches precheck exactly (zero new violations; only the pre-existing
+  BILLING_CUST_TIN_EMPTY on ORTIGAS GREENHILLS remains). L3 harness
+  scripts/s207_verify_all.py passes 5/5 executable checks (day-guard math
+  L3-3/4/5, Structures L3-8, coverage L3-9); L3-1/2/6/7 skip pending merge
+  + deploy (they require the new preview_allocation / post_allocation
+  endpoints on the container). TP Policy v1.2 ships with CEO approval
+  artifact reference. Agent stops after PR creation; Sam merges + deploys;
+  a fresh L3 session reruns the verify harness post-deploy to flip status
+  to COMPLETED.
+l3_result: "5 PASS, 4 SKIP (pending merge+deploy) — see output/l3/s207/VERIFICATION_SUMMARY.md"
 plan_version: v5
 canonical_model_reference: docs/STORE_COMPANY_CANONICAL.md
 canonical_preflight: required

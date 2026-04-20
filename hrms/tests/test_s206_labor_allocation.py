@@ -36,12 +36,14 @@ class BuildPairedJEsTests(unittest.TestCase):
 	"""
 
 	def setUp(self):
+		# Second-half slip per S207 Bimonthly cadence. posting_date_for_slip(April 30)
+		# returns May 10 (10th of next month, CFO PNL-001 payout-date rule).
 		self.slip = MagicMock()
 		self.slip.name = "SS-2026-04-001"
 		self.slip.employee = "BEI-EMP-2026-00123"
-		self.slip.start_date = date(2026, 4, 1)
+		self.slip.start_date = date(2026, 4, 16)
 		self.slip.end_date = date(2026, 4, 30)
-		self.slip.gross_pay = 30000.0
+		self.slip.gross_pay = 15000.0
 
 		self.mock_home_accts = {
 			"salaries_expense": "5220001 - Salaries and Wages - BEI",
@@ -64,7 +66,7 @@ class BuildPairedJEsTests(unittest.TestCase):
 			"internal_supplier": COVERED_INTERNAL_SUPPLIER,
 		}
 
-	def _call(self, amount=9000.0, share=0.3):
+	def _call(self, amount=4500.0, share=0.3):
 		def fake_accts(company):
 			if "ENTERPRISE" in company and "SM" not in company:
 				return self.mock_home_accts
@@ -92,15 +94,20 @@ class BuildPairedJEsTests(unittest.TestCase):
 		self.assertEqual(home["doctype"], "Journal Entry")
 		self.assertEqual(home["voucher_type"], INTER_COMPANY_VOUCHER_TYPE)
 		self.assertEqual(home["company"], "BEBANG ENTERPRISE INC.")
-		self.assertEqual(home["posting_date"], date(2026, 4, 30))
-		self.assertIn("S206 cost-sharing recharge", home["user_remark"])
+		# S207 P3: posting_date is the payout date (CFO PNL-001), not the slip end_date.
+		# Slip ends 2026-04-30 (second half) -> payout 2026-05-10 -> April cost hits May P&L wait,
+		# re-reading PNL-001: "billed to the P&L of the month PAID". Second half of April paid
+		# May 10 -> expense posts to May. posting_date_for_slip(date(2026,4,30)) -> date(2026,5,10).
+		self.assertEqual(home["posting_date"], date(2026, 5, 10))
+		self.assertIn("cost-sharing recharge", home["user_remark"])
 		self.assertIn("BEI-EMP-2026-00123", home["user_remark"])
+		self.assertIn("posting_date=2026-05-10", home["user_remark"])
 		self.assertEqual(len(home["accounts"]), 2)
 
 	def test_home_je_salaries_row_is_credit_with_employee_party(self):
-		home, _covered = self._call(amount=9000.0)
+		home, _covered = self._call(amount=4500.0)
 		salaries_row = next(r for r in home["accounts"] if "Salaries" in r["account"])
-		self.assertEqual(salaries_row["credit_in_account_currency"], 9000.0)
+		self.assertEqual(salaries_row["credit_in_account_currency"], 4500.0)
 		self.assertNotIn("debit_in_account_currency", salaries_row)
 		self.assertEqual(salaries_row["party_type"], "Employee")
 		self.assertEqual(salaries_row["party"], "BEI-EMP-2026-00123")
@@ -109,9 +116,9 @@ class BuildPairedJEsTests(unittest.TestCase):
 		self.assertEqual(salaries_row["reference_name"], "SS-2026-04-001")
 
 	def test_home_je_due_from_row_is_debit_with_customer_party(self):
-		home, _covered = self._call(amount=9000.0)
+		home, _covered = self._call(amount=4500.0)
 		due_from_row = next(r for r in home["accounts"] if "DUE FROM" in r["account"])
-		self.assertEqual(due_from_row["debit_in_account_currency"], 9000.0)
+		self.assertEqual(due_from_row["debit_in_account_currency"], 4500.0)
 		self.assertNotIn("credit_in_account_currency", due_from_row)
 		self.assertEqual(due_from_row["party_type"], "Customer")
 		# party = internal Customer representing the COVERED Company
@@ -125,17 +132,17 @@ class BuildPairedJEsTests(unittest.TestCase):
 		self.assertEqual(len(covered["accounts"]), 2)
 
 	def test_covered_je_salaries_row_is_debit_with_employee_party(self):
-		_home, covered = self._call(amount=9000.0)
+		_home, covered = self._call(amount=4500.0)
 		salaries_row = next(r for r in covered["accounts"] if "Salaries" in r["account"])
-		self.assertEqual(salaries_row["debit_in_account_currency"], 9000.0)
+		self.assertEqual(salaries_row["debit_in_account_currency"], 4500.0)
 		self.assertEqual(salaries_row["party_type"], "Employee")
 		self.assertEqual(salaries_row["party"], "BEI-EMP-2026-00123")
 		self.assertEqual(salaries_row["cost_center"], "Main - SMMM")
 
 	def test_covered_je_due_to_row_is_credit_with_supplier_party(self):
-		_home, covered = self._call(amount=9000.0)
+		_home, covered = self._call(amount=4500.0)
 		due_to_row = next(r for r in covered["accounts"] if "DUE TO" in r["account"])
-		self.assertEqual(due_to_row["credit_in_account_currency"], 9000.0)
+		self.assertEqual(due_to_row["credit_in_account_currency"], 4500.0)
 		self.assertEqual(due_to_row["party_type"], "Supplier")
 		# party = internal Supplier representing the HOME Company
 		self.assertEqual(due_to_row["party"], HOME_INTERNAL_SUPPLIER)
@@ -143,7 +150,7 @@ class BuildPairedJEsTests(unittest.TestCase):
 
 	def test_amounts_balance_across_pair(self):
 		"""DR total == CR total per JE, and amounts match between home/covered."""
-		home, covered = self._call(amount=9000.0)
+		home, covered = self._call(amount=4500.0)
 		home_dr = sum(r.get("debit_in_account_currency", 0) for r in home["accounts"])
 		home_cr = sum(r.get("credit_in_account_currency", 0) for r in home["accounts"])
 		covered_dr = sum(r.get("debit_in_account_currency", 0) for r in covered["accounts"])
@@ -154,7 +161,7 @@ class BuildPairedJEsTests(unittest.TestCase):
 
 	def test_no_party_type_company_anywhere(self):
 		"""Regression: party_type='Company' is invalid on ERPNext v15 Receivable/Payable rows."""
-		home, covered = self._call(amount=9000.0)
+		home, covered = self._call(amount=4500.0)
 		for je_label, je in (("home", home), ("covered", covered)):
 			for row in je["accounts"]:
 				self.assertNotEqual(
