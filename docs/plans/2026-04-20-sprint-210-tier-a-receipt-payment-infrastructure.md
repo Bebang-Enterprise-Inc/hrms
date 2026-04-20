@@ -2,7 +2,7 @@
 sprint_id: S210
 sprint_display: Sprint 210
 branch: s210-tier-a-receipt-payment-infrastructure
-pr: TBD
+pr: "https://github.com/Bebang-Enterprise-Inc/hrms/pull/649"
 status: COMPLETED
 created_date: 2026-04-20
 completed_date: 2026-04-20

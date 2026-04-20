@@ -2,7 +2,7 @@
   "sprint": "S210",
   "plan": "docs/plans/2026-04-20-sprint-210-tier-a-receipt-payment-infrastructure.md",
   "branch": "s210-tier-a-receipt-payment-infrastructure",
-  "pr": "TBD",
+  "pr": "https://github.com/Bebang-Enterprise-Inc/hrms/pull/649",
   "status": "COMPLETED",
   "phase_0_complete": true,
   "phase_1_complete": true,
