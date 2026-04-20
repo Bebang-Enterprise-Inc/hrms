@@ -578,3 +578,267 @@ This sprint is intended for autonomous end-to-end execution EXCEPT for the Phase
 ---
 
 *Plan authored 2026-04-20 (Monday) PHT by S209 L3 closeout agent after Sam's feedback on wasted R2/R3 sweeps. All factual claims trace to S209 evidence files or live hrms source. Next action: create plan PR and wait for user approval.*
+
+---
+
+# Appendix A — Cold-Start Gap Patch (added after cold-start audit)
+
+Seven gaps were found in the original plan body. This appendix patches them with concrete, grep-verified facts from live source.
+
+## A.1 DEFECT-1 premise correction — NOT a silent swallow
+
+**Original claim:** `_create_mr_for_store_order` swallows exceptions silently, causing 14 orders to have no MR.
+
+**Grounded reality (verified 2026-04-20 against `hrms/api/store.py`):**
+
+```python
+# hrms/api/store.py lines 3940-3950
+        mr.submit()
+        frappe.db.release_savepoint("create_mr_for_store_order")
+        return mr.name
+    except Exception as e:
+        frappe.db.rollback(save_point="create_mr_for_store_order")
+        frappe.log_error(
+            title=f"MR Creation Error for Store Order {order.name}",
+            message=str(e),
+        )
+        # S163 audit fix: do NOT swallow — raise so callers see real error
+        raise
+```
+
+The re-raise is **already present** (since S163 audit fix). The REAL defect is one of:
+
+1. **REST commit-lag race.** `mr.submit()` fires `frappe.db.commit()` via Frappe's default submit hook. The whitelist transaction ALSO commits at function return. But the REST API query from the test hits a MariaDB read replica (or its own connection) that hasn't seen the commit yet. 30s poll from S209 R2 may have been insufficient under system load.
+2. **My post-hoc "no MR" probe was wrong.** Cleanup in S209 R1 deleted MRs via `frappe.delete_doc("Material Request", name, force=1)`. When I later queried "does MR exist for order 00340?", the MR had been deleted — but it DID exist during the test window.
+
+**Revised DEFECT-1 fix (replaces Phase 1 P1-T1/T2 in the main plan):**
+
+1. **Keep the re-raise (no change — it's already correct).**
+2. **Add an explicit `frappe.db.commit()` after `mr.submit()`** to force the commit visible to the read replica before the whitelist returns. This is defensive: it guarantees that by the time the HTTP response returns to the frontend, MariaDB's commit log is synced and any subsequent REST GET will see the row.
+3. **Add structured logging** to `_create_mr_for_store_order` that prints (via `frappe.logger`) the elapsed ms for insert + submit, so next sweep's monitor can fingerprint "slow MR creation" vs "MR creation failure".
+4. **Extend `assertMRCreatedForOrder` poll timeout to 60s** (was 30s from S209 R2) AND query with `fetch("/api/method/frappe.client.get_list", ...)` using `limit=1 & order_by=creation desc` — NOT `/api/resource/Material%20Request?filters=...` which has historically suffered from child-table filter quirks.
+
+**Exact patch:**
+
+```python
+# hrms/api/store.py — inside _create_mr_for_store_order, after mr.submit():
+mr.submit()
+frappe.db.release_savepoint("create_mr_for_store_order")
+frappe.db.commit()  # S212 DEFECT-1 fix: force commit visibility before whitelist return
+return mr.name
+```
+
+**Test file pattern (cite):** copy the structure from `hrms/tests/test_returns_consistency_s10.py` (pure-Python unittest with `_FakeFrappe` mock). Path pattern: `hrms/tests/test_s212_mr_create_surface.py`.
+
+## A.2 DEFECT-2 — SI qty is set at DISPATCH time, not WR on_submit
+
+**Original claim:** "Patch WR `on_submit` to compute SI qty from accepted qty."
+
+**Grounded reality (verified 2026-04-20 against `hrms/api/warehouse.py` + `hrms/api/commissary.py`):**
+
+- **SI is created at DISPATCH time** as a Draft (docstatus=0) via `build_bki_store_sale_invoice` in `hrms/api/commissary.py:973` — invoked from `hrms/api/warehouse.py:1595-1613` inside the SE-submit hook.
+- **SI qty is set from `stock_entry.items[i].qty`** at that moment (dispatched qty) — NOT from WR accepted qty, because WR doesn't exist yet and no accept has happened.
+- **WR `on_submit` only SUBMITS the Draft SI** (docstatus 0→1) via `_submit_dispatch_draft_si(dispatch_se_name, receiving_name)` in `hrms/api/warehouse.py:974-1031`. It does NOT adjust item qtys.
+
+**Revised DEFECT-2 fix (replaces Phase 2 P2-T1 in the main plan):**
+
+Patch `_submit_dispatch_draft_si` in `hrms/api/warehouse.py` at line ~1011 (just before `si_doc.submit()`) to reconcile each SI item's qty against the WR's accepted_qty:
+
+```python
+# hrms/api/warehouse.py — inside _submit_dispatch_draft_si, before si_doc.submit():
+# S212 DEFECT-2: reconcile SI item qty against WR accepted qty.
+# On short-receive (accepted < dispatched), drop the SI qty. On full-receive
+# (accepted == dispatched), this is a no-op.
+wr_doc = frappe.get_doc("BEI Warehouse Receiving", receiving_name)
+accepted_by_item: dict[str, float] = {}
+for wr_row in wr_doc.items or []:
+    code = wr_row.item_code
+    accepted_by_item[code] = accepted_by_item.get(code, 0.0) + flt(wr_row.accepted_qty or 0)
+
+total_adjust = 0
+for si_row in si_doc.items or []:
+    accepted = flt(accepted_by_item.get(si_row.item_code, si_row.qty))
+    if accepted < flt(si_row.qty):
+        si_row.qty = accepted
+        si_row.amount = flt(si_row.qty) * flt(si_row.rate)
+        total_adjust += 1
+if total_adjust:
+    si_doc.run_method("calculate_taxes_and_totals")
+    frappe.logger().info(
+        f"S212 DEFECT-2: reconciled {total_adjust} SI lines for WR {wr_doc.name}"
+    )
+```
+
+**Unit tests:** cover (a) full-receive (accepted == dispatched) → no qty change; (b) partial-receive (accepted = 8 < dispatched = 10) → SI qty drops to 8 and amount recomputed.
+
+## A.3 DEFECT-3 — Fiscal Year 2026 link script exact invocation
+
+Use the S209-proven SSM + gzip+base64 pattern. Idempotent `append_if_missing` loop:
+
+```python
+# scripts/s212_link_stores_to_fy.py — core logic inside SSM subprocess
+fy = frappe.get_doc("Fiscal Year", "2026")
+existing = {c.company for c in fy.companies}
+stores = frappe.db.sql(
+    """SELECT name FROM `tabCompany`
+       WHERE entity_category = 'Store'
+         AND (operational_status IS NULL OR operational_status NOT IN ('Permanently Closed','Dormant'))
+       ORDER BY name""",
+    as_dict=True,
+)
+added = []
+for s in stores:
+    if s["name"] not in existing:
+        fy.append("companies", {"company": s["name"]})
+        added.append(s["name"])
+if added:
+    fy.save(ignore_permissions=True)
+    frappe.db.commit()
+print(json.dumps({"total_stores": len(stores), "added": len(added), "already_linked": len(stores) - len(added)}))
+```
+
+S209 already handled this pattern for SM TANZA + AYALA VERMOSA during session transcript.
+
+## A.4 Monitor fingerprint regex (exact pattern)
+
+```python
+# scripts/s212_sweep_monitor.py
+import re
+
+# Playwright error lines look like:
+#   Error: Material Request for order BEI-ORD-2026-00340 ...
+#   Error: DispatchPage: dispatch did not register for MAT-MR-2026-00207 within 30s ...
+FINGERPRINT_EXTRACT = re.compile(r"Error:\s*(.+?)(?:\s+at\s+|$)", re.DOTALL)
+
+# Normalize docnames so different orders/MRs bucket together:
+DOCNAME_PATTERNS = [
+    (re.compile(r"BEI-ORD-\d{4}-\d{5}"), "<ORDER>"),
+    (re.compile(r"MAT-MR-\d{4}-\d{5}"), "<MR>"),
+    (re.compile(r"MAT-STE-\d{4}-\d{5}"), "<SE>"),
+    (re.compile(r"BEI-WHR-\d{4}-\d{5}"), "<WR>"),
+    (re.compile(r"ACC-SINV-\d{4}-\d{5}"), "<SI>"),
+]
+
+def fingerprint(error_line: str) -> str:
+    """Return a normalized error fingerprint for bucket counting."""
+    m = FINGERPRINT_EXTRACT.search(error_line)
+    raw = (m.group(1) if m else error_line).strip()[:200]
+    for pat, repl in DOCNAME_PATTERNS:
+        raw = pat.sub(repl, raw)
+    return raw
+```
+
+## A.5 Windows vs Unix PID kill (exact code)
+
+```python
+# scripts/s212_sweep_monitor.py
+import os
+import sys
+import signal
+import subprocess
+
+def kill_sweep_pid(pid: int, reason: str) -> None:
+    """Kill a Playwright process + all its children. Windows uses taskkill /T."""
+    if sys.platform == "win32":
+        # /T kills the process tree (Chromium children)
+        # /F forces termination
+        subprocess.run(
+            ["taskkill", "/PID", str(pid), "/T", "/F"],
+            check=False,
+            capture_output=True,
+        )
+    else:
+        try:
+            # Negative PID means kill the process group (npx + node + chromium)
+            os.killpg(os.getpgid(pid), signal.SIGTERM)
+        except (ProcessLookupError, PermissionError):
+            try:
+                os.kill(pid, signal.SIGTERM)
+            except ProcessLookupError:
+                pass
+    # Log the decision
+    print(f"[S212 monitor] SIGTERM sent to PID {pid}: {reason}")
+```
+
+Launcher must capture the PID into `--pid-file` immediately after spawn:
+
+```python
+# scripts/s212_launch_sweep.py (excerpt)
+import subprocess, pathlib, sys
+
+pid_file = pathlib.Path(sys.argv[sys.argv.index("--pid-file")+1])
+log_file = pathlib.Path(sys.argv[sys.argv.index("--log")+1])
+
+# On Unix, start_new_session=True creates a new process group (for killpg)
+# On Windows, creationflags=CREATE_NEW_PROCESS_GROUP is the equivalent
+kwargs = {"stdout": open(log_file, "w"), "stderr": subprocess.STDOUT}
+if sys.platform == "win32":
+    kwargs["creationflags"] = subprocess.CREATE_NEW_PROCESS_GROUP
+else:
+    kwargs["start_new_session"] = True
+
+proc = subprocess.Popen(
+    ["npx", "playwright", "test", "tests/e2e/specs/s209-all-stores.spec.ts",
+     "--reporter=line", "--timeout=600000", "--retries=0"],
+    **kwargs,
+)
+pid_file.write_text(str(proc.pid))
+proc.wait()
+```
+
+## A.6 Env var prelude for Phase 6 sweep (copy exact from S209)
+
+```bash
+# Phase 6 sweep launch env vars (copy verbatim from S209 evidence)
+cd F:/Dropbox/Projects/bei-tasks
+FRAPPE_API_KEY=$(doppler secrets get FRAPPE_API_KEY --plain --project bei-erp --config dev) \
+FRAPPE_API_SECRET=$(doppler secrets get FRAPPE_API_SECRET --plain --project bei-erp --config dev) \
+BEI_ERP_ROOT=F:/Dropbox/Projects/BEI-ERP \
+S209_EVIDENCE_ROOT=F:/Dropbox/Projects/BEI-ERP/output/l3/s212 \
+EVIDENCE_ROOT=F:/Dropbox/Projects/BEI-ERP/output/l3/s212 \
+python F:/Dropbox/Projects/BEI-ERP/scripts/s212_launch_sweep.py \
+  --spec tests/e2e/specs/s209-all-stores.spec.ts \
+  --log F:/Dropbox/Projects/BEI-ERP/output/l3/s212/sweep_full_run.log \
+  --pid-file F:/Dropbox/Projects/BEI-ERP/output/l3/s212/sweep.pid \
+  --ledger F:/Dropbox/Projects/BEI-ERP/output/l3/s212/sweep_ledger.json \
+  --decision-log F:/Dropbox/Projects/BEI-ERP/output/l3/s212/monitor_decisions.log \
+  --kill-same-fingerprint 3 \
+  --kill-pass-rate-below 0.5 \
+  --kill-pass-rate-after-n 10
+```
+
+**Note:** `S209_EVIDENCE_ROOT` is the env var the existing spec reads (it's backwards-compatible naming even though we're in S212). Set both `S209_EVIDENCE_ROOT` AND `EVIDENCE_ROOT` to the S212 path so the spec writes to `output/l3/s212/` instead of `output/l3/s209/`.
+
+## A.7 Existing pytest pattern to copy
+
+`hrms/tests/` contains many `test_*.py` modules. Copy the `_FakeFrappe` mock pattern from `hrms/tests/test_returns_consistency_s10.py` (lines 1-30) — it lets you unit-test Frappe-aware code without a live MariaDB.
+
+Run via:
+```bash
+# Option A: pure pytest (no Frappe runtime)
+cd F:/Dropbox/Projects/BEI-ERP && python -m pytest hrms/tests/test_s212_mr_create_surface.py -v
+
+# Option B: bench run-tests (inside SSM, against real Frappe site)
+# Use the same SSM pattern as scripts/s209_generate_fixture.py:
+bench --site hq.bebang.ph run-tests --module hrms.tests.test_s212_mr_create_surface --verbose
+```
+
+**Recommendation:** write Phase 1 + Phase 2 tests with the `_FakeFrappe` pattern (pure pytest, fast, runs locally without SSM). Skip Option B unless something subtle needs live-Frappe integration.
+
+---
+
+## Appendix B — Gap-patch changelog
+
+Gaps addressed in this appendix (cross-reference with Sam's cold-start audit):
+
+| Gap | Fixed in |
+|---|---|
+| DEFECT-1 premise wrong (re-raise already there) | A.1 — real defect is commit-lag race, fix = add `frappe.db.commit()` + longer poll |
+| DEFECT-2 helper name guessed | A.2 — actual function is `_submit_dispatch_draft_si` at `hrms/api/warehouse.py:974`; SI is built at DISPATCH time via `build_bki_store_sale_invoice` at `hrms/api/commissary.py:973` |
+| MR-create swallow line numbers | A.1 — block is `hrms/api/store.py:3940-3950`, re-raise already present |
+| Monitor fingerprint regex | A.4 — exact regex + DOCNAME_PATTERNS list |
+| Windows vs Unix kill | A.5 — taskkill /T + os.killpg (full Python) |
+| Env var prelude | A.6 — copied verbatim from S209 |
+| Pytest pattern | A.7 — `test_returns_consistency_s10.py` as template; both pure pytest + bench run-tests invocations shown |
+
+Appendix is authoritative for the affected tasks. The main plan body above is preserved for historical traceability; executing agents should use THIS appendix's patches for DEFECT-1 + DEFECT-2 over the main-body versions.
