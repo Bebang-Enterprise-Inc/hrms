@@ -1,27 +1,648 @@
 {
   "success": [
     {
+      "doctype": "BEI Warehouse Receiving",
+      "name": "BEI-WHR-2026-00090",
+      "action": "deleted_draft"
+    },
+    {
+      "doctype": "BEI Warehouse Receiving",
+      "name": "BEI-WHR-2026-00089",
+      "action": "deleted_draft"
+    },
+    {
+      "doctype": "BEI Warehouse Receiving",
+      "name": "BEI-WHR-2026-00088",
+      "action": "deleted_draft"
+    },
+    {
+      "doctype": "BEI Warehouse Receiving",
+      "name": "BEI-WHR-2026-00087",
+      "action": "deleted_draft"
+    },
+    {
+      "doctype": "BEI Warehouse Receiving",
+      "name": "BEI-WHR-2026-00086",
+      "action": "deleted_draft"
+    },
+    {
+      "doctype": "BEI Warehouse Receiving",
+      "name": "BEI-WHR-2026-00085",
+      "action": "deleted_draft"
+    },
+    {
+      "doctype": "BEI Warehouse Receiving",
+      "name": "BEI-WHR-2026-00084",
+      "action": "deleted_draft"
+    },
+    {
+      "doctype": "BEI Warehouse Receiving",
+      "name": "BEI-WHR-2026-00083",
+      "action": "deleted_draft"
+    },
+    {
+      "doctype": "BEI Warehouse Receiving",
+      "name": "BEI-WHR-2026-00082",
+      "action": "deleted_draft"
+    },
+    {
+      "doctype": "BEI Warehouse Receiving",
+      "name": "BEI-WHR-2026-00081",
+      "action": "deleted_draft"
+    },
+    {
+      "doctype": "BEI Warehouse Receiving",
+      "name": "BEI-WHR-2026-00080",
+      "action": "deleted_draft"
+    },
+    {
+      "doctype": "BEI Warehouse Receiving",
+      "name": "BEI-WHR-2026-00079",
+      "action": "deleted_draft"
+    },
+    {
+      "doctype": "BEI Warehouse Receiving",
+      "name": "BEI-WHR-2026-00078",
+      "action": "deleted_draft"
+    },
+    {
+      "doctype": "BEI Warehouse Receiving",
+      "name": "BEI-WHR-2026-00077",
+      "action": "deleted_draft"
+    },
+    {
+      "doctype": "BEI Warehouse Receiving",
+      "name": "BEI-WHR-2026-00076",
+      "action": "deleted_draft"
+    },
+    {
+      "doctype": "BEI Warehouse Receiving",
+      "name": "BEI-WHR-2026-00074",
+      "action": "deleted_draft"
+    },
+    {
+      "doctype": "BEI Warehouse Receiving",
+      "name": "BEI-WHR-2026-00073",
+      "action": "deleted_draft"
+    },
+    {
+      "doctype": "BEI Warehouse Receiving",
+      "name": "BEI-WHR-2026-00072",
+      "action": "deleted_draft"
+    },
+    {
+      "doctype": "BEI Warehouse Receiving",
+      "name": "BEI-WHR-2026-00071",
+      "action": "deleted_draft"
+    },
+    {
+      "doctype": "BEI Warehouse Receiving",
+      "name": "BEI-WHR-2026-00070",
+      "action": "deleted_draft"
+    },
+    {
+      "doctype": "BEI Warehouse Receiving",
+      "name": "BEI-WHR-2026-00069",
+      "action": "deleted_draft"
+    },
+    {
+      "doctype": "BEI Warehouse Receiving",
+      "name": "BEI-WHR-2026-00068",
+      "action": "deleted_draft"
+    },
+    {
+      "doctype": "BEI Warehouse Receiving",
+      "name": "BEI-WHR-2026-00067",
+      "action": "deleted_draft"
+    },
+    {
+      "doctype": "BEI Warehouse Receiving",
+      "name": "BEI-WHR-2026-00066",
+      "action": "deleted_draft"
+    },
+    {
+      "doctype": "BEI Warehouse Receiving",
+      "name": "BEI-WHR-2026-00065",
+      "action": "deleted_draft"
+    },
+    {
+      "doctype": "BEI Warehouse Receiving",
+      "name": "BEI-WHR-2026-00064",
+      "action": "deleted_draft"
+    },
+    {
       "doctype": "Material Request",
-      "name": "MAT-MR-2026-00181",
+      "name": "MAT-MR-2026-00215",
+      "action": "cancelled"
+    },
+    {
+      "doctype": "Material Request",
+      "name": "MAT-MR-2026-00213",
+      "action": "cancelled"
+    },
+    {
+      "doctype": "Material Request",
+      "name": "MAT-MR-2026-00199",
+      "action": "cancelled"
+    },
+    {
+      "doctype": "Material Request",
+      "name": "MAT-MR-2026-00197",
+      "action": "cancelled"
+    },
+    {
+      "doctype": "Material Request",
+      "name": "MAT-MR-2026-00195",
       "action": "cancelled"
     },
     {
       "doctype": "BEI Store Order",
-      "name": "BEI-ORD-2026-00331",
+      "name": "BEI-ORD-2026-00383",
       "action": "deleted_draft"
     },
     {
       "doctype": "BEI Store Order",
-      "name": "BEI-ORD-2026-00330",
+      "name": "BEI-ORD-2026-00382",
       "action": "deleted_draft"
     },
     {
       "doctype": "BEI Store Order",
-      "name": "BEI-ORD-2026-00329",
+      "name": "BEI-ORD-2026-00381",
+      "action": "deleted_draft"
+    },
+    {
+      "doctype": "BEI Store Order",
+      "name": "BEI-ORD-2026-00380",
+      "action": "deleted_draft"
+    },
+    {
+      "doctype": "BEI Store Order",
+      "name": "BEI-ORD-2026-00379",
+      "action": "deleted_draft"
+    },
+    {
+      "doctype": "BEI Store Order",
+      "name": "BEI-ORD-2026-00378",
+      "action": "deleted_draft"
+    },
+    {
+      "doctype": "BEI Store Order",
+      "name": "BEI-ORD-2026-00377",
+      "action": "deleted_draft"
+    },
+    {
+      "doctype": "BEI Store Order",
+      "name": "BEI-ORD-2026-00376",
+      "action": "deleted_draft"
+    },
+    {
+      "doctype": "BEI Store Order",
+      "name": "BEI-ORD-2026-00375",
+      "action": "deleted_draft"
+    },
+    {
+      "doctype": "BEI Store Order",
+      "name": "BEI-ORD-2026-00374",
+      "action": "deleted_draft"
+    },
+    {
+      "doctype": "BEI Store Order",
+      "name": "BEI-ORD-2026-00373",
+      "action": "deleted_draft"
+    },
+    {
+      "doctype": "BEI Store Order",
+      "name": "BEI-ORD-2026-00372",
+      "action": "deleted_draft"
+    },
+    {
+      "doctype": "BEI Store Order",
+      "name": "BEI-ORD-2026-00371",
+      "action": "deleted_draft"
+    },
+    {
+      "doctype": "BEI Store Order",
+      "name": "BEI-ORD-2026-00370",
+      "action": "deleted_draft"
+    },
+    {
+      "doctype": "BEI Store Order",
+      "name": "BEI-ORD-2026-00369",
+      "action": "deleted_draft"
+    },
+    {
+      "doctype": "BEI Store Order",
+      "name": "BEI-ORD-2026-00368",
+      "action": "deleted_draft"
+    },
+    {
+      "doctype": "BEI Store Order",
+      "name": "BEI-ORD-2026-00367",
+      "action": "deleted_draft"
+    },
+    {
+      "doctype": "BEI Store Order",
+      "name": "BEI-ORD-2026-00366",
+      "action": "deleted_draft"
+    },
+    {
+      "doctype": "BEI Store Order",
+      "name": "BEI-ORD-2026-00365",
+      "action": "deleted_draft"
+    },
+    {
+      "doctype": "BEI Store Order",
+      "name": "BEI-ORD-2026-00364",
+      "action": "deleted_draft"
+    },
+    {
+      "doctype": "BEI Store Order",
+      "name": "BEI-ORD-2026-00363",
+      "action": "deleted_draft"
+    },
+    {
+      "doctype": "BEI Store Order",
+      "name": "BEI-ORD-2026-00362",
+      "action": "deleted_draft"
+    },
+    {
+      "doctype": "BEI Store Order",
+      "name": "BEI-ORD-2026-00361",
+      "action": "deleted_draft"
+    },
+    {
+      "doctype": "BEI Store Order",
+      "name": "BEI-ORD-2026-00360",
+      "action": "deleted_draft"
+    },
+    {
+      "doctype": "BEI Store Order",
+      "name": "BEI-ORD-2026-00359",
+      "action": "deleted_draft"
+    },
+    {
+      "doctype": "BEI Store Order",
+      "name": "BEI-ORD-2026-00358",
+      "action": "deleted_draft"
+    },
+    {
+      "doctype": "BEI Store Order",
+      "name": "BEI-ORD-2026-00357",
+      "action": "deleted_draft"
+    },
+    {
+      "doctype": "BEI Store Order",
+      "name": "BEI-ORD-2026-00356",
+      "action": "deleted_draft"
+    },
+    {
+      "doctype": "BEI Store Order",
+      "name": "BEI-ORD-2026-00355",
+      "action": "deleted_draft"
+    },
+    {
+      "doctype": "BEI Store Order",
+      "name": "BEI-ORD-2026-00354",
+      "action": "deleted_draft"
+    },
+    {
+      "doctype": "BEI Store Order",
+      "name": "BEI-ORD-2026-00353",
+      "action": "deleted_draft"
+    },
+    {
+      "doctype": "BEI Store Order",
+      "name": "BEI-ORD-2026-00352",
+      "action": "deleted_draft"
+    },
+    {
+      "doctype": "BEI Store Order",
+      "name": "BEI-ORD-2026-00351",
+      "action": "deleted_draft"
+    },
+    {
+      "doctype": "BEI Store Order",
+      "name": "BEI-ORD-2026-00350",
+      "action": "deleted_draft"
+    },
+    {
+      "doctype": "BEI Store Order",
+      "name": "BEI-ORD-2026-00349",
+      "action": "deleted_draft"
+    },
+    {
+      "doctype": "BEI Store Order",
+      "name": "BEI-ORD-2026-00348",
+      "action": "deleted_draft"
+    },
+    {
+      "doctype": "BEI Store Order",
+      "name": "BEI-ORD-2026-00347",
+      "action": "deleted_draft"
+    },
+    {
+      "doctype": "BEI Store Order",
+      "name": "BEI-ORD-2026-00346",
+      "action": "deleted_draft"
+    },
+    {
+      "doctype": "BEI Store Order",
+      "name": "BEI-ORD-2026-00345",
+      "action": "deleted_draft"
+    },
+    {
+      "doctype": "BEI Store Order",
+      "name": "BEI-ORD-2026-00344",
+      "action": "deleted_draft"
+    },
+    {
+      "doctype": "BEI Store Order",
+      "name": "BEI-ORD-2026-00343",
+      "action": "deleted_draft"
+    },
+    {
+      "doctype": "BEI Store Order",
+      "name": "BEI-ORD-2026-00342",
+      "action": "deleted_draft"
+    },
+    {
+      "doctype": "BEI Store Order",
+      "name": "BEI-ORD-2026-00341",
+      "action": "deleted_draft"
+    },
+    {
+      "doctype": "BEI Store Order",
+      "name": "BEI-ORD-2026-00340",
+      "action": "deleted_draft"
+    },
+    {
+      "doctype": "BEI Store Order",
+      "name": "BEI-ORD-2026-00339",
+      "action": "deleted_draft"
+    },
+    {
+      "doctype": "BEI Store Order",
+      "name": "BEI-ORD-2026-00338",
       "action": "deleted_draft"
     }
   ],
-  "failures": [],
+  "failures": [
+    {
+      "doctype": "Sales Invoice",
+      "name": "ACC-SINV-2026-00068",
+      "error": "Cannot delete or cancel because Sales Invoice <a href=\"https://hq.bebang.ph/app/sales-invoice/ACC-SINV-2026-00068\">ACC-SINV-2026-00068</a> is linked with Stock Entry <a href=\"https://hq.bebang.ph/app/stock-entry/MAT-STE-2026-00545\">MAT-STE-2026-00545</a> "
+    },
+    {
+      "doctype": "Sales Invoice",
+      "name": "ACC-SINV-2026-00067",
+      "error": "Cannot delete or cancel because Sales Invoice <a href=\"https://hq.bebang.ph/app/sales-invoice/ACC-SINV-2026-00067\">ACC-SINV-2026-00067</a> is linked with Stock Entry <a href=\"https://hq.bebang.ph/app/stock-entry/MAT-STE-2026-00543\">MAT-STE-2026-00543</a> "
+    },
+    {
+      "doctype": "Sales Invoice",
+      "name": "ACC-SINV-2026-00066",
+      "error": "Cannot delete or cancel because Sales Invoice <a href=\"https://hq.bebang.ph/app/sales-invoice/ACC-SINV-2026-00066\">ACC-SINV-2026-00066</a> is linked with Stock Entry <a href=\"https://hq.bebang.ph/app/stock-entry/MAT-STE-2026-00541\">MAT-STE-2026-00541</a> "
+    },
+    {
+      "doctype": "Sales Invoice",
+      "name": "ACC-SINV-2026-00065",
+      "error": "Cannot delete or cancel because Sales Invoice <a href=\"https://hq.bebang.ph/app/sales-invoice/ACC-SINV-2026-00065\">ACC-SINV-2026-00065</a> is linked with Stock Entry <a href=\"https://hq.bebang.ph/app/stock-entry/MAT-STE-2026-00539\">MAT-STE-2026-00539</a> "
+    },
+    {
+      "doctype": "Sales Invoice",
+      "name": "ACC-SINV-2026-00064",
+      "error": "Cannot delete or cancel because Sales Invoice <a href=\"https://hq.bebang.ph/app/sales-invoice/ACC-SINV-2026-00064\">ACC-SINV-2026-00064</a> is linked with Stock Entry <a href=\"https://hq.bebang.ph/app/stock-entry/MAT-STE-2026-00535\">MAT-STE-2026-00535</a> "
+    },
+    {
+      "doctype": "Sales Invoice",
+      "name": "ACC-SINV-2026-00063",
+      "error": "Cannot delete or cancel because Sales Invoice <a href=\"https://hq.bebang.ph/app/sales-invoice/ACC-SINV-2026-00063\">ACC-SINV-2026-00063</a> is linked with Stock Entry <a href=\"https://hq.bebang.ph/app/stock-entry/MAT-STE-2026-00533\">MAT-STE-2026-00533</a> "
+    },
+    {
+      "doctype": "Sales Invoice",
+      "name": "ACC-SINV-2026-00062",
+      "error": "Cannot delete or cancel because Sales Invoice <a href=\"https://hq.bebang.ph/app/sales-invoice/ACC-SINV-2026-00062\">ACC-SINV-2026-00062</a> is linked with Stock Entry <a href=\"https://hq.bebang.ph/app/stock-entry/MAT-STE-2026-00531\">MAT-STE-2026-00531</a> "
+    },
+    {
+      "doctype": "Sales Invoice",
+      "name": "ACC-SINV-2026-00061",
+      "error": "Cannot delete or cancel because Sales Invoice <a href=\"https://hq.bebang.ph/app/sales-invoice/ACC-SINV-2026-00061\">ACC-SINV-2026-00061</a> is linked with Stock Entry <a href=\"https://hq.bebang.ph/app/stock-entry/MAT-STE-2026-00529\">MAT-STE-2026-00529</a> "
+    },
+    {
+      "doctype": "Sales Invoice",
+      "name": "ACC-SINV-2026-00060",
+      "error": "Cannot delete or cancel because Sales Invoice <a href=\"https://hq.bebang.ph/app/sales-invoice/ACC-SINV-2026-00060\">ACC-SINV-2026-00060</a> is linked with Stock Entry <a href=\"https://hq.bebang.ph/app/stock-entry/MAT-STE-2026-00527\">MAT-STE-2026-00527</a> "
+    },
+    {
+      "doctype": "Sales Invoice",
+      "name": "ACC-SINV-2026-00059",
+      "error": "Cannot delete or cancel because Sales Invoice <a href=\"https://hq.bebang.ph/app/sales-invoice/ACC-SINV-2026-00059\">ACC-SINV-2026-00059</a> is linked with Stock Entry <a href=\"https://hq.bebang.ph/app/stock-entry/MAT-STE-2026-00524\">MAT-STE-2026-00524</a> "
+    },
+    {
+      "doctype": "Sales Invoice",
+      "name": "ACC-SINV-2026-00058",
+      "error": "Cannot delete or cancel because Sales Invoice <a href=\"https://hq.bebang.ph/app/sales-invoice/ACC-SINV-2026-00058\">ACC-SINV-2026-00058</a> is linked with Stock Entry <a href=\"https://hq.bebang.ph/app/stock-entry/MAT-STE-2026-00522\">MAT-STE-2026-00522</a> "
+    },
+    {
+      "doctype": "Sales Invoice",
+      "name": "ACC-SINV-2026-00057",
+      "error": "Cannot delete or cancel because Sales Invoice <a href=\"https://hq.bebang.ph/app/sales-invoice/ACC-SINV-2026-00057\">ACC-SINV-2026-00057</a> is linked with Stock Entry <a href=\"https://hq.bebang.ph/app/stock-entry/MAT-STE-2026-00520\">MAT-STE-2026-00520</a> "
+    },
+    {
+      "doctype": "Sales Invoice",
+      "name": "ACC-SINV-2026-00056",
+      "error": "Cannot delete or cancel because Sales Invoice <a href=\"https://hq.bebang.ph/app/sales-invoice/ACC-SINV-2026-00056\">ACC-SINV-2026-00056</a> is linked with Stock Entry <a href=\"https://hq.bebang.ph/app/stock-entry/MAT-STE-2026-00518\">MAT-STE-2026-00518</a> "
+    },
+    {
+      "doctype": "Sales Invoice",
+      "name": "ACC-SINV-2026-00055",
+      "error": "Cannot delete or cancel because Sales Invoice <a href=\"https://hq.bebang.ph/app/sales-invoice/ACC-SINV-2026-00055\">ACC-SINV-2026-00055</a> is linked with Stock Entry <a href=\"https://hq.bebang.ph/app/stock-entry/MAT-STE-2026-00516\">MAT-STE-2026-00516</a> "
+    },
+    {
+      "doctype": "Sales Invoice",
+      "name": "ACC-SINV-2026-00053",
+      "error": "Cannot delete or cancel because Sales Invoice <a href=\"https://hq.bebang.ph/app/sales-invoice/ACC-SINV-2026-00053\">ACC-SINV-2026-00053</a> is linked with Stock Entry <a href=\"https://hq.bebang.ph/app/stock-entry/MAT-STE-2026-00513\">MAT-STE-2026-00513</a> "
+    },
+    {
+      "doctype": "Sales Invoice",
+      "name": "ACC-SINV-2026-00052",
+      "error": "Cannot delete or cancel because Sales Invoice <a href=\"https://hq.bebang.ph/app/sales-invoice/ACC-SINV-2026-00052\">ACC-SINV-2026-00052</a> is linked with Stock Entry <a href=\"https://hq.bebang.ph/app/stock-entry/MAT-STE-2026-00511\">MAT-STE-2026-00511</a> "
+    },
+    {
+      "doctype": "Sales Invoice",
+      "name": "ACC-SINV-2026-00051",
+      "error": "Cannot delete or cancel because Sales Invoice <a href=\"https://hq.bebang.ph/app/sales-invoice/ACC-SINV-2026-00051\">ACC-SINV-2026-00051</a> is linked with Stock Entry <a href=\"https://hq.bebang.ph/app/stock-entry/MAT-STE-2026-00509\">MAT-STE-2026-00509</a> "
+    },
+    {
+      "doctype": "Sales Invoice",
+      "name": "ACC-SINV-2026-00050",
+      "error": "Cannot delete or cancel because Sales Invoice <a href=\"https://hq.bebang.ph/app/sales-invoice/ACC-SINV-2026-00050\">ACC-SINV-2026-00050</a> is linked with Stock Entry <a href=\"https://hq.bebang.ph/app/stock-entry/MAT-STE-2026-00507\">MAT-STE-2026-00507</a> "
+    },
+    {
+      "doctype": "Sales Invoice",
+      "name": "ACC-SINV-2026-00049",
+      "error": "Cannot delete or cancel because Sales Invoice <a href=\"https://hq.bebang.ph/app/sales-invoice/ACC-SINV-2026-00049\">ACC-SINV-2026-00049</a> is linked with Stock Entry <a href=\"https://hq.bebang.ph/app/stock-entry/MAT-STE-2026-00505\">MAT-STE-2026-00505</a> "
+    },
+    {
+      "doctype": "Sales Invoice",
+      "name": "ACC-SINV-2026-00048",
+      "error": "Cannot delete or cancel because Sales Invoice <a href=\"https://hq.bebang.ph/app/sales-invoice/ACC-SINV-2026-00048\">ACC-SINV-2026-00048</a> is linked with Stock Entry <a href=\"https://hq.bebang.ph/app/stock-entry/MAT-STE-2026-00503\">MAT-STE-2026-00503</a> "
+    },
+    {
+      "doctype": "Sales Invoice",
+      "name": "ACC-SINV-2026-00047",
+      "error": "Cannot delete or cancel because Sales Invoice <a href=\"https://hq.bebang.ph/app/sales-invoice/ACC-SINV-2026-00047\">ACC-SINV-2026-00047</a> is linked with Stock Entry <a href=\"https://hq.bebang.ph/app/stock-entry/MAT-STE-2026-00501\">MAT-STE-2026-00501</a> "
+    },
+    {
+      "doctype": "Sales Invoice",
+      "name": "ACC-SINV-2026-00046",
+      "error": "Cannot delete or cancel because Sales Invoice <a href=\"https://hq.bebang.ph/app/sales-invoice/ACC-SINV-2026-00046\">ACC-SINV-2026-00046</a> is linked with Stock Entry <a href=\"https://hq.bebang.ph/app/stock-entry/MAT-STE-2026-00499\">MAT-STE-2026-00499</a> "
+    },
+    {
+      "doctype": "Sales Invoice",
+      "name": "ACC-SINV-2026-00045",
+      "error": "Cannot delete or cancel because Sales Invoice <a href=\"https://hq.bebang.ph/app/sales-invoice/ACC-SINV-2026-00045\">ACC-SINV-2026-00045</a> is linked with Stock Entry <a href=\"https://hq.bebang.ph/app/stock-entry/MAT-STE-2026-00497\">MAT-STE-2026-00497</a> "
+    },
+    {
+      "doctype": "Sales Invoice",
+      "name": "ACC-SINV-2026-00044",
+      "error": "Cannot delete or cancel because Sales Invoice <a href=\"https://hq.bebang.ph/app/sales-invoice/ACC-SINV-2026-00044\">ACC-SINV-2026-00044</a> is linked with Stock Entry <a href=\"https://hq.bebang.ph/app/stock-entry/MAT-STE-2026-00493\">MAT-STE-2026-00493</a> "
+    },
+    {
+      "doctype": "Material Request",
+      "name": "MAT-MR-2026-00224",
+      "error": "Cannot delete or cancel because Material Request <a href=\"https://hq.bebang.ph/app/material-request/MAT-MR-2026-00224\">MAT-MR-2026-00224</a> is linked with Stock Entry <a href=\"https://hq.bebang.ph/app/stock-entry/MAT-STE-2026-00545\">MAT-STE-2026-00545</a> "
+    },
+    {
+      "doctype": "Material Request",
+      "name": "MAT-MR-2026-00223",
+      "error": "Cannot delete or cancel because Material Request <a href=\"https://hq.bebang.ph/app/material-request/MAT-MR-2026-00223\">MAT-MR-2026-00223</a> is linked with Stock Entry <a href=\"https://hq.bebang.ph/app/stock-entry/MAT-STE-2026-00543\">MAT-STE-2026-00543</a> "
+    },
+    {
+      "doctype": "Material Request",
+      "name": "MAT-MR-2026-00222",
+      "error": "Cannot delete or cancel because Material Request <a href=\"https://hq.bebang.ph/app/material-request/MAT-MR-2026-00222\">MAT-MR-2026-00222</a> is linked with Stock Entry <a href=\"https://hq.bebang.ph/app/stock-entry/MAT-STE-2026-00541\">MAT-STE-2026-00541</a> "
+    },
+    {
+      "doctype": "Material Request",
+      "name": "MAT-MR-2026-00221",
+      "error": "Cannot delete or cancel because Material Request <a href=\"https://hq.bebang.ph/app/material-request/MAT-MR-2026-00221\">MAT-MR-2026-00221</a> is linked with Stock Entry <a href=\"https://hq.bebang.ph/app/stock-entry/MAT-STE-2026-00539\">MAT-STE-2026-00539</a> "
+    },
+    {
+      "doctype": "Material Request",
+      "name": "MAT-MR-2026-00220",
+      "error": "Cannot delete or cancel because Material Request <a href=\"https://hq.bebang.ph/app/material-request/MAT-MR-2026-00220\">MAT-MR-2026-00220</a> is linked with Stock Entry <a href=\"https://hq.bebang.ph/app/stock-entry/MAT-STE-2026-00537\">MAT-STE-2026-00537</a> "
+    },
+    {
+      "doctype": "Material Request",
+      "name": "MAT-MR-2026-00219",
+      "error": "Cannot delete or cancel because Material Request <a href=\"https://hq.bebang.ph/app/material-request/MAT-MR-2026-00219\">MAT-MR-2026-00219</a> is linked with Stock Entry <a href=\"https://hq.bebang.ph/app/stock-entry/MAT-STE-2026-00535\">MAT-STE-2026-00535</a> "
+    },
+    {
+      "doctype": "Material Request",
+      "name": "MAT-MR-2026-00218",
+      "error": "Cannot delete or cancel because Material Request <a href=\"https://hq.bebang.ph/app/material-request/MAT-MR-2026-00218\">MAT-MR-2026-00218</a> is linked with Stock Entry <a href=\"https://hq.bebang.ph/app/stock-entry/MAT-STE-2026-00533\">MAT-STE-2026-00533</a> "
+    },
+    {
+      "doctype": "Material Request",
+      "name": "MAT-MR-2026-00217",
+      "error": "Cannot delete or cancel because Material Request <a href=\"https://hq.bebang.ph/app/material-request/MAT-MR-2026-00217\">MAT-MR-2026-00217</a> is linked with Stock Entry <a href=\"https://hq.bebang.ph/app/stock-entry/MAT-STE-2026-00531\">MAT-STE-2026-00531</a> "
+    },
+    {
+      "doctype": "Material Request",
+      "name": "MAT-MR-2026-00216",
+      "error": "Cannot delete or cancel because Material Request <a href=\"https://hq.bebang.ph/app/material-request/MAT-MR-2026-00216\">MAT-MR-2026-00216</a> is linked with Stock Entry <a href=\"https://hq.bebang.ph/app/stock-entry/MAT-STE-2026-00529\">MAT-STE-2026-00529</a> "
+    },
+    {
+      "doctype": "Material Request",
+      "name": "MAT-MR-2026-00214",
+      "error": "Cannot delete or cancel because Material Request <a href=\"https://hq.bebang.ph/app/material-request/MAT-MR-2026-00214\">MAT-MR-2026-00214</a> is linked with Stock Entry <a href=\"https://hq.bebang.ph/app/stock-entry/MAT-STE-2026-00527\">MAT-STE-2026-00527</a> "
+    },
+    {
+      "doctype": "Material Request",
+      "name": "MAT-MR-2026-00212",
+      "error": "Cannot delete or cancel because Material Request <a href=\"https://hq.bebang.ph/app/material-request/MAT-MR-2026-00212\">MAT-MR-2026-00212</a> is linked with Stock Entry <a href=\"https://hq.bebang.ph/app/stock-entry/MAT-STE-2026-00524\">MAT-STE-2026-00524</a> "
+    },
+    {
+      "doctype": "Material Request",
+      "name": "MAT-MR-2026-00211",
+      "error": "Cannot delete or cancel because Material Request <a href=\"https://hq.bebang.ph/app/material-request/MAT-MR-2026-00211\">MAT-MR-2026-00211</a> is linked with Stock Entry <a href=\"https://hq.bebang.ph/app/stock-entry/MAT-STE-2026-00522\">MAT-STE-2026-00522</a> "
+    },
+    {
+      "doctype": "Material Request",
+      "name": "MAT-MR-2026-00210",
+      "error": "Cannot delete or cancel because Material Request <a href=\"https://hq.bebang.ph/app/material-request/MAT-MR-2026-00210\">MAT-MR-2026-00210</a> is linked with Stock Entry <a href=\"https://hq.bebang.ph/app/stock-entry/MAT-STE-2026-00520\">MAT-STE-2026-00520</a> "
+    },
+    {
+      "doctype": "Material Request",
+      "name": "MAT-MR-2026-00209",
+      "error": "Cannot delete or cancel because Material Request <a href=\"https://hq.bebang.ph/app/material-request/MAT-MR-2026-00209\">MAT-MR-2026-00209</a> is linked with Stock Entry <a href=\"https://hq.bebang.ph/app/stock-entry/MAT-STE-2026-00518\">MAT-STE-2026-00518</a> "
+    },
+    {
+      "doctype": "Material Request",
+      "name": "MAT-MR-2026-00208",
+      "error": "Cannot delete or cancel because Material Request <a href=\"https://hq.bebang.ph/app/material-request/MAT-MR-2026-00208\">MAT-MR-2026-00208</a> is linked with Stock Entry <a href=\"https://hq.bebang.ph/app/stock-entry/MAT-STE-2026-00516\">MAT-STE-2026-00516</a> "
+    },
+    {
+      "doctype": "Material Request",
+      "name": "MAT-MR-2026-00207",
+      "error": "Cannot delete or cancel because Material Request <a href=\"https://hq.bebang.ph/app/material-request/MAT-MR-2026-00207\">MAT-MR-2026-00207</a> is linked with Stock Entry <a href=\"https://hq.bebang.ph/app/stock-entry/MAT-STE-2026-00515\">MAT-STE-2026-00515</a> "
+    },
+    {
+      "doctype": "Material Request",
+      "name": "MAT-MR-2026-00206",
+      "error": "Cannot delete or cancel because Material Request <a href=\"https://hq.bebang.ph/app/material-request/MAT-MR-2026-00206\">MAT-MR-2026-00206</a> is linked with Stock Entry <a href=\"https://hq.bebang.ph/app/stock-entry/MAT-STE-2026-00513\">MAT-STE-2026-00513</a> "
+    },
+    {
+      "doctype": "Material Request",
+      "name": "MAT-MR-2026-00205",
+      "error": "Cannot delete or cancel because Material Request <a href=\"https://hq.bebang.ph/app/material-request/MAT-MR-2026-00205\">MAT-MR-2026-00205</a> is linked with Stock Entry <a href=\"https://hq.bebang.ph/app/stock-entry/MAT-STE-2026-00511\">MAT-STE-2026-00511</a> "
+    },
+    {
+      "doctype": "Material Request",
+      "name": "MAT-MR-2026-00204",
+      "error": "Cannot delete or cancel because Material Request <a href=\"https://hq.bebang.ph/app/material-request/MAT-MR-2026-00204\">MAT-MR-2026-00204</a> is linked with Stock Entry <a href=\"https://hq.bebang.ph/app/stock-entry/MAT-STE-2026-00509\">MAT-STE-2026-00509</a> "
+    },
+    {
+      "doctype": "Material Request",
+      "name": "MAT-MR-2026-00203",
+      "error": "Cannot delete or cancel because Material Request <a href=\"https://hq.bebang.ph/app/material-request/MAT-MR-2026-00203\">MAT-MR-2026-00203</a> is linked with Stock Entry <a href=\"https://hq.bebang.ph/app/stock-entry/MAT-STE-2026-00507\">MAT-STE-2026-00507</a> "
+    },
+    {
+      "doctype": "Material Request",
+      "name": "MAT-MR-2026-00202",
+      "error": "Cannot delete or cancel because Material Request <a href=\"https://hq.bebang.ph/app/material-request/MAT-MR-2026-00202\">MAT-MR-2026-00202</a> is linked with Stock Entry <a href=\"https://hq.bebang.ph/app/stock-entry/MAT-STE-2026-00505\">MAT-STE-2026-00505</a> "
+    },
+    {
+      "doctype": "Material Request",
+      "name": "MAT-MR-2026-00201",
+      "error": "Cannot delete or cancel because Material Request <a href=\"https://hq.bebang.ph/app/material-request/MAT-MR-2026-00201\">MAT-MR-2026-00201</a> is linked with Stock Entry <a href=\"https://hq.bebang.ph/app/stock-entry/MAT-STE-2026-00503\">MAT-STE-2026-00503</a> "
+    },
+    {
+      "doctype": "Material Request",
+      "name": "MAT-MR-2026-00200",
+      "error": "Cannot delete or cancel because Material Request <a href=\"https://hq.bebang.ph/app/material-request/MAT-MR-2026-00200\">MAT-MR-2026-00200</a> is linked with Stock Entry <a href=\"https://hq.bebang.ph/app/stock-entry/MAT-STE-2026-00501\">MAT-STE-2026-00501</a> "
+    },
+    {
+      "doctype": "Material Request",
+      "name": "MAT-MR-2026-00198",
+      "error": "Cannot delete or cancel because Material Request <a href=\"https://hq.bebang.ph/app/material-request/MAT-MR-2026-00198\">MAT-MR-2026-00198</a> is linked with Stock Entry <a href=\"https://hq.bebang.ph/app/stock-entry/MAT-STE-2026-00499\">MAT-STE-2026-00499</a> "
+    },
+    {
+      "doctype": "Material Request",
+      "name": "MAT-MR-2026-00196",
+      "error": "Cannot delete or cancel because Material Request <a href=\"https://hq.bebang.ph/app/material-request/MAT-MR-2026-00196\">MAT-MR-2026-00196</a> is linked with Stock Entry <a href=\"https://hq.bebang.ph/app/stock-entry/MAT-STE-2026-00497\">MAT-STE-2026-00497</a> "
+    },
+    {
+      "doctype": "Material Request",
+      "name": "MAT-MR-2026-00194",
+      "error": "Cannot delete or cancel because Material Request <a href=\"https://hq.bebang.ph/app/material-request/MAT-MR-2026-00194\">MAT-MR-2026-00194</a> is linked with Stock Entry <a href=\"https://hq.bebang.ph/app/stock-entry/MAT-STE-2026-00495\">MAT-STE-2026-00495</a> "
+    },
+    {
+      "doctype": "Material Request",
+      "name": "MAT-MR-2026-00193",
+      "error": "Cannot delete or cancel because Material Request <a href=\"https://hq.bebang.ph/app/material-request/MAT-MR-2026-00193\">MAT-MR-2026-00193</a> is linked with Stock Entry <a href=\"https://hq.bebang.ph/app/stock-entry/MAT-STE-2026-00493\">MAT-STE-2026-00493</a> "
+    }
+  ],
   "skipped": [],
-  "total": 4
+  "total": 128
 }
