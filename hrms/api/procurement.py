@@ -2502,14 +2502,6 @@ def create_invoice(data: dict[str, Any] | str) -> dict[str, Any]:
     set_backend_observability_context(module="procurement", action="create_invoice", mutation_type="create")
     if isinstance(data, str):
         data = frappe.parse_json(data)
-    # Capture caller-supplied grand_total BEFORE _normalize_invoice_payload
-    # overwrites it with the items-derived computation. The post-normalize
-    # value is the natural floor; the caller's value is the (optional)
-    # ceiling for non-itemized charges (freight, insurance, currency
-    # adjustments). The reconciliation block below absorbs the gap into
-    # the first item's vat_amount so calculate_totals() lands on the
-    # caller's intent.
-    explicit_grand_total = flt(data.get("grand_total"))
     data = _normalize_invoice_payload(data)
 
     # S193 Guard: block new invoice for Blacklisted / Pending Verification suppliers.
@@ -2619,6 +2611,14 @@ def create_invoice(data: dict[str, Any] | str) -> dict[str, Any]:
 
     # Extract line items before sanitizing
     line_items = data.pop("items", None) or data.pop("line_items", None) or []
+
+    # Capture caller-supplied grand_total before _sanitize_doc_data strips it.
+    # When caller asserts a grand_total greater than what the line items would
+    # compute (e.g. invoice with freight, insurance, currency adjustments not
+    # itemized), honor the caller's total by inflating the first item's
+    # vat_amount to absorb the gap. calculate_totals() then re-derives the
+    # parent doc's totals from the items and the math reconciles.
+    explicit_grand_total = flt(data.get("grand_total"))
 
     # DEFECT-4 fix: Auto-link invoice_attachment from GR's supplier_invoice_photo
     if not data.get("invoice_attachment") and data.get("goods_receipt"):
@@ -2925,7 +2925,13 @@ def create_payment_request(data: dict[str, Any] | str) -> dict[str, Any]:
                 _("Payment amount must be greater than zero."),
                 title=_("Invalid Payment Amount"),
             )
-        if payment_amount > flt(invoice.balance_due):
+        # Cash Advance RFPs are pre-payments against future deliveries (or
+        # multi-invoice settlements) so they're allowed to exceed the
+        # current invoice balance. The balance check still applies to
+        # regular Vendor Invoice / Reimbursement / etc. types.
+        rfp_type = (data.get("rfp_type") or "").strip()
+        is_advance = rfp_type == "Cash Advance"
+        if not is_advance and payment_amount > flt(invoice.balance_due):
             frappe.throw(
                 _(
                     "Payment amount (₱{0:,.2f}) exceeds the current invoice balance "
@@ -2959,7 +2965,13 @@ def create_payment_request(data: dict[str, Any] | str) -> dict[str, Any]:
             )[0][0]
         )
         remaining_invoice_balance = flt(invoice.balance_due) - pending_requested_total
-        if remaining_invoice_balance <= 0:
+        # Cash Advance bypasses the per-invoice remaining-balance guard for
+        # the same reason as the balance check above: advance payments
+        # represent committed funds that may settle multiple invoices or
+        # future deliveries, not a draw on the current invoice's open
+        # balance. The advance-vs-PO double-payment guard above (line 2882+)
+        # still protects against true over-advancing.
+        if not is_advance and remaining_invoice_balance <= 0:
             frappe.throw(
                 _(
                     "This invoice already has pending payment requests totaling "
@@ -2967,7 +2979,7 @@ def create_payment_request(data: dict[str, Any] | str) -> dict[str, Any]:
                 ).format(pending_requested_total),
                 title=_("Duplicate Payment Risk"),
             )
-        if payment_amount > remaining_invoice_balance:
+        if not is_advance and payment_amount > remaining_invoice_balance:
             frappe.throw(
                 _(
                     "Payment amount (₱{0:,.2f}) plus pending requests would exceed the "
