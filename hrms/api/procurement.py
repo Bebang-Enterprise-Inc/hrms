@@ -2502,6 +2502,14 @@ def create_invoice(data: dict[str, Any] | str) -> dict[str, Any]:
     set_backend_observability_context(module="procurement", action="create_invoice", mutation_type="create")
     if isinstance(data, str):
         data = frappe.parse_json(data)
+    # Capture caller-supplied grand_total BEFORE _normalize_invoice_payload
+    # overwrites it with the items-derived computation. The post-normalize
+    # value is the natural floor; the caller's value is the (optional)
+    # ceiling for non-itemized charges (freight, insurance, currency
+    # adjustments). The reconciliation block below absorbs the gap into
+    # the first item's vat_amount so calculate_totals() lands on the
+    # caller's intent.
+    explicit_grand_total = flt(data.get("grand_total"))
     data = _normalize_invoice_payload(data)
 
     # S193 Guard: block new invoice for Blacklisted / Pending Verification suppliers.
@@ -2611,14 +2619,6 @@ def create_invoice(data: dict[str, Any] | str) -> dict[str, Any]:
 
     # Extract line items before sanitizing
     line_items = data.pop("items", None) or data.pop("line_items", None) or []
-
-    # Capture caller-supplied grand_total before _sanitize_doc_data strips it.
-    # When caller asserts a grand_total greater than what the line items would
-    # compute (e.g. invoice with freight, insurance, currency adjustments not
-    # itemized), honor the caller's total by inflating the first item's
-    # vat_amount to absorb the gap. calculate_totals() then re-derives the
-    # parent doc's totals from the items and the math reconciles.
-    explicit_grand_total = flt(data.get("grand_total"))
 
     # DEFECT-4 fix: Auto-link invoice_attachment from GR's supplier_invoice_photo
     if not data.get("invoice_attachment") and data.get("goods_receipt"):
