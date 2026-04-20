@@ -177,13 +177,18 @@ function s210_rebuildSupplierForm() {
     .setTitle('Amount (PHP)')
     .setHelpText('Total amount on SI in PHP (numbers only).')
     .setRequired(true);
-  // Native file upload — no Drive link text field fallback
-  const fileItem = form.addFileUploadItem()
-    .setTitle('SI PDF')
-    .setHelpText('Tap to upload a clear PDF or photo of your SI.')
-    .setRequired(true);
-  try { fileItem.setMaxFiles(1); } catch (e) {}
-  try { fileItem.setMaxFileSize(FormApp.FileSize.MB_10); } catch (e) {}
+  // NOTE: Apps Script FormApp has NO addFileUploadItem() method — file
+  // upload items can ONLY be added via the Google Forms UI by a human.
+  // Leave a placeholder text item here with a clear instruction; Sam will
+  // delete it + add a real File upload item in the form editor after
+  // this helper runs. 10 seconds of UI clicking.
+  const filePlaceholder = form.addTextItem()
+    .setTitle('[REPLACE_ME — delete this item and add a File upload item titled "SI PDF"]')
+    .setHelpText('Google Forms file upload can only be created in the UI. '
+      + 'Click the + button in the form editor and choose File upload. '
+      + 'Title it "SI PDF". Set required=true, max 1 file, max 10MB, '
+      + 'accepted types = PDF + Image. Then delete this placeholder row.')
+    .setRequired(false);
   const notesItem = form.addParagraphTextItem()
     .setTitle('Notes')
     .setHelpText('Anything the BEI team should know (optional).')
@@ -209,9 +214,12 @@ function s210_rebuildSupplierForm() {
       'SI Number': String(siNumItem.getId()),
       'SI Date': String(siDateItem.getId()),
       'Amount (PHP)': String(amountItem.getId()),
-      'SI PDF': String(fileItem.getId()),
+      'SI PDF (placeholder — replace in UI)': String(filePlaceholder.getId()),
       'Notes': String(notesItem.getId()),
     },
+    manualStep: 'Open editUrl, delete the [REPLACE_ME ...] placeholder item, '
+      + 'add a File upload item titled "SI PDF", required, max 1 file/10MB, '
+      + 'PDF + Image allowed.',
   };
 
   // Persist result to Sheet C 09_Audit_Log for Python pickup

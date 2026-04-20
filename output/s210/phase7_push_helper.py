@@ -7,7 +7,7 @@ sys.stdout.reconfigure(encoding='utf-8')
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
 
-ROOT = pathlib.Path(r'F:\Dropbox\Projects\BEI-ERP-s210b')
+ROOT = pathlib.Path(__file__).resolve().parents[2]
 SA = pathlib.Path(r'F:\Dropbox\Projects\BEI-ERP\credentials\task-manager-service.json')
 ids = json.loads((ROOT / 'output/s210/SHEET_IDS.json').read_text())
 
