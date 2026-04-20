@@ -1,0 +1,37 @@
+{
+  "deployment_id": "AKfycbwHhE8wesatwrXdw8SYOFjm30zqG62wNgFUyC_GIB14zFQb1CHU4ov-jVm1wjGfqFj2",
+  "web_app_url": "https://script.google.com/macros/s/AKfycbwHhE8wesatwrXdw8SYOFjm30zqG62wNgFUyC_GIB14zFQb1CHU4ov-jVm1wjGfqFj2/exec",
+  "shared_token_masked": "s210-b3i-a8F...0sK3",
+  "gcp_project": "quiet-walker-475722-s2",
+  "scheduler_location": "asia-southeast1",
+  "jobs": [
+    {
+      "name": "s210-poll-all",
+      "full_name": "projects/quiet-walker-475722-s2/locations/asia-southeast1/jobs/s210-poll-all",
+      "schedule": "*/1 * * * *",
+      "fn": "pollAll",
+      "state": "ENABLED"
+    },
+    {
+      "name": "s210-age-variance-hourly",
+      "full_name": "projects/quiet-walker-475722-s2/locations/asia-southeast1/jobs/s210-age-variance-hourly",
+      "schedule": "0 * * * *",
+      "fn": "ageVarianceQueue",
+      "state": "ENABLED"
+    },
+    {
+      "name": "s210-refresh-masters-06",
+      "full_name": "projects/quiet-walker-475722-s2/locations/asia-southeast1/jobs/s210-refresh-masters-06",
+      "schedule": "0 6 * * *",
+      "fn": "refreshMasters",
+      "state": "ENABLED"
+    },
+    {
+      "name": "s210-ceo-email-07",
+      "full_name": "projects/quiet-walker-475722-s2/locations/asia-southeast1/jobs/s210-ceo-email-07",
+      "schedule": "0 7 * * *",
+      "fn": "sendCeoDailyEmail",
+      "state": "ENABLED"
+    }
+  ]
+}

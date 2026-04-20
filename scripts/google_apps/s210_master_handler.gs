@@ -1,26 +1,22 @@
 /**
  * S210 Master Handler — BEI Receipt-Based Payment Infrastructure
  *
- * Bound/standalone Apps Script that orchestrates data flow from per-3PL
- * Google Sheets (A=3MD, B=Pinnacle, D=Shaw transitional) into the BEI-internal
- * master (Sheet C). Fires on edit and on time-based cron.
+ * Phase 8 (2026-04-20 PM): converted to web-app + Cloud Scheduler pattern.
+ * No Apps Script triggers needed — Cloud Scheduler pings the web-app URL on
+ * cron. This eliminates the manual setup() click that was required for
+ * ScriptApp.newTrigger() OAuth consent (a limitation of service-account DWD).
  *
- * Owner: commissary.team@bebang.ph
  * Source of truth: hrms repo `scripts/google_apps/s210_master_handler.gs`
- * Runtime deployment: Apps Script project created by
- *   `output/s210/phase3_deploy_apps_script.py`
+ * Deployed via:  output/s210/phase8_cloud_scheduler.py
  *
- * After deployment, a human editor must open the Apps Script editor once and
- * run `setup()` to install installable triggers. This is a one-time action.
+ * doGet(e) is the single entry point. Cloud Scheduler jobs hit:
+ *   https://script.google.com/macros/s/<DEPLOYMENT_ID>/exec?key=<TOKEN>&fn=<NAME>
  *
- * Triggers installed by setup():
- *   1. SPREADSHEET_EDIT on SHEET_A  -> handleNewReceipt_3MD
- *   2. SPREADSHEET_EDIT on SHEET_B  -> handleNewReceipt_Pinnacle
- *   3. Hourly time-based             -> ageVarianceQueue
- *   4. Daily 06:00 PHT time-based    -> refreshMasters  (Phase 5 body, trigger installed here)
- *
- * Phase 4 will add onFormSubmit trigger for the Supplier SI Upload form.
- * Phase 5 will flesh out refreshMasters() and sendCeoDailyEmail() + install its 07:00 trigger.
+ * Supported fn values:
+ *   - pollAll           (every 1 min)    polls Sheets A/B/D Receipts + form responses
+ *   - ageVarianceQueue  (hourly)         stale DR > 72h into Variance Queue
+ *   - refreshMasters    (daily 06:00 PHT) pulls Procurement AppSheet -> 07/08 masters
+ *   - sendCeoDailyEmail (daily 07:00 PHT) KPI digest email to sam+ian
  */
 
 // ========================================================================
@@ -72,6 +68,120 @@ const CONS_COL_SI_MATCH_TS = 21;  // col V
 
 // Stale DR threshold (hours)
 const STALE_DR_HOURS = 72;
+
+// Shared token for web-app access. URL obscurity is primary defense
+// (deployment ID is 57+ chars of random base64url); this token is a
+// secondary factor. Matching token is stored in Cloud Scheduler job URLs.
+const SHARED_TOKEN = 's210-b3i-a8F2kQ9mZv7RpYxLnCdT4wE6hG1jN5uH0sK3';
+
+// SI Upload form ID (Phase 7 form with native file upload)
+const SI_UPLOAD_FORM_ID = '1gyijOzmjXJHlyil7wraQ8xjmPMu0q1eoqUcjwHXogPg';
+
+// ========================================================================
+// doGet — web-app entry point (Cloud Scheduler target)
+// ========================================================================
+
+function doGet(e) {
+  const params = (e && e.parameter) || {};
+  const token = String(params.key || '');
+  const fn = String(params.fn || '');
+
+  const respond = function(body) {
+    return ContentService.createTextOutput(JSON.stringify(body))
+      .setMimeType(ContentService.MimeType.JSON);
+  };
+
+  if (token !== SHARED_TOKEN) {
+    return respond({ ok: false, error: 'unauthorized' });
+  }
+
+  const started = new Date();
+  try {
+    let result;
+    switch (fn) {
+      case 'pollAll':           result = pollAll();           break;
+      case 'pollReceipts':      result = pollReceipts();      break;
+      case 'pollFormResponses': result = pollFormResponses(); break;
+      case 'ageVarianceQueue':  result = ageVarianceQueue();  break;
+      case 'refreshMasters':    result = refreshMasters();    break;
+      case 'sendCeoDailyEmail': result = sendCeoDailyEmail(); break;
+      case 'ping':              result = { pong: true };      break;
+      default:
+        return respond({ ok: false, error: 'unknown_fn: ' + fn });
+    }
+    const elapsed = new Date().getTime() - started.getTime();
+    return respond({ ok: true, fn: fn, elapsed_ms: elapsed, result: result || null });
+  } catch (err) {
+    return respond({ ok: false, fn: fn, error: String(err) });
+  }
+}
+
+// ========================================================================
+// Scheduler-targeted poll functions
+// ========================================================================
+
+function pollAll() {
+  const receipts = pollReceipts();
+  const formResp = pollFormResponses();
+  return { receipts: receipts, form: formResp };
+}
+
+function pollReceipts() {
+  const out = {};
+  try { _handleNewReceipts(SHEET_A, '3MD'); out.a = 'ok'; } catch (e) { out.a = String(e); }
+  try { _handleNewReceipts(SHEET_B, 'Pinnacle'); out.b = 'ok'; } catch (e) { out.b = String(e); }
+  try { _handleNewReceipts(SHEET_D, 'Shaw'); out.d = 'ok'; } catch (e) { out.d = String(e); }
+  return out;
+}
+
+function pollFormResponses() {
+  const props = PropertiesService.getScriptProperties();
+  const lastSeenKey = 'form_last_processed_' + SI_UPLOAD_FORM_ID;
+  const lastSeenIso = props.getProperty(lastSeenKey) || '2000-01-01T00:00:00.000Z';
+  const lastSeen = new Date(lastSeenIso).getTime();
+
+  let form;
+  try {
+    form = FormApp.openById(SI_UPLOAD_FORM_ID);
+  } catch (e) {
+    return { processed: 0, error: String(e) };
+  }
+
+  const responses = form.getResponses();
+  let latestMs = lastSeen;
+  let processed = 0;
+  for (const response of responses) {
+    const ts = response.getTimestamp().getTime();
+    if (isNaN(ts) || ts <= lastSeen) continue;
+
+    const namedValues = {};
+    for (const ir of response.getItemResponses()) {
+      const title = ir.getItem().getTitle();
+      let value = ir.getResponse();
+      if (Array.isArray(value)) {
+        if (value.length > 0 && typeof value[0] === 'string') {
+          value = 'https://drive.google.com/file/d/' + value[0] + '/view';
+        } else {
+          value = String(value[0] || '');
+        }
+      }
+      namedValues[title] = [value];
+    }
+    try {
+      handleSiUpload({ namedValues: namedValues, timestamp: response.getTimestamp() });
+    } catch (e) {
+      console.error('handleSiUpload failed: ' + e);
+    }
+
+    if (ts > latestMs) latestMs = ts;
+    processed++;
+  }
+
+  if (processed > 0) {
+    props.setProperty(lastSeenKey, new Date(latestMs).toISOString());
+  }
+  return { processed: processed };
+}
 
 // ========================================================================
 // Validation
@@ -781,78 +891,23 @@ function _logAudit(sheet, trigger, source, row, action, outcome, details) {
 }
 
 // ========================================================================
-// Setup — install installable triggers (run ONCE by a human editor)
+// Cleanup — remove any leftover Apps Script triggers (Phase 8 replaces them)
 // ========================================================================
 
 /**
- * setup — run this ONCE from the Apps Script editor after first deployment.
- * Idempotent: deletes any existing s210 triggers before reinstalling.
+ * removeAllTriggers — optional cleanup. With the Phase 8 Cloud Scheduler
+ * switch, no Apps Script triggers are needed. If any were installed by a
+ * pre-Phase-8 setup() run, this removes them. Safe to skip on fresh deploys.
  */
-function setup() {
-  // Delete any existing triggers managed by this project to keep clean state
+function removeAllTriggers() {
   const existing = ScriptApp.getProjectTriggers();
-  const managed = new Set([
-    'handleNewReceipt_3MD',
-    'handleNewReceipt_Pinnacle',
-    'handleNewReceipt_Shaw',
-    'ageVarianceQueue',
-    'refreshMasters',
-    'sendCeoDailyEmail',
-    'handleSiUpload',
-  ]);
+  let removed = 0;
   for (const t of existing) {
-    if (managed.has(t.getHandlerFunction())) {
-      ScriptApp.deleteTrigger(t);
-    }
+    ScriptApp.deleteTrigger(t);
+    removed++;
   }
-
-  // 1. onEdit on Sheet A (3MD)
-  ScriptApp.newTrigger('handleNewReceipt_3MD')
-    .forSpreadsheet(SHEET_A).onEdit().create();
-
-  // 2. onEdit on Sheet B (Pinnacle)
-  ScriptApp.newTrigger('handleNewReceipt_Pinnacle')
-    .forSpreadsheet(SHEET_B).onEdit().create();
-
-  // 3. onEdit on Sheet D (Shaw transitional)
-  ScriptApp.newTrigger('handleNewReceipt_Shaw')
-    .forSpreadsheet(SHEET_D).onEdit().create();
-
-  // 4. Hourly cron — ageVarianceQueue
-  ScriptApp.newTrigger('ageVarianceQueue')
-    .timeBased().everyHours(1).create();
-
-  // 5. Daily 06:00 PHT — refreshMasters (body added Phase 5)
-  ScriptApp.newTrigger('refreshMasters')
-    .timeBased().atHour(6).everyDays(1)
-    .inTimezone('Asia/Manila').create();
-
-  // 6. Daily 07:00 PHT — sendCeoDailyEmail (body added Phase 5)
-  ScriptApp.newTrigger('sendCeoDailyEmail')
-    .timeBased().atHour(7).everyDays(1)
-    .inTimezone('Asia/Manila').create();
-
-  // 7. onFormSubmit — handleSiUpload (SI_UPLOAD_FORM_ID from SHEET_IDS.json)
-  // Note: installable onFormSubmit must be attached to the form. In the
-  // editor, open the SI Upload form, choose "Script editor" and add the
-  // handleSiUpload function with an onFormSubmit installable trigger. For
-  // a standalone script, we use Form ID programmatically:
-  const SI_UPLOAD_FORM_ID = '1DsT-IdDpW_p3XfpSevkyCZ7S-YVu3EWEK3SxD1lJ940';
-  try {
-    const form = FormApp.openById(SI_UPLOAD_FORM_ID);
-    ScriptApp.newTrigger('handleSiUpload')
-      .forForm(form).onFormSubmit().create();
-  } catch (err) {
-    console.error('Failed to install onFormSubmit trigger: ' + err);
-  }
-
-  console.log('setup complete: 7 triggers installed');
-
-  // Audit log entry to confirm setup ran
-  const masterSs = SpreadsheetApp.openById(SHEET_C);
-  const auditLog = masterSs.getSheetByName('09_Audit_Log');
-  _logAudit(auditLog, 'setup', 'manual', 0, 'Triggers_installed', 'OK',
-            '6 triggers: 3 onEdit + 3 timeBased');
+  console.log('removeAllTriggers: removed ' + removed);
+  return { removed: removed };
 }
 
 /**
