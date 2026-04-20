@@ -298,9 +298,11 @@ These documents contain sprint-like naming but are not part of the canonical seq
 
 | `S205` | Sprint 205 | `s205-s194-cert-finalization` (bei-tasks); `s205-s194-cert-finalization-plan` (hrms) | hrms #614, bei-tasks #414 (merged 2026-04-18) | IN PROGRESS 2026-04-18 — **S194 Procurement Cert Finalization.** Per CEO directive, target is 31/31 PASS via PRODUCT fixes only (no test reframes, no skips/deferrals). Bei-tasks deployed 2026-04-18: Warehouse role-hide on supplier hub (S194-24), GR Reject-All button + testid (S194-31), Sonner toast duration 4s→20s (S194-6/15/17/19), convertToPO race fix, supplier picker on new-invoice + new-RFP forms (S194-7/8), MX list row exposes exception name + testid (S194-18), GR auto_submit Page Object flag, submit-verify testid. Hrms (PR #614 pending): TIN gate on convert_to_po (S194-15), create_goods_receipt accepts auto_submit flag (S194-9..30 unblock). | `docs/plans/2026-04-17-sprint-205-s194-cert-finalization.md` |
 
+| `S209` | Sprint 209 | `s209-all-stores-ordering-billing-acceptance` (hrms) + `s209-all-stores-specs` (bei-tasks) | TBD | PLANNED 2026-04-20 — 49-Store Ordering + Billing + Receive-Variance Browser Acceptance. Post-canonical-cleanup (PR #638) full-fleet acceptance test: every store's happy chain (order → dual approve → dispatch → receive → SI) in browser, per-store billing assertion, V1 short-receive, V2 warehouse short-dispatch, canonical no-drift proof. | `docs/plans/2026-04-20-sprint-209-all-stores-ordering-billing-acceptance.md` |
+
 ## Next Sprint Reservation
-1. Next canonical sprint ID to assign: `S207`.
-2. Reserve branch name: `s207-{slug}` (fill slug from plan filename).
+1. Next canonical sprint ID to assign: `S210`.
+2. Reserve branch name: `s210-{slug}` (fill slug from plan filename).
 3. Create new sprint plan only after adding row here first.
 4. **Agent MUST `git checkout -b <branch>` before writing any code.**
 5. **MANDATORY cross-check before reserving any S###:** run `git branch -a | grep -iE 's(17[5-9]|18[0-9]|19[0-9])'` on BOTH `hrms` and `bei-tasks` AND `ls docs/plans/ | grep -E 'sprint-(17[5-9]|18[0-9]|19[0-9])'` — if any match the ID you're about to reserve, pick the next free number. The local registry is not authoritative; remote branches and plan files are.
