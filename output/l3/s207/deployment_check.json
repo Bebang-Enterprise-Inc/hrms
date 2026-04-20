@@ -1,11 +1,16 @@
 {
   "s207_api": {
-    "present": false,
-    "error": "cannot import name 'preview_allocation' from 'hrms.api.labor_allocation' (/home/frappe/frappe-bench/apps/hrms/hrms/api/labor_allocation.py)"
+    "preview_allocation_present": true,
+    "post_allocation_present": true,
+    "preview_scheduled_present": true,
+    "pht_constant_present": true,
+    "pht_offset_hours": 8.0
   },
   "posting_date_helper": {
-    "present": false,
-    "error": "cannot import name 'posting_date_for_slip' from 'hrms.utils.labor_allocation' (/home/frappe/frappe-bench/apps/hrms/hrms/utils/labor_allocation.py)"
+    "present": true,
+    "sample_first_half": "2026-04-25",
+    "sample_second_half": "2026-05-10",
+    "year_rollover": "2027-01-10"
   },
   "labor_allocation_log_schema": {
     "columns": [
@@ -25,22 +30,22 @@
       "idx",
       "modified",
       "modified_by",
-      "month",
       "name",
       "owner",
       "period_end",
       "period_start",
       "shift_shares_json",
-      "total_allocated",
-      "year"
+      "slip_name",
+      "total_allocated"
     ],
     "unique_indexes": [
-      "PRIMARY"
+      "PRIMARY",
+      "idx_slip_employee"
     ],
-    "year_column_dropped": false,
-    "month_column_dropped": false,
-    "slip_name_column_present": false,
-    "idx_slip_employee_present": false,
+    "year_column_dropped": true,
+    "month_column_dropped": true,
+    "slip_name_column_present": true,
+    "idx_slip_employee_present": true,
     "idx_year_month_employee_absent": true
   },
   "salary_structures": {
@@ -50,12 +55,12 @@
     "all_bimonthly": true
   },
   "hooks_cron": {
-    "daily_0_22_targets": [],
-    "preview_scheduled_in_daily": false,
+    "daily_0_22_targets": [
+      "hrms.api.labor_allocation.preview_scheduled"
+    ],
+    "preview_scheduled_in_daily": true,
     "old_monthly_cron_absent": true,
-    "old_monthly_cron_entries": [
-      "hrms.api.labor_allocation.preview_monthly_allocation_scheduled"
-    ]
+    "old_monthly_cron_entries": []
   },
   "container_hrms_head": "error: Command '['git', '-C', '/home/frappe/frappe-bench/apps/hrms', 'rev-parse', 'HEAD']' returned non-zero exit status 128."
 }

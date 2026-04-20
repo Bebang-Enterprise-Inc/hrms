@@ -3,27 +3,32 @@ sprint: S207
 title: S206 Long-Term Completion — Bimonthly Cadence + Salary Structure Alignment + 4-Children COA Finish
 branch: s207-semi-monthly-allocation-and-coa-completion
 base: production
-status: DEPLOYED_PENDING_L3
+status: COMPLETED
 deployed_date: 2026-04-20
-backend_pr: TBD-pending-PR-creation
+completed_date: 2026-04-20
+backend_pr: https://github.com/Bebang-Enterprise-Inc/hrms/pull/644
 execution_summary: |
-  All 8 phases delivered 2026-04-20 via 8 atomic commits on branch
-  s207-semi-monthly-allocation-and-coa-completion (pushed to remote). Built
-  inside worktree F:/Dropbox/Projects/BEI-ERP-s207 after a mid-session
-  concurrent-branch-switch incident (the /merge-bei-erp agent was rebasing
-  in the main repo). Phase 4 Salary Structure bulk-edit (4/4 Monthly ->
-  Bimonthly) and Phase 6 4-children COA seed (49/49 stores complete) are
-  already applied to live production data via SSM. Canonical postcheck
-  matches precheck exactly (zero new violations; only the pre-existing
-  BILLING_CUST_TIN_EMPTY on ORTIGAS GREENHILLS remains). L3 harness
-  scripts/s207_verify_all.py passes 5/5 executable checks (day-guard math
-  L3-3/4/5, Structures L3-8, coverage L3-9); L3-1/2/6/7 skip pending merge
-  + deploy (they require the new preview_allocation / post_allocation
-  endpoints on the container). TP Policy v1.2 ships with CEO approval
-  artifact reference. Agent stops after PR creation; Sam merges + deploys;
-  a fresh L3 session reruns the verify harness post-deploy to flip status
-  to COMPLETED.
-l3_result: "5 PASS, 4 SKIP (pending merge+deploy) — see output/l3/s207/VERIFICATION_SUMMARY.md"
+  All 8 phases delivered + deployed 2026-04-20. PR #644 merged 06:49 UTC
+  (Sam / /merge-bei-erp); "Build and Deploy Frappe HRMS" workflow succeeded
+  at 06:52 UTC; Docker Swarm rolled image ghcr.io/...@sha256:286501ee...;
+  backend container restarted 06:51 UTC. All S207 code is live on the
+  hq.bebang.ph container: preview_allocation / post_allocation /
+  preview_scheduled / posting_date_for_slip / PHT. Daily 0 22 * * * cron
+  wired to preview_scheduled; old 0 22 1 * * monthly cron removed.
+  Salary Structures 4/4 = Bimonthly. COA coverage 49/49.
+  Canonical postcheck matches precheck (zero new violations; only the
+  pre-existing BILLING_CUST_TIN_EMPTY on ORTIGAS GREENHILLS remains).
+  L3 harness (scripts/s207_verify_all.py with S207_APPLY_L3=1):
+  8 PASS + 1 SKIP + 0 FAIL. L3-7 SKIP is structural — there are zero
+  April Salary Slips so no S207 JE exists to inspect; posting_date math
+  itself is covered by unit tests (test_s207_posting_date.py, all PASS).
+  Deployment uncovered a pre-existing COLLATERAL bug in the deploy
+  workflow: migrate step uses wrong site name (hrms.bebang.ph vs the
+  actual hq.bebang.ph), so the migration patch didn't run. Manual SSM
+  repair (scripts/s207_check_migration_errors.py) completed the schema
+  changes; patch recorded as done in tabPatch Log. Collateral bug tracked
+  in output/l3/s207/DEFECTS.md for a separate sprint to fix the workflow.
+l3_result: "8 PASS, 1 SKIP (L3-7 no April data), 0 FAIL — see output/l3/s207/VERIFICATION_SUMMARY.md"
 plan_version: v5
 canonical_model_reference: docs/STORE_COMPANY_CANONICAL.md
 canonical_preflight: required

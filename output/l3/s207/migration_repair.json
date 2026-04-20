@@ -1,0 +1,71 @@
+{
+  "patch_log_rows": [],
+  "recent_errors": [],
+  "columns_before_repair": [
+    "name",
+    "creation",
+    "modified",
+    "modified_by",
+    "owner",
+    "docstatus",
+    "idx",
+    "year",
+    "month",
+    "employee",
+    "period_start",
+    "period_end",
+    "home_company",
+    "covered_companies",
+    "home_jes_json",
+    "covered_jes_json",
+    "total_allocated",
+    "shift_shares_json",
+    "allocated_on",
+    "allocated_by",
+    "_user_tags",
+    "_comments",
+    "_assign",
+    "_liked_by",
+    "slip_name"
+  ],
+  "null_slip_rows": 0,
+  "null_year_rows": 0,
+  "total_rows": 0,
+  "unique_indexes_before_repair": [
+    "PRIMARY"
+  ],
+  "repair_log": [
+    "dropped year OK",
+    "dropped month OK",
+    "created idx_slip_employee OK"
+  ],
+  "columns_after_repair": [
+    "name",
+    "creation",
+    "modified",
+    "modified_by",
+    "owner",
+    "docstatus",
+    "idx",
+    "employee",
+    "period_start",
+    "period_end",
+    "home_company",
+    "covered_companies",
+    "home_jes_json",
+    "covered_jes_json",
+    "total_allocated",
+    "shift_shares_json",
+    "allocated_on",
+    "allocated_by",
+    "_user_tags",
+    "_comments",
+    "_assign",
+    "_liked_by",
+    "slip_name"
+  ],
+  "unique_indexes_after_repair": [
+    "PRIMARY",
+    "idx_slip_employee"
+  ]
+}

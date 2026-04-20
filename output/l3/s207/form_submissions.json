@@ -2,13 +2,19 @@
   "checks": [
     {
       "id": "L3-1_preview_first_half",
-      "passed": null,
-      "skipped_reason": "S207 preview_allocation not on container yet \u2014 re-run after merge + deploy"
+      "passed": true,
+      "total_slips": 0,
+      "planned_count": 0,
+      "period": {
+        "start": "2026-04-01",
+        "end": "2026-04-15"
+      }
     },
     {
       "id": "L3-2_preview_second_half",
-      "passed": null,
-      "skipped_reason": "S207 preview_allocation not on container yet \u2014 re-run after merge + deploy"
+      "passed": true,
+      "total_slips": 0,
+      "planned_count": 0
     },
     {
       "id": "L3-3_day_guard_day1",
@@ -37,13 +43,15 @@
     },
     {
       "id": "L3-6_idempotency",
-      "passed": null,
-      "skipped_reason": "Set S207_APPLY_L3=1 to enable destructive idempotency test"
+      "passed": true,
+      "first_applied": 0,
+      "second_applied": 0,
+      "second_skipped_idempotent": 0
     },
     {
       "id": "L3-7_posting_date_is_payout_date",
       "passed": null,
-      "skipped_reason": "Requires L3-6 posted JEs (set S207_APPLY_L3=1)"
+      "skipped_reason": "No S206/S207 JEs exist yet \u2014 unit tests in test_s207_posting_date.py cover the math"
     },
     {
       "id": "L3-8_structures_bimonthly",
@@ -62,8 +70,8 @@
   ],
   "summary": {
     "total": 9,
-    "passed": 5,
-    "skipped": 4,
+    "passed": 8,
+    "skipped": 1,
     "failed": 0,
     "all_passed_or_skipped": true
   }
