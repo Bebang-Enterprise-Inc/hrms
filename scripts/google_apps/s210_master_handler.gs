@@ -917,12 +917,12 @@ function _writeFilteredPOs(ss, tabName, poData, destFilter) {
 
 /**
  * sendCeoDailyEmail — daily 07:00 PHT cron. Pulls yesterday's KPIs from
- * Sheet C 01_Dashboard and sends a summary email to sam@bebang.ph and
- * ian@bebang.ph.
+ * Sheet C 01_Dashboard and sends a summary email to sam@bebang.ph only.
+ * (Was sam+ian until 2026-04-21; Ian runs ops from the dashboard directly,
+ * doesn't need the CEO-level digest.)
  *
- * Recipients (hard-coded per plan 5.1):
+ * Recipients:
  *   - sam@bebang.ph
- *   - ian@bebang.ph
  */
 function sendCeoDailyEmail() {
   const masterSs = SpreadsheetApp.openById(SHEET_C);
@@ -974,14 +974,14 @@ function sendCeoDailyEmail() {
     ];
 
     GmailApp.sendEmail(
-      'sam@bebang.ph, ian@bebang.ph',
+      'sam@bebang.ph',
       subject,
       bodyLines.join('\n'),
       { name: 'BEI Receiving Bot' }
     );
 
     _logAudit(auditLog, 'sendCeoDailyEmail', 'cron', 0,
-              'Digest_sent', 'OK', 'to sam@bebang.ph, ian@bebang.ph');
+              'Digest_sent', 'OK', 'to sam@bebang.ph');
   } catch (e) {
     _logAudit(auditLog, 'sendCeoDailyEmail', 'cron', 0,
               'Digest_failed', 'FAIL', String(e));

@@ -1,0 +1,39 @@
+{
+  "updated": [
+    {
+      "local": "1_3PL_DOCK_CARD.docx",
+      "drive_name": "2026-04-21 - BEI Deliveries \u2014 3PL Dock Card (3MD + Pinnacle)",
+      "drive_url": "https://docs.google.com/document/d/1zlb5ZAXmyN1Y_HaXOJl_rNc-6cXy-Q1d2Uw3xbIq5EY/edit?usp=drivesdk",
+      "file_id": "1zlb5ZAXmyN1Y_HaXOJl_rNc-6cXy-Q1d2Uw3xbIq5EY"
+    },
+    {
+      "local": "2_SUPPLIER_FAQ.docx",
+      "drive_name": "2026-04-21 - BEI Supplier SI Upload \u2014 FAQ (attach to emails)",
+      "drive_url": "https://docs.google.com/document/d/1YERz3hHrekYoOVORTnRTumjjnMRch0hjVjLyFe3Qd9A/edit?usp=drivesdk",
+      "file_id": "1YERz3hHrekYoOVORTnRTumjjnMRch0hjVjLyFe3Qd9A"
+    },
+    {
+      "local": "3_BEI_TEAM_PLAYBOOK.docx",
+      "drive_name": "2026-04-21 - BEI Receiving \u2014 Team Playbook (Cayla + Ian + Denise)",
+      "drive_url": "https://docs.google.com/document/d/1XOBZ1J4SO_OAkh9AG1UiB9V1wdvTDuF_ncGk60VSbBs/edit?usp=drivesdk",
+      "file_id": "1XOBZ1J4SO_OAkh9AG1UiB9V1wdvTDuF_ncGk60VSbBs"
+    }
+  ],
+  "trashed": [
+    {
+      "label": "Master Index",
+      "file_id": "17U6HI0dks5QhJVZaeL4_wVQdWR7VsBW_HsBW-cOnPto",
+      "action": "trashed"
+    },
+    {
+      "label": "Cayla Supplier Rollout (merged)",
+      "file_id": "1ktaZ4HYOAO4Srbf8oj8tA3fRtDTlkpvqA_wx9nFYu10",
+      "action": "trashed"
+    },
+    {
+      "label": "Finance Reconciliation (merged)",
+      "file_id": "1GxLibZRYTkE9z8gM3tfXqJb1BkgHHpPizUMDEQpxaQI",
+      "action": "trashed"
+    }
+  ]
+}
