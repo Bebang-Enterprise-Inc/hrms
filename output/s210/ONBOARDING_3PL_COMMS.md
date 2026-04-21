@@ -63,6 +63,35 @@ Material Description | Qty Received | UoM | SI Number | Trucker's Name |
 Plate Number | Production Date | Expiration Date | Received By | Notes
 ```
 
+### Multi-line deliveries (Phase 10 UX assist)
+
+One PO drop often has multiple items on the same truck with the same SI. The
+3PL types the **header fields** on the first line of the delivery, then
+leaves them BLANK on subsequent lines of the same delivery — Apps Script
+auto-inherits from the most recent prior row.
+
+**Header fields (auto-inherited when blank):** RR Number, PO Number, Supplier,
+SI Number, Trucker's Name, Plate Number, Received By.
+
+**Per-line fields (NEVER inherited — must be typed every row):** Material Code,
+Material Description, Qty Received, UoM, Production Date, Expiration Date, Notes.
+
+Example — one 3MD delivery with 3 items:
+
+| Timestamp | RR# | PO# | Supplier | Material | Qty | UoM | SI# | Trucker |
+|---|---|---|---|---|---|---|---|---|
+| 10:15 | RR-0041 | PO-2026-1234 | DIMAX | FLOUR-25KG | 10 | BAG | SI-8877 | Juan |
+| 10:15 | _(blank)_ | _(blank)_ | _(blank)_ | SUGAR-50KG | 5 | BAG | _(blank)_ | _(blank)_ |
+| 10:15 | _(blank)_ | _(blank)_ | _(blank)_ | YEAST-1KG | 2 | PC | _(blank)_ | _(blank)_ |
+
+Sheet C consolidated still gets 3 rows, each with RR-0041 / PO-2026-1234 /
+DIMAX / SI-8877 / Juan fully populated. When the supplier later uploads
+SI-8877 via the form, all 3 rows are tagged `SI_Matched=TRUE`
+simultaneously (Phase 10 fix to match-all-rows).
+
+The audit log records `inherited_cols=3,4,5,9,10,11,14` (or whichever
+columns were auto-filled) so the trail is explicit.
+
 ### Edit behaviour gotchas
 
 | Action | Effect |
