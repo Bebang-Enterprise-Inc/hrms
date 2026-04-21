@@ -1,0 +1,127 @@
+{
+  "formId": "1gyijOzmjXJHlyil7wraQ8xjmPMu0q1eoqUcjwHXogPg",
+  "info": {
+    "title": "BEI Supplier SI Upload",
+    "description": "Suppliers: upload your Sales Invoice (SI) for a delivered Purchase Order.\\nFastest path to payment \u2014 no paper SI forwarding needed.\\n\\nRequired: PO Number, SI Number, SI Date, SI Amount, SI PDF file.\\n\\nQuestions: sam@bebang.ph",
+    "documentTitle": "BEI Supplier SI Upload"
+  },
+  "settings": {
+    "emailCollectionType": "DO_NOT_COLLECT"
+  },
+  "revisionId": "00000032",
+  "responderUri": "https://docs.google.com/forms/d/e/1FAIpQLSc3UC9f_3gefDYNgpOqNx7UCw_5BDrRh9T8-GQeyHHWSxdITw/viewform",
+  "items": [
+    {
+      "itemId": "27266a8d",
+      "title": "Warehouse",
+      "description": "Which BEI warehouse did you deliver to? Pick one \u2014 required.",
+      "questionItem": {
+        "question": {
+          "questionId": "4bde2019",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "3MD"
+              },
+              {
+                "value": "Pinnacle"
+              },
+              {
+                "value": "Shaw BLVD"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "532bc5de",
+      "title": "PO Number",
+      "description": "Copy from your BEI Purchase Order (e.g. PO-2026-1234).",
+      "questionItem": {
+        "question": {
+          "questionId": "7012ba71",
+          "required": true,
+          "textQuestion": {}
+        }
+      }
+    },
+    {
+      "itemId": "22edd1ee",
+      "title": "SI Number",
+      "description": "Your sales invoice number (exactly as printed).",
+      "questionItem": {
+        "question": {
+          "questionId": "2d4787a7",
+          "required": true,
+          "textQuestion": {}
+        }
+      }
+    },
+    {
+      "itemId": "6c3f4854",
+      "title": "Upload SI Copy",
+      "questionItem": {
+        "question": {
+          "questionId": "72e37828",
+          "required": true,
+          "fileUploadQuestion": {
+            "folderId": "1pA-dWHF18RwV1p4HRuDTU4a8vUD6kbXTZgT0bEAcJEbX3NxLTB053MVVvxAdWx9r2HXJH96k",
+            "types": [
+              "ANY"
+            ],
+            "maxFiles": 5,
+            "maxFileSize": "10485760"
+          }
+        }
+      }
+    },
+    {
+      "itemId": "6e3e9934",
+      "title": "SI Date",
+      "description": "Date on your SI.",
+      "questionItem": {
+        "question": {
+          "questionId": "5daba830",
+          "required": true,
+          "dateQuestion": {
+            "includeYear": true
+          }
+        }
+      }
+    },
+    {
+      "itemId": "44c9a889",
+      "title": "Amount (PHP)",
+      "description": "Total amount on SI in PHP (numbers only).",
+      "questionItem": {
+        "question": {
+          "questionId": "7ae30aab",
+          "required": true,
+          "textQuestion": {}
+        }
+      }
+    },
+    {
+      "itemId": "28974195",
+      "title": "Notes",
+      "description": "Anything the BEI team should know (optional).",
+      "questionItem": {
+        "question": {
+          "questionId": "042a2ec6",
+          "textQuestion": {
+            "paragraph": true
+          }
+        }
+      }
+    }
+  ],
+  "publishSettings": {
+    "publishState": {
+      "isPublished": true,
+      "isAcceptingResponses": true
+    }
+  }
+}

@@ -676,11 +676,55 @@ function refreshMasters() {
     errors.push('po_lines: ' + String(e));
   }
 
+  // S215 Phase 3: push latest material codes to the SI Upload form dropdown.
+  // Keeps the supplier-facing dropdown in sync with Item List without manual work.
+  let materialCodesPushed = 0;
+  try {
+    materialCodesPushed = _refreshFormMaterialCodes_(masterSs);
+  } catch (e) {
+    errors.push('form_material_codes: ' + String(e));
+  }
+
   const outcome = errors.length === 0 ? 'OK' : 'PARTIAL';
   _logAudit(auditLog, 'refreshMasters', 'cron', 0,
             'Refreshed_' + suppliersWritten + '_suppliers_' + openPosWritten + '_POs_' +
-              materialsWritten + '_materials_' + poLinesWritten + '_po_lines',
+              materialsWritten + '_materials_' + poLinesWritten + '_po_lines_' +
+              materialCodesPushed + '_mat_codes',
             outcome, errors.join('; '));
+}
+
+/**
+ * S215 Phase 3: push deduped Material Codes from `10_Full_Materials_Master`
+ * to the SI Upload form dropdown. Keeps supplier-facing choices in sync.
+ * Uses FormApp (Apps Script native — executes as deployer sam@bebang.ph).
+ * Returns number of options pushed.
+ */
+function _refreshFormMaterialCodes_(masterSs) {
+  const matMaster = masterSs.getSheetByName('10_Full_Materials_Master');
+  if (!matMaster) return 0;
+  const last = matMaster.getLastRow();
+  if (last < 2) return 0;
+  const codes = matMaster.getRange(2, 2, last - 1, 1).getValues()
+    .map(function(r) { return String(r[0] || '').trim(); })
+    .filter(function(c) { return c.length > 0; });
+  const unique = [];
+  const seen = {};
+  for (let i = 0; i < codes.length; i++) {
+    if (!seen[codes[i]]) { seen[codes[i]] = true; unique.push(codes[i]); }
+  }
+  unique.sort();
+
+  const form = FormApp.openById(SI_UPLOAD_FORM_ID);
+  const items = form.getItems();
+  let target = null;
+  for (let i = 0; i < items.length; i++) {
+    if (items[i].getTitle() === 'Material Code') { target = items[i]; break; }
+  }
+  if (!target) return 0;
+
+  // Material Code is a DROP_DOWN choice question — native Apps Script gives asListItem()
+  target.asListItem().setChoiceValues(unique);
+  return unique.length;
 }
 
 /**
@@ -982,9 +1026,10 @@ function handleSiUpload(e) {
   const auditLog = masterSs.getSheetByName('09_Audit_Log');
 
   // e.namedValues is keyed by form item title; e.values is array in item order.
-  // Form items post-Phase-14 (Supplier Name removed, derived from PO):
-  //   Warehouse, PO Number, SI Number, SI Date, Amount (PHP), Upload SI Copy, Notes
-  let warehouse = '', poNumber = '', siNumber = '';
+  // Form items post-S215-Phase-3 (Material Code dropdown added at position 3):
+  //   Warehouse, PO Number, SI Number, Material Code, Upload SI Copy, SI Date,
+  //   Amount (PHP), Notes
+  let warehouse = '', poNumber = '', siNumber = '', materialCode = '';
   let siDate = '', amount = '', siPdfLink = '', notes = '';
 
   if (e && e.namedValues) {
@@ -996,6 +1041,7 @@ function handleSiUpload(e) {
     warehouse = first('Warehouse');
     poNumber = first('PO Number');
     siNumber = first('SI Number');
+    materialCode = first('Material Code');
     siDate = first('SI Date');
     amount = first('Amount (PHP)');
     siPdfLink = first('Upload SI Copy') || first('SI PDF') || first('SI PDF Drive Link');
@@ -1005,10 +1051,36 @@ function handleSiUpload(e) {
     warehouse = e.values[1] || '';
     poNumber = e.values[2] || '';
     siNumber = e.values[3] || '';
-    siDate = e.values[4] || '';
-    amount = e.values[5] || '';
-    siPdfLink = e.values[6] || '';
-    notes = e.values[7] || '';
+    materialCode = e.values[4] || '';
+    siPdfLink = e.values[5] || '';
+    siDate = e.values[6] || '';
+    amount = e.values[7] || '';
+    notes = e.values[8] || '';
+  }
+
+  // S215 Phase 3 (P3-T2): validate Material Code against 10_Full_Materials_Master.
+  // Non-blocking — accepts the upload but logs mismatch to audit so Cayla can
+  // chase the supplier if they're using an unlisted code.
+  let materialCodeStatus = 'NOT_PROVIDED';
+  if (materialCode) {
+    const matMaster = masterSs.getSheetByName('10_Full_Materials_Master');
+    if (matMaster) {
+      const matData = matMaster.getRange(2, 2, Math.max(0, matMaster.getLastRow() - 1), 1).getValues();
+      const normMat = String(materialCode).trim().toUpperCase();
+      let found = false;
+      for (let i = 0; i < matData.length; i++) {
+        if (String(matData[i][0] || '').trim().toUpperCase() === normMat) {
+          found = true;
+          break;
+        }
+      }
+      materialCodeStatus = found ? 'MATCHED' : 'UNLISTED';
+      if (!found) {
+        _logAudit(auditLog, 'SI_UPLOAD_MATERIAL_CODE_MISMATCH', materialCode, 0,
+                  'po=' + poNumber + '_si=' + siNumber + '_code=' + materialCode,
+                  'WARN', 'Material Code not found in 10_Full_Materials_Master — accepted anyway');
+      }
+    }
   }
 
   // Phase 14: derive Supplier Name from PO via Sheet C 08_Full_Open_POs lookup.

@@ -1,0 +1,13 @@
+{
+  "steps": [
+    "appended TEST row to Item List",
+    "refreshMasters #1 returned: {\"ok\":true,\"fn\":\"refreshMasters\",\"elapsed_ms\":13558,\"result\":null}",
+    "after refresh #1: dropdown has TEST code? True (total options=384)",
+    "deleted 1 TEST rows from Item List",
+    "refreshMasters #2 returned: {\"ok\":true,\"fn\":\"refreshMasters\",\"elapsed_ms\":9168,\"result\":null}",
+    "after refresh #2: dropdown has TEST code? False (total options=383)"
+  ],
+  "test_code_added": true,
+  "test_code_removed": true,
+  "cascade_works": true
+}

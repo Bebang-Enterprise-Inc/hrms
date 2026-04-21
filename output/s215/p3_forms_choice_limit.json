@@ -1,0 +1,6 @@
+{
+  "cap_at_least": 500,
+  "probed_count": 500,
+  "note": "API accepted 500 options without error. Cap is at least 500 (much higher than Item List 384).",
+  "cleanup": "deleted"
+}

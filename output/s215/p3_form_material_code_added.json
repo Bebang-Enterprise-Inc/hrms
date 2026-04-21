@@ -1,0 +1,19 @@
+{
+  "action": "inserted_at_index_3",
+  "codes_count": 383,
+  "batch_response": {
+    "replies": [
+      {
+        "createItem": {
+          "itemId": "40d8c71e",
+          "questionId": [
+            "46ac9173"
+          ]
+        }
+      }
+    ],
+    "writeControl": {
+      "requiredRevisionId": "00000033"
+    }
+  }
+}
