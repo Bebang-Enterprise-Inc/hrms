@@ -1,0 +1,76 @@
+{
+  "attempted_stores": [
+    {
+      "warehouse": "ARANETA GATEWAY - TUNGSTEN CAPITAL HOLDINGS OPC",
+      "buyer_entity_name": "ARANETA GATEWAY - TUNGSTEN CAPITAL HOLDINGS OPC",
+      "store_type": "Managed Franchise",
+      "store_ownership_type": null,
+      "buyer_entity_status": "confirmed_legal_entity"
+    },
+    {
+      "warehouse": "AYALA FAIRVIEW TERRACES - BEBANG FT INC.",
+      "buyer_entity_name": "AYALA FAIRVIEW TERRACES - BEBANG FT INC.",
+      "store_type": "Company Owned",
+      "store_ownership_type": null,
+      "buyer_entity_status": "confirmed_legal_entity"
+    },
+    {
+      "warehouse": "AYALA MARKET MARKET - BEBANG MARKET MARKET INC.",
+      "buyer_entity_name": "AYALA MARKET MARKET - BEBANG MARKET MARKET INC.",
+      "store_type": "JV",
+      "store_ownership_type": null,
+      "buyer_entity_status": "confirmed_legal_entity"
+    },
+    {
+      "warehouse": "AYALA SOLENAD - HFFM SOLENAD FOOD SERVICES INC.",
+      "buyer_entity_name": "AYALA SOLENAD - HFFM SOLENAD FOOD SERVICES INC.",
+      "store_type": "Managed Franchise",
+      "store_ownership_type": null,
+      "buyer_entity_status": "confirmed_legal_entity"
+    },
+    {
+      "warehouse": "AYALA UP TOWN CENTER - BEBANG UP TOWN CENTER INC.",
+      "buyer_entity_name": "AYALA UP TOWN CENTER - BEBANG UP TOWN CENTER INC.",
+      "store_type": "JV",
+      "store_ownership_type": null,
+      "buyer_entity_status": "confirmed_legal_entity"
+    },
+    {
+      "warehouse": "AYALA VERMOSA - BEBANG MEGA INC.",
+      "buyer_entity_name": "AYALA VERMOSA - BEBANG MEGA INC.",
+      "store_type": "Managed Franchise",
+      "store_ownership_type": null,
+      "buyer_entity_status": "confirmed_legal_entity"
+    },
+    {
+      "warehouse": "BF HOMES - BEBANG BF HOMES INC.",
+      "buyer_entity_name": "BF HOMES - BEBANG BF HOMES INC.",
+      "store_type": "JV",
+      "store_ownership_type": null,
+      "buyer_entity_status": "confirmed_legal_entity"
+    },
+    {
+      "warehouse": "CTTM TOMAS MORATO - B CUBED VENTURES CORP.",
+      "buyer_entity_name": "CTTM TOMAS MORATO - B CUBED VENTURES CORP.",
+      "store_type": "Managed Franchise",
+      "store_ownership_type": null,
+      "buyer_entity_status": "confirmed_legal_entity"
+    }
+  ],
+  "distinct_ownership_types": [
+    "Company Owned",
+    "Full Franchise",
+    "JV",
+    "Managed Franchise"
+  ],
+  "markup_fields": [
+    "bki_markup_jv_percent",
+    "bki_markup_managed_franchise_percent",
+    "bki_markup_full_franchise_percent"
+  ],
+  "markup_values": {
+    "bki_markup_jv_percent": 2.75,
+    "bki_markup_managed_franchise_percent": 8.0,
+    "bki_markup_full_franchise_percent": 8.0
+  }
+}

@@ -1069,6 +1069,11 @@ def build_bki_store_sale_invoice(
 
 	# Markup + VAT template + income account from BEI Settings
 	settings = frappe.get_single("BEI Settings")
+	# S212 DEFECT-5 fix: add "Company Owned" with its own markup setting
+	# (falls back to 0 if not configured — internal transfer pricing at cost,
+	# standard accounting treatment for wholly-owned intercompany transfers).
+	# Finance can set bki_markup_company_owned_percent in BEI Settings to apply
+	# a non-zero intercompany markup without a deploy.
 	markup_by_type = {
 		"JV": flt(getattr(settings, "bki_markup_jv_percent", 0) or 0) / 100,
 		"Managed Franchise": flt(
@@ -1077,6 +1082,10 @@ def build_bki_store_sale_invoice(
 		/ 100,
 		"Full Franchise": flt(
 			getattr(settings, "bki_markup_full_franchise_percent", 0) or 0
+		)
+		/ 100,
+		"Company Owned": flt(
+			getattr(settings, "bki_markup_company_owned_percent", 0) or 0
 		)
 		/ 100,
 	}

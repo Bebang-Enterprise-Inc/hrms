@@ -1,0 +1,16 @@
+result: None
+
+Traceback:
+Traceback (most recent call last):
+  File "/tmp/s212_repro.py", line 14, in <module>
+    result = build_bki_store_sale_invoice(stock_entry="MAT-STE-2026-00621", store_order_name="BEI-ORD-2026-00399")
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/frappe/frappe-bench/apps/hrms/hrms/api/commissary.py", line 1085, in build_bki_store_sale_invoice
+    frappe.throw(
+  File "/home/frappe/frappe-bench/apps/frappe/frappe/__init__.py", line 619, in throw
+    msgprint(
+  File "/home/frappe/frappe-bench/apps/frappe/frappe/__init__.py", line 584, in msgprint
+    _raise_exception()
+  File "/home/frappe/frappe-bench/apps/frappe/frappe/__init__.py", line 535, in _raise_exception
+    raise exc
+frappe.exceptions.ValidationError: Unknown store_type 'Company Owned' for AYALA FAIRVIEW TERRACES - BEBANG FT INC.. Configure markup in BEI Settings or fix the S037 register row.
