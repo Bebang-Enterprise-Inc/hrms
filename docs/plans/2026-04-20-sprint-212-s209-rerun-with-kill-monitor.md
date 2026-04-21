@@ -4,7 +4,7 @@ title: S209 L3 Rerun — fix 3 defects + kill-on-defect sweep monitor
 branch: s212-s209-rerun-kill-on-defect
 bei_tasks_branch: s212-l3-sweep-monitor
 base: production
-status: GO
+status: COMPLETED-PARTIAL
 plan_version: v1
 plan_date: 2026-04-20
 canonical_scope: in
@@ -16,8 +16,11 @@ depends_on:
   - Fiscal Year 2026 has BKI + BEBANG ENTERPRISE + SM TANZA + AYALA VERMOSA linked as companies (S209 manually linked the last two)
 execution_mode: autonomous
 signoff_authority: single-owner (Sam, CEO)
-completed_date:
-execution_summary:
+completed_date: 2026-04-21
+backend_pr: "#661 (phases 0-4) + #664 (R1 triage + DEFECT-5 Company Owned fix)"
+follow_up_sprint: S213 (FG004 NULL-batch backfill at BKI warehouses)
+execution_summary: |
+  COMPLETED-PARTIAL 2026-04-21. Shipped 4/5 code defect fixes (DEFECT-1 MR commit, DEFECT-2 SI qty accepted, DEFECT-3 FY 2026 link, DEFECT-5 Company Owned markup). Kill-on-defect monitor PROVEN — killed R1 at test 8 on 3-same-fingerprint threshold, saving ~48 wall-clock min. R1: 3/8 PASS (ARANETA GATEWAY, AYALA UP TOWN CENTER, BF HOMES). R1 discovered DEFECT-6 (data issue): FG004 at PINNACLE + 3MD has batch_no=NULL in Stock Ledger — ERPNext blocks dispatch. Outside S212 code scope; reserved as S213. Original 48/49 goal NOT reached because DEFECT-6 is operational data, not code. R1 artifacts cleaned up (15+7 docs cancelled, ledger pendingEntries=0). Canonical zero drift (preflight==postcheck).
 ---
 
 # S212 — S209 L3 Rerun with Kill-on-Defect Sweep Monitor
