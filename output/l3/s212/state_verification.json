@@ -1,0 +1,23 @@
+[
+  {
+    "store": "BF HOMES - BEBANG BF HOMES INC.",
+    "company": "BF HOMES - BEBANG BF HOMES INC.",
+    "customer": "BF HOMES - BEBANG BF HOMES INC.",
+    "tin": "673-762-767-00000",
+    "pass": true,
+    "orderId": "BEI-ORD-2026-00404",
+    "mrName": "MAT-MR-2026-00261",
+    "siName": "ACC-SINV-2026-00094"
+  },
+  {
+    "store": "CTTM TOMAS MORATO - B CUBED VENTURES CORP.",
+    "company": "CTTM TOMAS MORATO - B CUBED VENTURES CORP.",
+    "customer": "CTTM TOMAS MORATO - B CUBED VENTURES CORP.",
+    "tin": "682-574-745-00000",
+    "pass": false,
+    "orderId": "BEI-ORD-2026-00405",
+    "mrName": "MAT-MR-2026-00262",
+    "failedAt": "dispatch/receive",
+    "error": "DispatchPage: dispatch did not register for MAT-MR-2026-00262 within 30s (status=Ordered, per_transferred=undefined)"
+  }
+]

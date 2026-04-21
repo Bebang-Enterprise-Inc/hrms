@@ -1,0 +1,335 @@
+=== MAT-MR-2026-00258 ===
+set_wh=PINNACLE COLD STORAGE SOLUTIONS - BKI
+target=AYALA SOLENAD - HFFM SOLENAD FOOD SERVICES INC.
+items=3
+result=None
+tb_head:
+Traceback (most recent call last):
+  File "/home/frappe/frappe-bench/apps/hrms/hrms/api/warehouse.py", line 1622, in create_stock_transfer
+    se.submit()
+  File "/home/frappe/frappe-bench/apps/frappe/frappe/utils/typing_validations.py", line 32, in wrapper
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/frappe/frappe-bench/apps/frappe/frappe/model/document.py", line 1097, in submit
+    return self._submit()
+           ^^^^^^^^^^^^^^
+  File "/home/frappe/frappe-bench/apps/frappe/frappe/model/document.py", line 1080, in _submit
+    return self.save()
+           ^^^^^^^^^^^
+  File "/home/frappe/frappe-bench/apps/frappe/frappe/model/document.py", line 378, in save
+    return self._save(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/frappe/frappe-bench/apps/frappe/frappe/model/document.py", line 431, in _save
+    self.run_post_save_methods()
+  File "/home/frappe/frappe-bench/apps/frappe/frappe/model/document.py", line 1180, in run_post_save_methods
+    self.run_method("on_submit")
+  File "/home/frappe/frappe-bench/apps/frappe/frappe/model/document.py", line 1011, in run_method
+    out = Document.hook(fn)(self, *args, **kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/frappe/frappe-bench/apps/frappe/frappe/model/document.py", line 1371, in composer
+    return composed(self, method, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/frappe/frappe-bench/apps/frappe/frappe/model/document.py", line 1353, in runner
+    add_to_return_value(self, fn(self, *args, **kwargs))
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/frappe/frappe-bench/apps/frappe/frappe/model/document.py", line 1008, in fn
+    return method_object(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/frappe/frappe-bench/apps/erpnext/erpnext/stock/doctype/stock_entry/stock_entry.py", line 348, in on_submit
+    self.update_stock_ledger()
+  File "/home/frappe/frappe-bench/apps/erpnext/erpnext/stock/doctype/stock_entry/stock_entry.py", line 1569, in update_stock_ledger
+    self.make_sl_entries(sl_entries, allow_negative_stock=allow_negative_stock)
+  File "/home/frappe/frappe-bench/apps/erpnext/erpnext/controllers/stock_controller.py", line 1035, in make_sl_entries
+    make_sl_entries(sl_entries, allow_negative_stock, via_landed_cost_voucher)
+  File "/home/frappe/frappe-bench/apps/erpnext/erpnext/stock/stock_ledger.py", line 97, in make_sl_entries
+    sle_doc = make_entry(sle, allow_negative_stock, via_landed_cost_voucher)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/frappe/frappe-bench/apps/erpnext/erpnext/stock/stock_ledger.py", line 230, in make_entry
+    sle.submit()
+  File "/home/frappe/frappe-bench/apps/frappe/frappe/utils/typing_validations.py", line 32, in wrapper
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/frappe/frappe-bench/apps/frappe/frappe/model/document.py", line 1097, in submit
+    return self._submit()
+           ^^^^^^^^^^^^^^
+  File "/home/frappe/frappe-bench/apps/frappe/frappe/model/document.py", line 1080, in _submit
+    return self.save()
+           ^^^^^^^^^^^
+  File "/home/frappe/frappe-bench/apps/frappe/frappe/model/document.py", line 378, in save
+    return self._save(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/frappe/frappe-bench/apps/frappe/frappe/model/document.py", line 400, in _save
+    return self.insert()
+           ^^^^^^^^^^^^^
+  File "/home/frappe/frappe-bench/apps/frappe/frappe/model/document.py", line 334, in insert
+    self.run_post_save_methods()
+  File "/home/frappe/frappe-bench/apps/frappe/frappe/model/document.py", line 1180, in run_post_save_methods
+    self.run_method("on_submit")
+  File "/home/frappe/frappe-bench/apps/frappe/frappe/model/document.py", line 1011, in run_method
+    out = Document.hook(fn)(self, *args, **kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/frappe/frappe-bench/apps/frappe/frappe/model/document.py", line 1371, in composer
+    return composed(self, method, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/frappe/frappe-bench/apps/frappe/frappe/model/document.py", line 1353, in runner
+    add_to_return_value(self, fn(self, *args, **kwargs))
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/frappe/frappe-bench/apps/frappe/frappe/model/document.py", line 1008, in fn
+    return method_object(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/frappe/frappe-bench/apps/erpnext/erpnext/stock/doctype/stock_ledger_entry/stock_ledger_entry.py", line 193, in on_submit
+    self.validate_serial_batch_no_bundle()
+  File "/home/frappe/frappe-bench/apps/erpnext/erpnext/stock/doctype/stock_ledger_entry/stock_ledger_entry.py", line 239, in validate_serial_batch_no_bundle
+    self.throw_error_message(f"Serial No / Batch No are mandatory for Item {self.item_code}")
+  File "/home/frappe/frappe-bench/apps/erpnext/erpnext/stock/doctype/stock_ledger_entry/stock_ledger_entry.py", line 245, in throw_error_message
+    frappe.throw(_(message), exception)
+  File "/home/frappe/frappe-bench/apps/frappe/frappe/__init__.py", line 619, in throw
+    msgprint(
+  File "/home/frappe/frappe-bench/apps/frappe/frappe/__init__.py", line 584, in msgprint
+    _raise_exception()
+  File "/home/frappe/frappe-bench/apps/frappe/frappe/__init__.py", line 535, in _raise_exception
+    raise exc
+frappe.exceptions.ValidationError: Serial No / Batch No are mandatory for Item FG004
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/tmp/s212_rd.py", line 21, in <module>
+    result = create_stock_transfer(
+             ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/frappe/frappe-bench/apps/frappe/frappe/utils/typing_validations.py", line 32, in wrapper
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/frappe/frappe-bench/apps/hrms/hrms/api/warehouse.py", line 1696, in create_stock_transfer
+    frappe.throw(_(plain_msg), title=_("Transfer Failed"))
+  File "/home/frappe/frappe-bench/apps/frappe/frappe/__init__.py", line 619, in throw
+    msgprint(
+  File "/home/frappe/frappe-bench/apps/frappe/frappe/__init__.py", line 584, in msgprint
+    _raise_exception()
+  File "/home/frappe/frappe-bench/apps/frappe/frappe/__init__.py", line 535, in _raise_exception
+    raise exc
+frappe.exceptions.ValidationError: Serial No / Batch No are mandatory for Item FG004
+
+=== MAT-MR-2026-00260 ===
+set_wh=PINNACLE COLD STORAGE SOLUTIONS - BKI
+target=AYALA VERMOSA - BEBANG MEGA INC.
+items=3
+result=None
+tb_head:
+Traceback (most recent call last):
+  File "/home/frappe/frappe-bench/apps/hrms/hrms/api/warehouse.py", line 1622, in create_stock_transfer
+    se.submit()
+  File "/home/frappe/frappe-bench/apps/frappe/frappe/utils/typing_validations.py", line 32, in wrapper
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/frappe/frappe-bench/apps/frappe/frappe/model/document.py", line 1097, in submit
+    return self._submit()
+           ^^^^^^^^^^^^^^
+  File "/home/frappe/frappe-bench/apps/frappe/frappe/model/document.py", line 1080, in _submit
+    return self.save()
+           ^^^^^^^^^^^
+  File "/home/frappe/frappe-bench/apps/frappe/frappe/model/document.py", line 378, in save
+    return self._save(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/frappe/frappe-bench/apps/frappe/frappe/model/document.py", line 431, in _save
+    self.run_post_save_methods()
+  File "/home/frappe/frappe-bench/apps/frappe/frappe/model/document.py", line 1180, in run_post_save_methods
+    self.run_method("on_submit")
+  File "/home/frappe/frappe-bench/apps/frappe/frappe/model/document.py", line 1011, in run_method
+    out = Document.hook(fn)(self, *args, **kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/frappe/frappe-bench/apps/frappe/frappe/model/document.py", line 1371, in composer
+    return composed(self, method, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/frappe/frappe-bench/apps/frappe/frappe/model/document.py", line 1353, in runner
+    add_to_return_value(self, fn(self, *args, **kwargs))
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/frappe/frappe-bench/apps/frappe/frappe/model/document.py", line 1008, in fn
+    return method_object(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/frappe/frappe-bench/apps/erpnext/erpnext/stock/doctype/stock_entry/stock_entry.py", line 348, in on_submit
+    self.update_stock_ledger()
+  File "/home/frappe/frappe-bench/apps/erpnext/erpnext/stock/doctype/stock_entry/stock_entry.py", line 1569, in update_stock_ledger
+    self.make_sl_entries(sl_entries, allow_negative_stock=allow_negative_stock)
+  File "/home/frappe/frappe-bench/apps/erpnext/erpnext/controllers/stock_controller.py", line 1035, in make_sl_entries
+    make_sl_entries(sl_entries, allow_negative_stock, via_landed_cost_voucher)
+  File "/home/frappe/frappe-bench/apps/erpnext/erpnext/stock/stock_ledger.py", line 97, in make_sl_entries
+    sle_doc = make_entry(sle, allow_negative_stock, via_landed_cost_voucher)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/frappe/frappe-bench/apps/erpnext/erpnext/stock/stock_ledger.py", line 230, in make_entry
+    sle.submit()
+  File "/home/frappe/frappe-bench/apps/frappe/frappe/utils/typing_validations.py", line 32, in wrapper
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/frappe/frappe-bench/apps/frappe/frappe/model/document.py", line 1097, in submit
+    return self._submit()
+           ^^^^^^^^^^^^^^
+  File "/home/frappe/frappe-bench/apps/frappe/frappe/model/document.py", line 1080, in _submit
+    return self.save()
+           ^^^^^^^^^^^
+  File "/home/frappe/frappe-bench/apps/frappe/frappe/model/document.py", line 378, in save
+    return self._save(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/frappe/frappe-bench/apps/frappe/frappe/model/document.py", line 400, in _save
+    return self.insert()
+           ^^^^^^^^^^^^^
+  File "/home/frappe/frappe-bench/apps/frappe/frappe/model/document.py", line 334, in insert
+    self.run_post_save_methods()
+  File "/home/frappe/frappe-bench/apps/frappe/frappe/model/document.py", line 1180, in run_post_save_methods
+    self.run_method("on_submit")
+  File "/home/frappe/frappe-bench/apps/frappe/frappe/model/document.py", line 1011, in run_method
+    out = Document.hook(fn)(self, *args, **kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/frappe/frappe-bench/apps/frappe/frappe/model/document.py", line 1371, in composer
+    return composed(self, method, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/frappe/frappe-bench/apps/frappe/frappe/model/document.py", line 1353, in runner
+    add_to_return_value(self, fn(self, *args, **kwargs))
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/frappe/frappe-bench/apps/frappe/frappe/model/document.py", line 1008, in fn
+    return method_object(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/frappe/frappe-bench/apps/erpnext/erpnext/stock/doctype/stock_ledger_entry/stock_ledger_entry.py", line 193, in on_submit
+    self.validate_serial_batch_no_bundle()
+  File "/home/frappe/frappe-bench/apps/erpnext/erpnext/stock/doctype/stock_ledger_entry/stock_ledger_entry.py", line 239, in validate_serial_batch_no_bundle
+    self.throw_error_message(f"Serial No / Batch No are mandatory for Item {self.item_code}")
+  File "/home/frappe/frappe-bench/apps/erpnext/erpnext/stock/doctype/stock_ledger_entry/stock_ledger_entry.py", line 245, in throw_error_message
+    frappe.throw(_(message), exception)
+  File "/home/frappe/frappe-bench/apps/frappe/frappe/__init__.py", line 619, in throw
+    msgprint(
+  File "/home/frappe/frappe-bench/apps/frappe/frappe/__init__.py", line 584, in msgprint
+    _raise_exception()
+  File "/home/frappe/frappe-bench/apps/frappe/frappe/__init__.py", line 535, in _raise_exception
+    raise exc
+frappe.exceptions.ValidationError: Serial No / Batch No are mandatory for Item FG004
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/tmp/s212_rd.py", line 21, in <module>
+    result = create_stock_transfer(
+             ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/frappe/frappe-bench/apps/frappe/frappe/utils/typing_validations.py", line 32, in wrapper
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/frappe/frappe-bench/apps/hrms/hrms/api/warehouse.py", line 1696, in create_stock_transfer
+    frappe.throw(_(plain_msg), title=_("Transfer Failed"))
+  File "/home/frappe/frappe-bench/apps/frappe/frappe/__init__.py", line 619, in throw
+    msgprint(
+  File "/home/frappe/frappe-bench/apps/frappe/frappe/__init__.py", line 584, in msgprint
+    _raise_exception()
+  File "/home/frappe/frappe-bench/apps/frappe/frappe/__init__.py", line 535, in _raise_exception
+    raise exc
+frappe.exceptions.ValidationError: Serial No / Batch No are mandatory for Item FG004
+
+=== MAT-MR-2026-00262 ===
+set_wh=3MD LOGISTICS - CAMANGYANAN - BKI
+target=CTTM TOMAS MORATO - B CUBED VENTURES CORP.
+items=3
+result=None
+tb_head:
+Traceback (most recent call last):
+  File "/home/frappe/frappe-bench/apps/hrms/hrms/api/warehouse.py", line 1622, in create_stock_transfer
+    se.submit()
+  File "/home/frappe/frappe-bench/apps/frappe/frappe/utils/typing_validations.py", line 32, in wrapper
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/frappe/frappe-bench/apps/frappe/frappe/model/document.py", line 1097, in submit
+    return self._submit()
+           ^^^^^^^^^^^^^^
+  File "/home/frappe/frappe-bench/apps/frappe/frappe/model/document.py", line 1080, in _submit
+    return self.save()
+           ^^^^^^^^^^^
+  File "/home/frappe/frappe-bench/apps/frappe/frappe/model/document.py", line 378, in save
+    return self._save(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/frappe/frappe-bench/apps/frappe/frappe/model/document.py", line 431, in _save
+    self.run_post_save_methods()
+  File "/home/frappe/frappe-bench/apps/frappe/frappe/model/document.py", line 1180, in run_post_save_methods
+    self.run_method("on_submit")
+  File "/home/frappe/frappe-bench/apps/frappe/frappe/model/document.py", line 1011, in run_method
+    out = Document.hook(fn)(self, *args, **kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/frappe/frappe-bench/apps/frappe/frappe/model/document.py", line 1371, in composer
+    return composed(self, method, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/frappe/frappe-bench/apps/frappe/frappe/model/document.py", line 1353, in runner
+    add_to_return_value(self, fn(self, *args, **kwargs))
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/frappe/frappe-bench/apps/frappe/frappe/model/document.py", line 1008, in fn
+    return method_object(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/frappe/frappe-bench/apps/erpnext/erpnext/stock/doctype/stock_entry/stock_entry.py", line 348, in on_submit
+    self.update_stock_ledger()
+  File "/home/frappe/frappe-bench/apps/erpnext/erpnext/stock/doctype/stock_entry/stock_entry.py", line 1569, in update_stock_ledger
+    self.make_sl_entries(sl_entries, allow_negative_stock=allow_negative_stock)
+  File "/home/frappe/frappe-bench/apps/erpnext/erpnext/controllers/stock_controller.py", line 1035, in make_sl_entries
+    make_sl_entries(sl_entries, allow_negative_stock, via_landed_cost_voucher)
+  File "/home/frappe/frappe-bench/apps/erpnext/erpnext/stock/stock_ledger.py", line 97, in make_sl_entries
+    sle_doc = make_entry(sle, allow_negative_stock, via_landed_cost_voucher)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/frappe/frappe-bench/apps/erpnext/erpnext/stock/stock_ledger.py", line 230, in make_entry
+    sle.submit()
+  File "/home/frappe/frappe-bench/apps/frappe/frappe/utils/typing_validations.py", line 32, in wrapper
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/frappe/frappe-bench/apps/frappe/frappe/model/document.py", line 1097, in submit
+    return self._submit()
+           ^^^^^^^^^^^^^^
+  File "/home/frappe/frappe-bench/apps/frappe/frappe/model/document.py", line 1080, in _submit
+    return self.save()
+           ^^^^^^^^^^^
+  File "/home/frappe/frappe-bench/apps/frappe/frappe/model/document.py", line 378, in save
+    return self._save(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/frappe/frappe-bench/apps/frappe/frappe/model/document.py", line 400, in _save
+    return self.insert()
+           ^^^^^^^^^^^^^
+  File "/home/frappe/frappe-bench/apps/frappe/frappe/model/document.py", line 334, in insert
+    self.run_post_save_methods()
+  File "/home/frappe/frappe-bench/apps/frappe/frappe/model/document.py", line 1180, in run_post_save_methods
+    self.run_method("on_submit")
+  File "/home/frappe/frappe-bench/apps/frappe/frappe/model/document.py", line 1011, in run_method
+    out = Document.hook(fn)(self, *args, **kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/frappe/frappe-bench/apps/frappe/frappe/model/document.py", line 1371, in composer
+    return composed(self, method, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/frappe/frappe-bench/apps/frappe/frappe/model/document.py", line 1353, in runner
+    add_to_return_value(self, fn(self, *args, **kwargs))
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/frappe/frappe-bench/apps/frappe/frappe/model/document.py", line 1008, in fn
+    return method_object(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/frappe/frappe-bench/apps/erpnext/erpnext/stock/doctype/stock_ledger_entry/stock_ledger_entry.py", line 193, in on_submit
+    self.validate_serial_batch_no_bundle()
+  File "/home/frappe/frappe-bench/apps/erpnext/erpnext/stock/doctype/stock_ledger_entry/stock_ledger_entry.py", line 239, in validate_serial_batch_no_bundle
+    self.throw_error_message(f"Serial No / Batch No are mandatory for Item {self.item_code}")
+  File "/home/frappe/frappe-bench/apps/erpnext/erpnext/stock/doctype/stock_ledger_entry/stock_ledger_entry.py", line 245, in throw_error_message
+    frappe.throw(_(message), exception)
+  File "/home/frappe/frappe-bench/apps/frappe/frappe/__init__.py", line 619, in throw
+    msgprint(
+  File "/home/frappe/frappe-bench/apps/frappe/frappe/__init__.py", line 584, in msgprint
+    _raise_exception()
+  File "/home/frappe/frappe-bench/apps/frappe/frappe/__init__.py", line 535, in _raise_exception
+    raise exc
+frappe.exceptions.ValidationError: Serial No / Batch No are mandatory for Item FG004
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/tmp/s212_rd.py", line 21, in <module>
+    result = create_stock_transfer(
+             ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/frappe/frappe-bench/apps/frappe/frappe/utils/typing_validations.py", line 32, in wrapper
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/frappe/frappe-bench/apps/hrms/hrms/api/warehouse.py", line 1696, in create_stock_transfer
+    frappe.throw(_(plain_msg), title=_("Transfer Failed"))
+  File "/home/frappe/frappe-bench/apps/frappe/frappe/__init__.py", line 619, in throw
+    msgprint(
+  File "/home/frappe/frappe-bench/apps/frappe/frappe/__init__.py", line 584, in msgprint
+    _raise_exception()
+  File "/home/frappe/frappe-bench/apps/frappe/frappe/__init__.py", line 535, in _raise_exception
+    raise exc
+frappe.exceptions.ValidationError: Serial No / Batch No are mandatory for Item FG004

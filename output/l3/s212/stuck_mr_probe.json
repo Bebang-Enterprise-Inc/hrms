@@ -1,0 +1,44 @@
+[
+  {
+    "mr": {
+      "name": "MAT-MR-2026-00258",
+      "docstatus": 1,
+      "status": "Ordered",
+      "per_ordered": 100.0,
+      "per_received": 0.0,
+      "custom_store_order": "BEI-ORD-2026-00401",
+      "set_warehouse": "PINNACLE COLD STORAGE SOLUTIONS - BKI",
+      "material_request_type": "Material Issue",
+      "modified": "2026-04-21 08:12:45.218509"
+    },
+    "stock_entries": []
+  },
+  {
+    "mr": {
+      "name": "MAT-MR-2026-00260",
+      "docstatus": 1,
+      "status": "Ordered",
+      "per_ordered": 100.0,
+      "per_received": 0.0,
+      "custom_store_order": "BEI-ORD-2026-00403",
+      "set_warehouse": "PINNACLE COLD STORAGE SOLUTIONS - BKI",
+      "material_request_type": "Material Issue",
+      "modified": "2026-04-21 08:15:29.110994"
+    },
+    "stock_entries": []
+  },
+  {
+    "mr": {
+      "name": "MAT-MR-2026-00262",
+      "docstatus": 1,
+      "status": "Ordered",
+      "per_ordered": 100.0,
+      "per_received": 0.0,
+      "custom_store_order": "BEI-ORD-2026-00405",
+      "set_warehouse": "3MD LOGISTICS - CAMANGYANAN - BKI",
+      "material_request_type": "Material Issue",
+      "modified": "2026-04-21 08:18:10.713267"
+    },
+    "stock_entries": []
+  }
+]

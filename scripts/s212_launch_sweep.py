@@ -83,8 +83,10 @@ def main() -> int:
 		else:
 			popen_kwargs["start_new_session"] = True
 
+		# Windows requires npx.cmd (npx without extension is not found by CreateProcess)
+		npx_exe = "npx.cmd" if sys.platform == "win32" else "npx"
 		cmd = [
-			"npx", "playwright", "test", args.spec,
+			npx_exe, "playwright", "test", args.spec,
 			"--reporter=line",
 			f"--timeout={args.timeout}",
 			f"--retries={args.retries}",

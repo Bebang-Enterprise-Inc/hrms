@@ -1,0 +1,48 @@
+{
+  "errors": [
+    {
+      "name": "0k7uv8o71c",
+      "creation": "2026-04-21 08:09:36.743524",
+      "method": "S203 Draft SI Error",
+      "error": "S203: Draft SI creation failed for SE MAT-STE-2026-00621: Traceback (most recent call last):\n  File \"apps/hrms/hrms/api/warehouse.py..."
+    }
+  ],
+  "se_00621": [
+    {
+      "name": "MAT-STE-2026-00621",
+      "docstatus": 1,
+      "custom_sales_invoice_draft": null,
+      "creation": "2026-04-21 08:09:34.780189",
+      "stock_entry_type": "Material Issue",
+      "item_code": "FG002",
+      "qty": 26.0,
+      "s_warehouse": "3MD LOGISTICS - CAMANGYANAN - BKI",
+      "t_warehouse": null,
+      "material_request": "MAT-MR-2026-00257"
+    },
+    {
+      "name": "MAT-STE-2026-00621",
+      "docstatus": 1,
+      "custom_sales_invoice_draft": null,
+      "creation": "2026-04-21 08:09:34.780189",
+      "stock_entry_type": "Material Issue",
+      "item_code": "PM007",
+      "qty": 1646.0,
+      "s_warehouse": "3MD LOGISTICS - CAMANGYANAN - BKI",
+      "t_warehouse": null,
+      "material_request": "MAT-MR-2026-00257"
+    },
+    {
+      "name": "MAT-STE-2026-00621",
+      "docstatus": 1,
+      "custom_sales_invoice_draft": null,
+      "creation": "2026-04-21 08:09:34.780189",
+      "stock_entry_type": "Material Issue",
+      "item_code": "FG001",
+      "qty": 1633.0,
+      "s_warehouse": "3MD LOGISTICS - CAMANGYANAN - BKI",
+      "t_warehouse": null,
+      "material_request": "MAT-MR-2026-00257"
+    }
+  ]
+}

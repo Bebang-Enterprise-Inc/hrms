@@ -1,0 +1,21 @@
+result: None
+
+Traceback:
+Traceback (most recent call last):
+  File "/tmp/s212_dispatch.py", line 22, in <module>
+    result = fulfill_store_order(mr_name=mr_name, items=items)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/frappe/frappe-bench/apps/frappe/frappe/utils/typing_validations.py", line 32, in wrapper
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/frappe/frappe-bench/apps/hrms/hrms/api/commissary.py", line 796, in fulfill_store_order
+    _raise_direct_fulfillment_retired()
+  File "/home/frappe/frappe-bench/apps/hrms/hrms/api/commissary.py", line 110, in _raise_direct_fulfillment_retired
+    frappe.throw(
+  File "/home/frappe/frappe-bench/apps/frappe/frappe/__init__.py", line 619, in throw
+    msgprint(
+  File "/home/frappe/frappe-bench/apps/frappe/frappe/__init__.py", line 584, in msgprint
+    _raise_exception()
+  File "/home/frappe/frappe-bench/apps/frappe/frappe/__init__.py", line 535, in _raise_exception
+    raise exc
+frappe.exceptions.ValidationError: Commissary direct store fulfillment is retired. Use the warehouse-centered flow: raw materials -> production -> QA -> warehouse handoff.

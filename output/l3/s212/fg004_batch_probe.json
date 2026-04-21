@@ -1,0 +1,115 @@
+{
+  "item_flags": [
+    {
+      "item_code": "FG004",
+      "has_batch_no": 1,
+      "has_serial_no": 0
+    }
+  ],
+  "batches": [
+    {
+      "name": "SYNC-VMTAG-FG004",
+      "batch_qty": 20.0
+    },
+    {
+      "name": "SYNC-VGC-FG004",
+      "batch_qty": 32.764
+    },
+    {
+      "name": "SYNC-UPTC-FG004",
+      "batch_qty": 30.564
+    },
+    {
+      "name": "SYNC-UMBGC-FG004",
+      "batch_qty": 30.0
+    },
+    {
+      "name": "SYNC-TTA-FG004",
+      "batch_qty": 20.0
+    },
+    {
+      "name": "SYNC-SMTAY-FG004",
+      "batch_qty": 46.138
+    },
+    {
+      "name": "SYNC-SMSDN-FG004",
+      "batch_qty": 6.458
+    },
+    {
+      "name": "SYNC-SMS-FG004",
+      "batch_qty": 38.09
+    },
+    {
+      "name": "SYNC-SMPUL-FG004",
+      "batch_qty": 19.543
+    },
+    {
+      "name": "SYNC-SMNE-FG004",
+      "batch_qty": 55.501
+    },
+    {
+      "name": "SYNC-SMMM-FG004",
+      "batch_qty": 38.004
+    },
+    {
+      "name": "SYNC-SMMAR-FG004",
+      "batch_qty": 38.234
+    },
+    {
+      "name": "SYNC-SMM-FG004",
+      "batch_qty": 24.04
+    },
+    {
+      "name": "SYNC-SMK-FG004",
+      "batch_qty": 12.595
+    },
+    {
+      "name": "SYNC-SMGC-FG004",
+      "batch_qty": 11.144
+    },
+    {
+      "name": "SYNC-SMEO-FG004",
+      "batch_qty": 27.284
+    },
+    {
+      "name": "SYNC-SMCAL-FG004",
+      "batch_qty": 21.524
+    },
+    {
+      "name": "SYNC-SMBIC-FG004",
+      "batch_qty": 19.665
+    },
+    {
+      "name": "SYNC-SLGM-FG004",
+      "batch_qty": 25.933
+    },
+    {
+      "name": "SYNC-SJDM-FG004",
+      "batch_qty": 44.592
+    }
+  ],
+  "bins": [
+    {
+      "warehouse": "3MD LOGISTICS - CAMANGYANAN - BKI",
+      "actual_qty": 1095.0,
+      "reserved_qty": 0.0
+    },
+    {
+      "warehouse": "PINNACLE COLD STORAGE SOLUTIONS - BKI",
+      "actual_qty": 1897.0,
+      "reserved_qty": 0.0
+    }
+  ],
+  "sle_by_batch": [
+    {
+      "warehouse": "3MD LOGISTICS - CAMANGYANAN - BKI",
+      "batch_no": null,
+      "qty": 1095.0
+    },
+    {
+      "warehouse": "PINNACLE COLD STORAGE SOLUTIONS - BKI",
+      "batch_no": null,
+      "qty": 1897.0
+    }
+  ]
+}
