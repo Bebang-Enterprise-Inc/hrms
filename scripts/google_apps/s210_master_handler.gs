@@ -798,11 +798,11 @@ function handleSiUpload(e) {
   const matchQueue = masterSs.getSheetByName('04_Match_Queue');
   const auditLog = masterSs.getSheetByName('09_Audit_Log');
 
-  // e.namedValues is keyed by form item title; e.values is array in item order
-  // Form items (in order): Supplier Name, PO Number, SI Number, SI Date,
-  //                        Amount (PHP), SI PDF Drive Link, Notes
-  let supplierName = '', poNumber = '', siNumber = '', siDate = '';
-  let amount = '', siPdfLink = '', notes = '';
+  // e.namedValues is keyed by form item title; e.values is array in item order.
+  // Form items (in order post-Phase-12): Supplier Name, Warehouse, PO Number,
+  //   SI Number, SI Date, Amount (PHP), Upload SI Copy, Notes
+  let supplierName = '', warehouse = '', poNumber = '', siNumber = '';
+  let siDate = '', amount = '', siPdfLink = '', notes = '';
 
   if (e && e.namedValues) {
     const nv = e.namedValues;
@@ -811,6 +811,7 @@ function handleSiUpload(e) {
       return v && v.length ? v[0] : '';
     };
     supplierName = first('Supplier Name');
+    warehouse = first('Warehouse');
     poNumber = first('PO Number');
     siNumber = first('SI Number');
     siDate = first('SI Date');
@@ -821,12 +822,13 @@ function handleSiUpload(e) {
   } else if (e && e.values) {
     // Fallback: positional (index 0 is Timestamp from form)
     supplierName = e.values[1] || '';
-    poNumber = e.values[2] || '';
-    siNumber = e.values[3] || '';
-    siDate = e.values[4] || '';
-    amount = e.values[5] || '';
-    siPdfLink = e.values[6] || '';
-    notes = e.values[7] || '';
+    warehouse = e.values[2] || '';
+    poNumber = e.values[3] || '';
+    siNumber = e.values[4] || '';
+    siDate = e.values[5] || '';
+    amount = e.values[6] || '';
+    siPdfLink = e.values[7] || '';
+    notes = e.values[8] || '';
   }
 
   const timestamp = new Date();
@@ -854,9 +856,9 @@ function handleSiUpload(e) {
   const matchStatus = matchedConsolidatedRows.length > 0 ? 'MATCHED' : 'ORPHAN';
   const matchedRRList = matchedConsolidatedRows.map(function(m) { return m.rr; }).join(',');
 
-  // Write into 03_Supplier_SI_Uploads
+  // Write into 03_Supplier_SI_Uploads (12 cols post-Phase-12, Warehouse at col C)
   siUploads.appendRow([
-    timestamp, supplierName, poNumber, siNumber, siDate,
+    timestamp, supplierName, warehouse, poNumber, siNumber, siDate,
     amount, siPdfLink, notes, matchStatus, matchedRRList,
     matchedConsolidatedRows.length > 0 ? timestamp : '',
   ]);
@@ -887,13 +889,13 @@ function handleSiUpload(e) {
 
     _logAudit(auditLog, 'handleSiUpload', supplierName, matchedConsolidatedRows.length,
               'SI_matched_' + matchedConsolidatedRows.length + '_DR_rows', 'OK',
-              'PO=' + poNumber + ' SI=' + siNumber +
+              'PO=' + poNumber + ' SI=' + siNumber + ' warehouse=' + warehouse +
               ' RRs=' + matchedRRList + ' pendingTagged=' + pendingTagged);
   } else {
-    // Orphan: write to 04_Match_Queue for manual resolution
+    // Orphan: write to 04_Match_Queue (12 cols post-Phase-12, Warehouse at col D)
     matchQueue.appendRow([
       timestamp, 'Orphan SI — no matching DR found',
-      supplierName, poNumber, siNumber, siDate, amount, siPdfLink,
+      supplierName, warehouse, poNumber, siNumber, siDate, amount, siPdfLink,
       'Ian', 'OPEN', '',
     ]);
     _logAudit(auditLog, 'handleSiUpload', supplierName, 0,

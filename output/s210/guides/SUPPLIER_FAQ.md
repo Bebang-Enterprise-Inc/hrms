@@ -15,11 +15,13 @@ https://docs.google.com/forms/d/e/1FAIpQLS.../viewform?usp=pp_url&entry.XXXX=You
 ```
 
 On the form:
-1. Your company name is auto-filled.
-2. Type the PO Number and SI Number exactly as printed on your SI.
-3. Pick the SI Date and type the Amount.
-4. Tap **Upload SI Copy** and pick your PDF or photo from the device.
-5. Submit.
+1. **Supplier Name** — pre-selected from your BEI link (dropdown; confirm it's your company).
+2. **Warehouse** — pick the one you delivered to (3MD, Pinnacle, or Shaw BLVD).
+3. **PO Number** and **SI Number** — type exactly as printed on your SI.
+4. **SI Date** — pick the date.
+5. **Amount** — type the PHP total.
+6. **Upload SI Copy** — tap, pick your PDF or photo from the device.
+7. Submit.
 
 That's it. 30-60 seconds.
 
@@ -77,8 +79,9 @@ format.
 
 ## Q: Can I share my link with my team?
 
-Yes. The link is unique to your company (it auto-fills your name) but
-anyone on your team who handles BEI deliveries can use the same link.
+Yes. The link pre-selects your company in the Supplier Name dropdown so
+there's no typo risk — anyone on your team who handles BEI deliveries
+can use the same link.
 Just don't upload the same SI twice.
 
 ## Q: I made a typo after submitting — can I fix it?
