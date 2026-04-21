@@ -1,0 +1,122 @@
+{
+  "emergency": {
+    "id": "888035557619357",
+    "name": "BEB: EMERGENCY - Pause ALL if spend > 100K",
+    "status": "ENABLED",
+    "schedule_spec": {
+      "schedule_type": "SEMI_HOURLY"
+    },
+    "evaluation_spec": {
+      "evaluation_type": "SCHEDULE",
+      "filters": [
+        {
+          "field": "entity_type",
+          "value": "CAMPAIGN",
+          "operator": "EQUAL"
+        },
+        {
+          "field": "time_preset",
+          "value": "TODAY",
+          "operator": "EQUAL"
+        },
+        {
+          "field": "spent",
+          "value": "100000",
+          "operator": "GREATER_THAN"
+        }
+      ]
+    },
+    "execution_spec": {
+      "execution_type": "PAUSE"
+    },
+    "updated_time": "2026-04-05T11:49:11+0800"
+  },
+  "sales_off": {
+    "id": "1539999288125943",
+    "name": "BEB: Sales OFF at 6PM",
+    "status": "ENABLED",
+    "schedule_spec": {
+      "schedule_type": "CUSTOM",
+      "schedule": [
+        {
+          "start_minute": 1080,
+          "end_minute": 1080,
+          "days": [
+            0
+          ]
+        },
+        {
+          "start_minute": 1080,
+          "end_minute": 1080,
+          "days": [
+            1
+          ]
+        },
+        {
+          "start_minute": 1080,
+          "end_minute": 1080,
+          "days": [
+            2
+          ]
+        },
+        {
+          "start_minute": 1080,
+          "end_minute": 1080,
+          "days": [
+            3
+          ]
+        },
+        {
+          "start_minute": 1080,
+          "end_minute": 1080,
+          "days": [
+            4
+          ]
+        },
+        {
+          "start_minute": 1080,
+          "end_minute": 1080,
+          "days": [
+            5
+          ]
+        },
+        {
+          "start_minute": 1080,
+          "end_minute": 1080,
+          "days": [
+            6
+          ]
+        }
+      ]
+    },
+    "evaluation_spec": {
+      "evaluation_type": "SCHEDULE",
+      "filters": [
+        {
+          "field": "campaign.id",
+          "value": [
+            "120225480340900030",
+            "120225029875060030",
+            "120225775497020030",
+            "120231023755930030"
+          ],
+          "operator": "IN"
+        },
+        {
+          "field": "entity_type",
+          "value": "CAMPAIGN",
+          "operator": "EQUAL"
+        },
+        {
+          "field": "time_preset",
+          "value": "MAXIMUM",
+          "operator": "EQUAL"
+        }
+      ]
+    },
+    "execution_spec": {
+      "execution_type": "PAUSE"
+    },
+    "updated_time": "2026-04-05T11:49:08+0800"
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "boosts": [
+    {
+      "label": "Apr16-TagAFriend-SikatArtista",
+      "post_id": "102628625216977_1266416878948597",
+      "campaign_id": "120243460275370030",
+      "resolved_adset_id": "120243460280340030",
+      "resolved_adset_name": "Community Engagement - Metro Manila Broad",
+      "cta_type": "LEARN_MORE",
+      "cta_link": "https://www.facebook.com/bebanghalohalo"
+    },
+    {
+      "label": "Apr08-Montalban-StoreOpening",
+      "post_id": "102628625216977_1260249656231986",
+      "campaign_id": "120242888352350030",
+      "resolved_adset_id": "120242888378420030",
+      "resolved_adset_name": "Summer Buzz - Metro Manila Broad",
+      "cta_type": "ORDER_NOW",
+      "cta_link": "https://www.foodpanda.ph/chain/cw3mi/bebang-halo-halo"
+    },
+    {
+      "label": "Apr18-GrabengPressure-MoodMeme",
+      "post_id": "102628625216977_1267949595461992",
+      "campaign_id": "120243460275370030",
+      "resolved_adset_id": "120243460280340030",
+      "resolved_adset_name": "Community Engagement - Metro Manila Broad",
+      "cta_type": "ORDER_NOW",
+      "cta_link": "https://www.foodpanda.ph/chain/cw3mi/bebang-halo-halo"
+    }
+  ]
+}

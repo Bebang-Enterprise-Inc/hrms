@@ -1,0 +1,403 @@
+[
+  {
+    "phase": "P1-T5",
+    "action": "disable_rule",
+    "target": "888035557619357",
+    "target_name": "BEB: EMERGENCY - Pause ALL if spend > 100K",
+    "before_status": "ENABLED",
+    "after_status": "DISABLED",
+    "api_response": {
+      "success": true
+    },
+    "success": true
+  },
+  {
+    "phase": "P1-T5",
+    "action": "update_rule_schedule",
+    "target": "1539999288125943",
+    "target_name": "BEB: Sales OFF at 6PM",
+    "before_schedule": {
+      "schedule_type": "CUSTOM",
+      "schedule": [
+        {
+          "start_minute": 1080,
+          "end_minute": 1080,
+          "days": [
+            0
+          ]
+        },
+        {
+          "start_minute": 1080,
+          "end_minute": 1080,
+          "days": [
+            1
+          ]
+        },
+        {
+          "start_minute": 1080,
+          "end_minute": 1080,
+          "days": [
+            2
+          ]
+        },
+        {
+          "start_minute": 1080,
+          "end_minute": 1080,
+          "days": [
+            3
+          ]
+        },
+        {
+          "start_minute": 1080,
+          "end_minute": 1080,
+          "days": [
+            4
+          ]
+        },
+        {
+          "start_minute": 1080,
+          "end_minute": 1080,
+          "days": [
+            5
+          ]
+        },
+        {
+          "start_minute": 1080,
+          "end_minute": 1080,
+          "days": [
+            6
+          ]
+        }
+      ]
+    },
+    "attempted_new_schedule": {
+      "schedule_type": "CUSTOM",
+      "schedule": [
+        {
+          "start_minute": 1320,
+          "end_minute": 1320,
+          "days": [
+            0
+          ]
+        },
+        {
+          "start_minute": 1320,
+          "end_minute": 1320,
+          "days": [
+            1
+          ]
+        },
+        {
+          "start_minute": 1320,
+          "end_minute": 1320,
+          "days": [
+            2
+          ]
+        },
+        {
+          "start_minute": 1320,
+          "end_minute": 1320,
+          "days": [
+            3
+          ]
+        },
+        {
+          "start_minute": 1320,
+          "end_minute": 1320,
+          "days": [
+            4
+          ]
+        },
+        {
+          "start_minute": 1320,
+          "end_minute": 1320,
+          "days": [
+            5
+          ]
+        },
+        {
+          "start_minute": 1320,
+          "end_minute": 1320,
+          "days": [
+            6
+          ]
+        }
+      ]
+    },
+    "fallback_applied": false,
+    "api_response": {
+      "success": true
+    },
+    "success": true
+  },
+  {
+    "phase": "P2-T3",
+    "action": "pause_ad",
+    "target": "120236894994690030",
+    "target_name": "Ad #16 - [Post] - Tried so many halo-halo brands\u2026",
+    "reason": "loser: CPA=533 ROAS=1.28x",
+    "7d_spend": 5858.13,
+    "7d_purchases": 11,
+    "api_response": {
+      "success": true
+    },
+    "success": true
+  },
+  {
+    "phase": "P2-T3",
+    "action": "pause_ad",
+    "target": "120236894995250030",
+    "target_name": "Ad #15 - [Post] - Hirap talaga kapag introvert ka... di ka nabubusog!",
+    "reason": "loser: CPA=2524 ROAS=0.56x",
+    "7d_spend": 5048.55,
+    "7d_purchases": 2,
+    "api_response": {
+      "success": true
+    },
+    "success": true
+  },
+  {
+    "phase": "P2-T3",
+    "action": "pause_ad",
+    "target": "120229072327660030",
+    "target_name": "Ad #10 - [IMG] - Deliver Frozen Posting 4",
+    "reason": "loser: CPA=814 ROAS=1.98x",
+    "7d_spend": 4069.63,
+    "7d_purchases": 5,
+    "api_response": {
+      "success": true
+    },
+    "success": true
+  },
+  {
+    "phase": "P2-T3",
+    "action": "pause_ad",
+    "target": "120227612549140030",
+    "target_name": "Ad #3 [Post] - Monday na naman",
+    "reason": "loser: CPA=1672 ROAS=0.29x",
+    "7d_spend": 3344.65,
+    "7d_purchases": 2,
+    "api_response": {
+      "success": true
+    },
+    "success": true
+  },
+  {
+    "phase": "P2-T3",
+    "action": "pause_ad",
+    "target": "120226689305170030",
+    "target_name": "Ad #12 - [IMG] - Choco Brownie",
+    "reason": "loser: CPA=1620 ROAS=0.34x",
+    "7d_spend": 3240.38,
+    "7d_purchases": 2,
+    "api_response": {
+      "success": true
+    },
+    "success": true
+  },
+  {
+    "phase": "P2-T3",
+    "action": "pause_ad",
+    "target": "120233174992090030",
+    "target_name": "Ad #1 - [Carousel] - Products",
+    "reason": "loser: CPA=2893 ROAS=0.18x",
+    "7d_spend": 2893.29,
+    "7d_purchases": 1,
+    "api_response": {
+      "success": true
+    },
+    "success": true
+  },
+  {
+    "phase": "P2-T3",
+    "action": "pause_ad",
+    "target": "120236894995230030",
+    "target_name": "Ad #14 - [Post] - Friday na, let's end the week with a Bebang!",
+    "reason": "loser: CPA=556 ROAS=1.71x",
+    "7d_spend": 2777.96,
+    "7d_purchases": 5,
+    "api_response": {
+      "success": true
+    },
+    "success": true
+  },
+  {
+    "phase": "P2-T3",
+    "action": "pause_ad",
+    "target": "120234821952020030",
+    "target_name": "Ad #121 - [Post] - Not your ordinary halo-halo",
+    "reason": "loser: CPA=2777 ROAS=0.44x",
+    "7d_spend": 2776.86,
+    "7d_purchases": 1,
+    "api_response": {
+      "success": true
+    },
+    "success": true
+  },
+  {
+    "phase": "P2-T3",
+    "action": "pause_ad",
+    "target": "120236894995120030",
+    "target_name": "Ad #15 - [Post] - Hirap talaga kapag introvert ka... di ka nabubusog!",
+    "reason": "loser: CPA=581 ROAS=1.24x",
+    "7d_spend": 1744.49,
+    "7d_purchases": 3,
+    "api_response": {
+      "success": true
+    },
+    "success": true
+  },
+  {
+    "phase": "P2-T3",
+    "action": "pause_ad",
+    "target": "120236894995070030",
+    "target_name": "Ad #13 - [Post] - You wanna be POPULARRRR?",
+    "reason": "loser: CPA=721 ROAS=1.47x",
+    "7d_spend": 1441.52,
+    "7d_purchases": 2,
+    "api_response": {
+      "success": true
+    },
+    "success": true
+  },
+  {
+    "phase": "P2-T3",
+    "action": "pause_ad",
+    "target": "120233600470520030",
+    "target_name": "Ad #101 - [Post] - Mas masaya talaga",
+    "reason": "loser: CPA=1437 ROAS=0.71x",
+    "7d_spend": 1437.28,
+    "7d_purchases": 1,
+    "api_response": {
+      "success": true
+    },
+    "success": true
+  },
+  {
+    "phase": "P2-T5",
+    "action": "scale_adset_budget",
+    "target": "120228362624100030",
+    "target_name": "BEH - Engaged Shoppers - 18/44 [Exclude 10d]",
+    "hosted_winner_ad": "Ad #49 - [Post/VID] - Don't leave your valuables",
+    "before_centavos": "150000",
+    "after_centavos": 750000,
+    "api_response": {
+      "success": true
+    },
+    "success": true
+  },
+  {
+    "phase": "P2-T5",
+    "action": "scale_adset_budget",
+    "target": "120226411235010030",
+    "target_name": "INT - Coffee/Ice Cream - 18/44 [Exclude 10d]",
+    "hosted_winner_ad": "Ad #81 - [VID Post] - Swipe left? Swipe right?",
+    "before_centavos": "250000",
+    "after_centavos": 500000,
+    "api_response": {
+      "success": true
+    },
+    "success": true
+  },
+  {
+    "phase": "P2-T5",
+    "action": "scale_adset_budget",
+    "target": "120227382261260030",
+    "target_name": "INT - Online food ordering - 18/50 [Exclude 10d]",
+    "hosted_winner_ad": "Ad #44 - [Post] - Ang sakit naman Beb!",
+    "before_centavos": "150000",
+    "after_centavos": 750000,
+    "api_response": {
+      "success": true
+    },
+    "success": true
+  },
+  {
+    "phase": "P3-T3",
+    "action": "reactivate_campaign",
+    "target": "120242888352350030",
+    "target_name": "BEB - Summer Buzz Awareness [Mar 2026]",
+    "before_status": "PAUSED",
+    "after_status": "ACTIVE",
+    "active_adsets_at_activate": 3,
+    "total_adsets": 3,
+    "api_response": {
+      "success": true
+    },
+    "success": true
+  },
+  {
+    "phase": "P3-T3",
+    "action": "reactivate_campaign",
+    "target": "120243460275370030",
+    "target_name": "BEB - Peak Season Community [Apr 2026]",
+    "before_status": "PAUSED",
+    "after_status": "ACTIVE",
+    "active_adsets_at_activate": 1,
+    "total_adsets": 1,
+    "api_response": {
+      "success": true
+    },
+    "success": true
+  },
+  {
+    "phase": "P3-T3",
+    "action": "reactivate_campaign",
+    "target": "120242888355100030",
+    "target_name": "BEB - Iskrambol Foodpanda Traffic [Mar 2026]",
+    "before_status": "PAUSED",
+    "after_status": "ACTIVE",
+    "active_adsets_at_activate": 1,
+    "total_adsets": 1,
+    "api_response": {
+      "success": true
+    },
+    "success": true
+  },
+  {
+    "phase": "P4-T3-T7",
+    "action": "create_boost_ad",
+    "target_post": "102628625216977_1266416878948597",
+    "creative_id": "2113916839464633",
+    "ad_id": "120244564280350030",
+    "adset_id": "120243460280340030",
+    "cta_type": "LEARN_MORE",
+    "cta_link": "https://www.facebook.com/bebanghalohalo",
+    "starts_paused": true,
+    "success": true
+  },
+  {
+    "phase": "P4-T3-T7",
+    "action": "create_boost_ad",
+    "target_post": "102628625216977_1260249656231986",
+    "creative_id": "1257704723180530",
+    "ad_id": "120244564281190030",
+    "adset_id": "120242888378420030",
+    "cta_type": "ORDER_NOW",
+    "cta_link": "https://www.foodpanda.ph/chain/cw3mi/bebang-halo-halo",
+    "starts_paused": true,
+    "success": true
+  },
+  {
+    "phase": "P4-T3-T7",
+    "action": "create_boost_ad",
+    "target_post": "102628625216977_1267949595461992",
+    "creative_id": "930941509841146",
+    "ad_id": "120244564282510030",
+    "adset_id": "120243460280340030",
+    "cta_type": "ORDER_NOW",
+    "cta_link": "https://www.foodpanda.ph/chain/cw3mi/bebang-halo-halo",
+    "starts_paused": true,
+    "success": true
+  },
+  {
+    "phase": "P5-T3",
+    "action": "bulk_archive_error_ads",
+    "total_attempted": 162,
+    "archived_count": 161,
+    "failure_count": 1,
+    "success_rate": 0.9938271604938271,
+    "elapsed_seconds": 495.9,
+    "within_tolerance": true
+  }
+]

@@ -1,0 +1,62 @@
+[
+  {
+    "id": "120242888352350030",
+    "name": "BEB - Summer Buzz Awareness [Mar 2026]",
+    "status_before": "PAUSED",
+    "objective": "OUTCOME_AWARENESS",
+    "active_adset_count": 3,
+    "total_adsets": 3,
+    "adsets_summary": [
+      {
+        "id": "120242888726570030",
+        "name": "Summer Buzz - PH 90s Kids (25-40)",
+        "status": "ACTIVE",
+        "daily_budget_centavos": "300000"
+      },
+      {
+        "id": "120242888378420030",
+        "name": "Summer Buzz - Metro Manila Broad",
+        "status": "ACTIVE",
+        "daily_budget_centavos": "250000"
+      },
+      {
+        "id": "120242888369980030",
+        "name": "Summer Buzz - LAL 1pct Engagers",
+        "status": "ACTIVE",
+        "daily_budget_centavos": "300000"
+      }
+    ]
+  },
+  {
+    "id": "120243460275370030",
+    "name": "BEB - Peak Season Community [Apr 2026]",
+    "status_before": "PAUSED",
+    "objective": "OUTCOME_ENGAGEMENT",
+    "active_adset_count": 1,
+    "total_adsets": 1,
+    "adsets_summary": [
+      {
+        "id": "120243460280340030",
+        "name": "Community Engagement - Metro Manila Broad",
+        "status": "ACTIVE",
+        "daily_budget_centavos": "520000"
+      }
+    ]
+  },
+  {
+    "id": "120242888355100030",
+    "name": "BEB - Iskrambol Foodpanda Traffic [Mar 2026]",
+    "status_before": "PAUSED",
+    "objective": "OUTCOME_TRAFFIC",
+    "active_adset_count": 1,
+    "total_adsets": 1,
+    "adsets_summary": [
+      {
+        "id": "120242888394500030",
+        "name": "Iskrambol Foodpanda - LAL Broad",
+        "status": "ACTIVE",
+        "daily_budget_centavos": "250000"
+      }
+    ]
+  }
+]

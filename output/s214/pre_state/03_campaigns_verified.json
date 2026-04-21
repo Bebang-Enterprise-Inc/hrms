@@ -1,0 +1,53 @@
+[
+  {
+    "spec": {
+      "id": "120242888352350030",
+      "expected_name_contains": "Summer Buzz",
+      "expected_objective": "OUTCOME_AWARENESS"
+    },
+    "campaign": {
+      "id": "120242888352350030",
+      "name": "BEB - Summer Buzz Awareness [Mar 2026]",
+      "status": "PAUSED",
+      "effective_status": "PAUSED",
+      "objective": "OUTCOME_AWARENESS",
+      "updated_time": "2026-04-05T12:07:38+0800"
+    },
+    "name_ok": true,
+    "obj_ok": true
+  },
+  {
+    "spec": {
+      "id": "120243460275370030",
+      "expected_name_contains": "Peak Season Community",
+      "expected_objective": "OUTCOME_ENGAGEMENT"
+    },
+    "campaign": {
+      "id": "120243460275370030",
+      "name": "BEB - Peak Season Community [Apr 2026]",
+      "status": "PAUSED",
+      "effective_status": "PAUSED",
+      "objective": "OUTCOME_ENGAGEMENT",
+      "updated_time": "2026-04-05T12:07:38+0800"
+    },
+    "name_ok": true,
+    "obj_ok": true
+  },
+  {
+    "spec": {
+      "id": "120242888355100030",
+      "expected_name_contains": "Iskrambol Foodpanda",
+      "expected_objective": "OUTCOME_TRAFFIC"
+    },
+    "campaign": {
+      "id": "120242888355100030",
+      "name": "BEB - Iskrambol Foodpanda Traffic [Mar 2026]",
+      "status": "PAUSED",
+      "effective_status": "PAUSED",
+      "objective": "OUTCOME_TRAFFIC",
+      "updated_time": "2026-04-05T12:07:38+0800"
+    },
+    "name_ok": true,
+    "obj_ok": true
+  }
+]

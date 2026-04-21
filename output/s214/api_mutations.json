@@ -1,0 +1,306 @@
+[
+  {
+    "timestamp": "2026-04-21T12:58:34",
+    "method": "POST",
+    "path": "/888035557619357",
+    "params_sent": {
+      "status": "DISABLED"
+    },
+    "response": {
+      "success": true
+    }
+  },
+  {
+    "timestamp": "2026-04-21T12:58:35",
+    "method": "POST",
+    "path": "/1539999288125943",
+    "params_sent": {
+      "schedule_spec": "{\"schedule_type\": \"CUSTOM\", \"schedule\": [{\"start_minute\": 1320, \"end_minute\": 1320, \"days\": [0]}, {\"start_minute\": 1320, \"end_minute\": 1320, \"days\": [1]}, {\"start_minute\": 1320, \"end_minute\": 1320, \"days\": [2]}, {\"start_minute\": 1320, \"end_minute\": 1320, \"days\": [3]}, {\"start_minute\": 1320, \"end_minute\": 1320, \"days\": [4]}, {\"start_minute\": 1320, \"end_minute\": 1320, \"days\": [5]}, {\"start_minute\": 1320, \"end_minute\": 1320, \"days\": [6]}]}"
+    },
+    "response": {
+      "success": true
+    }
+  },
+  {
+    "timestamp": "2026-04-21T13:01:11",
+    "method": "POST",
+    "path": "/120236894994690030",
+    "params_sent": {
+      "status": "PAUSED"
+    },
+    "response": {
+      "success": true
+    }
+  },
+  {
+    "timestamp": "2026-04-21T13:01:52",
+    "method": "POST",
+    "path": "/120236894994690030",
+    "params_sent": {
+      "status": "PAUSED"
+    },
+    "response": {
+      "success": true
+    }
+  },
+  {
+    "timestamp": "2026-04-21T13:01:55",
+    "method": "POST",
+    "path": "/120236894995250030",
+    "params_sent": {
+      "status": "PAUSED"
+    },
+    "response": {
+      "success": true
+    }
+  },
+  {
+    "timestamp": "2026-04-21T13:01:58",
+    "method": "POST",
+    "path": "/120229072327660030",
+    "params_sent": {
+      "status": "PAUSED"
+    },
+    "response": {
+      "success": true
+    }
+  },
+  {
+    "timestamp": "2026-04-21T13:02:01",
+    "method": "POST",
+    "path": "/120227612549140030",
+    "params_sent": {
+      "status": "PAUSED"
+    },
+    "response": {
+      "success": true
+    }
+  },
+  {
+    "timestamp": "2026-04-21T13:02:04",
+    "method": "POST",
+    "path": "/120226689305170030",
+    "params_sent": {
+      "status": "PAUSED"
+    },
+    "response": {
+      "success": true
+    }
+  },
+  {
+    "timestamp": "2026-04-21T13:02:06",
+    "method": "POST",
+    "path": "/120233174992090030",
+    "params_sent": {
+      "status": "PAUSED"
+    },
+    "response": {
+      "success": true
+    }
+  },
+  {
+    "timestamp": "2026-04-21T13:02:08",
+    "method": "POST",
+    "path": "/120236894995230030",
+    "params_sent": {
+      "status": "PAUSED"
+    },
+    "response": {
+      "success": true
+    }
+  },
+  {
+    "timestamp": "2026-04-21T13:02:11",
+    "method": "POST",
+    "path": "/120234821952020030",
+    "params_sent": {
+      "status": "PAUSED"
+    },
+    "response": {
+      "success": true
+    }
+  },
+  {
+    "timestamp": "2026-04-21T13:02:13",
+    "method": "POST",
+    "path": "/120236894995120030",
+    "params_sent": {
+      "status": "PAUSED"
+    },
+    "response": {
+      "success": true
+    }
+  },
+  {
+    "timestamp": "2026-04-21T13:02:15",
+    "method": "POST",
+    "path": "/120236894995070030",
+    "params_sent": {
+      "status": "PAUSED"
+    },
+    "response": {
+      "success": true
+    }
+  },
+  {
+    "timestamp": "2026-04-21T13:02:17",
+    "method": "POST",
+    "path": "/120233600470520030",
+    "params_sent": {
+      "status": "PAUSED"
+    },
+    "response": {
+      "success": true
+    }
+  },
+  {
+    "timestamp": "2026-04-21T13:04:23",
+    "method": "POST",
+    "path": "/120228362624100030",
+    "params_sent": {
+      "daily_budget": "750000"
+    },
+    "response": {
+      "success": true
+    }
+  },
+  {
+    "timestamp": "2026-04-21T13:04:25",
+    "method": "POST",
+    "path": "/120226411235010030",
+    "params_sent": {
+      "daily_budget": "500000"
+    },
+    "response": {
+      "success": true
+    }
+  },
+  {
+    "timestamp": "2026-04-21T13:04:27",
+    "method": "POST",
+    "path": "/120227382261260030",
+    "params_sent": {
+      "daily_budget": "750000"
+    },
+    "response": {
+      "success": true
+    }
+  },
+  {
+    "timestamp": "2026-04-21T13:05:53",
+    "method": "POST",
+    "path": "/120242888352350030",
+    "params_sent": {
+      "status": "ACTIVE"
+    },
+    "response": {
+      "success": true
+    }
+  },
+  {
+    "timestamp": "2026-04-21T13:05:54",
+    "method": "POST",
+    "path": "/120243460275370030",
+    "params_sent": {
+      "status": "ACTIVE"
+    },
+    "response": {
+      "success": true
+    }
+  },
+  {
+    "timestamp": "2026-04-21T13:05:54",
+    "method": "POST",
+    "path": "/120242888355100030",
+    "params_sent": {
+      "status": "ACTIVE"
+    },
+    "response": {
+      "success": true
+    }
+  },
+  {
+    "timestamp": "2026-04-21T13:08:24",
+    "method": "POST",
+    "path": "/act_843498792928069/adcreatives",
+    "params_sent": {
+      "name": "S214 Boost - Sikat na Artista (Tag-a-Friend)",
+      "object_story_id": "102628625216977_1266416878948597",
+      "call_to_action": "{\"type\": \"LEARN_MORE\", \"value\": {\"link\": \"https://www.facebook.com/bebanghalohalo\"}}",
+      "url_tags": "utm_source=meta&utm_medium=paid&utm_campaign=s214_community_engagement"
+    },
+    "response": {
+      "id": "2113916839464633"
+    }
+  },
+  {
+    "timestamp": "2026-04-21T13:08:26",
+    "method": "POST",
+    "path": "/act_843498792928069/ads",
+    "params_sent": {
+      "name": "S214 - [Post] - Tag-a-Friend - Sikat na Artista (Apr 16)",
+      "adset_id": "120243460280340030",
+      "creative": "{\"creative_id\": \"2113916839464633\"}",
+      "status": "PAUSED"
+    },
+    "response": {
+      "id": "120244564280350030"
+    }
+  },
+  {
+    "timestamp": "2026-04-21T13:08:29",
+    "method": "POST",
+    "path": "/act_843498792928069/adcreatives",
+    "params_sent": {
+      "name": "S214 Boost - Nasa Montalban na si Bebang (Store Opening)",
+      "object_story_id": "102628625216977_1260249656231986",
+      "call_to_action": "{\"type\": \"ORDER_NOW\", \"value\": {\"link\": \"https://www.foodpanda.ph/chain/cw3mi/bebang-halo-halo\"}}",
+      "url_tags": "utm_source=meta&utm_medium=paid&utm_campaign=s214_montalban_awareness"
+    },
+    "response": {
+      "id": "1257704723180530"
+    }
+  },
+  {
+    "timestamp": "2026-04-21T13:08:31",
+    "method": "POST",
+    "path": "/act_843498792928069/ads",
+    "params_sent": {
+      "name": "S214 - [Post] - Nasa Montalban na si Bebang (Apr 8)",
+      "adset_id": "120242888378420030",
+      "creative": "{\"creative_id\": \"1257704723180530\"}",
+      "status": "PAUSED"
+    },
+    "response": {
+      "id": "120244564281190030"
+    }
+  },
+  {
+    "timestamp": "2026-04-21T13:08:33",
+    "method": "POST",
+    "path": "/act_843498792928069/adcreatives",
+    "params_sent": {
+      "name": "S214 Boost - Grabeng Pressure (Mood Meme)",
+      "object_story_id": "102628625216977_1267949595461992",
+      "call_to_action": "{\"type\": \"ORDER_NOW\", \"value\": {\"link\": \"https://www.foodpanda.ph/chain/cw3mi/bebang-halo-halo\"}}",
+      "url_tags": "utm_source=meta&utm_medium=paid&utm_campaign=s214_mood_meme_conversion"
+    },
+    "response": {
+      "id": "930941509841146"
+    }
+  },
+  {
+    "timestamp": "2026-04-21T13:08:35",
+    "method": "POST",
+    "path": "/act_843498792928069/ads",
+    "params_sent": {
+      "name": "S214 - [Post] - Grabeng pressure naman to beb (Apr 18)",
+      "adset_id": "120243460280340030",
+      "creative": "{\"creative_id\": \"930941509841146\"}",
+      "status": "PAUSED"
+    },
+    "response": {
+      "id": "120244564282510030"
+    }
+  }
+]
