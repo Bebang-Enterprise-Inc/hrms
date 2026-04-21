@@ -1,0 +1,22 @@
+{
+  "total_fetched": 163,
+  "hard_error_count": 162,
+  "archived_count": 161,
+  "failure_count": 1,
+  "success_rate": 0.9938271604938271,
+  "elapsed_seconds": 495.9,
+  "error_categories": {
+    "Ads creative post was created by an app that is in developme": 8,
+    "The 191x100 crop key for image ads is deprecated.": 10,
+    "Automated Product Tags Not Supported": 1,
+    "Object Does Not Exist": 2,
+    "Please authenticate your account": 12,
+    "This ad isn\u2019t running, but you don't need to do anything": 4,
+    "Ads encountered delivery issue": 1,
+    "Missing Lead Form": 1,
+    "Invalid ad create parameters": 1,
+    "This Ad Set Has 1 Error": 48,
+    "Payment disabled for the user": 1,
+    "Custom audience not available": 73
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "attempted": 162,
+  "archived": 161,
+  "failures": [
+    {
+      "ad_id": "23849237891030029",
+      "name": "New Video views Ad",
+      "response": {
+        "error": {
+          "message": "Invalid parameter",
+          "type": "OAuthException",
+          "code": 100,
+          "error_subcode": 2446289,
+          "is_transient": false,
+          "error_user_title": "Ad Creative Is Incomplete",
+          "error_user_msg": "The reel you selected for your ad is not available. It could be deleted or you might not have permissions to see it. Please check your ad creative and try again.",
+          "fbtrace_id": "AXN_5HQzhgFs35XYRKQvLMw"
+        }
+      }
+    }
+  ],
+  "success_rate": 0.9938271604938271,
+  "elapsed_seconds": 495.9
+}
