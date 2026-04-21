@@ -60,14 +60,15 @@ Starting now, for every delivery you make to BEI or our 3PL warehouses
 (3MD, Pinnacle), please upload your Sales Invoice at the link below
 right after delivery.
 
-Your dedicated upload link (pre-fills your company name):
+Your dedicated upload link (pre-selects your company in the Supplier Name dropdown):
 [SUPPLIER_PREFILL_URL]
 
 What to do:
 1. Tap the link
-2. Fill PO Number, SI Number, SI Date, Amount
-3. Tap "Upload SI Copy" — pick your PDF or photo from your phone
-4. Submit
+2. Pick which BEI warehouse you delivered to (3MD, Pinnacle, or Shaw BLVD)
+3. Fill PO Number, SI Number, SI Date, Amount
+4. Tap "Upload SI Copy" — pick your PDF or photo from your phone
+5. Submit
 
 That's it. Our system matches your upload to the warehouse's delivery
 record automatically, and payment queues for release on your contracted

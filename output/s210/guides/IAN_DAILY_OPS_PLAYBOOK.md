@@ -34,9 +34,11 @@ escalate to Sam immediately.
 ### 3. Clear the Match Queue (`04_Match_Queue`)
 
 Each row = a supplier uploaded an SI that didn't auto-match to a delivery
-receipt. Reasons are usually:
+receipt. The `Warehouse` column tells you which 3PL to chase first.
+Reasons are usually:
 - Supplier uploaded before 3PL logged the delivery → wait 10 min; if still
-  unmatched after 30 min, investigate
+  unmatched after 30 min, investigate (check the matching 3PL sheet by
+  Warehouse)
 - Typo in PO# or SI# on EITHER side → identify whose error, fix, mark resolved
 - Supplier uploaded an SI that belongs to a different BEI company (BKI,
   franchise) → mark as "wrong recipient" in Resolution column and dismiss
