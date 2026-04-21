@@ -208,16 +208,18 @@ function validateReceipt(rowData) {
   if (!siNumber) errors.push('SI Number missing');
   // SI photo check removed post-Phase 7 — photos flow via supplier SI upload form.
 
-  // Cross-check PO against Open POs master
+  // Cross-check PO against Open POs master using fuzzy _normalizePo
+  // so PO-2026-1234 / 2026-1234 / 20261234 all match the same row.
   let poInfo = null;
   if (poNumber) {
+    const normPoLookup = _normalizePo(poNumber);
     const masterSs = SpreadsheetApp.openById(SHEET_C);
     const openPoSheet = masterSs.getSheetByName('08_Full_Open_POs');
     const poData = openPoSheet.getDataRange().getValues();
     // Headers: PO Number, PO Date, Supplier Code, Supplier Name, Destination 3PL,
     //          Total Amount, Balance, Delivery Needed By, Status
     for (let i = 1; i < poData.length; i++) {
-      if (String(poData[i][0]).trim() === poNumber) {
+      if (_normalizePo(poData[i][0]) === normPoLookup) {
         poInfo = {
           poNumber: poData[i][0],
           supplierCode: poData[i][2],
@@ -368,6 +370,37 @@ function _isBlank(v) {
   if (v === null || v === undefined) return true;
   return String(v).trim() === '';
 }
+
+/**
+ * _normalizeId — normalize a PO or SI identifier for fuzzy comparison.
+ * Strips all non-alphanumeric characters (dashes, spaces, slashes, dots,
+ * underscores), uppercases. Optionally strips a leading prefix like "PO"
+ * or "SI" so `PO-2026-1234` == `2026-1234` == `20261234` == `po2026/1234`.
+ *
+ * Rationale: suppliers and 3PL staff type PO / SI identifiers in many
+ * formats. Rather than policing input, we normalize both sides the same
+ * way before comparing.
+ *
+ * @param {string} s       raw identifier
+ * @param {string} prefix  optional prefix to strip if present (e.g. 'PO')
+ * @return {string}        canonical form for comparison
+ */
+function _normalizeId(s, prefix) {
+  let norm = String(s || '').replace(/[^A-Z0-9]/gi, '').toUpperCase();
+  if (prefix) {
+    const p = String(prefix).toUpperCase();
+    if (norm.indexOf(p) === 0) {
+      const rest = norm.substring(p.length);
+      // Only strip the prefix if what's left is still non-empty (defends
+      // against bogus input like just "PO").
+      if (rest) norm = rest;
+    }
+  }
+  return norm;
+}
+
+function _normalizePo(s) { return _normalizeId(s, 'PO'); }
+function _normalizeSi(s) { return _normalizeId(s, 'SI'); }
 
 /**
  * _fillInheritedHeaders — returns a copy of data[rowIdx] with blank header
@@ -862,17 +895,19 @@ function handleSiUpload(e) {
   // Phase 10: match ALL consolidated rows with the same (PO#, SI#), not just
   // the first. Multi-line deliveries create N consolidated rows sharing the
   // PO#/SI#; every one must be tagged SI_Matched when the supplier uploads.
-  const normPo = String(poNumber).trim().toUpperCase();
-  const normSi = String(siNumber).trim().toUpperCase();
+  // Phase 15: normalize both sides before comparing so PO-2026-1234 ==
+  // 2026-1234 == 20261234. Same for SI. Loose matching prevents orphans
+  // from format variance.
+  const normPo = _normalizePo(poNumber);
+  const normSi = _normalizeSi(siNumber);
 
   const matchedConsolidatedRows = [];  // [{ rowIdx, rr }]
   if (normPo && normSi) {
     const data = consolidated.getDataRange().getValues();
     // col indexes (0-based in data): 3=RR, 4=PO, 10=SI Number
     for (let i = 1; i < data.length; i++) {
-      const rowPo = String(data[i][4] || '').trim().toUpperCase();
-      const rowSi = String(data[i][10] || '').trim().toUpperCase();
-      if (rowPo === normPo && rowSi === normSi) {
+      if (_normalizePo(data[i][4]) === normPo &&
+          _normalizeSi(data[i][10]) === normSi) {
         matchedConsolidatedRows.push({ rowIdx: i + 1, rr: data[i][3] });
       }
     }
@@ -902,9 +937,8 @@ function handleSiUpload(e) {
     const pendingData = pending.getDataRange().getValues();
     let pendingTagged = 0;
     for (let i = 1; i < pendingData.length; i++) {
-      const rowPo = String(pendingData[i][3] || '').trim().toUpperCase();
-      const rowSi = String(pendingData[i][9] || '').trim().toUpperCase();
-      if (rowPo === normPo && rowSi === normSi) {
+      if (_normalizePo(pendingData[i][3]) === normPo &&
+          _normalizeSi(pendingData[i][9]) === normSi) {
         // Update SI PDF Link (col 11 = K, 1-based index 11)
         pending.getRange(i + 1, 11).setValue(siPdfLink);
         pending.getRange(i + 1, 12).setValue('READY');
