@@ -72,10 +72,10 @@ Google shows a confirmation page right after you submit. We don't send
 an email confirmation yet. If you don't see payment progress after 3
 business days, email Ian with the PO Number and SI Number.
 
-## Q: My PO number is long or has dashes — does that matter?
+## Q: My PO number has dashes, spaces, or "PO" prefix — does format matter?
 
-No. Copy-paste from the PO exactly as printed. The form accepts any
-format.
+No. Our system ignores dashes, spaces, and the "PO" prefix when matching.
+All of these will match the same PO:
 
 ## Q: Can I share the form link with my team?
 
