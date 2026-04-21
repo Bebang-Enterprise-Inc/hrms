@@ -20,5 +20,170 @@
     "response": {
       "success": true
     }
+  },
+  {
+    "timestamp": "2026-04-21T13:01:11",
+    "method": "POST",
+    "path": "/120236894994690030",
+    "params_sent": {
+      "status": "PAUSED"
+    },
+    "response": {
+      "success": true
+    }
+  },
+  {
+    "timestamp": "2026-04-21T13:01:52",
+    "method": "POST",
+    "path": "/120236894994690030",
+    "params_sent": {
+      "status": "PAUSED"
+    },
+    "response": {
+      "success": true
+    }
+  },
+  {
+    "timestamp": "2026-04-21T13:01:55",
+    "method": "POST",
+    "path": "/120236894995250030",
+    "params_sent": {
+      "status": "PAUSED"
+    },
+    "response": {
+      "success": true
+    }
+  },
+  {
+    "timestamp": "2026-04-21T13:01:58",
+    "method": "POST",
+    "path": "/120229072327660030",
+    "params_sent": {
+      "status": "PAUSED"
+    },
+    "response": {
+      "success": true
+    }
+  },
+  {
+    "timestamp": "2026-04-21T13:02:01",
+    "method": "POST",
+    "path": "/120227612549140030",
+    "params_sent": {
+      "status": "PAUSED"
+    },
+    "response": {
+      "success": true
+    }
+  },
+  {
+    "timestamp": "2026-04-21T13:02:04",
+    "method": "POST",
+    "path": "/120226689305170030",
+    "params_sent": {
+      "status": "PAUSED"
+    },
+    "response": {
+      "success": true
+    }
+  },
+  {
+    "timestamp": "2026-04-21T13:02:06",
+    "method": "POST",
+    "path": "/120233174992090030",
+    "params_sent": {
+      "status": "PAUSED"
+    },
+    "response": {
+      "success": true
+    }
+  },
+  {
+    "timestamp": "2026-04-21T13:02:08",
+    "method": "POST",
+    "path": "/120236894995230030",
+    "params_sent": {
+      "status": "PAUSED"
+    },
+    "response": {
+      "success": true
+    }
+  },
+  {
+    "timestamp": "2026-04-21T13:02:11",
+    "method": "POST",
+    "path": "/120234821952020030",
+    "params_sent": {
+      "status": "PAUSED"
+    },
+    "response": {
+      "success": true
+    }
+  },
+  {
+    "timestamp": "2026-04-21T13:02:13",
+    "method": "POST",
+    "path": "/120236894995120030",
+    "params_sent": {
+      "status": "PAUSED"
+    },
+    "response": {
+      "success": true
+    }
+  },
+  {
+    "timestamp": "2026-04-21T13:02:15",
+    "method": "POST",
+    "path": "/120236894995070030",
+    "params_sent": {
+      "status": "PAUSED"
+    },
+    "response": {
+      "success": true
+    }
+  },
+  {
+    "timestamp": "2026-04-21T13:02:17",
+    "method": "POST",
+    "path": "/120233600470520030",
+    "params_sent": {
+      "status": "PAUSED"
+    },
+    "response": {
+      "success": true
+    }
+  },
+  {
+    "timestamp": "2026-04-21T13:04:23",
+    "method": "POST",
+    "path": "/120228362624100030",
+    "params_sent": {
+      "daily_budget": "750000"
+    },
+    "response": {
+      "success": true
+    }
+  },
+  {
+    "timestamp": "2026-04-21T13:04:25",
+    "method": "POST",
+    "path": "/120226411235010030",
+    "params_sent": {
+      "daily_budget": "500000"
+    },
+    "response": {
+      "success": true
+    }
+  },
+  {
+    "timestamp": "2026-04-21T13:04:27",
+    "method": "POST",
+    "path": "/120227382261260030",
+    "params_sent": {
+      "daily_budget": "750000"
+    },
+    "response": {
+      "success": true
+    }
   }
 ]

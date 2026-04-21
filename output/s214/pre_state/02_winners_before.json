@@ -1,0 +1,23 @@
+{
+  "120228362624100030": {
+    "ad_name": "Ad #49 - [Post/VID] - Don't leave your valuables",
+    "7d_roas": 80.933808,
+    "current_daily_budget_centavos": "150000",
+    "target_daily_budget_centavos": 750000,
+    "adset_name": "BEH - Engaged Shoppers - 18/44 [Exclude 10d]"
+  },
+  "120226411235010030": {
+    "ad_name": "Ad #81 - [VID Post] - Swipe left? Swipe right?",
+    "7d_roas": 39.279658,
+    "current_daily_budget_centavos": "250000",
+    "target_daily_budget_centavos": 500000,
+    "adset_name": "INT - Coffee/Ice Cream - 18/44 [Exclude 10d]"
+  },
+  "120227382261260030": {
+    "ad_name": "Ad #44 - [Post] - Ang sakit naman Beb!",
+    "7d_roas": 24.041734,
+    "current_daily_budget_centavos": "150000",
+    "target_daily_budget_centavos": 750000,
+    "adset_name": "INT - Online food ordering - 18/50 [Exclude 10d]"
+  }
+}

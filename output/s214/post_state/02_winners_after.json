@@ -1,0 +1,26 @@
+{
+  "120228362624100030": {
+    "id": "120228362624100030",
+    "name": "BEH - Engaged Shoppers - 18/44 [Exclude 10d]",
+    "status": "ACTIVE",
+    "daily_budget": "750000",
+    "effective_status": "CAMPAIGN_PAUSED",
+    "campaign_id": "120225775497020030"
+  },
+  "120226411235010030": {
+    "id": "120226411235010030",
+    "name": "INT - Coffee/Ice Cream - 18/44 [Exclude 10d]",
+    "status": "ACTIVE",
+    "daily_budget": "500000",
+    "effective_status": "CAMPAIGN_PAUSED",
+    "campaign_id": "120225775497020030"
+  },
+  "120227382261260030": {
+    "id": "120227382261260030",
+    "name": "INT - Online food ordering - 18/50 [Exclude 10d]",
+    "status": "ACTIVE",
+    "daily_budget": "750000",
+    "effective_status": "CAMPAIGN_PAUSED",
+    "campaign_id": "120225775497020030"
+  }
+}

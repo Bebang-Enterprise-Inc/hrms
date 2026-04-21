@@ -1,0 +1,82 @@
+{
+  "results": [
+    {
+      "ad_id": "120236894994690030",
+      "success": true,
+      "response": {
+        "success": true
+      }
+    },
+    {
+      "ad_id": "120236894995250030",
+      "success": true,
+      "response": {
+        "success": true
+      }
+    },
+    {
+      "ad_id": "120229072327660030",
+      "success": true,
+      "response": {
+        "success": true
+      }
+    },
+    {
+      "ad_id": "120227612549140030",
+      "success": true,
+      "response": {
+        "success": true
+      }
+    },
+    {
+      "ad_id": "120226689305170030",
+      "success": true,
+      "response": {
+        "success": true
+      }
+    },
+    {
+      "ad_id": "120233174992090030",
+      "success": true,
+      "response": {
+        "success": true
+      }
+    },
+    {
+      "ad_id": "120236894995230030",
+      "success": true,
+      "response": {
+        "success": true
+      }
+    },
+    {
+      "ad_id": "120234821952020030",
+      "success": true,
+      "response": {
+        "success": true
+      }
+    },
+    {
+      "ad_id": "120236894995120030",
+      "success": true,
+      "response": {
+        "success": true
+      }
+    },
+    {
+      "ad_id": "120236894995070030",
+      "success": true,
+      "response": {
+        "success": true
+      }
+    },
+    {
+      "ad_id": "120233600470520030",
+      "success": true,
+      "response": {
+        "success": true
+      }
+    }
+  ],
+  "total": 11
+}

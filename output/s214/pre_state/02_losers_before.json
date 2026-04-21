@@ -1,0 +1,126 @@
+{
+  "losers": [
+    {
+      "ad_id": "120236894994690030",
+      "ad_name": "Ad #16 - [Post] - Tried so many halo-halo brands\u2026",
+      "campaign_name": "TOF - Lookalike test 4-10% - [ABO]",
+      "spend": 5858.13,
+      "purchases": 11,
+      "roas": 1.279248,
+      "cpa": 532.5572727272728,
+      "ctr": 2.878764,
+      "freq": 1.101303
+    },
+    {
+      "ad_id": "120236894995250030",
+      "ad_name": "Ad #15 - [Post] - Hirap talaga kapag introvert ka... di ka nabubusog!",
+      "campaign_name": "TOF - Lookalike test 4-10% - [ABO]",
+      "spend": 5048.55,
+      "purchases": 2,
+      "roas": 0.557982,
+      "cpa": 2524.275,
+      "ctr": 5.895707,
+      "freq": 1.087594
+    },
+    {
+      "ad_id": "120229072327660030",
+      "ad_name": "Ad #10 - [IMG] - Deliver Frozen Posting 4",
+      "campaign_name": "TOF - Lookalike test 4-10% - [ABO]",
+      "spend": 4069.63,
+      "purchases": 5,
+      "roas": 1.980033,
+      "cpa": 813.926,
+      "ctr": 2.513086,
+      "freq": 1.054612
+    },
+    {
+      "ad_id": "120227612549140030",
+      "ad_name": "Ad #3 [Post] - Monday na naman",
+      "campaign_name": "TOF - Lookalike test 4-10% - [ABO]",
+      "spend": 3344.65,
+      "purchases": 2,
+      "roas": 0.285531,
+      "cpa": 1672.325,
+      "ctr": 3.007832,
+      "freq": 1.053421
+    },
+    {
+      "ad_id": "120226689305170030",
+      "ad_name": "Ad #12 - [IMG] - Choco Brownie",
+      "campaign_name": "TOF - Lookalike test 4-10% - [ABO]",
+      "spend": 3240.38,
+      "purchases": 2,
+      "roas": 0.341935,
+      "cpa": 1620.19,
+      "ctr": 4.30279,
+      "freq": 1.122511
+    },
+    {
+      "ad_id": "120233174992090030",
+      "ad_name": "Ad #1 - [Carousel] - Products",
+      "campaign_name": "TOF - Lookalike test 4-10% - [ABO]",
+      "spend": 2893.29,
+      "purchases": 1,
+      "roas": 0.181109,
+      "cpa": 2893.29,
+      "ctr": 2.758024,
+      "freq": 1.102331
+    },
+    {
+      "ad_id": "120236894995230030",
+      "ad_name": "Ad #14 - [Post] - Friday na, let's end the week with a Bebang!",
+      "campaign_name": "TOF - Lookalike test 4-10% - [ABO]",
+      "spend": 2777.96,
+      "purchases": 5,
+      "roas": 1.714208,
+      "cpa": 555.592,
+      "ctr": 2.819785,
+      "freq": 1.051259
+    },
+    {
+      "ad_id": "120234821952020030",
+      "ad_name": "Ad #121 - [Post] - Not your ordinary halo-halo",
+      "campaign_name": "TOF - Lookalike test 4-10% - [ABO]",
+      "spend": 2776.86,
+      "purchases": 1,
+      "roas": 0.443306,
+      "cpa": 2776.86,
+      "ctr": 0.974026,
+      "freq": 1.063903
+    },
+    {
+      "ad_id": "120236894995120030",
+      "ad_name": "Ad #15 - [Post] - Hirap talaga kapag introvert ka... di ka nabubusog!",
+      "campaign_name": "TOF - Lookalike test 4-10% - [ABO]",
+      "spend": 1744.49,
+      "purchases": 3,
+      "roas": 1.235318,
+      "cpa": 581.4966666666667,
+      "ctr": 1.435072,
+      "freq": 1.123697
+    },
+    {
+      "ad_id": "120236894995070030",
+      "ad_name": "Ad #13 - [Post] - You wanna be POPULARRRR?",
+      "campaign_name": "TOF - Lookalike test 4-10% - [ABO]",
+      "spend": 1441.52,
+      "purchases": 2,
+      "roas": 1.474832,
+      "cpa": 720.76,
+      "ctr": 3.067757,
+      "freq": 1.093196
+    },
+    {
+      "ad_id": "120233600470520030",
+      "ad_name": "Ad #101 - [Post] - Mas masaya talaga",
+      "campaign_name": "TOF - Lookalike test 4-10% - [ABO]",
+      "spend": 1437.28,
+      "purchases": 1,
+      "roas": 0.705499,
+      "cpa": 1437.28,
+      "ctr": 4.587443,
+      "freq": 1.095634
+    }
+  ],
+  "rule": "CPA>400 AND ROAS<2x, top 16 by spend"
+}

@@ -129,5 +129,187 @@
       "success": true
     },
     "success": true
+  },
+  {
+    "phase": "P2-T3",
+    "action": "pause_ad",
+    "target": "120236894994690030",
+    "target_name": "Ad #16 - [Post] - Tried so many halo-halo brands\u2026",
+    "reason": "loser: CPA=533 ROAS=1.28x",
+    "7d_spend": 5858.13,
+    "7d_purchases": 11,
+    "api_response": {
+      "success": true
+    },
+    "success": true
+  },
+  {
+    "phase": "P2-T3",
+    "action": "pause_ad",
+    "target": "120236894995250030",
+    "target_name": "Ad #15 - [Post] - Hirap talaga kapag introvert ka... di ka nabubusog!",
+    "reason": "loser: CPA=2524 ROAS=0.56x",
+    "7d_spend": 5048.55,
+    "7d_purchases": 2,
+    "api_response": {
+      "success": true
+    },
+    "success": true
+  },
+  {
+    "phase": "P2-T3",
+    "action": "pause_ad",
+    "target": "120229072327660030",
+    "target_name": "Ad #10 - [IMG] - Deliver Frozen Posting 4",
+    "reason": "loser: CPA=814 ROAS=1.98x",
+    "7d_spend": 4069.63,
+    "7d_purchases": 5,
+    "api_response": {
+      "success": true
+    },
+    "success": true
+  },
+  {
+    "phase": "P2-T3",
+    "action": "pause_ad",
+    "target": "120227612549140030",
+    "target_name": "Ad #3 [Post] - Monday na naman",
+    "reason": "loser: CPA=1672 ROAS=0.29x",
+    "7d_spend": 3344.65,
+    "7d_purchases": 2,
+    "api_response": {
+      "success": true
+    },
+    "success": true
+  },
+  {
+    "phase": "P2-T3",
+    "action": "pause_ad",
+    "target": "120226689305170030",
+    "target_name": "Ad #12 - [IMG] - Choco Brownie",
+    "reason": "loser: CPA=1620 ROAS=0.34x",
+    "7d_spend": 3240.38,
+    "7d_purchases": 2,
+    "api_response": {
+      "success": true
+    },
+    "success": true
+  },
+  {
+    "phase": "P2-T3",
+    "action": "pause_ad",
+    "target": "120233174992090030",
+    "target_name": "Ad #1 - [Carousel] - Products",
+    "reason": "loser: CPA=2893 ROAS=0.18x",
+    "7d_spend": 2893.29,
+    "7d_purchases": 1,
+    "api_response": {
+      "success": true
+    },
+    "success": true
+  },
+  {
+    "phase": "P2-T3",
+    "action": "pause_ad",
+    "target": "120236894995230030",
+    "target_name": "Ad #14 - [Post] - Friday na, let's end the week with a Bebang!",
+    "reason": "loser: CPA=556 ROAS=1.71x",
+    "7d_spend": 2777.96,
+    "7d_purchases": 5,
+    "api_response": {
+      "success": true
+    },
+    "success": true
+  },
+  {
+    "phase": "P2-T3",
+    "action": "pause_ad",
+    "target": "120234821952020030",
+    "target_name": "Ad #121 - [Post] - Not your ordinary halo-halo",
+    "reason": "loser: CPA=2777 ROAS=0.44x",
+    "7d_spend": 2776.86,
+    "7d_purchases": 1,
+    "api_response": {
+      "success": true
+    },
+    "success": true
+  },
+  {
+    "phase": "P2-T3",
+    "action": "pause_ad",
+    "target": "120236894995120030",
+    "target_name": "Ad #15 - [Post] - Hirap talaga kapag introvert ka... di ka nabubusog!",
+    "reason": "loser: CPA=581 ROAS=1.24x",
+    "7d_spend": 1744.49,
+    "7d_purchases": 3,
+    "api_response": {
+      "success": true
+    },
+    "success": true
+  },
+  {
+    "phase": "P2-T3",
+    "action": "pause_ad",
+    "target": "120236894995070030",
+    "target_name": "Ad #13 - [Post] - You wanna be POPULARRRR?",
+    "reason": "loser: CPA=721 ROAS=1.47x",
+    "7d_spend": 1441.52,
+    "7d_purchases": 2,
+    "api_response": {
+      "success": true
+    },
+    "success": true
+  },
+  {
+    "phase": "P2-T3",
+    "action": "pause_ad",
+    "target": "120233600470520030",
+    "target_name": "Ad #101 - [Post] - Mas masaya talaga",
+    "reason": "loser: CPA=1437 ROAS=0.71x",
+    "7d_spend": 1437.28,
+    "7d_purchases": 1,
+    "api_response": {
+      "success": true
+    },
+    "success": true
+  },
+  {
+    "phase": "P2-T5",
+    "action": "scale_adset_budget",
+    "target": "120228362624100030",
+    "target_name": "BEH - Engaged Shoppers - 18/44 [Exclude 10d]",
+    "hosted_winner_ad": "Ad #49 - [Post/VID] - Don't leave your valuables",
+    "before_centavos": "150000",
+    "after_centavos": 750000,
+    "api_response": {
+      "success": true
+    },
+    "success": true
+  },
+  {
+    "phase": "P2-T5",
+    "action": "scale_adset_budget",
+    "target": "120226411235010030",
+    "target_name": "INT - Coffee/Ice Cream - 18/44 [Exclude 10d]",
+    "hosted_winner_ad": "Ad #81 - [VID Post] - Swipe left? Swipe right?",
+    "before_centavos": "250000",
+    "after_centavos": 500000,
+    "api_response": {
+      "success": true
+    },
+    "success": true
+  },
+  {
+    "phase": "P2-T5",
+    "action": "scale_adset_budget",
+    "target": "120227382261260030",
+    "target_name": "INT - Online food ordering - 18/50 [Exclude 10d]",
+    "hosted_winner_ad": "Ad #44 - [Post] - Ang sakit naman Beb!",
+    "before_centavos": "150000",
+    "after_centavos": 750000,
+    "api_response": {
+      "success": true
+    },
+    "success": true
   }
 ]

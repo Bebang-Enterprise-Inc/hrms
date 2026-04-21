@@ -1,0 +1,20 @@
+{
+  "reversed_losers": [
+    {
+      "ad_id": "120236490022230030",
+      "ad_name": "Ad #12 - [Post] - It\u2019s time to try\u2026 Matcha-fying Gravity! \ud83e\uddd9\u200d\u2640\ufe0f\ud83d\udc9a\ud83c\udf75",
+      "7d_roas": 1.120227,
+      "24h_roas": 4.522652,
+      "24h_purchases": 3
+    },
+    {
+      "ad_id": "120238080535160030",
+      "ad_name": "Ad #46 - [Post] - Basta happy",
+      "7d_roas": 0.946215,
+      "24h_roas": 4.766004,
+      "24h_purchases": 3
+    }
+  ],
+  "decision": "excluded_from_pause",
+  "reason": "Fresh 24h signal shows recovery; pausing would hurt performance. Per plan stop_only_for: flagged; proceeding with stable losers only."
+}
