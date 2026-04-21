@@ -1,0 +1,53 @@
+{
+  "bki_warehouses": [
+    {
+      "name": "3MD LOGISTICS - CAMANGYANAN - BKI",
+      "company": "BEBANG KITCHEN INC.",
+      "warehouse_name": "3MD LOGISTICS - CAMANGYANAN",
+      "is_group": 0
+    },
+    {
+      "name": "3MD LOGISTICS \u2013 CAMANGYANAN - BKI",
+      "company": "BEBANG KITCHEN INC.",
+      "warehouse_name": "3MD LOGISTICS \u2013 CAMANGYANAN",
+      "is_group": 0
+    },
+    {
+      "name": "JENTEC STORAGE INC. - BKI",
+      "company": "BEBANG KITCHEN INC.",
+      "warehouse_name": "JENTEC STORAGE INC.",
+      "is_group": 0
+    },
+    {
+      "name": "PINNACLE COLD STORAGE SOLUTIONS - BKI",
+      "company": "BEBANG KITCHEN INC.",
+      "warehouse_name": "PINNACLE COLD STORAGE SOLUTIONS",
+      "is_group": 0
+    },
+    {
+      "name": "ROYAL COLD STORAGE - TAYTAY (RCS) - BKI",
+      "company": "BEBANG KITCHEN INC.",
+      "warehouse_name": "ROYAL COLD STORAGE - TAYTAY (RCS)",
+      "is_group": 0
+    },
+    {
+      "name": "ROYAL COLD STORAGE \u2013 TAYTAY (RCS) - BKI",
+      "company": "BEBANG KITCHEN INC.",
+      "warehouse_name": "ROYAL COLD STORAGE \u2013 TAYTAY (RCS)",
+      "is_group": 0
+    },
+    {
+      "name": "SHAW BLVD - BKI",
+      "company": "BEBANG KITCHEN INC.",
+      "warehouse_name": "SHAW BLVD",
+      "is_group": 0
+    }
+  ],
+  "null_batch_tuples": [],
+  "summary": {
+    "total_tuples": 0,
+    "total_qty": 0,
+    "distinct_items": 0,
+    "distinct_warehouses": 0
+  }
+}

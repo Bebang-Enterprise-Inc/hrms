@@ -3,7 +3,7 @@ sprint: S213
 title: FG004 NULL-batch backfill + batch-tracked item audit at BKI warehouses
 branch: s213-fg004-batch-backfill
 base: production
-status: PLANNED
+status: COMPLETED-PARTIAL
 plan_version: v1
 plan_date: 2026-04-21
 canonical_scope: in
@@ -14,7 +14,10 @@ depends_on:
   - S212 R1 triage evidence proving NULL-batch stock is a data issue, not a code bug
 execution_mode: autonomous
 signoff_authority: single-owner (Sam, CEO)
-execution_summary:
+completed_date: 2026-04-21
+follow_up_sprint: S214 (inventory replenishment + fixture cap + dispatch-mystery)
+execution_summary: |
+  COMPLETED-PARTIAL 2026-04-21. DEFECT-6 (NULL-batch stock at BKI) fully fixed: 36 tuples / 22,904 units of stock at PINNACLE + 3MD + SHAW BLVD now properly batch-tracked via auto-generated BACKFILL-20260421-* batches. Sweep pass rate improved from 37% (S212 R1: 3/8) to 47% (S213 R1: 7/15). AYALA FAIRVIEW TERRACES now passes (validates S212 DEFECT-5 Company Owned markup fix in production). 48/49 goal NOT reached because sweep exposed DEFECT-7 (inventory shortages — PM001, PM007, KL004, PLASTIC 8x11 at Pinnacle don't have enough qty for fixture suggested qty) + DEFECT-8 (3 remaining dispatch mysteries) + DEFECT-9 (1 WR receive timeout). Deferred to S214. All 16 R1 artifacts cleaned. Canonical zero drift.
 ---
 
 # S213 — FG004 NULL-batch Backfill + Batch-Tracked Item Audit at BKI Warehouses
