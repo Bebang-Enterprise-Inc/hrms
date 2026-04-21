@@ -24,7 +24,7 @@ via their own form.
 1. Click the "Receipts" tab at the bottom of this sheet.
 2. Scroll to the first empty row.
 3. Fill left-to-right:
-   A. Timestamp (leave blank if you want auto; else type date+time)
+   A. Timestamp (REQUIRED — type date+time of arrival; row is skipped if blank)
    B. 3PL (your warehouse: _3PL_NAME_)
    C. RR Number (your own receipt number, e.g. RR-0041)
    D. PO Number (exactly as printed on the BEI PO)

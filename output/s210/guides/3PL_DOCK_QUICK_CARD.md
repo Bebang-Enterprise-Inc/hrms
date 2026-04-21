@@ -23,7 +23,7 @@ own form. Your job is the delivery record only.
 
 | # | Column | What to type |
 |---|---|---|
-| A | Timestamp | Now (auto-fills if you leave blank) |
+| A | Timestamp | Type date+time of arrival (required — row is skipped if blank) |
 | B | 3PL | Your warehouse name (3MD or Pinnacle) |
 | C | RR Number | Your own receipt number (e.g. `RR-0041`) |
 | D | PO Number | Exactly as printed on the BEI PO (e.g. `PO-2026-1234`) |

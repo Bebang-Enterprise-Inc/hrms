@@ -1,6 +1,6 @@
 # BEI Receipt-Based Payment — Finance Reconciliation Guide
 
-**Audience:** Denise (takes over Finance 2026-04-27 after Juanna leaves)
+**Audience:** Denise (effective Finance lead **2026-04-28**; Juanna's last day is 2026-04-27)
 **Prerequisites:** Read `ONBOARDING_3PL_COMMS.md` first for the overall
 architecture. This guide assumes you understand the data flow.
 
@@ -146,7 +146,7 @@ isn't polling. Escalate to Ashish.
 - Procurement AppSheet — read access from Ashish
 - Cloud Scheduler console (read-only) — not needed day-1, get it from
   Sam later
-- BIR eFPS credentials — get from Juanna during handover before 04-27
+- BIR eFPS credentials — get from Juanna during handover on or before 2026-04-27
 
 ---
 
@@ -162,5 +162,5 @@ isn't polling. Escalate to Ashish.
 
 ---
 
-_Version 2026-04-21 (S210 Phase 11 guide pack). Scheduled handover from
-Juanna 2026-04-27._
+_Version 2026-04-21 (S210 Phase 11 guide pack). Juanna's last day is
+2026-04-27; Denise effective Finance lead 2026-04-28._
