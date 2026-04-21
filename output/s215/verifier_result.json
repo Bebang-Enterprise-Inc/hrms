@@ -1,0 +1,78 @@
+{
+  "all_pass": true,
+  "check_count": 14,
+  "pass_count": 14,
+  "fail_count": 0,
+  "checks": [
+    {
+      "name": "materials_master_row_count",
+      "pass": true,
+      "detail": "rows=384 (target >=380)"
+    },
+    {
+      "name": "po_lines_master_row_count",
+      "pass": true,
+      "detail": "rows=2199 (target >=2100; excludes 26 blank-PO legacy rows)"
+    },
+    {
+      "name": "po_lines_3md_row_count",
+      "pass": true,
+      "detail": "rows=121"
+    },
+    {
+      "name": "po_lines_pinnacle_row_count",
+      "pass": true,
+      "detail": "rows=75"
+    },
+    {
+      "name": "po_lines_shaw_row_count",
+      "pass": true,
+      "detail": "rows=190"
+    },
+    {
+      "name": "form_has_material_code_dropdown",
+      "pass": true,
+      "detail": "items_found=1 options_count=383"
+    },
+    {
+      "name": "bound_scripts_created",
+      "pass": true,
+      "detail": "keys=['sheetA', 'sheetB', 'sheetD']"
+    },
+    {
+      "name": "onedit_code_present_sheetA",
+      "pass": true,
+      "detail": "scriptId=1wqkp3H14-nsH8-koXOK6HODOMu4KWhCzFvGmuIrw8cRJC4d6I165qHh8"
+    },
+    {
+      "name": "onedit_code_present_sheetB",
+      "pass": true,
+      "detail": "scriptId=1VMm0L13n-l68KJHGQuta8GENsn16a7mTTTEG-ysjrsXrQHihVFOWgLY4"
+    },
+    {
+      "name": "onedit_code_present_sheetD",
+      "pass": true,
+      "detail": "scriptId=150LOn_jULK1uCzBgHnSgG3ppfNJ3UeewRViPtfn52w_zVQsytaMGhpST"
+    },
+    {
+      "name": "sheet_A_owned_by_sam",
+      "pass": true,
+      "detail": "owner=sam@bebang.ph"
+    },
+    {
+      "name": "sheet_B_owned_by_sam",
+      "pass": true,
+      "detail": "owner=sam@bebang.ph"
+    },
+    {
+      "name": "sheet_C_owned_by_sam",
+      "pass": true,
+      "detail": "owner=sam@bebang.ph"
+    },
+    {
+      "name": "sheet_D_owned_by_sam",
+      "pass": true,
+      "detail": "owner=sam@bebang.ph"
+    }
+  ]
+}

@@ -409,10 +409,13 @@ def build_dock_card():
                       'Sheet A (3MD) or Sheet B (Pinnacle) — bookmarked on the receiving terminal.')
     add_numbered_step(doc, 2, 'Click Receipts tab',
                       'Scroll to the first empty row. One row per item per delivery.')
-    add_numbered_step(doc, 3, 'Fill 16 columns left-to-right',
-                      'Timestamp, RR#, PO#, Supplier, Material, Qty, UoM, SI#, Trucker, Plate, '
+    add_numbered_step(doc, 3, 'Skip Timestamp — it fills itself',
+                      'Start typing at RR#. Timestamp col A auto-fills the second you type in '
+                      'the row. Don\'t type in col A — it\'s locked.')
+    add_numbered_step(doc, 4, 'Fill remaining 15 columns left-to-right',
+                      'RR#, PO#, Supplier, Material, Qty, UoM, SI#, Trucker, Plate, '
                       'Production Date, Expiration Date, Received By, Notes. No photos.')
-    add_numbered_step(doc, 4, 'Press Enter — done',
+    add_numbered_step(doc, 5, 'Press Enter — done',
                       "Within ~1 minute BEI's system picks up the row and processes it automatically.")
 
     add_section_header(doc, 'Multi-item delivery')

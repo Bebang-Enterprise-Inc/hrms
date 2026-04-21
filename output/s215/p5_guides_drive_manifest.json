@@ -1,16 +1,38 @@
 [
   {
-    "local": "F:\\Dropbox\\Projects\\BEI-ERP-s215\\output\\s210\\guides\\4_SUPPLIER_ROLLOUT_GUIDE.docx",
-    "drive_name": "2026-04-21 - S210 Guide \u2014 Supplier Rollout Playbook (Cayla)",
-    "drive_url": "https://docs.google.com/document/d/1ktaZ4HYOAO4Srbf8oj8tA3fRtDTlkpvqA_wx9nFYu10/edit?usp=drivesdk",
-    "file_id": "1ktaZ4HYOAO4Srbf8oj8tA3fRtDTlkpvqA_wx9nFYu10",
-    "updated_at": "2026-04-21T07:09:28.492Z"
+    "local": "1_MASTER_INDEX.docx",
+    "drive_name": "2026-04-21 - S210 Master Index \u2014 Team-by-Team Guide",
+    "drive_url": "https://docs.google.com/document/d/17U6HI0dks5QhJVZaeL4_wVQdWR7VsBW_HsBW-cOnPto/edit",
+    "file_id": "17U6HI0dks5QhJVZaeL4_wVQdWR7VsBW_HsBW-cOnPto"
   },
   {
-    "local": "F:\\Dropbox\\Projects\\BEI-ERP-s215\\output\\s210\\guides\\3_SUPPLIER_FAQ.docx",
+    "local": "2_3PL_DOCK_QUICK_CARD.docx",
+    "drive_name": "2026-04-21 - S210 Guide \u2014 3PL Dock Quick Card (3MD + Pinnacle)",
+    "drive_url": "https://docs.google.com/document/d/1zlb5ZAXmyN1Y_HaXOJl_rNc-6cXy-Q1d2Uw3xbIq5EY/edit",
+    "file_id": "1zlb5ZAXmyN1Y_HaXOJl_rNc-6cXy-Q1d2Uw3xbIq5EY"
+  },
+  {
+    "local": "3_SUPPLIER_FAQ.docx",
     "drive_name": "2026-04-21 - S210 Guide \u2014 Supplier SI Upload FAQ (for supplier emails)",
-    "drive_url": "https://docs.google.com/document/d/1YERz3hHrekYoOVORTnRTumjjnMRch0hjVjLyFe3Qd9A/edit?usp=drivesdk",
-    "file_id": "1YERz3hHrekYoOVORTnRTumjjnMRch0hjVjLyFe3Qd9A",
-    "updated_at": "2026-04-21T07:10:09.950Z"
+    "drive_url": "https://docs.google.com/document/d/1YERz3hHrekYoOVORTnRTumjjnMRch0hjVjLyFe3Qd9A/edit",
+    "file_id": "1YERz3hHrekYoOVORTnRTumjjnMRch0hjVjLyFe3Qd9A"
+  },
+  {
+    "local": "4_SUPPLIER_ROLLOUT_GUIDE.docx",
+    "drive_name": "2026-04-21 - S210 Guide \u2014 Supplier Rollout Playbook (Cayla)",
+    "drive_url": "https://docs.google.com/document/d/1ktaZ4HYOAO4Srbf8oj8tA3fRtDTlkpvqA_wx9nFYu10/edit?usp=drivesdk",
+    "file_id": "1ktaZ4HYOAO4Srbf8oj8tA3fRtDTlkpvqA_wx9nFYu10"
+  },
+  {
+    "local": "5_IAN_DAILY_OPS_PLAYBOOK.docx",
+    "drive_name": "2026-04-21 - S210 Guide \u2014 Ian Daily Ops Playbook",
+    "drive_url": "https://docs.google.com/document/d/1XOBZ1J4SO_OAkh9AG1UiB9V1wdvTDuF_ncGk60VSbBs/edit?usp=drivesdk",
+    "file_id": "1XOBZ1J4SO_OAkh9AG1UiB9V1wdvTDuF_ncGk60VSbBs"
+  },
+  {
+    "local": "6_FINANCE_RECONCILIATION_GUIDE.docx",
+    "drive_name": "2026-04-21 - S210 Guide \u2014 Finance Reconciliation (Denise)",
+    "drive_url": "https://docs.google.com/document/d/1GxLibZRYTkE9z8gM3tfXqJb1BkgHHpPizUMDEQpxaQI/edit?usp=drivesdk",
+    "file_id": "1GxLibZRYTkE9z8gM3tfXqJb1BkgHHpPizUMDEQpxaQI"
   }
 ]
