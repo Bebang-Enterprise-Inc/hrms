@@ -1,0 +1,24 @@
+[
+  {
+    "timestamp": "2026-04-21T12:58:34",
+    "method": "POST",
+    "path": "/888035557619357",
+    "params_sent": {
+      "status": "DISABLED"
+    },
+    "response": {
+      "success": true
+    }
+  },
+  {
+    "timestamp": "2026-04-21T12:58:35",
+    "method": "POST",
+    "path": "/1539999288125943",
+    "params_sent": {
+      "schedule_spec": "{\"schedule_type\": \"CUSTOM\", \"schedule\": [{\"start_minute\": 1320, \"end_minute\": 1320, \"days\": [0]}, {\"start_minute\": 1320, \"end_minute\": 1320, \"days\": [1]}, {\"start_minute\": 1320, \"end_minute\": 1320, \"days\": [2]}, {\"start_minute\": 1320, \"end_minute\": 1320, \"days\": [3]}, {\"start_minute\": 1320, \"end_minute\": 1320, \"days\": [4]}, {\"start_minute\": 1320, \"end_minute\": 1320, \"days\": [5]}, {\"start_minute\": 1320, \"end_minute\": 1320, \"days\": [6]}]}"
+    },
+    "response": {
+      "success": true
+    }
+  }
+]

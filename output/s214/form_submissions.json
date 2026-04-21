@@ -1,0 +1,133 @@
+[
+  {
+    "phase": "P1-T5",
+    "action": "disable_rule",
+    "target": "888035557619357",
+    "target_name": "BEB: EMERGENCY - Pause ALL if spend > 100K",
+    "before_status": "ENABLED",
+    "after_status": "DISABLED",
+    "api_response": {
+      "success": true
+    },
+    "success": true
+  },
+  {
+    "phase": "P1-T5",
+    "action": "update_rule_schedule",
+    "target": "1539999288125943",
+    "target_name": "BEB: Sales OFF at 6PM",
+    "before_schedule": {
+      "schedule_type": "CUSTOM",
+      "schedule": [
+        {
+          "start_minute": 1080,
+          "end_minute": 1080,
+          "days": [
+            0
+          ]
+        },
+        {
+          "start_minute": 1080,
+          "end_minute": 1080,
+          "days": [
+            1
+          ]
+        },
+        {
+          "start_minute": 1080,
+          "end_minute": 1080,
+          "days": [
+            2
+          ]
+        },
+        {
+          "start_minute": 1080,
+          "end_minute": 1080,
+          "days": [
+            3
+          ]
+        },
+        {
+          "start_minute": 1080,
+          "end_minute": 1080,
+          "days": [
+            4
+          ]
+        },
+        {
+          "start_minute": 1080,
+          "end_minute": 1080,
+          "days": [
+            5
+          ]
+        },
+        {
+          "start_minute": 1080,
+          "end_minute": 1080,
+          "days": [
+            6
+          ]
+        }
+      ]
+    },
+    "attempted_new_schedule": {
+      "schedule_type": "CUSTOM",
+      "schedule": [
+        {
+          "start_minute": 1320,
+          "end_minute": 1320,
+          "days": [
+            0
+          ]
+        },
+        {
+          "start_minute": 1320,
+          "end_minute": 1320,
+          "days": [
+            1
+          ]
+        },
+        {
+          "start_minute": 1320,
+          "end_minute": 1320,
+          "days": [
+            2
+          ]
+        },
+        {
+          "start_minute": 1320,
+          "end_minute": 1320,
+          "days": [
+            3
+          ]
+        },
+        {
+          "start_minute": 1320,
+          "end_minute": 1320,
+          "days": [
+            4
+          ]
+        },
+        {
+          "start_minute": 1320,
+          "end_minute": 1320,
+          "days": [
+            5
+          ]
+        },
+        {
+          "start_minute": 1320,
+          "end_minute": 1320,
+          "days": [
+            6
+          ]
+        }
+      ]
+    },
+    "fallback_applied": false,
+    "api_response": {
+      "success": true
+    },
+    "success": true
+  }
+]
