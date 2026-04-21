@@ -73,8 +73,8 @@ That's it. Our system matches your upload to the warehouse's delivery
 record automatically, and payment queues for release on your contracted
 terms (e.g. Net 30 from delivery date).
 
-Paper SI continues under BIR's 3-year retention rule, but it no longer
-gates your payment — we work from your upload.
+Keep sending the paper SI to us as you do today — that's separate and
+unchanged. The upload is what speeds up your payment.
 
 Attached FAQ answers common questions. Contact me if anything is unclear.
 
@@ -136,7 +136,7 @@ For suppliers NOT yet uploading, cross-reference:
 |---|---|
 | "I don't have a scanner" | Phone photo is fine. The form accepts JPG/PNG. |
 | "Our accounts staff don't use Gmail" | Form is public — works with any email. No Google account needed. |
-| "Can I still send paper SI?" | Yes, keep doing that for BIR. Upload is in addition, not instead. |
+| "Can I still send paper SI?" | Yes, keep doing that. Upload is in addition, not instead. |
 | "My PO number is long / has dashes" | Copy-paste from the PO exactly as printed. The form accepts any string. |
 | "What if I make a typo after submitting?" | Upload again — the form allows repeat submissions. Mark the bad one in Notes. |
 | "I'm worried about my PDF being seen by others" | Only BEI staff have access. Not public, not indexed. |
@@ -165,4 +165,4 @@ For suppliers NOT yet uploading, cross-reference:
 
 ---
 
-_Version 2026-04-21 (S210 Phase 11 guide pack)._
+_Version 2026-04-21._

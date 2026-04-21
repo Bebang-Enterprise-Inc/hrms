@@ -89,8 +89,7 @@ Example — 3 materials on 1 truck:
 
 ─── VERSION ───
 
-2026-04-21 (Phase 11 — multi-line delivery support + photo columns removed).
-Supersedes all prior instructions.
+2026-04-21 — current version. Supersedes all prior instructions.
 ```
 
 ---
