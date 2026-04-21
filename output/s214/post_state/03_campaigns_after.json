@@ -1,0 +1,23 @@
+[
+  {
+    "id": "120242888352350030",
+    "name": "BEB - Summer Buzz Awareness [Mar 2026]",
+    "status_after": "ACTIVE",
+    "effective_status_after": "ACTIVE",
+    "active_adset_count": 3
+  },
+  {
+    "id": "120243460275370030",
+    "name": "BEB - Peak Season Community [Apr 2026]",
+    "status_after": "ACTIVE",
+    "effective_status_after": "ACTIVE",
+    "active_adset_count": 1
+  },
+  {
+    "id": "120242888355100030",
+    "name": "BEB - Iskrambol Foodpanda Traffic [Mar 2026]",
+    "status_after": "ACTIVE",
+    "effective_status_after": "ACTIVE",
+    "active_adset_count": 1
+  }
+]

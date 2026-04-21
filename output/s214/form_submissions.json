@@ -311,5 +311,47 @@
       "success": true
     },
     "success": true
+  },
+  {
+    "phase": "P3-T3",
+    "action": "reactivate_campaign",
+    "target": "120242888352350030",
+    "target_name": "BEB - Summer Buzz Awareness [Mar 2026]",
+    "before_status": "PAUSED",
+    "after_status": "ACTIVE",
+    "active_adsets_at_activate": 3,
+    "total_adsets": 3,
+    "api_response": {
+      "success": true
+    },
+    "success": true
+  },
+  {
+    "phase": "P3-T3",
+    "action": "reactivate_campaign",
+    "target": "120243460275370030",
+    "target_name": "BEB - Peak Season Community [Apr 2026]",
+    "before_status": "PAUSED",
+    "after_status": "ACTIVE",
+    "active_adsets_at_activate": 1,
+    "total_adsets": 1,
+    "api_response": {
+      "success": true
+    },
+    "success": true
+  },
+  {
+    "phase": "P3-T3",
+    "action": "reactivate_campaign",
+    "target": "120242888355100030",
+    "target_name": "BEB - Iskrambol Foodpanda Traffic [Mar 2026]",
+    "before_status": "PAUSED",
+    "after_status": "ACTIVE",
+    "active_adsets_at_activate": 1,
+    "total_adsets": 1,
+    "api_response": {
+      "success": true
+    },
+    "success": true
   }
 ]
