@@ -2,18 +2,20 @@
 
 **Owner:** Cayla
 **Audience:** Cayla + any backup on the procurement/supplier-relations side
-**Goal:** Onboard all 98 BEI suppliers to the new Supplier SI Upload form so
-they stop sending paper SIs through the 3PL warehouses.
+**Goal:** Get all 98 BEI suppliers uploading their SIs through the form
+instead of relying on 3PL warehouse paper-SI forwarding.
 
 ---
 
 ## 0. What you have
 
-- `output/s210/SUPPLIER_URLS.csv` — 98 rows. Columns:
-  `supplier_code, supplier_name, tin, email, tier, prefill_url, qr_url`
-- The form itself:
+- **Single form URL for all suppliers** (no per-supplier links):
   https://docs.google.com/forms/d/e/1FAIpQLSc3UC9f_3gefDYNgpOqNx7UCw_5BDrRh9T8-GQeyHHWSxdITw/viewform
-- `output/s210/guides/SUPPLIER_FAQ.md` — attach to every rollout email
+- `output/s210/guides/SUPPLIER_FAQ.docx` — attach to every rollout email
+
+We identify the supplier automatically from the PO Number they type on
+the form, so the URL doesn't need to carry company identity. Same URL for
+everyone — simpler comms + no confidentiality exposure.
 
 ---
 
@@ -30,8 +32,8 @@ Identify them by pulling top 10 PO totals from Procurement AppSheet:
 Sort Sheet C 08_Full_Open_POs by Total Amount desc, take top 10 distinct suppliers.
 ```
 
-Email individually with their pre-filled URL. Watch for 48 hours — confirm
-each sends at least one test SI. Call any who don't respond.
+Email each individually. Watch for 48 hours — confirm each sends at
+least one test SI. Call any who don't respond.
 
 ### Wave 2 — Rest of Tier A (week 2)
 
@@ -48,7 +50,7 @@ Anyone who hasn't uploaded a single SI. Direct call.
 
 ---
 
-## 2. Email template (per supplier)
+## 2. Email template
 
 Subject: `BEI Supplier SI Upload — fastest path to payment`
 
@@ -60,19 +62,19 @@ Starting now, for every delivery you make to BEI or our 3PL warehouses
 (3MD, Pinnacle), please upload your Sales Invoice at the link below
 right after delivery.
 
-Your dedicated upload link (pre-selects your company in the Supplier Name dropdown):
-[SUPPLIER_PREFILL_URL]
+Upload link (bookmark this — same link for every delivery):
+https://docs.google.com/forms/d/e/1FAIpQLSc3UC9f_3gefDYNgpOqNx7UCw_5BDrRh9T8-GQeyHHWSxdITw/viewform
 
 What to do:
 1. Tap the link
 2. Pick which BEI warehouse you delivered to (3MD, Pinnacle, or Shaw BLVD)
-3. Fill PO Number, SI Number, SI Date, Amount
+3. Type the PO Number, SI Number, SI Date, Amount
 4. Tap "Upload SI Copy" — pick your PDF or photo from your phone
 5. Submit
 
-That's it. Our system matches your upload to the warehouse's delivery
-record automatically, and payment queues for release on your contracted
-terms (e.g. Net 30 from delivery date).
+That's it. Our system identifies you from the PO Number automatically,
+matches your upload to the warehouse's delivery record, and queues
+payment for release on your contracted terms (e.g. Net 30 from delivery).
 
 Keep sending the paper SI to us as you do today — that's separate and
 unchanged. The upload is what speeds up your payment.
@@ -83,38 +85,24 @@ Thanks,
 Cayla
 cayla@bebang.ph
 
-[ATTACH: SUPPLIER_FAQ.md or print-to-PDF equivalent]
+[ATTACH: SUPPLIER_FAQ.docx]
 ```
 
 ---
 
-## 3. QR codes for physical deliveries
+## 3. QR code for the dock
 
-Some truckers / supplier reps prefer scanning a QR at the dock instead of
-fishing for a link. Each supplier's URL has a QR in
-`SUPPLIER_URLS.csv:qr_url`.
+Print one QR code once; the same QR works for every supplier and every
+delivery. Print large on the receiving area wall so truckers can scan
+with their phone while the 3PL is signing off.
 
-### Print per-supplier QR sticker
-
-1. Open `SUPPLIER_URLS.csv`
-2. Filter to a specific supplier
-3. Paste the `qr_url` into a browser → renders a 300×300 QR image
-4. Right-click → Save image → print at postcard size (4×6") on a sticker
-   sheet
-5. Bundle the sticker with the supplier's onboarding email or hand to the
-   trucker directly
-
-### Bulk print
-
-If you want a binder of all 98 QR codes for dock use:
-
+Generate the QR:
 ```
-Use a Google Sheets QR-rendering add-on (e.g. "QR Codes for Sheets") on
-SUPPLIER_URLS — column H formula: =IMAGE("https://api.qrserver.com/v1/
-create-qr-code/?size=200x200&data="&ENCODEURL(F2))
+https://api.qrserver.com/v1/create-qr-code/?size=600x600&data=https%3A//docs.google.com/forms/d/e/1FAIpQLSc3UC9f_3gefDYNgpOqNx7UCw_5BDrRh9T8-GQeyHHWSxdITw/viewform
 ```
 
-Then print-to-PDF, 2-up, color printer.
+Save → print A5 → laminate → post at each of 3MD, Pinnacle, and Shaw
+receiving stations.
 
 ---
 
@@ -136,11 +124,12 @@ For suppliers NOT yet uploading, cross-reference:
 | Objection | Response |
 |---|---|
 | "I don't have a scanner" | Phone photo is fine. The form accepts JPG/PNG. |
-| "Our accounts staff don't use Gmail" | Form is public — works with any email. No Google account needed. |
+| "Our accounts staff don't use Gmail" | Form is public — works with any browser. No Google account needed. |
 | "Can I still send paper SI?" | Yes, keep doing that. Upload is in addition, not instead. |
 | "My PO number is long / has dashes" | Copy-paste from the PO exactly as printed. The form accepts any string. |
-| "What if I make a typo after submitting?" | Upload again — the form allows repeat submissions. Mark the bad one in Notes. |
+| "What if I make a typo after submitting?" | Upload again — the form allows repeat submissions. Add "Correction for PO-xxxx SI-yyyy" in Notes so we know to dismiss the bad one. |
 | "I'm worried about my PDF being seen by others" | Only BEI staff have access. Not public, not indexed. |
+| "How do you know it's my company uploading?" | We match the PO Number you type to your PO in our system. No company name in the form means no list of other suppliers to worry about. |
 
 ---
 
@@ -154,15 +143,13 @@ For suppliers NOT yet uploading, cross-reference:
 
 ## 7. After rollout — steady state
 
-- **New supplier onboarding:** as part of supplier onboarding, Cayla adds
-  their email to the Sheet C `07_Full_Suppliers_Master` tab so their
-  pre-filled URL is generated on the next `s210-refresh-masters-06` daily
-  run. Manually send the URL in the welcome email.
-- **Changed supplier contact:** update `Email ID` in the Procurement
-  AppSheet Suppliers tab — it flows into Sheet C on next daily refresh.
-  Re-send pre-filled URL to the new email.
-- **Retired supplier:** mark as Tier C or disable in Procurement AppSheet.
-  They'll be excluded from `SUPPLIER_URLS.csv` on next regeneration.
+- **New supplier onboarding:** as part of supplier onboarding, Cayla
+  adds their email + contract to the Procurement AppSheet Suppliers
+  tab. They get the same form URL in their welcome email. No per-
+  supplier generation needed.
+- **Retired supplier:** mark as Tier C or disabled in Procurement
+  AppSheet. Their old POs stop matching once you close them. No URL
+  housekeeping needed.
 
 ---
 

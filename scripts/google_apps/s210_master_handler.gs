@@ -799,9 +799,9 @@ function handleSiUpload(e) {
   const auditLog = masterSs.getSheetByName('09_Audit_Log');
 
   // e.namedValues is keyed by form item title; e.values is array in item order.
-  // Form items (in order post-Phase-12): Supplier Name, Warehouse, PO Number,
-  //   SI Number, SI Date, Amount (PHP), Upload SI Copy, Notes
-  let supplierName = '', warehouse = '', poNumber = '', siNumber = '';
+  // Form items post-Phase-14 (Supplier Name removed, derived from PO):
+  //   Warehouse, PO Number, SI Number, SI Date, Amount (PHP), Upload SI Copy, Notes
+  let warehouse = '', poNumber = '', siNumber = '';
   let siDate = '', amount = '', siPdfLink = '', notes = '';
 
   if (e && e.namedValues) {
@@ -810,25 +810,50 @@ function handleSiUpload(e) {
       const v = nv[key];
       return v && v.length ? v[0] : '';
     };
-    supplierName = first('Supplier Name');
     warehouse = first('Warehouse');
     poNumber = first('PO Number');
     siNumber = first('SI Number');
     siDate = first('SI Date');
     amount = first('Amount (PHP)');
-    // Field title set by Sam in UI is "Upload SI Copy"; legacy names kept as fallbacks.
     siPdfLink = first('Upload SI Copy') || first('SI PDF') || first('SI PDF Drive Link');
     notes = first('Notes');
   } else if (e && e.values) {
     // Fallback: positional (index 0 is Timestamp from form)
-    supplierName = e.values[1] || '';
-    warehouse = e.values[2] || '';
-    poNumber = e.values[3] || '';
-    siNumber = e.values[4] || '';
-    siDate = e.values[5] || '';
-    amount = e.values[6] || '';
-    siPdfLink = e.values[7] || '';
-    notes = e.values[8] || '';
+    warehouse = e.values[1] || '';
+    poNumber = e.values[2] || '';
+    siNumber = e.values[3] || '';
+    siDate = e.values[4] || '';
+    amount = e.values[5] || '';
+    siPdfLink = e.values[6] || '';
+    notes = e.values[7] || '';
+  }
+
+  // Phase 14: derive Supplier Name from PO via Sheet C 08_Full_Open_POs lookup.
+  // Never trust / don't expose a supplier-facing list; supplier types only
+  // what's on their own PO + SI.
+  let supplierName = '';
+  let supplierLookupStatus = 'NO_LOOKUP';
+  if (poNumber) {
+    const normPoForLookup = String(poNumber).trim().toUpperCase();
+    const openPoSheet = masterSs.getSheetByName('08_Full_Open_POs');
+    const openPoData = openPoSheet.getDataRange().getValues();
+    // headers: PO Number, PO Date, Supplier Code, Supplier Name, Destination 3PL,
+    //          Total Amount, Balance, Delivery Needed By, Status
+    for (let i = 1; i < openPoData.length; i++) {
+      const rowPo = String(openPoData[i][0] || '').trim().toUpperCase();
+      if (rowPo === normPoForLookup) {
+        supplierName = String(openPoData[i][3] || '').trim();
+        supplierLookupStatus = 'FOUND_IN_OPEN_POS';
+        break;
+      }
+    }
+    if (!supplierName) {
+      supplierName = 'UNKNOWN — PO not in Open POs master';
+      supplierLookupStatus = 'PO_NOT_FOUND';
+    }
+  } else {
+    supplierName = 'UNKNOWN — no PO provided';
+    supplierLookupStatus = 'NO_PO';
   }
 
   const timestamp = new Date();
@@ -890,6 +915,7 @@ function handleSiUpload(e) {
     _logAudit(auditLog, 'handleSiUpload', supplierName, matchedConsolidatedRows.length,
               'SI_matched_' + matchedConsolidatedRows.length + '_DR_rows', 'OK',
               'PO=' + poNumber + ' SI=' + siNumber + ' warehouse=' + warehouse +
+              ' supplierLookup=' + supplierLookupStatus +
               ' RRs=' + matchedRRList + ' pendingTagged=' + pendingTagged);
   } else {
     // Orphan: write to 04_Match_Queue (12 cols post-Phase-12, Warehouse at col D)

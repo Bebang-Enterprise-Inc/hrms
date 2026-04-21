@@ -1,3 +1,7 @@
+# DEPRECATED 2026-04-21 — one generic form URL replaces per-supplier pre-filled URLs.
+# Use this single link for all suppliers:
+# https://docs.google.com/forms/d/e/1FAIpQLSc3UC9f_3gefDYNgpOqNx7UCw_5BDrRh9T8-GQeyHHWSxdITw/viewform
+# File retained for audit trail only.
 supplier_code,supplier_name,tin,email,tier,prefill_url,qr_url
 1T1MI3,"1 To 1 Marketing, Inc.",218-204-943-00000,litoberos@gmail.com,A,https://docs.google.com/forms/d/e/1FAIpQLSc3UC9f_3gefDYNgpOqNx7UCw_5BDrRh9T8-GQeyHHWSxdITw/viewform?usp=pp_url&entry.6f714ee0=1+To+1+Marketing%2C+Inc.,https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=https%3A//docs.google.com/forms/d/e/1FAIpQLSc3UC9f_3gefDYNgpOqNx7UCw_5BDrRh9T8-GQeyHHWSxdITw/viewform%3Fusp%3Dpp_url%26entry.6f714ee0%3D1%2BTo%2B1%2BMarketing%252C%2BInc.
 3PW30,3J PLASTIC WORLD,,airamichaelaf@gmail.com,A,https://docs.google.com/forms/d/e/1FAIpQLSc3UC9f_3gefDYNgpOqNx7UCw_5BDrRh9T8-GQeyHHWSxdITw/viewform?usp=pp_url&entry.6f714ee0=3J+PLASTIC+WORLD,https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=https%3A//docs.google.com/forms/d/e/1FAIpQLSc3UC9f_3gefDYNgpOqNx7UCw_5BDrRh9T8-GQeyHHWSxdITw/viewform%3Fusp%3Dpp_url%26entry.6f714ee0%3D3J%2BPLASTIC%2BWORLD
