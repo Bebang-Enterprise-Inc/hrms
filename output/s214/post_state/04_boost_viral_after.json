@@ -1,0 +1,37 @@
+{
+  "results": [
+    {
+      "label": "Apr16-TagAFriend-SikatArtista",
+      "post_id": "102628625216977_1266416878948597",
+      "creative_id": "2113916839464633",
+      "ad_id": "120244564280350030",
+      "adset_id": "120243460280340030",
+      "verify_status": "PAUSED",
+      "verify_effective": "IN_PROCESS",
+      "stage": "complete",
+      "success": true
+    },
+    {
+      "label": "Apr08-Montalban-StoreOpening",
+      "post_id": "102628625216977_1260249656231986",
+      "creative_id": "1257704723180530",
+      "ad_id": "120244564281190030",
+      "adset_id": "120242888378420030",
+      "verify_status": "PAUSED",
+      "verify_effective": "IN_PROCESS",
+      "stage": "complete",
+      "success": true
+    },
+    {
+      "label": "Apr18-GrabengPressure-MoodMeme",
+      "post_id": "102628625216977_1267949595461992",
+      "creative_id": "930941509841146",
+      "ad_id": "120244564282510030",
+      "adset_id": "120243460280340030",
+      "verify_status": "PAUSED",
+      "verify_effective": "IN_PROCESS",
+      "stage": "complete",
+      "success": true
+    }
+  ]
+}
