@@ -1,0 +1,61 @@
+{
+  "tabs_ensured": [
+    {
+      "sheet": "C",
+      "tab": "10_Full_Materials_Master",
+      "sheetId": 1735579023,
+      "action": "created"
+    },
+    {
+      "sheet": "C",
+      "tab": "11_Full_PO_Lines",
+      "sheetId": 835721677,
+      "action": "created"
+    },
+    {
+      "sheet": "A",
+      "tab": "PO_Lines_3MD_Only",
+      "sheetId": 946564668,
+      "action": "created"
+    },
+    {
+      "sheet": "B",
+      "tab": "PO_Lines_Pinnacle_Only",
+      "sheetId": 1388396370,
+      "action": "created"
+    },
+    {
+      "sheet": "D",
+      "tab": "PO_Lines_Shaw_Only",
+      "sheetId": 311670851,
+      "action": "created"
+    }
+  ],
+  "protections": [
+    {
+      "action": "added",
+      "tab": "10_Full_Materials_Master",
+      "protectionId": 216900626
+    },
+    {
+      "action": "added",
+      "tab": "11_Full_PO_Lines",
+      "protectionId": 217300494
+    },
+    {
+      "action": "added",
+      "tab": "PO_Lines_3MD_Only",
+      "protectionId": 181928857
+    },
+    {
+      "action": "added",
+      "tab": "PO_Lines_Pinnacle_Only",
+      "protectionId": 391239167
+    },
+    {
+      "action": "added",
+      "tab": "PO_Lines_Shaw_Only",
+      "protectionId": 1502552527
+    }
+  ]
+}
