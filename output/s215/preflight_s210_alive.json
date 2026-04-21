@@ -1,0 +1,40 @@
+{
+  "checks": [
+    {
+      "name": "sheet_c_tabs_01_to_09_present",
+      "pass": true,
+      "detail": "found=9/9 / total_tabs=9"
+    },
+    {
+      "name": "cloud_scheduler_4_jobs_live",
+      "pass": true,
+      "detail": "matched={'poll-all': True, 'age-variance': True, 'refresh-masters': True, 'ceo-email': True} / all_jobs=['ap-auto-view-hourly-refresh', 's210-age-variance-hourly', 's210-ceo-email-07', 's210-poll-all', 's210-refresh-masters-06']"
+    },
+    {
+      "name": "web_app_ping_ok",
+      "pass": true,
+      "detail": "resp={'ok': True, 'fn': 'ping', 'elapsed_ms': 0, 'result': {'pong': True}}"
+    }
+  ],
+  "all_pass": true,
+  "sheet_c_tab_list": [
+    "01_Dashboard",
+    "02_All_Receipts_Consolidated",
+    "03_Supplier_SI_Uploads",
+    "04_Match_Queue",
+    "05_Variance_Queue",
+    "06_Pending_GR",
+    "07_Full_Suppliers_Master",
+    "08_Full_Open_POs",
+    "09_Audit_Log"
+  ],
+  "scheduler_jobs": [
+    "s210-refresh-masters-06",
+    "ap-auto-view-hourly-refresh",
+    "s210-poll-all",
+    "s210-ceo-email-07",
+    "s210-age-variance-hourly"
+  ],
+  "phases_1_3_preflight_ok": true,
+  "phase_4_preflight_ok": false
+}

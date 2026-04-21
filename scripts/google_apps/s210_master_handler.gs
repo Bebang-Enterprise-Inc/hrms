@@ -659,10 +659,204 @@ function refreshMasters() {
     errors.push(String(e));
   }
 
+  // S215 Phase 1: pull Procurement `Item List` -> Sheet C `10_Full_Materials_Master`
+  let materialsWritten = 0;
+  try {
+    materialsWritten = _refreshMaterialsMaster_(masterSs);
+  } catch (e) {
+    errors.push('materials: ' + String(e));
+  }
+
+  // S215 Phase 2: pull Procurement `PO Items` joined with Purchase Order.Ship To
+  //   -> Sheet C `11_Full_PO_Lines` + per-3PL filtered tabs on A/B/D
+  let poLinesWritten = 0;
+  try {
+    poLinesWritten = _refreshPoLinesAndPer3plTabs_(masterSs);
+  } catch (e) {
+    errors.push('po_lines: ' + String(e));
+  }
+
+  // S215 Phase 3: push latest material codes to the SI Upload form dropdown.
+  // Keeps the supplier-facing dropdown in sync with Item List without manual work.
+  let materialCodesPushed = 0;
+  try {
+    materialCodesPushed = _refreshFormMaterialCodes_(masterSs);
+  } catch (e) {
+    errors.push('form_material_codes: ' + String(e));
+  }
+
   const outcome = errors.length === 0 ? 'OK' : 'PARTIAL';
   _logAudit(auditLog, 'refreshMasters', 'cron', 0,
-            'Refreshed_' + suppliersWritten + '_suppliers_' + openPosWritten + '_POs',
+            'Refreshed_' + suppliersWritten + '_suppliers_' + openPosWritten + '_POs_' +
+              materialsWritten + '_materials_' + poLinesWritten + '_po_lines_' +
+              materialCodesPushed + '_mat_codes',
             outcome, errors.join('; '));
+}
+
+/**
+ * S215 Phase 3: push deduped Material Codes from `10_Full_Materials_Master`
+ * to the SI Upload form dropdown. Keeps supplier-facing choices in sync.
+ * Uses FormApp (Apps Script native — executes as deployer sam@bebang.ph).
+ * Returns number of options pushed.
+ */
+function _refreshFormMaterialCodes_(masterSs) {
+  const matMaster = masterSs.getSheetByName('10_Full_Materials_Master');
+  if (!matMaster) return 0;
+  const last = matMaster.getLastRow();
+  if (last < 2) return 0;
+  const codes = matMaster.getRange(2, 2, last - 1, 1).getValues()
+    .map(function(r) { return String(r[0] || '').trim(); })
+    .filter(function(c) { return c.length > 0; });
+  const unique = [];
+  const seen = {};
+  for (let i = 0; i < codes.length; i++) {
+    if (!seen[codes[i]]) { seen[codes[i]] = true; unique.push(codes[i]); }
+  }
+  unique.sort();
+
+  const form = FormApp.openById(SI_UPLOAD_FORM_ID);
+  const items = form.getItems();
+  let target = null;
+  for (let i = 0; i < items.length; i++) {
+    if (items[i].getTitle() === 'Material Code') { target = items[i]; break; }
+  }
+  if (!target) return 0;
+
+  // Material Code is a DROP_DOWN choice question — native Apps Script gives asListItem()
+  target.asListItem().setChoiceValues(unique);
+  return unique.length;
+}
+
+/**
+ * S215 Phase 1: pull Procurement AppSheet `Item List` -> Sheet C `10_Full_Materials_Master`.
+ * Returns number of rows written.
+ *
+ * Source cols (11): Timestamp, Item Code, Item Name, UOM, Unit Price (Vat Inc),
+ *                   Unit Price (Vat ex), VAT, REMARKS, Category, Packaging size, Added By
+ */
+function _refreshMaterialsMaster_(masterSs) {
+  const srcSs = SpreadsheetApp.openById(PROCUREMENT_APPSHEET_ID);
+  const src = srcSs.getSheetByName('Item List');
+  if (!src) throw new Error('Item List tab missing in Procurement AppSheet');
+  const data = src.getDataRange().getValues();
+  if (data.length < 2) return 0;
+
+  // Snap to canonical 11-column shape (A..K of source). Other cols ignored.
+  const rows = [];
+  for (let i = 1; i < data.length; i++) {
+    const r = data[i];
+    if (!r[1]) continue;  // skip empty Item Code rows
+    rows.push([
+      r[0] || '',  // Timestamp
+      r[1] || '',  // Item Code
+      r[2] || '',  // Item Name
+      r[3] || '',  // UOM
+      r[4] || '',  // Unit Price (Vat Inc)
+      r[5] || '',  // Unit Price (Vat ex)
+      r[6] || '',  // VAT
+      r[7] || '',  // REMARKS
+      r[8] || '',  // Category
+      r[9] || '',  // Packaging size
+      r[10] || '', // Added By
+    ]);
+  }
+
+  const tab = masterSs.getSheetByName('10_Full_Materials_Master');
+  if (!tab) throw new Error('10_Full_Materials_Master tab not created yet');
+  const last = tab.getLastRow();
+  if (last > 1) tab.getRange(2, 1, last - 1, 11).clearContent();
+  if (rows.length > 0) tab.getRange(2, 1, rows.length, 11).setValues(rows);
+  return rows.length;
+}
+
+/**
+ * S215 Phase 2: pull Procurement AppSheet `PO Items` (A..O), join with
+ * `Purchase Order`.Ship To (col K) on PO No, and write:
+ *   - Sheet C `11_Full_PO_Lines` (all lines + joined Ship To as col P)
+ *   - Sheet A `PO_Lines_3MD_Only`
+ *   - Sheet B `PO_Lines_Pinnacle_Only`
+ *   - Sheet D `PO_Lines_Shaw_Only`
+ * Per-3PL tabs use case-insensitive substring match on Ship To.
+ * Returns total rows written to master tab.
+ */
+function _refreshPoLinesAndPer3plTabs_(masterSs) {
+  const srcSs = SpreadsheetApp.openById(PROCUREMENT_APPSHEET_ID);
+  const itemsTab = srcSs.getSheetByName('PO Items');
+  if (!itemsTab) throw new Error('PO Items tab missing');
+  const poTab = srcSs.getSheetByName('Purchase Order');
+  if (!poTab) throw new Error('Purchase Order tab missing');
+
+  // Build PO No -> Ship To map from Purchase Order tab
+  const poData = poTab.getDataRange().getValues();
+  const poHeaders = poData[0];
+  const poNoIdx = poHeaders.indexOf('PO No');
+  const shipToIdx = poHeaders.indexOf('Ship To');
+  if (poNoIdx < 0 || shipToIdx < 0) {
+    throw new Error('Purchase Order headers missing PO No or Ship To');
+  }
+  const shipToMap = {};
+  for (let i = 1; i < poData.length; i++) {
+    const poNum = String(poData[i][poNoIdx] || '').trim();
+    if (!poNum) continue;
+    shipToMap[poNum] = String(poData[i][shipToIdx] || '').trim();
+  }
+
+  // Read PO Items (A..O = 15 cols); build joined rows (16 cols incl Ship To)
+  const itemsData = itemsTab.getDataRange().getValues();
+  const joinedRows = [];
+  for (let i = 1; i < itemsData.length; i++) {
+    const r = itemsData[i];
+    const poNum = String(r[2] || '').trim();  // col C = PO No
+    if (!poNum) continue;
+    const shipTo = shipToMap[poNum] || '';
+    joinedRows.push([
+      r[0] || '',  // A Timestamp
+      r[1] || '',  // B PR No
+      r[2] || '',  // C PO No
+      r[3] || '',  // D Uniqueid
+      r[4] || '',  // E Item No
+      r[5] || '',  // F Item Code
+      r[6] || '',  // G Item Name
+      r[7] || '',  // H Packaging size
+      r[8] || '',  // I Qty
+      r[9] || '',  // J UOM
+      r[10] || '', // K Unit Cost
+      r[11] || '', // L VAT
+      r[12] || '', // M Amount
+      r[13] || '', // N Delivery Schedule
+      r[14] || '', // O Added By
+      shipTo,      // P Ship To (joined)
+    ]);
+  }
+
+  // Write to Sheet C 11_Full_PO_Lines
+  const masterTab = masterSs.getSheetByName('11_Full_PO_Lines');
+  if (!masterTab) throw new Error('11_Full_PO_Lines tab not created yet');
+  const last = masterTab.getLastRow();
+  if (last > 1) masterTab.getRange(2, 1, last - 1, 16).clearContent();
+  if (joinedRows.length > 0) masterTab.getRange(2, 1, joinedRows.length, 16).setValues(joinedRows);
+
+  // Write per-3PL filtered tabs
+  const cases = [
+    { ssid: SHEET_A, tabName: 'PO_Lines_3MD_Only', filter: '3MD' },
+    { ssid: SHEET_B, tabName: 'PO_Lines_Pinnacle_Only', filter: 'PINNACLE' },
+    { ssid: SHEET_D, tabName: 'PO_Lines_Shaw_Only', filter: 'SHAW' },
+  ];
+  for (const c of cases) {
+    const ss = SpreadsheetApp.openById(c.ssid);
+    const tab = ss.getSheetByName(c.tabName);
+    if (!tab) continue;  // tab must be pre-created (idempotent helper does that)
+    const match = c.filter.toUpperCase();
+    const filtered = joinedRows.filter(function (row) {
+      const st = String(row[15] || '').toUpperCase();
+      return st && st.indexOf(match) >= 0;
+    });
+    const tabLast = tab.getLastRow();
+    if (tabLast > 1) tab.getRange(2, 1, tabLast - 1, 16).clearContent();
+    if (filtered.length > 0) tab.getRange(2, 1, filtered.length, 16).setValues(filtered);
+  }
+
+  return joinedRows.length;
 }
 
 function _refreshPerSheetFilteredTabs(masterSs, supMaster, poMaster) {
@@ -723,12 +917,12 @@ function _writeFilteredPOs(ss, tabName, poData, destFilter) {
 
 /**
  * sendCeoDailyEmail — daily 07:00 PHT cron. Pulls yesterday's KPIs from
- * Sheet C 01_Dashboard and sends a summary email to sam@bebang.ph and
- * ian@bebang.ph.
+ * Sheet C 01_Dashboard and sends a summary email to sam@bebang.ph only.
+ * (Was sam+ian until 2026-04-21; Ian runs ops from the dashboard directly,
+ * doesn't need the CEO-level digest.)
  *
- * Recipients (hard-coded per plan 5.1):
+ * Recipients:
  *   - sam@bebang.ph
- *   - ian@bebang.ph
  */
 function sendCeoDailyEmail() {
   const masterSs = SpreadsheetApp.openById(SHEET_C);
@@ -780,14 +974,14 @@ function sendCeoDailyEmail() {
     ];
 
     GmailApp.sendEmail(
-      'sam@bebang.ph, ian@bebang.ph',
+      'sam@bebang.ph',
       subject,
       bodyLines.join('\n'),
       { name: 'BEI Receiving Bot' }
     );
 
     _logAudit(auditLog, 'sendCeoDailyEmail', 'cron', 0,
-              'Digest_sent', 'OK', 'to sam@bebang.ph, ian@bebang.ph');
+              'Digest_sent', 'OK', 'to sam@bebang.ph');
   } catch (e) {
     _logAudit(auditLog, 'sendCeoDailyEmail', 'cron', 0,
               'Digest_failed', 'FAIL', String(e));
@@ -832,9 +1026,10 @@ function handleSiUpload(e) {
   const auditLog = masterSs.getSheetByName('09_Audit_Log');
 
   // e.namedValues is keyed by form item title; e.values is array in item order.
-  // Form items post-Phase-14 (Supplier Name removed, derived from PO):
-  //   Warehouse, PO Number, SI Number, SI Date, Amount (PHP), Upload SI Copy, Notes
-  let warehouse = '', poNumber = '', siNumber = '';
+  // Form items post-S215-Phase-3 (Material Code dropdown added at position 3):
+  //   Warehouse, PO Number, SI Number, Material Code, Upload SI Copy, SI Date,
+  //   Amount (PHP), Notes
+  let warehouse = '', poNumber = '', siNumber = '', materialCode = '';
   let siDate = '', amount = '', siPdfLink = '', notes = '';
 
   if (e && e.namedValues) {
@@ -846,6 +1041,7 @@ function handleSiUpload(e) {
     warehouse = first('Warehouse');
     poNumber = first('PO Number');
     siNumber = first('SI Number');
+    materialCode = first('Material Code');
     siDate = first('SI Date');
     amount = first('Amount (PHP)');
     siPdfLink = first('Upload SI Copy') || first('SI PDF') || first('SI PDF Drive Link');
@@ -855,10 +1051,36 @@ function handleSiUpload(e) {
     warehouse = e.values[1] || '';
     poNumber = e.values[2] || '';
     siNumber = e.values[3] || '';
-    siDate = e.values[4] || '';
-    amount = e.values[5] || '';
-    siPdfLink = e.values[6] || '';
-    notes = e.values[7] || '';
+    materialCode = e.values[4] || '';
+    siPdfLink = e.values[5] || '';
+    siDate = e.values[6] || '';
+    amount = e.values[7] || '';
+    notes = e.values[8] || '';
+  }
+
+  // S215 Phase 3 (P3-T2): validate Material Code against 10_Full_Materials_Master.
+  // Non-blocking — accepts the upload but logs mismatch to audit so Cayla can
+  // chase the supplier if they're using an unlisted code.
+  let materialCodeStatus = 'NOT_PROVIDED';
+  if (materialCode) {
+    const matMaster = masterSs.getSheetByName('10_Full_Materials_Master');
+    if (matMaster) {
+      const matData = matMaster.getRange(2, 2, Math.max(0, matMaster.getLastRow() - 1), 1).getValues();
+      const normMat = String(materialCode).trim().toUpperCase();
+      let found = false;
+      for (let i = 0; i < matData.length; i++) {
+        if (String(matData[i][0] || '').trim().toUpperCase() === normMat) {
+          found = true;
+          break;
+        }
+      }
+      materialCodeStatus = found ? 'MATCHED' : 'UNLISTED';
+      if (!found) {
+        _logAudit(auditLog, 'SI_UPLOAD_MATERIAL_CODE_MISMATCH', materialCode, 0,
+                  'po=' + poNumber + '_si=' + siNumber + '_code=' + materialCode,
+                  'WARN', 'Material Code not found in 10_Full_Materials_Master — accepted anyway');
+      }
+    }
   }
 
   // Phase 14: derive Supplier Name from PO via Sheet C 08_Full_Open_POs lookup.

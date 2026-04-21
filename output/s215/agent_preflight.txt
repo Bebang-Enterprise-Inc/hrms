@@ -1,0 +1,21 @@
+S215 Phase 0 Preflight — agent self-attestation
+
+Branch: s215-s210-ops-polish
+Worktree: F:/Dropbox/Projects/BEI-ERP-s215
+Plan read: docs/plans/2026-04-21-sprint-215-s210-ops-polish.md
+
+=== P0-T3 S210 alive ===
+  [PASS] sheet_c_tabs_01_to_09_present: found=9/9 / total_tabs=9
+  [PASS] cloud_scheduler_4_jobs_live: matched={'poll-all': True, 'age-variance': True, 'refresh-masters': True, 'ceo-email': True} / all_jobs=['ap-auto-view-hourly-refresh', 's210-age-variance-hourly', 's210-ceo-email-07', 's210-poll-all', 's210-refresh-masters-06']
+  [PASS] web_app_ping_ok: resp={'ok': True, 'fn': 'ping', 'elapsed_ms': 0, 'result': {'pong': True}}
+
+=== P0-T4 Procurement counts ===
+  [PASS] Item List: 384 (threshold 380)
+  [PASS] PO Items: 2225 (threshold 2200)
+  [PASS] Purchase Order: 685 (threshold 680)
+
+=== P0-T5 Orphan cleanup ===
+  orphan_clean: False — {'orphan_still_exists': True, 'orphan_title': 'S215 Probe — bound test (delete me)', 'orphan_parentId': '1dambmiLzSMWOQun7MCymK4nHpuqrarFCAOK0G9-6oIU', 'delete_attempt': 'FAILED — 403: <HttpError 403 when requesting https://www.googleapis.com/drive/v3/files/1LRS_XnRqEDQP2ux6a2xdmTCzcqHE_H_3cJKRJau4KzjqKwwHl7MfhEd7?supportsAllDrives=true returned "The user does not have sufficient pe', 'clean': False}
+
+ERRORS: 1
+  - ORPHAN CLEANUP FAIL: cannot delete scriptId 1LRS_XnRqEDQP2ux6a2xdmTCzcqHE_H_3cJKRJau4KzjqKwwHl7MfhEd7 via drive — 403. Ask Sam to delete manually.
