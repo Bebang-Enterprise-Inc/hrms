@@ -1,0 +1,12 @@
+[
+  {
+    "store": "NAIA T3 - HALO-HALO TERMINAL FOOD CORP.",
+    "company": "NAIA T3 - HALO-HALO TERMINAL FOOD CORP.",
+    "customer": "NAIA T3 - HALO-HALO TERMINAL FOOD CORP.",
+    "tin": "690-528-808-00000",
+    "pass": false,
+    "orderId": "BEI-ORD-2026-00413",
+    "failedAt": "approval",
+    "error": "Material Request for order BEI-ORD-2026-00413 (polled 30000ms, last=0)\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeGreaterThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: > \u001b[32m0\u001b[39m\nReceived:   \u001b[31m0\u001b[39m"
+  }
+]

@@ -1,0 +1,331 @@
+{
+  "results": [
+    {
+      "item_code": "FG002-A",
+      "warehouse": "PINNACLE COLD STORAGE SOLUTIONS - BKI",
+      "batch_id": "BACKFILL-20260421-FG002-A-PINNACLE-COLD-STORAGE-SOLUTIONS",
+      "status": "ok",
+      "sle_rows_affected": 36,
+      "batch_qty_after": 2787.0,
+      "batch_created": true
+    },
+    {
+      "item_code": "FG004",
+      "warehouse": "PINNACLE COLD STORAGE SOLUTIONS - BKI",
+      "batch_id": "BACKFILL-20260421-FG004-PINNACLE-COLD-STORAGE-SOLUTIONS",
+      "status": "ok",
+      "sle_rows_affected": 10,
+      "batch_qty_after": 1897.0,
+      "batch_created": true
+    },
+    {
+      "item_code": "FG009",
+      "warehouse": "PINNACLE COLD STORAGE SOLUTIONS - BKI",
+      "batch_id": "BACKFILL-20260421-FG009-PINNACLE-COLD-STORAGE-SOLUTIONS",
+      "status": "ok",
+      "sle_rows_affected": 10,
+      "batch_qty_after": 1736.0,
+      "batch_created": true
+    },
+    {
+      "item_code": "FG002-A",
+      "warehouse": "3MD LOGISTICS - CAMANGYANAN - BKI",
+      "batch_id": "BACKFILL-20260421-FG002-A-3MD-LOGISTICS-CAMANGYANAN",
+      "status": "ok",
+      "sle_rows_affected": 1,
+      "batch_qty_after": 1714.0,
+      "batch_created": true
+    },
+    {
+      "item_code": "FG013",
+      "warehouse": "PINNACLE COLD STORAGE SOLUTIONS - BKI",
+      "batch_id": "BACKFILL-20260421-FG013-PINNACLE-COLD-STORAGE-SOLUTIONS",
+      "status": "ok",
+      "sle_rows_affected": 10,
+      "batch_qty_after": 1517.0,
+      "batch_created": true
+    },
+    {
+      "item_code": "FG009",
+      "warehouse": "3MD LOGISTICS - CAMANGYANAN - BKI",
+      "batch_id": "BACKFILL-20260421-FG009-3MD-LOGISTICS-CAMANGYANAN",
+      "status": "ok",
+      "sle_rows_affected": 1,
+      "batch_qty_after": 1448.0,
+      "batch_created": true
+    },
+    {
+      "item_code": "FG012",
+      "warehouse": "PINNACLE COLD STORAGE SOLUTIONS - BKI",
+      "batch_id": "BACKFILL-20260421-FG012-PINNACLE-COLD-STORAGE-SOLUTIONS",
+      "status": "ok",
+      "sle_rows_affected": 10,
+      "batch_qty_after": 1385.0,
+      "batch_created": true
+    },
+    {
+      "item_code": "FG002-A",
+      "warehouse": "3MD LOGISTICS \u2013 CAMANGYANAN - BKI",
+      "batch_id": "BACKFILL-20260421-FG002-A-3MD-LOGISTICS-CAMANGYANAN",
+      "status": "ok",
+      "sle_rows_affected": 5,
+      "batch_qty_after": 2958.0,
+      "batch_created": false
+    },
+    {
+      "item_code": "FG004",
+      "warehouse": "3MD LOGISTICS - CAMANGYANAN - BKI",
+      "batch_id": "BACKFILL-20260421-FG004-3MD-LOGISTICS-CAMANGYANAN",
+      "status": "ok",
+      "sle_rows_affected": 1,
+      "batch_qty_after": 1095.0,
+      "batch_created": true
+    },
+    {
+      "item_code": "FG009",
+      "warehouse": "3MD LOGISTICS \u2013 CAMANGYANAN - BKI",
+      "batch_id": "BACKFILL-20260421-FG009-3MD-LOGISTICS-CAMANGYANAN",
+      "status": "ok",
+      "sle_rows_affected": 5,
+      "batch_qty_after": 2491.0,
+      "batch_created": false
+    },
+    {
+      "item_code": "FG013",
+      "warehouse": "3MD LOGISTICS \u2013 CAMANGYANAN - BKI",
+      "batch_id": "BACKFILL-20260421-FG013-3MD-LOGISTICS-CAMANGYANAN",
+      "status": "ok",
+      "sle_rows_affected": 5,
+      "batch_qty_after": 892.0,
+      "batch_created": true
+    },
+    {
+      "item_code": "FG003",
+      "warehouse": "PINNACLE COLD STORAGE SOLUTIONS - BKI",
+      "batch_id": "BACKFILL-20260421-FG003-PINNACLE-COLD-STORAGE-SOLUTIONS",
+      "status": "ok",
+      "sle_rows_affected": 10,
+      "batch_qty_after": 746.0,
+      "batch_created": true
+    },
+    {
+      "item_code": "FG012",
+      "warehouse": "3MD LOGISTICS - CAMANGYANAN - BKI",
+      "batch_id": "BACKFILL-20260421-FG012-3MD-LOGISTICS-CAMANGYANAN",
+      "status": "ok",
+      "sle_rows_affected": 1,
+      "batch_qty_after": 661.0,
+      "batch_created": true
+    },
+    {
+      "item_code": "FG004",
+      "warehouse": "3MD LOGISTICS \u2013 CAMANGYANAN - BKI",
+      "batch_id": "BACKFILL-20260421-FG004-3MD-LOGISTICS-CAMANGYANAN",
+      "status": "ok",
+      "sle_rows_affected": 7,
+      "batch_qty_after": 1743.0,
+      "batch_created": false
+    },
+    {
+      "item_code": "FG013",
+      "warehouse": "3MD LOGISTICS - CAMANGYANAN - BKI",
+      "batch_id": "BACKFILL-20260421-FG013-3MD-LOGISTICS-CAMANGYANAN",
+      "status": "ok",
+      "sle_rows_affected": 1,
+      "batch_qty_after": 1468.0,
+      "batch_created": false
+    },
+    {
+      "item_code": "FG012",
+      "warehouse": "3MD LOGISTICS \u2013 CAMANGYANAN - BKI",
+      "batch_id": "BACKFILL-20260421-FG012-3MD-LOGISTICS-CAMANGYANAN",
+      "status": "ok",
+      "sle_rows_affected": 7,
+      "batch_qty_after": 1229.0,
+      "batch_created": false
+    },
+    {
+      "item_code": "FG003",
+      "warehouse": "3MD LOGISTICS - CAMANGYANAN - BKI",
+      "batch_id": "BACKFILL-20260421-FG003-3MD-LOGISTICS-CAMANGYANAN",
+      "status": "ok",
+      "sle_rows_affected": 1,
+      "batch_qty_after": 539.0,
+      "batch_created": true
+    },
+    {
+      "item_code": "FG012",
+      "warehouse": "SHAW BLVD - BKI",
+      "batch_id": "BACKFILL-20260421-FG012-SHAW-BLVD",
+      "status": "ok",
+      "sle_rows_affected": 8,
+      "batch_qty_after": 423.0,
+      "batch_created": true
+    },
+    {
+      "item_code": "FG003",
+      "warehouse": "3MD LOGISTICS \u2013 CAMANGYANAN - BKI",
+      "batch_id": "BACKFILL-20260421-FG003-3MD-LOGISTICS-CAMANGYANAN",
+      "status": "ok",
+      "sle_rows_affected": 5,
+      "batch_qty_after": 926.0,
+      "batch_created": false
+    },
+    {
+      "item_code": "FG005",
+      "warehouse": "PINNACLE COLD STORAGE SOLUTIONS - BKI",
+      "batch_id": "BACKFILL-20260421-FG005-PINNACLE-COLD-STORAGE-SOLUTIONS",
+      "status": "ok",
+      "sle_rows_affected": 10,
+      "batch_qty_after": 263.0,
+      "batch_created": true
+    },
+    {
+      "item_code": "FG004",
+      "warehouse": "SHAW BLVD - BKI",
+      "batch_id": "BACKFILL-20260421-FG004-SHAW-BLVD",
+      "status": "ok",
+      "sle_rows_affected": 1,
+      "batch_qty_after": 231.0,
+      "batch_created": true
+    },
+    {
+      "item_code": "FG005",
+      "warehouse": "3MD LOGISTICS - CAMANGYANAN - BKI",
+      "batch_id": "BACKFILL-20260421-FG005-3MD-LOGISTICS-CAMANGYANAN",
+      "status": "ok",
+      "sle_rows_affected": 1,
+      "batch_qty_after": 175.0,
+      "batch_created": true
+    },
+    {
+      "item_code": "FG006",
+      "warehouse": "PINNACLE COLD STORAGE SOLUTIONS - BKI",
+      "batch_id": "BACKFILL-20260421-FG006-PINNACLE-COLD-STORAGE-SOLUTIONS",
+      "status": "ok",
+      "sle_rows_affected": 10,
+      "batch_qty_after": 161.0,
+      "batch_created": true
+    },
+    {
+      "item_code": "FG007",
+      "warehouse": "PINNACLE COLD STORAGE SOLUTIONS - BKI",
+      "batch_id": "BACKFILL-20260421-FG007-PINNACLE-COLD-STORAGE-SOLUTIONS",
+      "status": "ok",
+      "sle_rows_affected": 10,
+      "batch_qty_after": 139.0,
+      "batch_created": true
+    },
+    {
+      "item_code": "FG005",
+      "warehouse": "3MD LOGISTICS \u2013 CAMANGYANAN - BKI",
+      "batch_id": "BACKFILL-20260421-FG005-3MD-LOGISTICS-CAMANGYANAN",
+      "status": "ok",
+      "sle_rows_affected": 7,
+      "batch_qty_after": 306.0,
+      "batch_created": false
+    },
+    {
+      "item_code": "FG006",
+      "warehouse": "3MD LOGISTICS \u2013 CAMANGYANAN - BKI",
+      "batch_id": "BACKFILL-20260421-FG006-3MD-LOGISTICS-CAMANGYANAN",
+      "status": "ok",
+      "sle_rows_affected": 5,
+      "batch_qty_after": 100.0,
+      "batch_created": true
+    },
+    {
+      "item_code": "FG007",
+      "warehouse": "3MD LOGISTICS \u2013 CAMANGYANAN - BKI",
+      "batch_id": "BACKFILL-20260421-FG007-3MD-LOGISTICS-CAMANGYANAN",
+      "status": "ok",
+      "sle_rows_affected": 7,
+      "batch_qty_after": 92.0,
+      "batch_created": true
+    },
+    {
+      "item_code": "FG007",
+      "warehouse": "3MD LOGISTICS - CAMANGYANAN - BKI",
+      "batch_id": "BACKFILL-20260421-FG007-3MD-LOGISTICS-CAMANGYANAN",
+      "status": "ok",
+      "sle_rows_affected": 1,
+      "batch_qty_after": 168.0,
+      "batch_created": false
+    },
+    {
+      "item_code": "FG015",
+      "warehouse": "PINNACLE COLD STORAGE SOLUTIONS - BKI",
+      "batch_id": "BACKFILL-20260421-FG015-PINNACLE-COLD-STORAGE-SOLUTIONS",
+      "status": "ok",
+      "sle_rows_affected": 10,
+      "batch_qty_after": 68.0,
+      "batch_created": true
+    },
+    {
+      "item_code": "FG006",
+      "warehouse": "3MD LOGISTICS - CAMANGYANAN - BKI",
+      "batch_id": "BACKFILL-20260421-FG006-3MD-LOGISTICS-CAMANGYANAN",
+      "status": "ok",
+      "sle_rows_affected": 1,
+      "batch_qty_after": 151.0,
+      "batch_created": false
+    },
+    {
+      "item_code": "FG005",
+      "warehouse": "SHAW BLVD - BKI",
+      "batch_id": "BACKFILL-20260421-FG005-SHAW-BLVD",
+      "status": "ok",
+      "sle_rows_affected": 1,
+      "batch_qty_after": 30.0,
+      "batch_created": true
+    },
+    {
+      "item_code": "FG014",
+      "warehouse": "PINNACLE COLD STORAGE SOLUTIONS - BKI",
+      "batch_id": "BACKFILL-20260421-FG014-PINNACLE-COLD-STORAGE-SOLUTIONS",
+      "status": "ok",
+      "sle_rows_affected": 10,
+      "batch_qty_after": 23.0,
+      "batch_created": true
+    },
+    {
+      "item_code": "FG015",
+      "warehouse": "3MD LOGISTICS - CAMANGYANAN - BKI",
+      "batch_id": "BACKFILL-20260421-FG015-3MD-LOGISTICS-CAMANGYANAN",
+      "status": "ok",
+      "sle_rows_affected": 1,
+      "batch_qty_after": 18.0,
+      "batch_created": true
+    },
+    {
+      "item_code": "FG014",
+      "warehouse": "3MD LOGISTICS \u2013 CAMANGYANAN - BKI",
+      "batch_id": "BACKFILL-20260421-FG014-3MD-LOGISTICS-CAMANGYANAN",
+      "status": "ok",
+      "sle_rows_affected": 5,
+      "batch_qty_after": 17.0,
+      "batch_created": true
+    },
+    {
+      "item_code": "FG014",
+      "warehouse": "3MD LOGISTICS - CAMANGYANAN - BKI",
+      "batch_id": "BACKFILL-20260421-FG014-3MD-LOGISTICS-CAMANGYANAN",
+      "status": "ok",
+      "sle_rows_affected": 1,
+      "batch_qty_after": 31.0,
+      "batch_created": false
+    },
+    {
+      "item_code": "FG015",
+      "warehouse": "3MD LOGISTICS \u2013 CAMANGYANAN - BKI",
+      "batch_id": "BACKFILL-20260421-FG015-3MD-LOGISTICS-CAMANGYANAN",
+      "status": "ok",
+      "sle_rows_affected": 5,
+      "batch_qty_after": 27.0,
+      "batch_created": false
+    }
+  ],
+  "total": 36,
+  "ok": 36,
+  "err": 0
+}

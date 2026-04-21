@@ -1,0 +1,202 @@
+[
+  {
+    "creation": "2026-04-21 12:21:47.080543",
+    "method": "MR Creation Error for Store Order BEI-ORD-2026-00413",
+    "error_head": "Stock decreased between resolution and dispatch \u2014 SCM must re-resolve order line for KL004 (have 0.0, need 1.0) at Pinnacle Cold Storage Solutions - BKI."
+  },
+  {
+    "creation": "2026-04-21 12:20:13.665371",
+    "method": "MR Creation Error for Store Order BEI-ORD-2026-00412",
+    "error_head": "Stock decreased between resolution and dispatch \u2014 SCM must re-resolve order line for PM007 (have 475.0, need 1144.0) at Pinnacle Cold Storage Solutions - BKI."
+  },
+  {
+    "creation": "2026-04-21 12:17:22.186620",
+    "method": "MR Creation Error for Store Order BEI-ORD-2026-00410",
+    "error_head": "Stock decreased between resolution and dispatch \u2014 SCM must re-resolve order line for PM007 (have 475.0, need 767.0) at Pinnacle Cold Storage Solutions - BKI."
+  },
+  {
+    "creation": "2026-04-21 12:14:35.837460",
+    "method": "MR Creation Error for Store Order BEI-ORD-2026-00408",
+    "error_head": "Stock decreased between resolution and dispatch \u2014 SCM must re-resolve order line for PM007 (have 475.0, need 1148.0) at Pinnacle Cold Storage Solutions - BKI."
+  },
+  {
+    "creation": "2026-04-21 12:01:02.523690",
+    "method": "MR Creation Error for Store Order BEI-ORD-2026-00400",
+    "error_head": "Stock decreased between resolution and dispatch \u2014 SCM must re-resolve order line for PM001 (have 99.0, need 1438.0) at Pinnacle Cold Storage Solutions - BKI."
+  },
+  {
+    "creation": "2026-04-21 12:00:25.974375",
+    "method": "Device Mapping Not Found",
+    "error_head": "File not found: /home/frappe/frappe-bench/apps/hrms/hrms/../data/ADMS/device_mapping.json"
+  },
+  {
+    "creation": "2026-04-21 10:52:45.922165",
+    "method": "S168: Stock Entry MAT-STE-2026-00625 cancelled but linked SI ACC-SINV-2026-00094 is docstatus=2; not deleting. Manual review required.",
+    "error_head": "S168 Draft SI Cancel"
+  },
+  {
+    "creation": "2026-04-21 10:52:45.653532",
+    "method": "S168: Stock Entry MAT-STE-2026-00623 cancelled but linked SI ACC-SINV-2026-00093 is docstatus=2; not deleting. Manual review required.",
+    "error_head": "S168 Draft SI Cancel"
+  },
+  {
+    "creation": "2026-04-21 10:52:44.959645",
+    "method": "S168: Stock Entry MAT-STE-2026-00619 cancelled but linked SI ACC-SINV-2026-00092 is docstatus=2; not deleting. Manual review required.",
+    "error_head": "S168 Draft SI Cancel"
+  },
+  {
+    "creation": "2026-04-21 09:31:07.552536",
+    "method": "Error Attaching File",
+    "error_head": "Traceback with variables (most recent call last):\n  File \"apps/frappe/frappe/core/doctype/file/utils.py\", line 372, in attach_files_to_document\n    file.insert(ignore_permissions=True)\n      doc = <BEIGoodsReceipt: GR-2026-10728>\n      event = 'on_update'\n      attach_fields = [<Attach ImageDocField: supplier_invoice_photo parent=BEI Goods Receipt>]\n      df = <Attach ImageDocField: supplier_invoice_photo parent=BEI Goods Receipt>\n      value = '/files/test-gr-delivery.png'\n      unattached_file = None\n      file = <File: unsaved>\n  File \"apps/frappe/frappe/model/document.py\", line 303, in insert\n    self.run_method(\"before_insert\")\n      self = <File: unsaved>\n      ignore_permissions = True\n      ignore_links = None\n      ignore_if_duplicate = False\n      ignore_mandatory = None\n      se"
+  },
+  {
+    "creation": "2026-04-21 09:31:03.947264",
+    "method": "Error Attaching File",
+    "error_head": "Traceback with variables (most recent call last):\n  File \"apps/frappe/frappe/core/doctype/file/utils.py\", line 372, in attach_files_to_document\n    file.insert(ignore_permissions=True)\n      doc = <BEIGoodsReceipt: GR-2026-10728>\n      event = 'on_update'\n      attach_fields = [<Attach ImageDocField: supplier_invoice_photo parent=BEI Goods Receipt>]\n      df = <Attach ImageDocField: supplier_invoice_photo parent=BEI Goods Receipt>\n      value = '/files/test-gr-delivery.png'\n      unattached_file = None\n      file = <File: unsaved>\n  File \"apps/frappe/frappe/model/document.py\", line 303, in insert\n    self.run_method(\"before_insert\")\n      self = <File: unsaved>\n      ignore_permissions = True\n      ignore_links = None\n      ignore_if_duplicate = False\n      ignore_mandatory = None\n      se"
+  },
+  {
+    "creation": "2026-04-21 09:31:03.882700",
+    "method": "Error Attaching File",
+    "error_head": "Traceback with variables (most recent call last):\n  File \"apps/frappe/frappe/core/doctype/file/utils.py\", line 372, in attach_files_to_document\n    file.insert(ignore_permissions=True)\n      doc = <BEIGoodsReceipt: GR-2026-10728>\n      event = 'on_update'\n      attach_fields = [<Attach ImageDocField: supplier_invoice_photo parent=BEI Goods Receipt>]\n      df = <Attach ImageDocField: supplier_invoice_photo parent=BEI Goods Receipt>\n      value = '/files/test-gr-delivery.png'\n      unattached_file = None\n      file = <File: unsaved>\n  File \"apps/frappe/frappe/model/document.py\", line 303, in insert\n    self.run_method(\"before_insert\")\n      self = <File: unsaved>\n      ignore_permissions = True\n      ignore_links = None\n      ignore_if_duplicate = False\n      ignore_mandatory = None\n      se"
+  },
+  {
+    "creation": "2026-04-21 09:30:49.625406",
+    "method": "(4078, \"Illegal parameter data types varchar and row for operation '='\")",
+    "error_head": "Traceback with variables (most recent call last):\n  File \"apps/frappe/frappe/app.py\", line 120, in application\n    response = frappe.api.handle(request)\n      request = <Request 'http://hq.bebang.ph/api/method/hrms.api.procurement.get_invoices' [POST]>\n      response = None\n      rollback = True\n      e = OperationalError(4078, \"Illegal parameter data types varchar and row for operation '='\")\n  File \"apps/frappe/frappe/api/__init__.py\", line 52, in handle\n    data = endpoint(**arguments)\n      request = <Request 'http://hq.bebang.ph/api/method/hrms.api.procurement.get_invoices' [POST]>\n      endpoint = <function handle_rpc_call at 0x708ba51fc540>\n      arguments = {'method': 'hrms.api.procurement.get_invoices'}\n  File \"apps/frappe/frappe/api/v1.py\", line 40, in handle_rpc_call\n    return f"
+  },
+  {
+    "creation": "2026-04-21 09:30:49.622156",
+    "method": "(4078, \"Illegal parameter data types varchar and row for operation '='\")",
+    "error_head": "Traceback with variables (most recent call last):\n  File \"apps/frappe/frappe/app.py\", line 120, in application\n    response = frappe.api.handle(request)\n      request = <Request 'http://hq.bebang.ph/api/method/hrms.api.procurement.get_invoices' [POST]>\n      response = None\n      rollback = True\n      e = OperationalError(4078, \"Illegal parameter data types varchar and row for operation '='\")\n  File \"apps/frappe/frappe/api/__init__.py\", line 52, in handle\n    data = endpoint(**arguments)\n      request = <Request 'http://hq.bebang.ph/api/method/hrms.api.procurement.get_invoices' [POST]>\n      endpoint = <function handle_rpc_call at 0x708ba51fc540>\n      arguments = {'method': 'hrms.api.procurement.get_invoices'}\n  File \"apps/frappe/frappe/api/v1.py\", line 40, in handle_rpc_call\n    return f"
+  },
+  {
+    "creation": "2026-04-21 09:30:49.618932",
+    "method": "(4078, \"Illegal parameter data types varchar and row for operation '='\")",
+    "error_head": "Traceback with variables (most recent call last):\n  File \"apps/frappe/frappe/app.py\", line 120, in application\n    response = frappe.api.handle(request)\n      request = <Request 'http://hq.bebang.ph/api/method/hrms.api.procurement.get_invoices' [POST]>\n      response = None\n      rollback = True\n      e = OperationalError(4078, \"Illegal parameter data types varchar and row for operation '='\")\n  File \"apps/frappe/frappe/api/__init__.py\", line 52, in handle\n    data = endpoint(**arguments)\n      request = <Request 'http://hq.bebang.ph/api/method/hrms.api.procurement.get_invoices' [POST]>\n      endpoint = <function handle_rpc_call at 0x708ba51fc540>\n      arguments = {'method': 'hrms.api.procurement.get_invoices'}\n  File \"apps/frappe/frappe/api/v1.py\", line 40, in handle_rpc_call\n    return f"
+  },
+  {
+    "creation": "2026-04-21 09:30:49.615854",
+    "method": "(4078, \"Illegal parameter data types varchar and row for operation '='\")",
+    "error_head": "Traceback with variables (most recent call last):\n  File \"apps/frappe/frappe/app.py\", line 120, in application\n    response = frappe.api.handle(request)\n      request = <Request 'http://hq.bebang.ph/api/method/hrms.api.procurement.get_invoices' [POST]>\n      response = None\n      rollback = True\n      e = OperationalError(4078, \"Illegal parameter data types varchar and row for operation '='\")\n  File \"apps/frappe/frappe/api/__init__.py\", line 52, in handle\n    data = endpoint(**arguments)\n      request = <Request 'http://hq.bebang.ph/api/method/hrms.api.procurement.get_invoices' [POST]>\n      endpoint = <function handle_rpc_call at 0x708ba51fc540>\n      arguments = {'method': 'hrms.api.procurement.get_invoices'}\n  File \"apps/frappe/frappe/api/v1.py\", line 40, in handle_rpc_call\n    return f"
+  },
+  {
+    "creation": "2026-04-21 09:30:49.612494",
+    "method": "(4078, \"Illegal parameter data types varchar and row for operation '='\")",
+    "error_head": "Traceback with variables (most recent call last):\n  File \"apps/frappe/frappe/app.py\", line 120, in application\n    response = frappe.api.handle(request)\n      request = <Request 'http://hq.bebang.ph/api/method/hrms.api.procurement.get_invoices' [POST]>\n      response = None\n      rollback = True\n      e = OperationalError(4078, \"Illegal parameter data types varchar and row for operation '='\")\n  File \"apps/frappe/frappe/api/__init__.py\", line 52, in handle\n    data = endpoint(**arguments)\n      request = <Request 'http://hq.bebang.ph/api/method/hrms.api.procurement.get_invoices' [POST]>\n      endpoint = <function handle_rpc_call at 0x708ba51fc540>\n      arguments = {'method': 'hrms.api.procurement.get_invoices'}\n  File \"apps/frappe/frappe/api/v1.py\", line 40, in handle_rpc_call\n    return f"
+  },
+  {
+    "creation": "2026-04-21 09:30:49.608374",
+    "method": "(4078, \"Illegal parameter data types varchar and row for operation '='\")",
+    "error_head": "Traceback with variables (most recent call last):\n  File \"apps/frappe/frappe/app.py\", line 120, in application\n    response = frappe.api.handle(request)\n      request = <Request 'http://hq.bebang.ph/api/method/hrms.api.procurement.get_invoices' [POST]>\n      response = None\n      rollback = True\n      e = OperationalError(4078, \"Illegal parameter data types varchar and row for operation '='\")\n  File \"apps/frappe/frappe/api/__init__.py\", line 52, in handle\n    data = endpoint(**arguments)\n      request = <Request 'http://hq.bebang.ph/api/method/hrms.api.procurement.get_invoices' [POST]>\n      endpoint = <function handle_rpc_call at 0x708ba51fc540>\n      arguments = {'method': 'hrms.api.procurement.get_invoices'}\n  File \"apps/frappe/frappe/api/v1.py\", line 40, in handle_rpc_call\n    return f"
+  },
+  {
+    "creation": "2026-04-21 09:27:38.607801",
+    "method": "Error Attaching File",
+    "error_head": "Traceback with variables (most recent call last):\n  File \"apps/frappe/frappe/core/doctype/file/utils.py\", line 372, in attach_files_to_document\n    file.insert(ignore_permissions=True)\n      doc = <BEIInvoice: INV-2026-10724>\n      event = 'on_update'\n      attach_fields = [<AttachDocField: invoice_attachment parent=BEI Invoice>, <AttachDocField: supporting_docs parent=BEI Invoice>]\n      df = <AttachDocField: invoice_attachment parent=BEI Invoice>\n      value = '/files/test-invoice-doc.png'\n      unattached_file = None\n      file = <File: unsaved>\n  File \"apps/frappe/frappe/model/document.py\", line 303, in insert\n    self.run_method(\"before_insert\")\n      self = <File: unsaved>\n      ignore_permissions = True\n      ignore_links = None\n      ignore_if_duplicate = False\n      ignore_mandato"
+  },
+  {
+    "creation": "2026-04-21 09:27:23.108869",
+    "method": "Error Attaching File",
+    "error_head": "Traceback with variables (most recent call last):\n  File \"apps/frappe/frappe/core/doctype/file/utils.py\", line 372, in attach_files_to_document\n    file.insert(ignore_permissions=True)\n      doc = <BEIInvoice: INV-2026-10724>\n      event = 'on_update'\n      attach_fields = [<AttachDocField: invoice_attachment parent=BEI Invoice>, <AttachDocField: supporting_docs parent=BEI Invoice>]\n      df = <AttachDocField: invoice_attachment parent=BEI Invoice>\n      value = '/files/test-invoice-doc.png'\n      unattached_file = None\n      file = <File: unsaved>\n  File \"apps/frappe/frappe/model/document.py\", line 303, in insert\n    self.run_method(\"before_insert\")\n      self = <File: unsaved>\n      ignore_permissions = True\n      ignore_links = None\n      ignore_if_duplicate = False\n      ignore_mandato"
+  },
+  {
+    "creation": "2026-04-21 09:27:19.362061",
+    "method": "Error Attaching File",
+    "error_head": "Traceback with variables (most recent call last):\n  File \"apps/frappe/frappe/core/doctype/file/utils.py\", line 372, in attach_files_to_document\n    file.insert(ignore_permissions=True)\n      doc = <BEIInvoice: INV-2026-10724>\n      event = 'on_update'\n      attach_fields = [<AttachDocField: invoice_attachment parent=BEI Invoice>, <AttachDocField: supporting_docs parent=BEI Invoice>]\n      df = <AttachDocField: invoice_attachment parent=BEI Invoice>\n      value = '/files/test-invoice-doc.png'\n      unattached_file = None\n      file = <File: unsaved>\n  File \"apps/frappe/frappe/model/document.py\", line 303, in insert\n    self.run_method(\"before_insert\")\n      self = <File: unsaved>\n      ignore_permissions = True\n      ignore_links = None\n      ignore_if_duplicate = False\n      ignore_mandato"
+  },
+  {
+    "creation": "2026-04-21 09:27:15.838234",
+    "method": "Error Attaching File",
+    "error_head": "Traceback with variables (most recent call last):\n  File \"apps/frappe/frappe/core/doctype/file/utils.py\", line 372, in attach_files_to_document\n    file.insert(ignore_permissions=True)\n      doc = <BEIGoodsReceipt: GR-2026-10723>\n      event = 'on_update'\n      attach_fields = [<Attach ImageDocField: supplier_invoice_photo parent=BEI Goods Receipt>]\n      df = <Attach ImageDocField: supplier_invoice_photo parent=BEI Goods Receipt>\n      value = '/files/test-gr-delivery.png'\n      unattached_file = None\n      file = <File: unsaved>\n  File \"apps/frappe/frappe/model/document.py\", line 303, in insert\n    self.run_method(\"before_insert\")\n      self = <File: unsaved>\n      ignore_permissions = True\n      ignore_links = None\n      ignore_if_duplicate = False\n      ignore_mandatory = None\n      se"
+  },
+  {
+    "creation": "2026-04-21 09:27:15.770945",
+    "method": "Error Attaching File",
+    "error_head": "Traceback with variables (most recent call last):\n  File \"apps/frappe/frappe/core/doctype/file/utils.py\", line 372, in attach_files_to_document\n    file.insert(ignore_permissions=True)\n      doc = <BEIGoodsReceipt: GR-2026-10723>\n      event = 'on_update'\n      attach_fields = [<Attach ImageDocField: supplier_invoice_photo parent=BEI Goods Receipt>]\n      df = <Attach ImageDocField: supplier_invoice_photo parent=BEI Goods Receipt>\n      value = '/files/test-gr-delivery.png'\n      unattached_file = None\n      file = <File: unsaved>\n  File \"apps/frappe/frappe/model/document.py\", line 303, in insert\n    self.run_method(\"before_insert\")\n      self = <File: unsaved>\n      ignore_permissions = True\n      ignore_links = None\n      ignore_if_duplicate = False\n      ignore_mandatory = None\n      se"
+  },
+  {
+    "creation": "2026-04-21 09:24:40.117072",
+    "method": "Error Attaching File",
+    "error_head": "Traceback with variables (most recent call last):\n  File \"apps/frappe/frappe/core/doctype/file/utils.py\", line 372, in attach_files_to_document\n    file.insert(ignore_permissions=True)\n      doc = <BEIInvoice: INV-2026-10719>\n      event = 'on_update'\n      attach_fields = [<AttachDocField: invoice_attachment parent=BEI Invoice>, <AttachDocField: supporting_docs parent=BEI Invoice>]\n      df = <AttachDocField: invoice_attachment parent=BEI Invoice>\n      value = '/files/test-invoice-doc.png'\n      unattached_file = None\n      file = <File: unsaved>\n  File \"apps/frappe/frappe/model/document.py\", line 303, in insert\n    self.run_method(\"before_insert\")\n      self = <File: unsaved>\n      ignore_permissions = True\n      ignore_links = None\n      ignore_if_duplicate = False\n      ignore_mandato"
+  },
+  {
+    "creation": "2026-04-21 09:24:24.400241",
+    "method": "Error Attaching File",
+    "error_head": "Traceback with variables (most recent call last):\n  File \"apps/frappe/frappe/core/doctype/file/utils.py\", line 372, in attach_files_to_document\n    file.insert(ignore_permissions=True)\n      doc = <BEIInvoice: INV-2026-10719>\n      event = 'on_update'\n      attach_fields = [<AttachDocField: invoice_attachment parent=BEI Invoice>, <AttachDocField: supporting_docs parent=BEI Invoice>]\n      df = <AttachDocField: invoice_attachment parent=BEI Invoice>\n      value = '/files/test-invoice-doc.png'\n      unattached_file = None\n      file = <File: unsaved>\n  File \"apps/frappe/frappe/model/document.py\", line 303, in insert\n    self.run_method(\"before_insert\")\n      self = <File: unsaved>\n      ignore_permissions = True\n      ignore_links = None\n      ignore_if_duplicate = False\n      ignore_mandato"
+  },
+  {
+    "creation": "2026-04-21 09:24:20.492145",
+    "method": "Error Attaching File",
+    "error_head": "Traceback with variables (most recent call last):\n  File \"apps/frappe/frappe/core/doctype/file/utils.py\", line 372, in attach_files_to_document\n    file.insert(ignore_permissions=True)\n      doc = <BEIInvoice: INV-2026-10719>\n      event = 'on_update'\n      attach_fields = [<AttachDocField: invoice_attachment parent=BEI Invoice>, <AttachDocField: supporting_docs parent=BEI Invoice>]\n      df = <AttachDocField: invoice_attachment parent=BEI Invoice>\n      value = '/files/test-invoice-doc.png'\n      unattached_file = None\n      file = <File: unsaved>\n  File \"apps/frappe/frappe/model/document.py\", line 303, in insert\n    self.run_method(\"before_insert\")\n      self = <File: unsaved>\n      ignore_permissions = True\n      ignore_links = None\n      ignore_if_duplicate = False\n      ignore_mandato"
+  },
+  {
+    "creation": "2026-04-21 09:24:16.757861",
+    "method": "Error Attaching File",
+    "error_head": "Traceback with variables (most recent call last):\n  File \"apps/frappe/frappe/core/doctype/file/utils.py\", line 372, in attach_files_to_document\n    file.insert(ignore_permissions=True)\n      doc = <BEIGoodsReceipt: GR-2026-10718>\n      event = 'on_update'\n      attach_fields = [<Attach ImageDocField: supplier_invoice_photo parent=BEI Goods Receipt>]\n      df = <Attach ImageDocField: supplier_invoice_photo parent=BEI Goods Receipt>\n      value = '/files/test-gr-delivery.png'\n      unattached_file = None\n      file = <File: unsaved>\n  File \"apps/frappe/frappe/model/document.py\", line 303, in insert\n    self.run_method(\"before_insert\")\n      self = <File: unsaved>\n      ignore_permissions = True\n      ignore_links = None\n      ignore_if_duplicate = False\n      ignore_mandatory = None\n      se"
+  },
+  {
+    "creation": "2026-04-21 09:24:16.697073",
+    "method": "Error Attaching File",
+    "error_head": "Traceback with variables (most recent call last):\n  File \"apps/frappe/frappe/core/doctype/file/utils.py\", line 372, in attach_files_to_document\n    file.insert(ignore_permissions=True)\n      doc = <BEIGoodsReceipt: GR-2026-10718>\n      event = 'on_update'\n      attach_fields = [<Attach ImageDocField: supplier_invoice_photo parent=BEI Goods Receipt>]\n      df = <Attach ImageDocField: supplier_invoice_photo parent=BEI Goods Receipt>\n      value = '/files/test-gr-delivery.png'\n      unattached_file = None\n      file = <File: unsaved>\n  File \"apps/frappe/frappe/model/document.py\", line 303, in insert\n    self.run_method(\"before_insert\")\n      self = <File: unsaved>\n      ignore_permissions = True\n      ignore_links = None\n      ignore_if_duplicate = False\n      ignore_mandatory = None\n      se"
+  },
+  {
+    "creation": "2026-04-21 09:21:57.454586",
+    "method": "Error Attaching File",
+    "error_head": "Traceback with variables (most recent call last):\n  File \"apps/frappe/frappe/core/doctype/file/utils.py\", line 372, in attach_files_to_document\n    file.insert(ignore_permissions=True)\n      doc = <BEIInvoice: INV-2026-10714>\n      event = 'on_update'\n      attach_fields = [<AttachDocField: invoice_attachment parent=BEI Invoice>, <AttachDocField: supporting_docs parent=BEI Invoice>]\n      df = <AttachDocField: invoice_attachment parent=BEI Invoice>\n      value = '/files/test-invoice-doc.png'\n      unattached_file = None\n      file = <File: unsaved>\n  File \"apps/frappe/frappe/model/document.py\", line 303, in insert\n    self.run_method(\"before_insert\")\n      self = <File: unsaved>\n      ignore_permissions = True\n      ignore_links = None\n      ignore_if_duplicate = False\n      ignore_mandato"
+  },
+  {
+    "creation": "2026-04-21 09:21:41.754397",
+    "method": "Error Attaching File",
+    "error_head": "Traceback with variables (most recent call last):\n  File \"apps/frappe/frappe/core/doctype/file/utils.py\", line 372, in attach_files_to_document\n    file.insert(ignore_permissions=True)\n      doc = <BEIInvoice: INV-2026-10714>\n      event = 'on_update'\n      attach_fields = [<AttachDocField: invoice_attachment parent=BEI Invoice>, <AttachDocField: supporting_docs parent=BEI Invoice>]\n      df = <AttachDocField: invoice_attachment parent=BEI Invoice>\n      value = '/files/test-invoice-doc.png'\n      unattached_file = None\n      file = <File: unsaved>\n  File \"apps/frappe/frappe/model/document.py\", line 303, in insert\n    self.run_method(\"before_insert\")\n      self = <File: unsaved>\n      ignore_permissions = True\n      ignore_links = None\n      ignore_if_duplicate = False\n      ignore_mandato"
+  },
+  {
+    "creation": "2026-04-21 09:21:37.943886",
+    "method": "Error Attaching File",
+    "error_head": "Traceback with variables (most recent call last):\n  File \"apps/frappe/frappe/core/doctype/file/utils.py\", line 372, in attach_files_to_document\n    file.insert(ignore_permissions=True)\n      doc = <BEIInvoice: INV-2026-10714>\n      event = 'on_update'\n      attach_fields = [<AttachDocField: invoice_attachment parent=BEI Invoice>, <AttachDocField: supporting_docs parent=BEI Invoice>]\n      df = <AttachDocField: invoice_attachment parent=BEI Invoice>\n      value = '/files/test-invoice-doc.png'\n      unattached_file = None\n      file = <File: unsaved>\n  File \"apps/frappe/frappe/model/document.py\", line 303, in insert\n    self.run_method(\"before_insert\")\n      self = <File: unsaved>\n      ignore_permissions = True\n      ignore_links = None\n      ignore_if_duplicate = False\n      ignore_mandato"
+  },
+  {
+    "creation": "2026-04-21 09:21:34.443750",
+    "method": "Error Attaching File",
+    "error_head": "Traceback with variables (most recent call last):\n  File \"apps/frappe/frappe/core/doctype/file/utils.py\", line 372, in attach_files_to_document\n    file.insert(ignore_permissions=True)\n      doc = <BEIGoodsReceipt: GR-2026-10713>\n      event = 'on_update'\n      attach_fields = [<Attach ImageDocField: supplier_invoice_photo parent=BEI Goods Receipt>]\n      df = <Attach ImageDocField: supplier_invoice_photo parent=BEI Goods Receipt>\n      value = '/files/test-gr-delivery.png'\n      unattached_file = None\n      file = <File: unsaved>\n  File \"apps/frappe/frappe/model/document.py\", line 303, in insert\n    self.run_method(\"before_insert\")\n      self = <File: unsaved>\n      ignore_permissions = True\n      ignore_links = None\n      ignore_if_duplicate = False\n      ignore_mandatory = None\n      se"
+  },
+  {
+    "creation": "2026-04-21 09:21:34.385469",
+    "method": "Error Attaching File",
+    "error_head": "Traceback with variables (most recent call last):\n  File \"apps/frappe/frappe/core/doctype/file/utils.py\", line 372, in attach_files_to_document\n    file.insert(ignore_permissions=True)\n      doc = <BEIGoodsReceipt: GR-2026-10713>\n      event = 'on_update'\n      attach_fields = [<Attach ImageDocField: supplier_invoice_photo parent=BEI Goods Receipt>]\n      df = <Attach ImageDocField: supplier_invoice_photo parent=BEI Goods Receipt>\n      value = '/files/test-gr-delivery.png'\n      unattached_file = None\n      file = <File: unsaved>\n  File \"apps/frappe/frappe/model/document.py\", line 303, in insert\n    self.run_method(\"before_insert\")\n      self = <File: unsaved>\n      ignore_permissions = True\n      ignore_links = None\n      ignore_if_duplicate = False\n      ignore_mandatory = None\n      se"
+  },
+  {
+    "creation": "2026-04-21 09:19:51.279454",
+    "method": "Error Attaching File",
+    "error_head": "Traceback with variables (most recent call last):\n  File \"apps/frappe/frappe/core/doctype/file/utils.py\", line 372, in attach_files_to_document\n    file.insert(ignore_permissions=True)\n      doc = <BEIInvoice: INV-2026-10710>\n      event = 'on_update'\n      attach_fields = [<AttachDocField: invoice_attachment parent=BEI Invoice>, <AttachDocField: supporting_docs parent=BEI Invoice>]\n      df = <AttachDocField: invoice_attachment parent=BEI Invoice>\n      value = '/files/test-invoice-doc.png'\n      unattached_file = None\n      file = <File: unsaved>\n  File \"apps/frappe/frappe/model/document.py\", line 303, in insert\n    self.run_method(\"before_insert\")\n      self = <File: unsaved>\n      ignore_permissions = True\n      ignore_links = None\n      ignore_if_duplicate = False\n      ignore_mandato"
+  },
+  {
+    "creation": "2026-04-21 09:19:30.641584",
+    "method": "Error Attaching File",
+    "error_head": "Traceback with variables (most recent call last):\n  File \"apps/frappe/frappe/core/doctype/file/utils.py\", line 372, in attach_files_to_document\n    file.insert(ignore_permissions=True)\n      doc = <BEIInvoice: INV-2026-10710>\n      event = 'on_update'\n      attach_fields = [<AttachDocField: invoice_attachment parent=BEI Invoice>, <AttachDocField: supporting_docs parent=BEI Invoice>]\n      df = <AttachDocField: invoice_attachment parent=BEI Invoice>\n      value = '/files/test-invoice-doc.png'\n      unattached_file = None\n      file = <File: unsaved>\n  File \"apps/frappe/frappe/model/document.py\", line 303, in insert\n    self.run_method(\"before_insert\")\n      self = <File: unsaved>\n      ignore_permissions = True\n      ignore_links = None\n      ignore_if_duplicate = False\n      ignore_mandato"
+  },
+  {
+    "creation": "2026-04-21 09:19:14.961210",
+    "method": "Error Attaching File",
+    "error_head": "Traceback with variables (most recent call last):\n  File \"apps/frappe/frappe/core/doctype/file/utils.py\", line 372, in attach_files_to_document\n    file.insert(ignore_permissions=True)\n      doc = <BEIInvoice: INV-2026-10710>\n      event = 'on_update'\n      attach_fields = [<AttachDocField: invoice_attachment parent=BEI Invoice>, <AttachDocField: supporting_docs parent=BEI Invoice>]\n      df = <AttachDocField: invoice_attachment parent=BEI Invoice>\n      value = '/files/test-invoice-doc.png'\n      unattached_file = None\n      file = <File: unsaved>\n  File \"apps/frappe/frappe/model/document.py\", line 303, in insert\n    self.run_method(\"before_insert\")\n      self = <File: unsaved>\n      ignore_permissions = True\n      ignore_links = None\n      ignore_if_duplicate = False\n      ignore_mandato"
+  },
+  {
+    "creation": "2026-04-21 09:19:11.435411",
+    "method": "Error Attaching File",
+    "error_head": "Traceback with variables (most recent call last):\n  File \"apps/frappe/frappe/core/doctype/file/utils.py\", line 372, in attach_files_to_document\n    file.insert(ignore_permissions=True)\n      doc = <BEIInvoice: INV-2026-10710>\n      event = 'on_update'\n      attach_fields = [<AttachDocField: invoice_attachment parent=BEI Invoice>, <AttachDocField: supporting_docs parent=BEI Invoice>]\n      df = <AttachDocField: invoice_attachment parent=BEI Invoice>\n      value = '/files/test-invoice-doc.png'\n      unattached_file = None\n      file = <File: unsaved>\n  File \"apps/frappe/frappe/model/document.py\", line 303, in insert\n    self.run_method(\"before_insert\")\n      self = <File: unsaved>\n      ignore_permissions = True\n      ignore_links = None\n      ignore_if_duplicate = False\n      ignore_mandato"
+  },
+  {
+    "creation": "2026-04-21 09:19:07.904605",
+    "method": "Error Attaching File",
+    "error_head": "Traceback with variables (most recent call last):\n  File \"apps/frappe/frappe/core/doctype/file/utils.py\", line 372, in attach_files_to_document\n    file.insert(ignore_permissions=True)\n      doc = <BEIGoodsReceipt: GR-2026-10709>\n      event = 'on_update'\n      attach_fields = [<Attach ImageDocField: supplier_invoice_photo parent=BEI Goods Receipt>]\n      df = <Attach ImageDocField: supplier_invoice_photo parent=BEI Goods Receipt>\n      value = '/files/test-gr-delivery.png'\n      unattached_file = None\n      file = <File: unsaved>\n  File \"apps/frappe/frappe/model/document.py\", line 303, in insert\n    self.run_method(\"before_insert\")\n      self = <File: unsaved>\n      ignore_permissions = True\n      ignore_links = None\n      ignore_if_duplicate = False\n      ignore_mandatory = None\n      se"
+  },
+  {
+    "creation": "2026-04-21 09:19:07.836668",
+    "method": "Error Attaching File",
+    "error_head": "Traceback with variables (most recent call last):\n  File \"apps/frappe/frappe/core/doctype/file/utils.py\", line 372, in attach_files_to_document\n    file.insert(ignore_permissions=True)\n      doc = <BEIGoodsReceipt: GR-2026-10709>\n      event = 'on_update'\n      attach_fields = [<Attach ImageDocField: supplier_invoice_photo parent=BEI Goods Receipt>]\n      df = <Attach ImageDocField: supplier_invoice_photo parent=BEI Goods Receipt>\n      value = '/files/test-gr-delivery.png'\n      unattached_file = None\n      file = <File: unsaved>\n  File \"apps/frappe/frappe/model/document.py\", line 303, in insert\n    self.run_method(\"before_insert\")\n      self = <File: unsaved>\n      ignore_permissions = True\n      ignore_links = None\n      ignore_if_duplicate = False\n      ignore_mandatory = None\n      se"
+  },
+  {
+    "creation": "2026-04-21 09:16:50.954131",
+    "method": "(4078, \"Illegal parameter data types varchar and row for operation '='\")",
+    "error_head": "Traceback with variables (most recent call last):\n  File \"apps/frappe/frappe/app.py\", line 120, in application\n    response = frappe.api.handle(request)\n      request = <Request 'http://hq.bebang.ph/api/method/hrms.api.procurement.get_invoices' [POST]>\n      response = None\n      rollback = True\n      e = OperationalError(4078, \"Illegal parameter data types varchar and row for operation '='\")\n  File \"apps/frappe/frappe/api/__init__.py\", line 52, in handle\n    data = endpoint(**arguments)\n      request = <Request 'http://hq.bebang.ph/api/method/hrms.api.procurement.get_invoices' [POST]>\n      endpoint = <function handle_rpc_call at 0x7c9a2db00540>\n      arguments = {'method': 'hrms.api.procurement.get_invoices'}\n  File \"apps/frappe/frappe/api/v1.py\", line 40, in handle_rpc_call\n    return f"
+  }
+]
