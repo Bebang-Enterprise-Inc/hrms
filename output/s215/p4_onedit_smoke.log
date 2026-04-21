@@ -1,0 +1,23 @@
+{
+  "note": "Simple onEdit triggers fire ONLY on UI edits, not API writes. Automated smoke is not possible. Verified source + deployment below. SAM/IAN manual smoke: type a row in Receipts -> Timestamp auto-fills within 1s.",
+  "verifications": [
+    {
+      "key": "sheetA",
+      "scriptId": "1wqkp3H14-nsH8-koXOK6HODOMu4KWhCzFvGmuIrw8cRJC4d6I165qHh8",
+      "has_onEdit_code": true,
+      "has_manifest": true
+    },
+    {
+      "key": "sheetB",
+      "scriptId": "1VMm0L13n-l68KJHGQuta8GENsn16a7mTTTEG-ysjrsXrQHihVFOWgLY4",
+      "has_onEdit_code": true,
+      "has_manifest": true
+    },
+    {
+      "key": "sheetD",
+      "scriptId": "150LOn_jULK1uCzBgHnSgG3ppfNJ3UeewRViPtfn52w_zVQsytaMGhpST",
+      "has_onEdit_code": true,
+      "has_manifest": true
+    }
+  ]
+}

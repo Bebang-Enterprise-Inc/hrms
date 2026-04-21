@@ -1,0 +1,56 @@
+{
+  "bound_scripts": {
+    "sheetA": {
+      "scriptId": "1wqkp3H14-nsH8-koXOK6HODOMu4KWhCzFvGmuIrw8cRJC4d6I165qHh8",
+      "parentId": "1dambmiLzSMWOQun7MCymK4nHpuqrarFCAOK0G9-6oIU",
+      "action": "created"
+    },
+    "sheetB": {
+      "scriptId": "1VMm0L13n-l68KJHGQuta8GENsn16a7mTTTEG-ysjrsXrQHihVFOWgLY4",
+      "parentId": "10fqnvF_uDl5ky3MkvXUmWvZ1fYat_p6XFGmVFc3vqrw",
+      "action": "created"
+    },
+    "sheetD": {
+      "scriptId": "150LOn_jULK1uCzBgHnSgG3ppfNJ3UeewRViPtfn52w_zVQsytaMGhpST",
+      "parentId": "1mbJiLW9M9e-AmrXSRRTtbRP-xKI16ah5rakOt6qv2As",
+      "action": "created"
+    }
+  },
+  "code_pushed": {
+    "sheetA": {
+      "scriptId": "1wqkp3H14-nsH8-koXOK6HODOMu4KWhCzFvGmuIrw8cRJC4d6I165qHh8",
+      "files": [
+        "Code",
+        "appsscript"
+      ]
+    },
+    "sheetB": {
+      "scriptId": "1VMm0L13n-l68KJHGQuta8GENsn16a7mTTTEG-ysjrsXrQHihVFOWgLY4",
+      "files": [
+        "Code",
+        "appsscript"
+      ]
+    },
+    "sheetD": {
+      "scriptId": "150LOn_jULK1uCzBgHnSgG3ppfNJ3UeewRViPtfn52w_zVQsytaMGhpST",
+      "files": [
+        "Code",
+        "appsscript"
+      ]
+    }
+  },
+  "protections": {
+    "sheetA": {
+      "action": "added",
+      "protectionId": 2088580847
+    },
+    "sheetB": {
+      "action": "added",
+      "protectionId": 1848940721
+    },
+    "sheetD": {
+      "action": "added",
+      "protectionId": 1675194483
+    }
+  }
+}
