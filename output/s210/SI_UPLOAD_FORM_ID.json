@@ -3,15 +3,16 @@
   "responder_uri": "https://docs.google.com/forms/d/e/1FAIpQLSc3UC9f_3gefDYNgpOqNx7UCw_5BDrRh9T8-GQeyHHWSxdITw/viewform",
   "edit_url": "https://docs.google.com/forms/d/1gyijOzmjXJHlyil7wraQ8xjmPMu0q1eoqUcjwHXogPg/edit",
   "item_ids": {
-    "Supplier Name": "916838180",
-    "PO Number": "1395377630",
-    "SI Number": "586011118",
-    "SI Date": "1849596212",
-    "Amount (PHP)": "1154066569",
-    "SI PDF (placeholder \u2014 replace in UI)": "1479809273",
-    "Notes": "681001365",
-    "Warehouse": "4bde2019"
+    "Supplier Name": "6f714ee0",
+    "Warehouse": "4bde2019",
+    "PO Number": "7012ba71",
+    "SI Number": "2d4787a7",
+    "Upload SI Copy": "72e37828",
+    "SI Date": "5daba830",
+    "Amount (PHP)": "7ae30aab",
+    "Notes": "042a2ec6"
   },
   "created_via": "Apps Script FormApp (file upload field pending UI add by Sam)",
-  "ui_step_pending": "Delete item '[REPLACE_ME ...]' + add File upload titled 'SI PDF' (see PHASE7_MANUAL_STEP.md)"
+  "ui_step_pending": "Delete item '[REPLACE_ME ...]' + add File upload titled 'SI PDF' (see PHASE7_MANUAL_STEP.md)",
+  "supplier_name_field_type": "DROP_DOWN"
 }
