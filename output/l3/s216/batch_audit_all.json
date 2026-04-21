@@ -1,0 +1,3666 @@
+{
+  "total_tuples": 610,
+  "total_qty": 155496.5410000003,
+  "tuples": [
+    {
+      "item_code": "FG001-A",
+      "warehouse": "AYALA EVO - BEBANG MEGA INC.",
+      "null_qty": 15437.75,
+      "warehouse_company": "BEBANG MEGA INC."
+    },
+    {
+      "item_code": "FG001-A",
+      "warehouse": "BF HOMES - BEBANG BF HOMES INC.",
+      "null_qty": 14801.0,
+      "warehouse_company": "BF HOMES - BEBANG BF HOMES INC."
+    },
+    {
+      "item_code": "FG001-A",
+      "warehouse": "FESTIVAL MALL ALABANG - BEBANG FESTIVAL INC.",
+      "null_qty": 7956.0,
+      "warehouse_company": "FESTIVAL MALL ALABANG - BEBANG FESTIVAL INC."
+    },
+    {
+      "item_code": "FG001-A",
+      "warehouse": "SM CLARK - RED TALDAWA FOODS OPC",
+      "null_qty": 7331.0,
+      "warehouse_company": "SM CLARK - RED TALDAWA FOODS OPC"
+    },
+    {
+      "item_code": "FG001-A",
+      "warehouse": "SM MALL OF ASIA - BEBANG SMOA INC.",
+      "null_qty": 5793.0,
+      "warehouse_company": "SM MALL OF ASIA - BEBANG SMOA INC."
+    },
+    {
+      "item_code": "FG001-A",
+      "warehouse": "SM SAN JOSE DEL MONTE - JL TRADE OPC",
+      "null_qty": 5774.0,
+      "warehouse_company": "SM SAN JOSE DEL MONTE - JL TRADE OPC"
+    },
+    {
+      "item_code": "FG001-A",
+      "warehouse": "ROBINSONS GALLERIA SOUTH - TUNGSTEN CAPITAL HOLDINGS OPC",
+      "null_qty": 4825.0,
+      "warehouse_company": "ROBINSONS GALLERIA SOUTH - TUNGSTEN CAPITAL HOLDINGS OPC"
+    },
+    {
+      "item_code": "FG001-A",
+      "warehouse": "SM NORTH EDSA - BEBANG NORTH EDSA INC.",
+      "null_qty": 4602.0,
+      "warehouse_company": "SM NORTH EDSA - BEBANG NORTH EDSA INC."
+    },
+    {
+      "item_code": "FG001-A",
+      "warehouse": "D'VERDE CALAMBA - TAJ FOOD CORP.",
+      "null_qty": 4243.0,
+      "warehouse_company": "D'VERDE CALAMBA - TAJ FOOD CORP."
+    },
+    {
+      "item_code": "FG001-A",
+      "warehouse": "SM MARILAO - BEBANG MARILAO INC.",
+      "null_qty": 4223.0,
+      "warehouse_company": "SM MARILAO - BEBANG MARILAO INC."
+    },
+    {
+      "item_code": "FG001-A",
+      "warehouse": "SM GRAND CENTRAL - BEBANG GRAND CENTRAL INC.",
+      "null_qty": 4013.0,
+      "warehouse_company": "SM GRAND CENTRAL - BEBANG GRAND CENTRAL INC."
+    },
+    {
+      "item_code": "FG001-A",
+      "warehouse": "ARANETA GATEWAY - TUNGSTEN CAPITAL HOLDINGS OPC",
+      "null_qty": 3982.0,
+      "warehouse_company": "ARANETA GATEWAY - TUNGSTEN CAPITAL HOLDINGS OPC"
+    },
+    {
+      "item_code": "FG001-A",
+      "warehouse": "AYALA FAIRVIEW TERRACES - BEBANG FT INC.",
+      "null_qty": 3975.0,
+      "warehouse_company": "AYALA FAIRVIEW TERRACES - BEBANG FT INC."
+    },
+    {
+      "item_code": "FG001-A",
+      "warehouse": "SM CALOOCAN - TAJ FOOD CORP.",
+      "null_qty": 3878.0,
+      "warehouse_company": "SM CALOOCAN - TAJ FOOD CORP."
+    },
+    {
+      "item_code": "FG001-A",
+      "warehouse": "AYALA SOLENAD - HFFM SOLENAD FOOD SERVICES INC.",
+      "null_qty": 3710.0,
+      "warehouse_company": "AYALA SOLENAD - HFFM SOLENAD FOOD SERVICES INC."
+    },
+    {
+      "item_code": "FG001-A",
+      "warehouse": "LUCKY CHINATOWN - BEBANG LCT INC.",
+      "null_qty": 3543.0,
+      "warehouse_company": "LUCKY CHINATOWN - BEBANG LCT INC."
+    },
+    {
+      "item_code": "FG001-A",
+      "warehouse": "Greenhills Ortigas - BEIFRANCHISE FOOD OPC",
+      "null_qty": 3526.0,
+      "warehouse_company": null
+    },
+    {
+      "item_code": "FG001-A",
+      "warehouse": "SM TAYTAY - DAY ONES FOOD AND DRINK ESTABLISHMENTS CORP.",
+      "null_qty": 3456.0,
+      "warehouse_company": "SM TAYTAY - DAY ONES FOOD AND DRINK ESTABLISHMENTS CORP."
+    },
+    {
+      "item_code": "FG001-A",
+      "warehouse": "EVER COMMONWEALTH - DLS DESSERT CRAFT INC.",
+      "null_qty": 3392.0,
+      "warehouse_company": "EVER COMMONWEALTH - DLS DESSERT CRAFT INC."
+    },
+    {
+      "item_code": "FG001-A",
+      "warehouse": "AYALA UP TOWN CENTER - BEBANG UP TOWN CENTER INC.",
+      "null_qty": 3385.0,
+      "warehouse_company": "AYALA UP TOWN CENTER - BEBANG UP TOWN CENTER INC."
+    },
+    {
+      "item_code": "FG001-A",
+      "warehouse": "SM SANGANDAAN - TUNGSTEN CAPITAL HOLDINGS OPC",
+      "null_qty": 3025.0,
+      "warehouse_company": "SM SANGANDAAN - TUNGSTEN CAPITAL HOLDINGS OPC"
+    },
+    {
+      "item_code": "FG001-A",
+      "warehouse": "VISTA MALL TAGUIG - TRICERN FOOD CORP.",
+      "null_qty": 2953.0,
+      "warehouse_company": "VISTA MALL TAGUIG - TRICERN FOOD CORP."
+    },
+    {
+      "item_code": "FG001-A",
+      "warehouse": "UP TOWN MALL BGC - DMD HOLDINGS INC.",
+      "null_qty": 2819.0,
+      "warehouse_company": "UP TOWN MALL BGC - DMD HOLDINGS INC."
+    },
+    {
+      "item_code": "FG001-A",
+      "warehouse": "SM VALENZUELA - BEBANG SMV INC.",
+      "null_qty": 2807.0,
+      "warehouse_company": "SM VALENZUELA - BEBANG SMV INC."
+    },
+    {
+      "item_code": "FG001-A",
+      "warehouse": "SM STA. ROSA - SWEET HARMONY FOOD CORP.",
+      "null_qty": 2768.0,
+      "warehouse_company": "SM STA. ROSA - SWEET HARMONY FOOD CORP."
+    },
+    {
+      "item_code": "FG001-A",
+      "warehouse": "SM MARIKINA - BEBANG SM MARIKINA INC.",
+      "null_qty": 2475.0,
+      "warehouse_company": "SM MARIKINA - BEBANG SM MARIKINA INC."
+    },
+    {
+      "item_code": "FG001-A",
+      "warehouse": "SM BICUTAN - BEBANG SM BICUTAN INC.",
+      "null_qty": 2155.0,
+      "warehouse_company": "SM BICUTAN - BEBANG SM BICUTAN INC."
+    },
+    {
+      "item_code": "FG001-A",
+      "warehouse": "CTTM TOMAS MORATO - B CUBED VENTURES CORP.",
+      "null_qty": 2052.0,
+      "warehouse_company": "CTTM TOMAS MORATO - B CUBED VENTURES CORP."
+    },
+    {
+      "item_code": "FG001-A",
+      "warehouse": "SM EAST ORTIGAS - BEBANG SMEO INC.",
+      "null_qty": 2051.0,
+      "warehouse_company": "SM EAST ORTIGAS - BEBANG SMEO INC."
+    },
+    {
+      "item_code": "FG001-A",
+      "warehouse": "SM PULILAN - BEBANG SMM INC.",
+      "null_qty": 1657.0,
+      "warehouse_company": "SM PULILAN - BEBANG SMM INC."
+    },
+    {
+      "item_code": "FG001-A",
+      "warehouse": "AYALA MARKET MARKET - BEBANG MARKET MARKET INC.",
+      "null_qty": 1645.0,
+      "warehouse_company": "AYALA MARKET MARKET - BEBANG MARKET MARKET INC."
+    },
+    {
+      "item_code": "FG001-A",
+      "warehouse": "THE GRID ROCKWELL - TASTECARTEL CORP.",
+      "null_qty": 1629.0,
+      "warehouse_company": "THE GRID ROCKWELL - TASTECARTEL CORP."
+    },
+    {
+      "item_code": "FG001-A",
+      "warehouse": "THE TERMINAL - BEBANG STARMALL ALABANG INC.",
+      "null_qty": 1341.0,
+      "warehouse_company": "THE TERMINAL - BEBANG STARMALL ALABANG INC."
+    },
+    {
+      "item_code": "FG001-A",
+      "warehouse": "NAIA T3 - HALO-HALO TERMINAL FOOD CORP.",
+      "null_qty": 1168.0,
+      "warehouse_company": "NAIA T3 - HALO-HALO TERMINAL FOOD CORP."
+    },
+    {
+      "item_code": "FG001-A",
+      "warehouse": "MEGAWORLD VENICE GRAND CANAL - BEBANG VENICE GRAND CANAL INC.",
+      "null_qty": 1049.0,
+      "warehouse_company": "MEGAWORLD VENICE GRAND CANAL - BEBANG VENICE GRAND CANAL INC."
+    },
+    {
+      "item_code": "FG001-A",
+      "warehouse": "MEGAWIDE PITX - BEBANG PITX INC.",
+      "null_qty": 952.0,
+      "warehouse_company": "MEGAWIDE PITX - BEBANG PITX INC."
+    },
+    {
+      "item_code": "FG001-B",
+      "warehouse": "MEGAWORLD VENICE GRAND CANAL - BEBANG VENICE GRAND CANAL INC.",
+      "null_qty": 915.0,
+      "warehouse_company": "MEGAWORLD VENICE GRAND CANAL - BEBANG VENICE GRAND CANAL INC."
+    },
+    {
+      "item_code": "FG001-A",
+      "warehouse": "SM TANZA - BEBANG MEGA INC.",
+      "null_qty": 240.5,
+      "warehouse_company": "SM TANZA - BEBANG MEGA INC."
+    },
+    {
+      "item_code": "FG001-B",
+      "warehouse": "SM VALENZUELA - BEBANG SMV INC.",
+      "null_qty": 230.0,
+      "warehouse_company": "SM VALENZUELA - BEBANG SMV INC."
+    },
+    {
+      "item_code": "FG002-A",
+      "warehouse": "EVER COMMONWEALTH - DLS DESSERT CRAFT INC.",
+      "null_qty": 93.02,
+      "warehouse_company": "EVER COMMONWEALTH - DLS DESSERT CRAFT INC."
+    },
+    {
+      "item_code": "FG012",
+      "warehouse": "AYALA UP TOWN CENTER - BEBANG UP TOWN CENTER INC.",
+      "null_qty": 74.59,
+      "warehouse_company": "AYALA UP TOWN CENTER - BEBANG UP TOWN CENTER INC."
+    },
+    {
+      "item_code": "FG012",
+      "warehouse": "AYALA SOLENAD - HFFM SOLENAD FOOD SERVICES INC.",
+      "null_qty": 68.795,
+      "warehouse_company": "AYALA SOLENAD - HFFM SOLENAD FOOD SERVICES INC."
+    },
+    {
+      "item_code": "FG004",
+      "warehouse": "SM SAN JOSE DEL MONTE - JL TRADE OPC",
+      "null_qty": 67.463,
+      "warehouse_company": "SM SAN JOSE DEL MONTE - JL TRADE OPC"
+    },
+    {
+      "item_code": "FG013",
+      "warehouse": "AYALA SOLENAD - HFFM SOLENAD FOOD SERVICES INC.",
+      "null_qty": 65.721,
+      "warehouse_company": "AYALA SOLENAD - HFFM SOLENAD FOOD SERVICES INC."
+    },
+    {
+      "item_code": "FG002-A",
+      "warehouse": "SM SAN JOSE DEL MONTE - JL TRADE OPC",
+      "null_qty": 60.938,
+      "warehouse_company": "SM SAN JOSE DEL MONTE - JL TRADE OPC"
+    },
+    {
+      "item_code": "FG012",
+      "warehouse": "D'VERDE CALAMBA - TAJ FOOD CORP.",
+      "null_qty": 58.582,
+      "warehouse_company": "D'VERDE CALAMBA - TAJ FOOD CORP."
+    },
+    {
+      "item_code": "FG013",
+      "warehouse": "SM SAN JOSE DEL MONTE - JL TRADE OPC",
+      "null_qty": 57.857,
+      "warehouse_company": "SM SAN JOSE DEL MONTE - JL TRADE OPC"
+    },
+    {
+      "item_code": "FG012",
+      "warehouse": "SM CLARK - RED TALDAWA FOODS OPC",
+      "null_qty": 57.314,
+      "warehouse_company": "SM CLARK - RED TALDAWA FOODS OPC"
+    },
+    {
+      "item_code": "FG009",
+      "warehouse": "SM CALOOCAN - TAJ FOOD CORP.",
+      "null_qty": 56.346,
+      "warehouse_company": "SM CALOOCAN - TAJ FOOD CORP."
+    },
+    {
+      "item_code": "FG001-A",
+      "warehouse": "AYALA VERMOSA - BEBANG MEGA INC.",
+      "null_qty": 56.0,
+      "warehouse_company": "AYALA VERMOSA - BEBANG MEGA INC."
+    },
+    {
+      "item_code": "FG004",
+      "warehouse": "ARANETA GATEWAY - TUNGSTEN CAPITAL HOLDINGS OPC",
+      "null_qty": 55.999,
+      "warehouse_company": "ARANETA GATEWAY - TUNGSTEN CAPITAL HOLDINGS OPC"
+    },
+    {
+      "item_code": "FG004",
+      "warehouse": "SM NORTH EDSA - BEBANG NORTH EDSA INC.",
+      "null_qty": 55.87,
+      "warehouse_company": "SM NORTH EDSA - BEBANG NORTH EDSA INC."
+    },
+    {
+      "item_code": "FG002-A",
+      "warehouse": "BF HOMES - BEBANG BF HOMES INC.",
+      "null_qty": 55.866,
+      "warehouse_company": "BF HOMES - BEBANG BF HOMES INC."
+    },
+    {
+      "item_code": "FG004",
+      "warehouse": "SM CLARK - RED TALDAWA FOODS OPC",
+      "null_qty": 55.409,
+      "warehouse_company": "SM CLARK - RED TALDAWA FOODS OPC"
+    },
+    {
+      "item_code": "FG012",
+      "warehouse": "AYALA FAIRVIEW TERRACES - BEBANG FT INC.",
+      "null_qty": 55.138,
+      "warehouse_company": "AYALA FAIRVIEW TERRACES - BEBANG FT INC."
+    },
+    {
+      "item_code": "FG002-A",
+      "warehouse": "SM CALOOCAN - TAJ FOOD CORP.",
+      "null_qty": 54.481,
+      "warehouse_company": "SM CALOOCAN - TAJ FOOD CORP."
+    },
+    {
+      "item_code": "FG013",
+      "warehouse": "SM CALOOCAN - TAJ FOOD CORP.",
+      "null_qty": 54.191,
+      "warehouse_company": "SM CALOOCAN - TAJ FOOD CORP."
+    },
+    {
+      "item_code": "FG013",
+      "warehouse": "SM NORTH EDSA - BEBANG NORTH EDSA INC.",
+      "null_qty": 53.246,
+      "warehouse_company": "SM NORTH EDSA - BEBANG NORTH EDSA INC."
+    },
+    {
+      "item_code": "FG013",
+      "warehouse": "SM STA. ROSA - SWEET HARMONY FOOD CORP.",
+      "null_qty": 53.099,
+      "warehouse_company": "SM STA. ROSA - SWEET HARMONY FOOD CORP."
+    },
+    {
+      "item_code": "FG002-A",
+      "warehouse": "SM TAYTAY - DAY ONES FOOD AND DRINK ESTABLISHMENTS CORP.",
+      "null_qty": 52.403,
+      "warehouse_company": "SM TAYTAY - DAY ONES FOOD AND DRINK ESTABLISHMENTS CORP."
+    },
+    {
+      "item_code": "FG012",
+      "warehouse": "SM TAYTAY - DAY ONES FOOD AND DRINK ESTABLISHMENTS CORP.",
+      "null_qty": 52.332,
+      "warehouse_company": "SM TAYTAY - DAY ONES FOOD AND DRINK ESTABLISHMENTS CORP."
+    },
+    {
+      "item_code": "FG002-A",
+      "warehouse": "AYALA SOLENAD - HFFM SOLENAD FOOD SERVICES INC.",
+      "null_qty": 52.216,
+      "warehouse_company": "AYALA SOLENAD - HFFM SOLENAD FOOD SERVICES INC."
+    },
+    {
+      "item_code": "FG009",
+      "warehouse": "AYALA SOLENAD - HFFM SOLENAD FOOD SERVICES INC.",
+      "null_qty": 51.382,
+      "warehouse_company": "AYALA SOLENAD - HFFM SOLENAD FOOD SERVICES INC."
+    },
+    {
+      "item_code": "FG004",
+      "warehouse": "AYALA FAIRVIEW TERRACES - BEBANG FT INC.",
+      "null_qty": 51.025,
+      "warehouse_company": "AYALA FAIRVIEW TERRACES - BEBANG FT INC."
+    },
+    {
+      "item_code": "FG009",
+      "warehouse": "AYALA FAIRVIEW TERRACES - BEBANG FT INC.",
+      "null_qty": 51.007,
+      "warehouse_company": "AYALA FAIRVIEW TERRACES - BEBANG FT INC."
+    },
+    {
+      "item_code": "FG002-A",
+      "warehouse": "SM NORTH EDSA - BEBANG NORTH EDSA INC.",
+      "null_qty": 50.732,
+      "warehouse_company": "SM NORTH EDSA - BEBANG NORTH EDSA INC."
+    },
+    {
+      "item_code": "FG009",
+      "warehouse": "SM TAYTAY - DAY ONES FOOD AND DRINK ESTABLISHMENTS CORP.",
+      "null_qty": 50.191,
+      "warehouse_company": "SM TAYTAY - DAY ONES FOOD AND DRINK ESTABLISHMENTS CORP."
+    },
+    {
+      "item_code": "FG013",
+      "warehouse": "SM TAYTAY - DAY ONES FOOD AND DRINK ESTABLISHMENTS CORP.",
+      "null_qty": 49.6,
+      "warehouse_company": "SM TAYTAY - DAY ONES FOOD AND DRINK ESTABLISHMENTS CORP."
+    },
+    {
+      "item_code": "FG004",
+      "warehouse": "SM MARILAO - BEBANG MARILAO INC.",
+      "null_qty": 49.3411,
+      "warehouse_company": "SM MARILAO - BEBANG MARILAO INC."
+    },
+    {
+      "item_code": "FG004",
+      "warehouse": "SM TAYTAY - DAY ONES FOOD AND DRINK ESTABLISHMENTS CORP.",
+      "null_qty": 49.138,
+      "warehouse_company": "SM TAYTAY - DAY ONES FOOD AND DRINK ESTABLISHMENTS CORP."
+    },
+    {
+      "item_code": "FG013",
+      "warehouse": "EVER COMMONWEALTH - DLS DESSERT CRAFT INC.",
+      "null_qty": 48.856,
+      "warehouse_company": "EVER COMMONWEALTH - DLS DESSERT CRAFT INC."
+    },
+    {
+      "item_code": "FG009",
+      "warehouse": "LUCKY CHINATOWN - BEBANG LCT INC.",
+      "null_qty": 48.7133,
+      "warehouse_company": "LUCKY CHINATOWN - BEBANG LCT INC."
+    },
+    {
+      "item_code": "FG012",
+      "warehouse": "SM NORTH EDSA - BEBANG NORTH EDSA INC.",
+      "null_qty": 48.696,
+      "warehouse_company": "SM NORTH EDSA - BEBANG NORTH EDSA INC."
+    },
+    {
+      "item_code": "FG013",
+      "warehouse": "D'VERDE CALAMBA - TAJ FOOD CORP.",
+      "null_qty": 48.535,
+      "warehouse_company": "D'VERDE CALAMBA - TAJ FOOD CORP."
+    },
+    {
+      "item_code": "FG012",
+      "warehouse": "SM BICUTAN - BEBANG SM BICUTAN INC.",
+      "null_qty": 48.529,
+      "warehouse_company": "SM BICUTAN - BEBANG SM BICUTAN INC."
+    },
+    {
+      "item_code": "FG009",
+      "warehouse": "SM MARILAO - BEBANG MARILAO INC.",
+      "null_qty": 48.4323,
+      "warehouse_company": "SM MARILAO - BEBANG MARILAO INC."
+    },
+    {
+      "item_code": "FG013",
+      "warehouse": "LUCKY CHINATOWN - BEBANG LCT INC.",
+      "null_qty": 48.1534,
+      "warehouse_company": "LUCKY CHINATOWN - BEBANG LCT INC."
+    },
+    {
+      "item_code": "FG012",
+      "warehouse": "BF HOMES - BEBANG BF HOMES INC.",
+      "null_qty": 48.0,
+      "warehouse_company": "BF HOMES - BEBANG BF HOMES INC."
+    },
+    {
+      "item_code": "FG012",
+      "warehouse": "SM MARIKINA - BEBANG SM MARIKINA INC.",
+      "null_qty": 47.201,
+      "warehouse_company": "SM MARIKINA - BEBANG SM MARIKINA INC."
+    },
+    {
+      "item_code": "FG013",
+      "warehouse": "ROBINSONS GALLERIA SOUTH - TUNGSTEN CAPITAL HOLDINGS OPC",
+      "null_qty": 47.006,
+      "warehouse_company": "ROBINSONS GALLERIA SOUTH - TUNGSTEN CAPITAL HOLDINGS OPC"
+    },
+    {
+      "item_code": "FG009",
+      "warehouse": "SM NORTH EDSA - BEBANG NORTH EDSA INC.",
+      "null_qty": 46.894,
+      "warehouse_company": "SM NORTH EDSA - BEBANG NORTH EDSA INC."
+    },
+    {
+      "item_code": "FG012",
+      "warehouse": "THE GRID ROCKWELL - TASTECARTEL CORP.",
+      "null_qty": 46.5029,
+      "warehouse_company": "THE GRID ROCKWELL - TASTECARTEL CORP."
+    },
+    {
+      "item_code": "FG013",
+      "warehouse": "SM CLARK - RED TALDAWA FOODS OPC",
+      "null_qty": 45.775,
+      "warehouse_company": "SM CLARK - RED TALDAWA FOODS OPC"
+    },
+    {
+      "item_code": "FG009",
+      "warehouse": "THE GRID ROCKWELL - TASTECARTEL CORP.",
+      "null_qty": 44.7532,
+      "warehouse_company": "THE GRID ROCKWELL - TASTECARTEL CORP."
+    },
+    {
+      "item_code": "FG009",
+      "warehouse": "ROBINSONS GALLERIA SOUTH - TUNGSTEN CAPITAL HOLDINGS OPC",
+      "null_qty": 44.669,
+      "warehouse_company": "ROBINSONS GALLERIA SOUTH - TUNGSTEN CAPITAL HOLDINGS OPC"
+    },
+    {
+      "item_code": "FG013",
+      "warehouse": "AYALA UP TOWN CENTER - BEBANG UP TOWN CENTER INC.",
+      "null_qty": 44.5351,
+      "warehouse_company": "AYALA UP TOWN CENTER - BEBANG UP TOWN CENTER INC."
+    },
+    {
+      "item_code": "FG012",
+      "warehouse": "SM SAN JOSE DEL MONTE - JL TRADE OPC",
+      "null_qty": 43.82,
+      "warehouse_company": "SM SAN JOSE DEL MONTE - JL TRADE OPC"
+    },
+    {
+      "item_code": "FG002-A",
+      "warehouse": "AYALA FAIRVIEW TERRACES - BEBANG FT INC.",
+      "null_qty": 43.722,
+      "warehouse_company": "AYALA FAIRVIEW TERRACES - BEBANG FT INC."
+    },
+    {
+      "item_code": "FG002-A",
+      "warehouse": "ARANETA GATEWAY - TUNGSTEN CAPITAL HOLDINGS OPC",
+      "null_qty": 43.6,
+      "warehouse_company": "ARANETA GATEWAY - TUNGSTEN CAPITAL HOLDINGS OPC"
+    },
+    {
+      "item_code": "FG002-A",
+      "warehouse": "SM EAST ORTIGAS - BEBANG SMEO INC.",
+      "null_qty": 43.095,
+      "warehouse_company": "SM EAST ORTIGAS - BEBANG SMEO INC."
+    },
+    {
+      "item_code": "FG009",
+      "warehouse": "SM MALL OF ASIA - BEBANG SMOA INC.",
+      "null_qty": 43.038,
+      "warehouse_company": "SM MALL OF ASIA - BEBANG SMOA INC."
+    },
+    {
+      "item_code": "FG004",
+      "warehouse": "BF HOMES - BEBANG BF HOMES INC.",
+      "null_qty": 43.024,
+      "warehouse_company": "BF HOMES - BEBANG BF HOMES INC."
+    },
+    {
+      "item_code": "FG002-A",
+      "warehouse": "LUCKY CHINATOWN - BEBANG LCT INC.",
+      "null_qty": 43.02,
+      "warehouse_company": "LUCKY CHINATOWN - BEBANG LCT INC."
+    },
+    {
+      "item_code": "FG002-A",
+      "warehouse": "SM STA. ROSA - SWEET HARMONY FOOD CORP.",
+      "null_qty": 42.554,
+      "warehouse_company": "SM STA. ROSA - SWEET HARMONY FOOD CORP."
+    },
+    {
+      "item_code": "FG004",
+      "warehouse": "D'VERDE CALAMBA - TAJ FOOD CORP.",
+      "null_qty": 42.349,
+      "warehouse_company": "D'VERDE CALAMBA - TAJ FOOD CORP."
+    },
+    {
+      "item_code": "FG004",
+      "warehouse": "SM EAST ORTIGAS - BEBANG SMEO INC.",
+      "null_qty": 42.284,
+      "warehouse_company": "SM EAST ORTIGAS - BEBANG SMEO INC."
+    },
+    {
+      "item_code": "FG012",
+      "warehouse": "ROBINSONS GALLERIA SOUTH - TUNGSTEN CAPITAL HOLDINGS OPC",
+      "null_qty": 41.547,
+      "warehouse_company": "ROBINSONS GALLERIA SOUTH - TUNGSTEN CAPITAL HOLDINGS OPC"
+    },
+    {
+      "item_code": "FG002-A",
+      "warehouse": "SM CLARK - RED TALDAWA FOODS OPC",
+      "null_qty": 41.473,
+      "warehouse_company": "SM CLARK - RED TALDAWA FOODS OPC"
+    },
+    {
+      "item_code": "FG012",
+      "warehouse": "EVER COMMONWEALTH - DLS DESSERT CRAFT INC.",
+      "null_qty": 41.406,
+      "warehouse_company": "EVER COMMONWEALTH - DLS DESSERT CRAFT INC."
+    },
+    {
+      "item_code": "FG013",
+      "warehouse": "SM MARILAO - BEBANG MARILAO INC.",
+      "null_qty": 41.401,
+      "warehouse_company": "SM MARILAO - BEBANG MARILAO INC."
+    },
+    {
+      "item_code": "FG009",
+      "warehouse": "SM CLARK - RED TALDAWA FOODS OPC",
+      "null_qty": 41.204,
+      "warehouse_company": "SM CLARK - RED TALDAWA FOODS OPC"
+    },
+    {
+      "item_code": "FG009",
+      "warehouse": "SM SANGANDAAN - TUNGSTEN CAPITAL HOLDINGS OPC",
+      "null_qty": 40.1083,
+      "warehouse_company": "SM SANGANDAAN - TUNGSTEN CAPITAL HOLDINGS OPC"
+    },
+    {
+      "item_code": "FG002-A",
+      "warehouse": "UP TOWN MALL BGC - DMD HOLDINGS INC.",
+      "null_qty": 39.8,
+      "warehouse_company": "UP TOWN MALL BGC - DMD HOLDINGS INC."
+    },
+    {
+      "item_code": "FG004",
+      "warehouse": "SM MALL OF ASIA - BEBANG SMOA INC.",
+      "null_qty": 39.0,
+      "warehouse_company": "SM MALL OF ASIA - BEBANG SMOA INC."
+    },
+    {
+      "item_code": "FG013",
+      "warehouse": "UP TOWN MALL BGC - DMD HOLDINGS INC.",
+      "null_qty": 39.0,
+      "warehouse_company": "UP TOWN MALL BGC - DMD HOLDINGS INC."
+    },
+    {
+      "item_code": "FG002-A",
+      "warehouse": "ROBINSONS GALLERIA SOUTH - TUNGSTEN CAPITAL HOLDINGS OPC",
+      "null_qty": 38.705,
+      "warehouse_company": "ROBINSONS GALLERIA SOUTH - TUNGSTEN CAPITAL HOLDINGS OPC"
+    },
+    {
+      "item_code": "FG013",
+      "warehouse": "ARANETA GATEWAY - TUNGSTEN CAPITAL HOLDINGS OPC",
+      "null_qty": 38.286,
+      "warehouse_company": "ARANETA GATEWAY - TUNGSTEN CAPITAL HOLDINGS OPC"
+    },
+    {
+      "item_code": "FG012",
+      "warehouse": "LUCKY CHINATOWN - BEBANG LCT INC.",
+      "null_qty": 37.90131,
+      "warehouse_company": "LUCKY CHINATOWN - BEBANG LCT INC."
+    },
+    {
+      "item_code": "FG009",
+      "warehouse": "ARANETA GATEWAY - TUNGSTEN CAPITAL HOLDINGS OPC",
+      "null_qty": 37.65,
+      "warehouse_company": "ARANETA GATEWAY - TUNGSTEN CAPITAL HOLDINGS OPC"
+    },
+    {
+      "item_code": "FG003",
+      "warehouse": "D'VERDE CALAMBA - TAJ FOOD CORP.",
+      "null_qty": 37.472,
+      "warehouse_company": "D'VERDE CALAMBA - TAJ FOOD CORP."
+    },
+    {
+      "item_code": "FG013",
+      "warehouse": "SM GRAND CENTRAL - BEBANG GRAND CENTRAL INC.",
+      "null_qty": 37.133,
+      "warehouse_company": "SM GRAND CENTRAL - BEBANG GRAND CENTRAL INC."
+    },
+    {
+      "item_code": "FG002-A",
+      "warehouse": "VISTA MALL TAGUIG - TRICERN FOOD CORP.",
+      "null_qty": 37.0,
+      "warehouse_company": "VISTA MALL TAGUIG - TRICERN FOOD CORP."
+    },
+    {
+      "item_code": "FG012",
+      "warehouse": "VISTA MALL TAGUIG - TRICERN FOOD CORP.",
+      "null_qty": 37.0,
+      "warehouse_company": "VISTA MALL TAGUIG - TRICERN FOOD CORP."
+    },
+    {
+      "item_code": "FG004",
+      "warehouse": "UP TOWN MALL BGC - DMD HOLDINGS INC.",
+      "null_qty": 36.928,
+      "warehouse_company": "UP TOWN MALL BGC - DMD HOLDINGS INC."
+    },
+    {
+      "item_code": "FG002-A",
+      "warehouse": "AYALA UP TOWN CENTER - BEBANG UP TOWN CENTER INC.",
+      "null_qty": 36.704,
+      "warehouse_company": "AYALA UP TOWN CENTER - BEBANG UP TOWN CENTER INC."
+    },
+    {
+      "item_code": "FG013",
+      "warehouse": "BF HOMES - BEBANG BF HOMES INC.",
+      "null_qty": 36.305,
+      "warehouse_company": "BF HOMES - BEBANG BF HOMES INC."
+    },
+    {
+      "item_code": "FG002-A",
+      "warehouse": "Greenhills Ortigas - BEIFRANCHISE FOOD OPC",
+      "null_qty": 36.246,
+      "warehouse_company": null
+    },
+    {
+      "item_code": "FG004",
+      "warehouse": "SM VALENZUELA - BEBANG SMV INC.",
+      "null_qty": 36.13,
+      "warehouse_company": "SM VALENZUELA - BEBANG SMV INC."
+    },
+    {
+      "item_code": "FG009",
+      "warehouse": "VISTA MALL TAGUIG - TRICERN FOOD CORP.",
+      "null_qty": 36.092,
+      "warehouse_company": "VISTA MALL TAGUIG - TRICERN FOOD CORP."
+    },
+    {
+      "item_code": "FG004",
+      "warehouse": "AYALA UP TOWN CENTER - BEBANG UP TOWN CENTER INC.",
+      "null_qty": 35.564,
+      "warehouse_company": "AYALA UP TOWN CENTER - BEBANG UP TOWN CENTER INC."
+    },
+    {
+      "item_code": "FG004",
+      "warehouse": "THE GRID ROCKWELL - TASTECARTEL CORP.",
+      "null_qty": 35.3034,
+      "warehouse_company": "THE GRID ROCKWELL - TASTECARTEL CORP."
+    },
+    {
+      "item_code": "FG012",
+      "warehouse": "MEGAWORLD VENICE GRAND CANAL - BEBANG VENICE GRAND CANAL INC.",
+      "null_qty": 34.483,
+      "warehouse_company": "MEGAWORLD VENICE GRAND CANAL - BEBANG VENICE GRAND CANAL INC."
+    },
+    {
+      "item_code": "FG009",
+      "warehouse": "FESTIVAL MALL ALABANG - BEBANG FESTIVAL INC.",
+      "null_qty": 34.365,
+      "warehouse_company": "FESTIVAL MALL ALABANG - BEBANG FESTIVAL INC."
+    },
+    {
+      "item_code": "FG004",
+      "warehouse": "MEGAWIDE PITX - BEBANG PITX INC.",
+      "null_qty": 34.3605,
+      "warehouse_company": "MEGAWIDE PITX - BEBANG PITX INC."
+    },
+    {
+      "item_code": "FG012",
+      "warehouse": "Greenhills Ortigas - BEIFRANCHISE FOOD OPC",
+      "null_qty": 34.275,
+      "warehouse_company": null
+    },
+    {
+      "item_code": "FG009",
+      "warehouse": "BF HOMES - BEBANG BF HOMES INC.",
+      "null_qty": 33.6,
+      "warehouse_company": "BF HOMES - BEBANG BF HOMES INC."
+    },
+    {
+      "item_code": "FG009",
+      "warehouse": "NAIA T3 - HALO-HALO TERMINAL FOOD CORP.",
+      "null_qty": 33.324,
+      "warehouse_company": "NAIA T3 - HALO-HALO TERMINAL FOOD CORP."
+    },
+    {
+      "item_code": "FG004",
+      "warehouse": "FESTIVAL MALL ALABANG - BEBANG FESTIVAL INC.",
+      "null_qty": 33.301,
+      "warehouse_company": "FESTIVAL MALL ALABANG - BEBANG FESTIVAL INC."
+    },
+    {
+      "item_code": "FG012",
+      "warehouse": "ARANETA GATEWAY - TUNGSTEN CAPITAL HOLDINGS OPC",
+      "null_qty": 33.083,
+      "warehouse_company": "ARANETA GATEWAY - TUNGSTEN CAPITAL HOLDINGS OPC"
+    },
+    {
+      "item_code": "FG013",
+      "warehouse": "VISTA MALL TAGUIG - TRICERN FOOD CORP.",
+      "null_qty": 33.08,
+      "warehouse_company": "VISTA MALL TAGUIG - TRICERN FOOD CORP."
+    },
+    {
+      "item_code": "FG004",
+      "warehouse": "MEGAWORLD VENICE GRAND CANAL - BEBANG VENICE GRAND CANAL INC.",
+      "null_qty": 33.019,
+      "warehouse_company": "MEGAWORLD VENICE GRAND CANAL - BEBANG VENICE GRAND CANAL INC."
+    },
+    {
+      "item_code": "FG004",
+      "warehouse": "VISTA MALL TAGUIG - TRICERN FOOD CORP.",
+      "null_qty": 32.836,
+      "warehouse_company": "VISTA MALL TAGUIG - TRICERN FOOD CORP."
+    },
+    {
+      "item_code": "FG009",
+      "warehouse": "SM GRAND CENTRAL - BEBANG GRAND CENTRAL INC.",
+      "null_qty": 32.544,
+      "warehouse_company": "SM GRAND CENTRAL - BEBANG GRAND CENTRAL INC."
+    },
+    {
+      "item_code": "FG009",
+      "warehouse": "D'VERDE CALAMBA - TAJ FOOD CORP.",
+      "null_qty": 32.518,
+      "warehouse_company": "D'VERDE CALAMBA - TAJ FOOD CORP."
+    },
+    {
+      "item_code": "FG004",
+      "warehouse": "NAIA T3 - HALO-HALO TERMINAL FOOD CORP.",
+      "null_qty": 31.838,
+      "warehouse_company": "NAIA T3 - HALO-HALO TERMINAL FOOD CORP."
+    },
+    {
+      "item_code": "FG013",
+      "warehouse": "SM VALENZUELA - BEBANG SMV INC.",
+      "null_qty": 31.701,
+      "warehouse_company": "SM VALENZUELA - BEBANG SMV INC."
+    },
+    {
+      "item_code": "FG004",
+      "warehouse": "AYALA MARKET MARKET - BEBANG MARKET MARKET INC.",
+      "null_qty": 31.657,
+      "warehouse_company": "AYALA MARKET MARKET - BEBANG MARKET MARKET INC."
+    },
+    {
+      "item_code": "FG009",
+      "warehouse": "CTTM TOMAS MORATO - B CUBED VENTURES CORP.",
+      "null_qty": 31.48,
+      "warehouse_company": "CTTM TOMAS MORATO - B CUBED VENTURES CORP."
+    },
+    {
+      "item_code": "FG013",
+      "warehouse": "Greenhills Ortigas - BEIFRANCHISE FOOD OPC",
+      "null_qty": 31.277,
+      "warehouse_company": null
+    },
+    {
+      "item_code": "FG002-A",
+      "warehouse": "SM GRAND CENTRAL - BEBANG GRAND CENTRAL INC.",
+      "null_qty": 31.006,
+      "warehouse_company": "SM GRAND CENTRAL - BEBANG GRAND CENTRAL INC."
+    },
+    {
+      "item_code": "FG009",
+      "warehouse": "UP TOWN MALL BGC - DMD HOLDINGS INC.",
+      "null_qty": 30.526,
+      "warehouse_company": "UP TOWN MALL BGC - DMD HOLDINGS INC."
+    },
+    {
+      "item_code": "FG009",
+      "warehouse": "EVER COMMONWEALTH - DLS DESSERT CRAFT INC.",
+      "null_qty": 30.416,
+      "warehouse_company": "EVER COMMONWEALTH - DLS DESSERT CRAFT INC."
+    },
+    {
+      "item_code": "FG009",
+      "warehouse": "SM EAST ORTIGAS - BEBANG SMEO INC.",
+      "null_qty": 30.072,
+      "warehouse_company": "SM EAST ORTIGAS - BEBANG SMEO INC."
+    },
+    {
+      "item_code": "FG002-A",
+      "warehouse": "NAIA T3 - HALO-HALO TERMINAL FOOD CORP.",
+      "null_qty": 29.958,
+      "warehouse_company": "NAIA T3 - HALO-HALO TERMINAL FOOD CORP."
+    },
+    {
+      "item_code": "FG009",
+      "warehouse": "SM STA. ROSA - SWEET HARMONY FOOD CORP.",
+      "null_qty": 29.553,
+      "warehouse_company": "SM STA. ROSA - SWEET HARMONY FOOD CORP."
+    },
+    {
+      "item_code": "FG004",
+      "warehouse": "LUCKY CHINATOWN - BEBANG LCT INC.",
+      "null_qty": 29.4525,
+      "warehouse_company": "LUCKY CHINATOWN - BEBANG LCT INC."
+    },
+    {
+      "item_code": "FG004",
+      "warehouse": "EVER COMMONWEALTH - DLS DESSERT CRAFT INC.",
+      "null_qty": 29.3,
+      "warehouse_company": "EVER COMMONWEALTH - DLS DESSERT CRAFT INC."
+    },
+    {
+      "item_code": "FG012",
+      "warehouse": "SM CALOOCAN - TAJ FOOD CORP.",
+      "null_qty": 28.815,
+      "warehouse_company": "SM CALOOCAN - TAJ FOOD CORP."
+    },
+    {
+      "item_code": "FG004",
+      "warehouse": "SM TANZA - BEBANG MEGA INC.",
+      "null_qty": 28.52,
+      "warehouse_company": "SM TANZA - BEBANG MEGA INC."
+    },
+    {
+      "item_code": "FG012",
+      "warehouse": "FESTIVAL MALL ALABANG - BEBANG FESTIVAL INC.",
+      "null_qty": 28.442,
+      "warehouse_company": "FESTIVAL MALL ALABANG - BEBANG FESTIVAL INC."
+    },
+    {
+      "item_code": "FG013",
+      "warehouse": "MEGAWORLD VENICE GRAND CANAL - BEBANG VENICE GRAND CANAL INC.",
+      "null_qty": 28.364,
+      "warehouse_company": "MEGAWORLD VENICE GRAND CANAL - BEBANG VENICE GRAND CANAL INC."
+    },
+    {
+      "item_code": "FG019",
+      "warehouse": "SM STA. ROSA - SWEET HARMONY FOOD CORP.",
+      "null_qty": 28.258,
+      "warehouse_company": "SM STA. ROSA - SWEET HARMONY FOOD CORP."
+    },
+    {
+      "item_code": "FG013",
+      "warehouse": "SM MARIKINA - BEBANG SM MARIKINA INC.",
+      "null_qty": 28.026,
+      "warehouse_company": "SM MARIKINA - BEBANG SM MARIKINA INC."
+    },
+    {
+      "item_code": "FG003",
+      "warehouse": "SM GRAND CENTRAL - BEBANG GRAND CENTRAL INC.",
+      "null_qty": 27.74,
+      "warehouse_company": "SM GRAND CENTRAL - BEBANG GRAND CENTRAL INC."
+    },
+    {
+      "item_code": "FG002-A",
+      "warehouse": "SM MALL OF ASIA - BEBANG SMOA INC.",
+      "null_qty": 27.3257,
+      "warehouse_company": "SM MALL OF ASIA - BEBANG SMOA INC."
+    },
+    {
+      "item_code": "FG002-A",
+      "warehouse": "SM MARILAO - BEBANG MARILAO INC.",
+      "null_qty": 27.1112,
+      "warehouse_company": "SM MARILAO - BEBANG MARILAO INC."
+    },
+    {
+      "item_code": "FG013",
+      "warehouse": "AYALA FAIRVIEW TERRACES - BEBANG FT INC.",
+      "null_qty": 26.648,
+      "warehouse_company": "AYALA FAIRVIEW TERRACES - BEBANG FT INC."
+    },
+    {
+      "item_code": "FG002-A",
+      "warehouse": "SM MARIKINA - BEBANG SM MARIKINA INC.",
+      "null_qty": 26.637,
+      "warehouse_company": "SM MARIKINA - BEBANG SM MARIKINA INC."
+    },
+    {
+      "item_code": "FG009",
+      "warehouse": "SM BICUTAN - BEBANG SM BICUTAN INC.",
+      "null_qty": 26.393,
+      "warehouse_company": "SM BICUTAN - BEBANG SM BICUTAN INC."
+    },
+    {
+      "item_code": "FG012",
+      "warehouse": "AYALA MARKET MARKET - BEBANG MARKET MARKET INC.",
+      "null_qty": 26.29,
+      "warehouse_company": "AYALA MARKET MARKET - BEBANG MARKET MARKET INC."
+    },
+    {
+      "item_code": "FG009",
+      "warehouse": "SM VALENZUELA - BEBANG SMV INC.",
+      "null_qty": 26.177,
+      "warehouse_company": "SM VALENZUELA - BEBANG SMV INC."
+    },
+    {
+      "item_code": "FG012",
+      "warehouse": "SM EAST ORTIGAS - BEBANG SMEO INC.",
+      "null_qty": 26.152,
+      "warehouse_company": "SM EAST ORTIGAS - BEBANG SMEO INC."
+    },
+    {
+      "item_code": "FG013",
+      "warehouse": "SM EAST ORTIGAS - BEBANG SMEO INC.",
+      "null_qty": 26.0,
+      "warehouse_company": "SM EAST ORTIGAS - BEBANG SMEO INC."
+    },
+    {
+      "item_code": "FG002-A",
+      "warehouse": "MEGAWIDE PITX - BEBANG PITX INC.",
+      "null_qty": 25.9825,
+      "warehouse_company": "MEGAWIDE PITX - BEBANG PITX INC."
+    },
+    {
+      "item_code": "FG004",
+      "warehouse": "Greenhills Ortigas - BEIFRANCHISE FOOD OPC",
+      "null_qty": 25.679,
+      "warehouse_company": null
+    },
+    {
+      "item_code": "FG006",
+      "warehouse": "BF HOMES - BEBANG BF HOMES INC.",
+      "null_qty": 25.546,
+      "warehouse_company": "BF HOMES - BEBANG BF HOMES INC."
+    },
+    {
+      "item_code": "FG009",
+      "warehouse": "SM SAN JOSE DEL MONTE - JL TRADE OPC",
+      "null_qty": 25.527,
+      "warehouse_company": "SM SAN JOSE DEL MONTE - JL TRADE OPC"
+    },
+    {
+      "item_code": "FG009",
+      "warehouse": "AYALA MARKET MARKET - BEBANG MARKET MARKET INC.",
+      "null_qty": 25.308,
+      "warehouse_company": "AYALA MARKET MARKET - BEBANG MARKET MARKET INC."
+    },
+    {
+      "item_code": "FG002-A",
+      "warehouse": "D'VERDE CALAMBA - TAJ FOOD CORP.",
+      "null_qty": 25.146,
+      "warehouse_company": "D'VERDE CALAMBA - TAJ FOOD CORP."
+    },
+    {
+      "item_code": "FG009",
+      "warehouse": "SM TANZA - BEBANG MEGA INC.",
+      "null_qty": 25.03,
+      "warehouse_company": "SM TANZA - BEBANG MEGA INC."
+    },
+    {
+      "item_code": "FG004",
+      "warehouse": "SM PULILAN - BEBANG SMM INC.",
+      "null_qty": 25.011,
+      "warehouse_company": "SM PULILAN - BEBANG SMM INC."
+    },
+    {
+      "item_code": "FG004",
+      "warehouse": "THE TERMINAL - BEBANG STARMALL ALABANG INC.",
+      "null_qty": 25.0,
+      "warehouse_company": "THE TERMINAL - BEBANG STARMALL ALABANG INC."
+    },
+    {
+      "item_code": "FG009",
+      "warehouse": "AYALA UP TOWN CENTER - BEBANG UP TOWN CENTER INC.",
+      "null_qty": 24.851,
+      "warehouse_company": "AYALA UP TOWN CENTER - BEBANG UP TOWN CENTER INC."
+    },
+    {
+      "item_code": "FG009",
+      "warehouse": "SM MARIKINA - BEBANG SM MARIKINA INC.",
+      "null_qty": 24.836,
+      "warehouse_company": "SM MARIKINA - BEBANG SM MARIKINA INC."
+    },
+    {
+      "item_code": "FG012",
+      "warehouse": "SM MARILAO - BEBANG MARILAO INC.",
+      "null_qty": 24.747,
+      "warehouse_company": "SM MARILAO - BEBANG MARILAO INC."
+    },
+    {
+      "item_code": "FG019",
+      "warehouse": "SM SAN JOSE DEL MONTE - JL TRADE OPC",
+      "null_qty": 24.726,
+      "warehouse_company": "SM SAN JOSE DEL MONTE - JL TRADE OPC"
+    },
+    {
+      "item_code": "FG013",
+      "warehouse": "NAIA T3 - HALO-HALO TERMINAL FOOD CORP.",
+      "null_qty": 24.376,
+      "warehouse_company": "NAIA T3 - HALO-HALO TERMINAL FOOD CORP."
+    },
+    {
+      "item_code": "FG019",
+      "warehouse": "AYALA SOLENAD - HFFM SOLENAD FOOD SERVICES INC.",
+      "null_qty": 24.016,
+      "warehouse_company": "AYALA SOLENAD - HFFM SOLENAD FOOD SERVICES INC."
+    },
+    {
+      "item_code": "FG002-A",
+      "warehouse": "CTTM TOMAS MORATO - B CUBED VENTURES CORP.",
+      "null_qty": 23.8143,
+      "warehouse_company": "CTTM TOMAS MORATO - B CUBED VENTURES CORP."
+    },
+    {
+      "item_code": "FG012",
+      "warehouse": "SM STA. ROSA - SWEET HARMONY FOOD CORP.",
+      "null_qty": 23.614,
+      "warehouse_company": "SM STA. ROSA - SWEET HARMONY FOOD CORP."
+    },
+    {
+      "item_code": "FG004",
+      "warehouse": "AYALA EVO - BEBANG MEGA INC.",
+      "null_qty": 23.551,
+      "warehouse_company": "BEBANG MEGA INC."
+    },
+    {
+      "item_code": "FG012",
+      "warehouse": "NAIA T3 - HALO-HALO TERMINAL FOOD CORP.",
+      "null_qty": 23.166,
+      "warehouse_company": "NAIA T3 - HALO-HALO TERMINAL FOOD CORP."
+    },
+    {
+      "item_code": "FG013",
+      "warehouse": "AYALA MARKET MARKET - BEBANG MARKET MARKET INC.",
+      "null_qty": 23.08,
+      "warehouse_company": "AYALA MARKET MARKET - BEBANG MARKET MARKET INC."
+    },
+    {
+      "item_code": "FG012",
+      "warehouse": "SM VALENZUELA - BEBANG SMV INC.",
+      "null_qty": 22.744,
+      "warehouse_company": "SM VALENZUELA - BEBANG SMV INC."
+    },
+    {
+      "item_code": "FG016",
+      "warehouse": "AYALA UP TOWN CENTER - BEBANG UP TOWN CENTER INC.",
+      "null_qty": 22.622,
+      "warehouse_company": "AYALA UP TOWN CENTER - BEBANG UP TOWN CENTER INC."
+    },
+    {
+      "item_code": "FG016",
+      "warehouse": "SM TAYTAY - DAY ONES FOOD AND DRINK ESTABLISHMENTS CORP.",
+      "null_qty": 22.287,
+      "warehouse_company": "SM TAYTAY - DAY ONES FOOD AND DRINK ESTABLISHMENTS CORP."
+    },
+    {
+      "item_code": "FG019",
+      "warehouse": "AYALA VERMOSA - BEBANG MEGA INC.",
+      "null_qty": 22.248,
+      "warehouse_company": "AYALA VERMOSA - BEBANG MEGA INC."
+    },
+    {
+      "item_code": "FG019",
+      "warehouse": "CTTM TOMAS MORATO - B CUBED VENTURES CORP.",
+      "null_qty": 22.087,
+      "warehouse_company": "CTTM TOMAS MORATO - B CUBED VENTURES CORP."
+    },
+    {
+      "item_code": "FG012",
+      "warehouse": "SM MALL OF ASIA - BEBANG SMOA INC.",
+      "null_qty": 22.075,
+      "warehouse_company": "SM MALL OF ASIA - BEBANG SMOA INC."
+    },
+    {
+      "item_code": "FG002-A",
+      "warehouse": "SM VALENZUELA - BEBANG SMV INC.",
+      "null_qty": 22.023,
+      "warehouse_company": "SM VALENZUELA - BEBANG SMV INC."
+    },
+    {
+      "item_code": "FG019",
+      "warehouse": "SM CALOOCAN - TAJ FOOD CORP.",
+      "null_qty": 21.912,
+      "warehouse_company": "SM CALOOCAN - TAJ FOOD CORP."
+    },
+    {
+      "item_code": "FG004",
+      "warehouse": "SM CALOOCAN - TAJ FOOD CORP.",
+      "null_qty": 21.892,
+      "warehouse_company": "SM CALOOCAN - TAJ FOOD CORP."
+    },
+    {
+      "item_code": "FG009",
+      "warehouse": "MEGAWORLD VENICE GRAND CANAL - BEBANG VENICE GRAND CANAL INC.",
+      "null_qty": 21.576,
+      "warehouse_company": "MEGAWORLD VENICE GRAND CANAL - BEBANG VENICE GRAND CANAL INC."
+    },
+    {
+      "item_code": "FG009",
+      "warehouse": "SM PULILAN - BEBANG SMM INC.",
+      "null_qty": 21.535,
+      "warehouse_company": "SM PULILAN - BEBANG SMM INC."
+    },
+    {
+      "item_code": "FG009",
+      "warehouse": "AYALA EVO - BEBANG MEGA INC.",
+      "null_qty": 21.283,
+      "warehouse_company": "BEBANG MEGA INC."
+    },
+    {
+      "item_code": "FG009",
+      "warehouse": "THE TERMINAL - BEBANG STARMALL ALABANG INC.",
+      "null_qty": 21.125,
+      "warehouse_company": "THE TERMINAL - BEBANG STARMALL ALABANG INC."
+    },
+    {
+      "item_code": "FG019",
+      "warehouse": "SM MARIKINA - BEBANG SM MARIKINA INC.",
+      "null_qty": 21.0605,
+      "warehouse_company": "SM MARIKINA - BEBANG SM MARIKINA INC."
+    },
+    {
+      "item_code": "FG012",
+      "warehouse": "UP TOWN MALL BGC - DMD HOLDINGS INC.",
+      "null_qty": 21.0,
+      "warehouse_company": "UP TOWN MALL BGC - DMD HOLDINGS INC."
+    },
+    {
+      "item_code": "FG006",
+      "warehouse": "SM STA. ROSA - SWEET HARMONY FOOD CORP.",
+      "null_qty": 20.799,
+      "warehouse_company": "SM STA. ROSA - SWEET HARMONY FOOD CORP."
+    },
+    {
+      "item_code": "FG005",
+      "warehouse": "SM GRAND CENTRAL - BEBANG GRAND CENTRAL INC.",
+      "null_qty": 20.665,
+      "warehouse_company": "SM GRAND CENTRAL - BEBANG GRAND CENTRAL INC."
+    },
+    {
+      "item_code": "FG004",
+      "warehouse": "SM BICUTAN - BEBANG SM BICUTAN INC.",
+      "null_qty": 20.284,
+      "warehouse_company": "SM BICUTAN - BEBANG SM BICUTAN INC."
+    },
+    {
+      "item_code": "FG018",
+      "warehouse": "SM STA. ROSA - SWEET HARMONY FOOD CORP.",
+      "null_qty": 20.151,
+      "warehouse_company": "SM STA. ROSA - SWEET HARMONY FOOD CORP."
+    },
+    {
+      "item_code": "FG013",
+      "warehouse": "THE GRID ROCKWELL - TASTECARTEL CORP.",
+      "null_qty": 20.1482,
+      "warehouse_company": "THE GRID ROCKWELL - TASTECARTEL CORP."
+    },
+    {
+      "item_code": "FG019",
+      "warehouse": "SM CLARK - RED TALDAWA FOODS OPC",
+      "null_qty": 20.12,
+      "warehouse_company": "SM CLARK - RED TALDAWA FOODS OPC"
+    },
+    {
+      "item_code": "FG002-A",
+      "warehouse": "SM TANZA - BEBANG MEGA INC.",
+      "null_qty": 19.729,
+      "warehouse_company": "SM TANZA - BEBANG MEGA INC."
+    },
+    {
+      "item_code": "FG003",
+      "warehouse": "SM TAYTAY - DAY ONES FOOD AND DRINK ESTABLISHMENTS CORP.",
+      "null_qty": 19.675,
+      "warehouse_company": "SM TAYTAY - DAY ONES FOOD AND DRINK ESTABLISHMENTS CORP."
+    },
+    {
+      "item_code": "FG006",
+      "warehouse": "SM CALOOCAN - TAJ FOOD CORP.",
+      "null_qty": 19.617,
+      "warehouse_company": "SM CALOOCAN - TAJ FOOD CORP."
+    },
+    {
+      "item_code": "FG013",
+      "warehouse": "MEGAWIDE PITX - BEBANG PITX INC.",
+      "null_qty": 19.604,
+      "warehouse_company": "MEGAWIDE PITX - BEBANG PITX INC."
+    },
+    {
+      "item_code": "FG003",
+      "warehouse": "SM STA. ROSA - SWEET HARMONY FOOD CORP.",
+      "null_qty": 19.5,
+      "warehouse_company": "SM STA. ROSA - SWEET HARMONY FOOD CORP."
+    },
+    {
+      "item_code": "FG016",
+      "warehouse": "SM NORTH EDSA - BEBANG NORTH EDSA INC.",
+      "null_qty": 19.4,
+      "warehouse_company": "SM NORTH EDSA - BEBANG NORTH EDSA INC."
+    },
+    {
+      "item_code": "FG002-A",
+      "warehouse": "AYALA MARKET MARKET - BEBANG MARKET MARKET INC.",
+      "null_qty": 19.374,
+      "warehouse_company": "AYALA MARKET MARKET - BEBANG MARKET MARKET INC."
+    },
+    {
+      "item_code": "FG003",
+      "warehouse": "ROBINSONS GALLERIA SOUTH - TUNGSTEN CAPITAL HOLDINGS OPC",
+      "null_qty": 19.35,
+      "warehouse_company": "ROBINSONS GALLERIA SOUTH - TUNGSTEN CAPITAL HOLDINGS OPC"
+    },
+    {
+      "item_code": "FG019",
+      "warehouse": "AYALA UP TOWN CENTER - BEBANG UP TOWN CENTER INC.",
+      "null_qty": 19.069,
+      "warehouse_company": "AYALA UP TOWN CENTER - BEBANG UP TOWN CENTER INC."
+    },
+    {
+      "item_code": "FG018",
+      "warehouse": "AYALA SOLENAD - HFFM SOLENAD FOOD SERVICES INC.",
+      "null_qty": 18.993,
+      "warehouse_company": "AYALA SOLENAD - HFFM SOLENAD FOOD SERVICES INC."
+    },
+    {
+      "item_code": "FG009",
+      "warehouse": "Greenhills Ortigas - BEIFRANCHISE FOOD OPC",
+      "null_qty": 18.969,
+      "warehouse_company": null
+    },
+    {
+      "item_code": "FG016",
+      "warehouse": "SM CLARK - RED TALDAWA FOODS OPC",
+      "null_qty": 18.894,
+      "warehouse_company": "SM CLARK - RED TALDAWA FOODS OPC"
+    },
+    {
+      "item_code": "FG006",
+      "warehouse": "SM NORTH EDSA - BEBANG NORTH EDSA INC.",
+      "null_qty": 18.798,
+      "warehouse_company": "SM NORTH EDSA - BEBANG NORTH EDSA INC."
+    },
+    {
+      "item_code": "FG016",
+      "warehouse": "AYALA SOLENAD - HFFM SOLENAD FOOD SERVICES INC.",
+      "null_qty": 18.638,
+      "warehouse_company": "AYALA SOLENAD - HFFM SOLENAD FOOD SERVICES INC."
+    },
+    {
+      "item_code": "FG019",
+      "warehouse": "EVER COMMONWEALTH - DLS DESSERT CRAFT INC.",
+      "null_qty": 18.308,
+      "warehouse_company": "EVER COMMONWEALTH - DLS DESSERT CRAFT INC."
+    },
+    {
+      "item_code": "FG006",
+      "warehouse": "SM TAYTAY - DAY ONES FOOD AND DRINK ESTABLISHMENTS CORP.",
+      "null_qty": 18.268,
+      "warehouse_company": "SM TAYTAY - DAY ONES FOOD AND DRINK ESTABLISHMENTS CORP."
+    },
+    {
+      "item_code": "FG005",
+      "warehouse": "SM CALOOCAN - TAJ FOOD CORP.",
+      "null_qty": 18.048,
+      "warehouse_company": "SM CALOOCAN - TAJ FOOD CORP."
+    },
+    {
+      "item_code": "FG005",
+      "warehouse": "BF HOMES - BEBANG BF HOMES INC.",
+      "null_qty": 17.946,
+      "warehouse_company": "BF HOMES - BEBANG BF HOMES INC."
+    },
+    {
+      "item_code": "FG018",
+      "warehouse": "SM TAYTAY - DAY ONES FOOD AND DRINK ESTABLISHMENTS CORP.",
+      "null_qty": 17.806,
+      "warehouse_company": "SM TAYTAY - DAY ONES FOOD AND DRINK ESTABLISHMENTS CORP."
+    },
+    {
+      "item_code": "FG013",
+      "warehouse": "THE TERMINAL - BEBANG STARMALL ALABANG INC.",
+      "null_qty": 17.706,
+      "warehouse_company": "THE TERMINAL - BEBANG STARMALL ALABANG INC."
+    },
+    {
+      "item_code": "FG004",
+      "warehouse": "SM MARIKINA - BEBANG SM MARIKINA INC.",
+      "null_qty": 17.595,
+      "warehouse_company": "SM MARIKINA - BEBANG SM MARIKINA INC."
+    },
+    {
+      "item_code": "FG018",
+      "warehouse": "ROBINSONS GALLERIA SOUTH - TUNGSTEN CAPITAL HOLDINGS OPC",
+      "null_qty": 17.471,
+      "warehouse_company": "ROBINSONS GALLERIA SOUTH - TUNGSTEN CAPITAL HOLDINGS OPC"
+    },
+    {
+      "item_code": "FG005",
+      "warehouse": "SM MARILAO - BEBANG MARILAO INC.",
+      "null_qty": 17.3971,
+      "warehouse_company": "SM MARILAO - BEBANG MARILAO INC."
+    },
+    {
+      "item_code": "FG019",
+      "warehouse": "ROBINSONS GALLERIA SOUTH - TUNGSTEN CAPITAL HOLDINGS OPC",
+      "null_qty": 17.241,
+      "warehouse_company": "ROBINSONS GALLERIA SOUTH - TUNGSTEN CAPITAL HOLDINGS OPC"
+    },
+    {
+      "item_code": "FG009",
+      "warehouse": "MEGAWIDE PITX - BEBANG PITX INC.",
+      "null_qty": 16.9065,
+      "warehouse_company": "MEGAWIDE PITX - BEBANG PITX INC."
+    },
+    {
+      "item_code": "FG006",
+      "warehouse": "AYALA SOLENAD - HFFM SOLENAD FOOD SERVICES INC.",
+      "null_qty": 16.796,
+      "warehouse_company": "AYALA SOLENAD - HFFM SOLENAD FOOD SERVICES INC."
+    },
+    {
+      "item_code": "FG002-A",
+      "warehouse": "THE GRID ROCKWELL - TASTECARTEL CORP.",
+      "null_qty": 16.7283,
+      "warehouse_company": "THE GRID ROCKWELL - TASTECARTEL CORP."
+    },
+    {
+      "item_code": "FG003",
+      "warehouse": "EVER COMMONWEALTH - DLS DESSERT CRAFT INC.",
+      "null_qty": 16.59,
+      "warehouse_company": "EVER COMMONWEALTH - DLS DESSERT CRAFT INC."
+    },
+    {
+      "item_code": "FG007",
+      "warehouse": "SM STA. ROSA - SWEET HARMONY FOOD CORP.",
+      "null_qty": 16.483,
+      "warehouse_company": "SM STA. ROSA - SWEET HARMONY FOOD CORP."
+    },
+    {
+      "item_code": "FG019",
+      "warehouse": "SM GRAND CENTRAL - BEBANG GRAND CENTRAL INC.",
+      "null_qty": 16.45,
+      "warehouse_company": "SM GRAND CENTRAL - BEBANG GRAND CENTRAL INC."
+    },
+    {
+      "item_code": "FG012",
+      "warehouse": "THE TERMINAL - BEBANG STARMALL ALABANG INC.",
+      "null_qty": 16.431,
+      "warehouse_company": "THE TERMINAL - BEBANG STARMALL ALABANG INC."
+    },
+    {
+      "item_code": "FG015",
+      "warehouse": "SM TAYTAY - DAY ONES FOOD AND DRINK ESTABLISHMENTS CORP.",
+      "null_qty": 16.426,
+      "warehouse_company": "SM TAYTAY - DAY ONES FOOD AND DRINK ESTABLISHMENTS CORP."
+    },
+    {
+      "item_code": "FG013",
+      "warehouse": "SM PULILAN - BEBANG SMM INC.",
+      "null_qty": 16.341,
+      "warehouse_company": "SM PULILAN - BEBANG SMM INC."
+    },
+    {
+      "item_code": "FG019",
+      "warehouse": "SM BICUTAN - BEBANG SM BICUTAN INC.",
+      "null_qty": 16.231,
+      "warehouse_company": "SM BICUTAN - BEBANG SM BICUTAN INC."
+    },
+    {
+      "item_code": "FG003",
+      "warehouse": "THE GRID ROCKWELL - TASTECARTEL CORP.",
+      "null_qty": 15.9994,
+      "warehouse_company": "THE GRID ROCKWELL - TASTECARTEL CORP."
+    },
+    {
+      "item_code": "FG019",
+      "warehouse": "SM TAYTAY - DAY ONES FOOD AND DRINK ESTABLISHMENTS CORP.",
+      "null_qty": 15.978,
+      "warehouse_company": "SM TAYTAY - DAY ONES FOOD AND DRINK ESTABLISHMENTS CORP."
+    },
+    {
+      "item_code": "FG007",
+      "warehouse": "SM TAYTAY - DAY ONES FOOD AND DRINK ESTABLISHMENTS CORP.",
+      "null_qty": 15.937,
+      "warehouse_company": "SM TAYTAY - DAY ONES FOOD AND DRINK ESTABLISHMENTS CORP."
+    },
+    {
+      "item_code": "FG007",
+      "warehouse": "AYALA SOLENAD - HFFM SOLENAD FOOD SERVICES INC.",
+      "null_qty": 15.922,
+      "warehouse_company": "AYALA SOLENAD - HFFM SOLENAD FOOD SERVICES INC."
+    },
+    {
+      "item_code": "FG017",
+      "warehouse": "ARANETA GATEWAY - TUNGSTEN CAPITAL HOLDINGS OPC",
+      "null_qty": 15.9115,
+      "warehouse_company": "ARANETA GATEWAY - TUNGSTEN CAPITAL HOLDINGS OPC"
+    },
+    {
+      "item_code": "FG002-A",
+      "warehouse": "FESTIVAL MALL ALABANG - BEBANG FESTIVAL INC.",
+      "null_qty": 15.894,
+      "warehouse_company": "FESTIVAL MALL ALABANG - BEBANG FESTIVAL INC."
+    },
+    {
+      "item_code": "FG016",
+      "warehouse": "EVER COMMONWEALTH - DLS DESSERT CRAFT INC.",
+      "null_qty": 15.826,
+      "warehouse_company": "EVER COMMONWEALTH - DLS DESSERT CRAFT INC."
+    },
+    {
+      "item_code": "FG005",
+      "warehouse": "LUCKY CHINATOWN - BEBANG LCT INC.",
+      "null_qty": 15.6105,
+      "warehouse_company": "LUCKY CHINATOWN - BEBANG LCT INC."
+    },
+    {
+      "item_code": "FG018",
+      "warehouse": "LUCKY CHINATOWN - BEBANG LCT INC.",
+      "null_qty": 15.5123,
+      "warehouse_company": "LUCKY CHINATOWN - BEBANG LCT INC."
+    },
+    {
+      "item_code": "FG018",
+      "warehouse": "SM CLARK - RED TALDAWA FOODS OPC",
+      "null_qty": 15.478,
+      "warehouse_company": "SM CLARK - RED TALDAWA FOODS OPC"
+    },
+    {
+      "item_code": "FG016",
+      "warehouse": "SM CALOOCAN - TAJ FOOD CORP.",
+      "null_qty": 15.429,
+      "warehouse_company": "SM CALOOCAN - TAJ FOOD CORP."
+    },
+    {
+      "item_code": "FG013",
+      "warehouse": "SM MALL OF ASIA - BEBANG SMOA INC.",
+      "null_qty": 15.323,
+      "warehouse_company": "SM MALL OF ASIA - BEBANG SMOA INC."
+    },
+    {
+      "item_code": "FG016",
+      "warehouse": "SM GRAND CENTRAL - BEBANG GRAND CENTRAL INC.",
+      "null_qty": 15.131,
+      "warehouse_company": "SM GRAND CENTRAL - BEBANG GRAND CENTRAL INC."
+    },
+    {
+      "item_code": "FG006",
+      "warehouse": "EVER COMMONWEALTH - DLS DESSERT CRAFT INC.",
+      "null_qty": 15.031,
+      "warehouse_company": "EVER COMMONWEALTH - DLS DESSERT CRAFT INC."
+    },
+    {
+      "item_code": "FG012",
+      "warehouse": "CTTM TOMAS MORATO - B CUBED VENTURES CORP.",
+      "null_qty": 14.991,
+      "warehouse_company": "CTTM TOMAS MORATO - B CUBED VENTURES CORP."
+    },
+    {
+      "item_code": "FG019",
+      "warehouse": "LUCKY CHINATOWN - BEBANG LCT INC.",
+      "null_qty": 14.9774,
+      "warehouse_company": "LUCKY CHINATOWN - BEBANG LCT INC."
+    },
+    {
+      "item_code": "FG007",
+      "warehouse": "SM SAN JOSE DEL MONTE - JL TRADE OPC",
+      "null_qty": 14.959,
+      "warehouse_company": "SM SAN JOSE DEL MONTE - JL TRADE OPC"
+    },
+    {
+      "item_code": "FG016",
+      "warehouse": "SM STA. ROSA - SWEET HARMONY FOOD CORP.",
+      "null_qty": 14.897,
+      "warehouse_company": "SM STA. ROSA - SWEET HARMONY FOOD CORP."
+    },
+    {
+      "item_code": "FG007",
+      "warehouse": "SM CLARK - RED TALDAWA FOODS OPC",
+      "null_qty": 14.823,
+      "warehouse_company": "SM CLARK - RED TALDAWA FOODS OPC"
+    },
+    {
+      "item_code": "FG013",
+      "warehouse": "SM BICUTAN - BEBANG SM BICUTAN INC.",
+      "null_qty": 14.803,
+      "warehouse_company": "SM BICUTAN - BEBANG SM BICUTAN INC."
+    },
+    {
+      "item_code": "FG002-A",
+      "warehouse": "SM BICUTAN - BEBANG SM BICUTAN INC.",
+      "null_qty": 14.695,
+      "warehouse_company": "SM BICUTAN - BEBANG SM BICUTAN INC."
+    },
+    {
+      "item_code": "FG012",
+      "warehouse": "MEGAWIDE PITX - BEBANG PITX INC.",
+      "null_qty": 14.6445,
+      "warehouse_company": "MEGAWIDE PITX - BEBANG PITX INC."
+    },
+    {
+      "item_code": "FG013",
+      "warehouse": "FESTIVAL MALL ALABANG - BEBANG FESTIVAL INC.",
+      "null_qty": 14.578,
+      "warehouse_company": "FESTIVAL MALL ALABANG - BEBANG FESTIVAL INC."
+    },
+    {
+      "item_code": "FG017",
+      "warehouse": "SM STA. ROSA - SWEET HARMONY FOOD CORP.",
+      "null_qty": 14.517,
+      "warehouse_company": "SM STA. ROSA - SWEET HARMONY FOOD CORP."
+    },
+    {
+      "item_code": "FG016",
+      "warehouse": "LUCKY CHINATOWN - BEBANG LCT INC.",
+      "null_qty": 14.4931,
+      "warehouse_company": "LUCKY CHINATOWN - BEBANG LCT INC."
+    },
+    {
+      "item_code": "FG017",
+      "warehouse": "SM MARIKINA - BEBANG SM MARIKINA INC.",
+      "null_qty": 14.4494,
+      "warehouse_company": "SM MARIKINA - BEBANG SM MARIKINA INC."
+    },
+    {
+      "item_code": "FG012",
+      "warehouse": "SM GRAND CENTRAL - BEBANG GRAND CENTRAL INC.",
+      "null_qty": 14.278,
+      "warehouse_company": "SM GRAND CENTRAL - BEBANG GRAND CENTRAL INC."
+    },
+    {
+      "item_code": "FG005",
+      "warehouse": "SM TAYTAY - DAY ONES FOOD AND DRINK ESTABLISHMENTS CORP.",
+      "null_qty": 14.246,
+      "warehouse_company": "SM TAYTAY - DAY ONES FOOD AND DRINK ESTABLISHMENTS CORP."
+    },
+    {
+      "item_code": "FG012",
+      "warehouse": "AYALA EVO - BEBANG MEGA INC.",
+      "null_qty": 14.224,
+      "warehouse_company": "BEBANG MEGA INC."
+    },
+    {
+      "item_code": "FG019",
+      "warehouse": "THE GRID ROCKWELL - TASTECARTEL CORP.",
+      "null_qty": 14.2233,
+      "warehouse_company": "THE GRID ROCKWELL - TASTECARTEL CORP."
+    },
+    {
+      "item_code": "FG004",
+      "warehouse": "CTTM TOMAS MORATO - B CUBED VENTURES CORP.",
+      "null_qty": 14.222,
+      "warehouse_company": "CTTM TOMAS MORATO - B CUBED VENTURES CORP."
+    },
+    {
+      "item_code": "FG019",
+      "warehouse": "SM SANGANDAAN - TUNGSTEN CAPITAL HOLDINGS OPC",
+      "null_qty": 14.2094,
+      "warehouse_company": "SM SANGANDAAN - TUNGSTEN CAPITAL HOLDINGS OPC"
+    },
+    {
+      "item_code": "FG016",
+      "warehouse": "MEGAWORLD VENICE GRAND CANAL - BEBANG VENICE GRAND CANAL INC.",
+      "null_qty": 14.207,
+      "warehouse_company": "MEGAWORLD VENICE GRAND CANAL - BEBANG VENICE GRAND CANAL INC."
+    },
+    {
+      "item_code": "FG013",
+      "warehouse": "SM SANGANDAAN - TUNGSTEN CAPITAL HOLDINGS OPC",
+      "null_qty": 14.043,
+      "warehouse_company": "SM SANGANDAAN - TUNGSTEN CAPITAL HOLDINGS OPC"
+    },
+    {
+      "item_code": "FG019",
+      "warehouse": "SM MALL OF ASIA - BEBANG SMOA INC.",
+      "null_qty": 14.033,
+      "warehouse_company": "SM MALL OF ASIA - BEBANG SMOA INC."
+    },
+    {
+      "item_code": "FG007",
+      "warehouse": "SM MARILAO - BEBANG MARILAO INC.",
+      "null_qty": 13.914,
+      "warehouse_company": "SM MARILAO - BEBANG MARILAO INC."
+    },
+    {
+      "item_code": "FG006",
+      "warehouse": "SM SAN JOSE DEL MONTE - JL TRADE OPC",
+      "null_qty": 13.908,
+      "warehouse_company": "SM SAN JOSE DEL MONTE - JL TRADE OPC"
+    },
+    {
+      "item_code": "FG003",
+      "warehouse": "AYALA SOLENAD - HFFM SOLENAD FOOD SERVICES INC.",
+      "null_qty": 13.746,
+      "warehouse_company": "AYALA SOLENAD - HFFM SOLENAD FOOD SERVICES INC."
+    },
+    {
+      "item_code": "FG003",
+      "warehouse": "SM NORTH EDSA - BEBANG NORTH EDSA INC.",
+      "null_qty": 13.678,
+      "warehouse_company": "SM NORTH EDSA - BEBANG NORTH EDSA INC."
+    },
+    {
+      "item_code": "FG002-A",
+      "warehouse": "AYALA EVO - BEBANG MEGA INC.",
+      "null_qty": 13.641,
+      "warehouse_company": "BEBANG MEGA INC."
+    },
+    {
+      "item_code": "FG002-A",
+      "warehouse": "SM PULILAN - BEBANG SMM INC.",
+      "null_qty": 13.632,
+      "warehouse_company": "SM PULILAN - BEBANG SMM INC."
+    },
+    {
+      "item_code": "FG016",
+      "warehouse": "AYALA VERMOSA - BEBANG MEGA INC.",
+      "null_qty": 13.564,
+      "warehouse_company": "AYALA VERMOSA - BEBANG MEGA INC."
+    },
+    {
+      "item_code": "FG017",
+      "warehouse": "ROBINSONS GALLERIA SOUTH - TUNGSTEN CAPITAL HOLDINGS OPC",
+      "null_qty": 13.532,
+      "warehouse_company": "ROBINSONS GALLERIA SOUTH - TUNGSTEN CAPITAL HOLDINGS OPC"
+    },
+    {
+      "item_code": "FG018",
+      "warehouse": "Greenhills Ortigas - BEIFRANCHISE FOOD OPC",
+      "null_qty": 13.427,
+      "warehouse_company": null
+    },
+    {
+      "item_code": "FG018",
+      "warehouse": "FESTIVAL MALL ALABANG - BEBANG FESTIVAL INC.",
+      "null_qty": 13.273,
+      "warehouse_company": "FESTIVAL MALL ALABANG - BEBANG FESTIVAL INC."
+    },
+    {
+      "item_code": "FG016",
+      "warehouse": "SM SAN JOSE DEL MONTE - JL TRADE OPC",
+      "null_qty": 13.221,
+      "warehouse_company": "SM SAN JOSE DEL MONTE - JL TRADE OPC"
+    },
+    {
+      "item_code": "FG016",
+      "warehouse": "SM MARIKINA - BEBANG SM MARIKINA INC.",
+      "null_qty": 13.1934,
+      "warehouse_company": "SM MARIKINA - BEBANG SM MARIKINA INC."
+    },
+    {
+      "item_code": "FG003",
+      "warehouse": "Greenhills Ortigas - BEIFRANCHISE FOOD OPC",
+      "null_qty": 13.162,
+      "warehouse_company": null
+    },
+    {
+      "item_code": "FG004",
+      "warehouse": "SM GRAND CENTRAL - BEBANG GRAND CENTRAL INC.",
+      "null_qty": 13.008,
+      "warehouse_company": "SM GRAND CENTRAL - BEBANG GRAND CENTRAL INC."
+    },
+    {
+      "item_code": "FG018",
+      "warehouse": "BF HOMES - BEBANG BF HOMES INC.",
+      "null_qty": 12.954,
+      "warehouse_company": "BF HOMES - BEBANG BF HOMES INC."
+    },
+    {
+      "item_code": "FG019",
+      "warehouse": "SM MARILAO - BEBANG MARILAO INC.",
+      "null_qty": 12.8555,
+      "warehouse_company": "SM MARILAO - BEBANG MARILAO INC."
+    },
+    {
+      "item_code": "FG019",
+      "warehouse": "SM VALENZUELA - BEBANG SMV INC.",
+      "null_qty": 12.79,
+      "warehouse_company": "SM VALENZUELA - BEBANG SMV INC."
+    },
+    {
+      "item_code": "FG003",
+      "warehouse": "FESTIVAL MALL ALABANG - BEBANG FESTIVAL INC.",
+      "null_qty": 12.782,
+      "warehouse_company": "FESTIVAL MALL ALABANG - BEBANG FESTIVAL INC."
+    },
+    {
+      "item_code": "FG019",
+      "warehouse": "SM NORTH EDSA - BEBANG NORTH EDSA INC.",
+      "null_qty": 12.769,
+      "warehouse_company": "SM NORTH EDSA - BEBANG NORTH EDSA INC."
+    },
+    {
+      "item_code": "FG019",
+      "warehouse": "MEGAWORLD VENICE GRAND CANAL - BEBANG VENICE GRAND CANAL INC.",
+      "null_qty": 12.719,
+      "warehouse_company": "MEGAWORLD VENICE GRAND CANAL - BEBANG VENICE GRAND CANAL INC."
+    },
+    {
+      "item_code": "FG018",
+      "warehouse": "SM MARIKINA - BEBANG SM MARIKINA INC.",
+      "null_qty": 12.6214,
+      "warehouse_company": "SM MARIKINA - BEBANG SM MARIKINA INC."
+    },
+    {
+      "item_code": "FG004",
+      "warehouse": "AYALA SOLENAD - HFFM SOLENAD FOOD SERVICES INC.",
+      "null_qty": 12.593,
+      "warehouse_company": "AYALA SOLENAD - HFFM SOLENAD FOOD SERVICES INC."
+    },
+    {
+      "item_code": "FG018",
+      "warehouse": "THE GRID ROCKWELL - TASTECARTEL CORP.",
+      "null_qty": 12.5752,
+      "warehouse_company": "THE GRID ROCKWELL - TASTECARTEL CORP."
+    },
+    {
+      "item_code": "FG018",
+      "warehouse": "SM BICUTAN - BEBANG SM BICUTAN INC.",
+      "null_qty": 12.52,
+      "warehouse_company": "SM BICUTAN - BEBANG SM BICUTAN INC."
+    },
+    {
+      "item_code": "FG018",
+      "warehouse": "AYALA VERMOSA - BEBANG MEGA INC.",
+      "null_qty": 12.494,
+      "warehouse_company": "AYALA VERMOSA - BEBANG MEGA INC."
+    },
+    {
+      "item_code": "FG005",
+      "warehouse": "AYALA EVO - BEBANG MEGA INC.",
+      "null_qty": 12.404,
+      "warehouse_company": "BEBANG MEGA INC."
+    },
+    {
+      "item_code": "FG018",
+      "warehouse": "MEGAWORLD VENICE GRAND CANAL - BEBANG VENICE GRAND CANAL INC.",
+      "null_qty": 12.383,
+      "warehouse_company": "MEGAWORLD VENICE GRAND CANAL - BEBANG VENICE GRAND CANAL INC."
+    },
+    {
+      "item_code": "FG002-A",
+      "warehouse": "MEGAWORLD VENICE GRAND CANAL - BEBANG VENICE GRAND CANAL INC.",
+      "null_qty": 12.295,
+      "warehouse_company": "MEGAWORLD VENICE GRAND CANAL - BEBANG VENICE GRAND CANAL INC."
+    },
+    {
+      "item_code": "FG006",
+      "warehouse": "SM CLARK - RED TALDAWA FOODS OPC",
+      "null_qty": 12.28,
+      "warehouse_company": "SM CLARK - RED TALDAWA FOODS OPC"
+    },
+    {
+      "item_code": "FG007",
+      "warehouse": "SM EAST ORTIGAS - BEBANG SMEO INC.",
+      "null_qty": 12.25,
+      "warehouse_company": "SM EAST ORTIGAS - BEBANG SMEO INC."
+    },
+    {
+      "item_code": "FG019",
+      "warehouse": "ARANETA GATEWAY - TUNGSTEN CAPITAL HOLDINGS OPC",
+      "null_qty": 12.2031,
+      "warehouse_company": "ARANETA GATEWAY - TUNGSTEN CAPITAL HOLDINGS OPC"
+    },
+    {
+      "item_code": "FG018",
+      "warehouse": "SM CALOOCAN - TAJ FOOD CORP.",
+      "null_qty": 12.166,
+      "warehouse_company": "SM CALOOCAN - TAJ FOOD CORP."
+    },
+    {
+      "item_code": "FG003",
+      "warehouse": "AYALA UP TOWN CENTER - BEBANG UP TOWN CENTER INC.",
+      "null_qty": 12.079,
+      "warehouse_company": "AYALA UP TOWN CENTER - BEBANG UP TOWN CENTER INC."
+    },
+    {
+      "item_code": "FG007",
+      "warehouse": "BF HOMES - BEBANG BF HOMES INC.",
+      "null_qty": 12.073,
+      "warehouse_company": "BF HOMES - BEBANG BF HOMES INC."
+    },
+    {
+      "item_code": "FG012",
+      "warehouse": "SM PULILAN - BEBANG SMM INC.",
+      "null_qty": 12.035,
+      "warehouse_company": "SM PULILAN - BEBANG SMM INC."
+    },
+    {
+      "item_code": "FG018",
+      "warehouse": "AYALA UP TOWN CENTER - BEBANG UP TOWN CENTER INC.",
+      "null_qty": 12.027,
+      "warehouse_company": "AYALA UP TOWN CENTER - BEBANG UP TOWN CENTER INC."
+    },
+    {
+      "item_code": "FG016",
+      "warehouse": "AYALA FAIRVIEW TERRACES - BEBANG FT INC.",
+      "null_qty": 11.983,
+      "warehouse_company": "AYALA FAIRVIEW TERRACES - BEBANG FT INC."
+    },
+    {
+      "item_code": "FG015",
+      "warehouse": "SM NORTH EDSA - BEBANG NORTH EDSA INC.",
+      "null_qty": 11.889,
+      "warehouse_company": "SM NORTH EDSA - BEBANG NORTH EDSA INC."
+    },
+    {
+      "item_code": "FG006",
+      "warehouse": "SM MARILAO - BEBANG MARILAO INC.",
+      "null_qty": 11.8809,
+      "warehouse_company": "SM MARILAO - BEBANG MARILAO INC."
+    },
+    {
+      "item_code": "FG005",
+      "warehouse": "SM CLARK - RED TALDAWA FOODS OPC",
+      "null_qty": 11.823,
+      "warehouse_company": "SM CLARK - RED TALDAWA FOODS OPC"
+    },
+    {
+      "item_code": "FG015",
+      "warehouse": "SM STA. ROSA - SWEET HARMONY FOOD CORP.",
+      "null_qty": 11.821,
+      "warehouse_company": "SM STA. ROSA - SWEET HARMONY FOOD CORP."
+    },
+    {
+      "item_code": "FG018",
+      "warehouse": "SM NORTH EDSA - BEBANG NORTH EDSA INC.",
+      "null_qty": 11.769,
+      "warehouse_company": "SM NORTH EDSA - BEBANG NORTH EDSA INC."
+    },
+    {
+      "item_code": "FG013",
+      "warehouse": "SM TANZA - BEBANG MEGA INC.",
+      "null_qty": 11.706,
+      "warehouse_company": "SM TANZA - BEBANG MEGA INC."
+    },
+    {
+      "item_code": "FG005",
+      "warehouse": "ROBINSONS GALLERIA SOUTH - TUNGSTEN CAPITAL HOLDINGS OPC",
+      "null_qty": 11.691,
+      "warehouse_company": "ROBINSONS GALLERIA SOUTH - TUNGSTEN CAPITAL HOLDINGS OPC"
+    },
+    {
+      "item_code": "FG005",
+      "warehouse": "D'VERDE CALAMBA - TAJ FOOD CORP.",
+      "null_qty": 11.599,
+      "warehouse_company": "D'VERDE CALAMBA - TAJ FOOD CORP."
+    },
+    {
+      "item_code": "FG007",
+      "warehouse": "SM NORTH EDSA - BEBANG NORTH EDSA INC.",
+      "null_qty": 11.587,
+      "warehouse_company": "SM NORTH EDSA - BEBANG NORTH EDSA INC."
+    },
+    {
+      "item_code": "FG006",
+      "warehouse": "NAIA T3 - HALO-HALO TERMINAL FOOD CORP.",
+      "null_qty": 11.531,
+      "warehouse_company": "NAIA T3 - HALO-HALO TERMINAL FOOD CORP."
+    },
+    {
+      "item_code": "FG018",
+      "warehouse": "SM MARILAO - BEBANG MARILAO INC.",
+      "null_qty": 11.4905,
+      "warehouse_company": "SM MARILAO - BEBANG MARILAO INC."
+    },
+    {
+      "item_code": "FG017",
+      "warehouse": "SM TAYTAY - DAY ONES FOOD AND DRINK ESTABLISHMENTS CORP.",
+      "null_qty": 11.467,
+      "warehouse_company": "SM TAYTAY - DAY ONES FOOD AND DRINK ESTABLISHMENTS CORP."
+    },
+    {
+      "item_code": "FG005",
+      "warehouse": "MEGAWIDE PITX - BEBANG PITX INC.",
+      "null_qty": 11.4247,
+      "warehouse_company": "MEGAWIDE PITX - BEBANG PITX INC."
+    },
+    {
+      "item_code": "FG015",
+      "warehouse": "AYALA FAIRVIEW TERRACES - BEBANG FT INC.",
+      "null_qty": 11.413,
+      "warehouse_company": "AYALA FAIRVIEW TERRACES - BEBANG FT INC."
+    },
+    {
+      "item_code": "FG007",
+      "warehouse": "SM CALOOCAN - TAJ FOOD CORP.",
+      "null_qty": 11.41,
+      "warehouse_company": "SM CALOOCAN - TAJ FOOD CORP."
+    },
+    {
+      "item_code": "FG019",
+      "warehouse": "SM EAST ORTIGAS - BEBANG SMEO INC.",
+      "null_qty": 11.393,
+      "warehouse_company": "SM EAST ORTIGAS - BEBANG SMEO INC."
+    },
+    {
+      "item_code": "FG013",
+      "warehouse": "AYALA EVO - BEBANG MEGA INC.",
+      "null_qty": 11.357,
+      "warehouse_company": "BEBANG MEGA INC."
+    },
+    {
+      "item_code": "FG019",
+      "warehouse": "BF HOMES - BEBANG BF HOMES INC.",
+      "null_qty": 11.318,
+      "warehouse_company": "BF HOMES - BEBANG BF HOMES INC."
+    },
+    {
+      "item_code": "FG015",
+      "warehouse": "SM MARIKINA - BEBANG SM MARIKINA INC.",
+      "null_qty": 11.2884,
+      "warehouse_company": "SM MARIKINA - BEBANG SM MARIKINA INC."
+    },
+    {
+      "item_code": "FG002-A",
+      "warehouse": "THE TERMINAL - BEBANG STARMALL ALABANG INC.",
+      "null_qty": 11.273,
+      "warehouse_company": "THE TERMINAL - BEBANG STARMALL ALABANG INC."
+    },
+    {
+      "item_code": "FG005",
+      "warehouse": "SM TANZA - BEBANG MEGA INC.",
+      "null_qty": 11.155,
+      "warehouse_company": "SM TANZA - BEBANG MEGA INC."
+    },
+    {
+      "item_code": "FG013",
+      "warehouse": "AYALA VERMOSA - BEBANG MEGA INC.",
+      "null_qty": 11.139,
+      "warehouse_company": "AYALA VERMOSA - BEBANG MEGA INC."
+    },
+    {
+      "item_code": "FG016",
+      "warehouse": "SM VALENZUELA - BEBANG SMV INC.",
+      "null_qty": 11.067,
+      "warehouse_company": "SM VALENZUELA - BEBANG SMV INC."
+    },
+    {
+      "item_code": "FG003",
+      "warehouse": "AYALA FAIRVIEW TERRACES - BEBANG FT INC.",
+      "null_qty": 11.0532,
+      "warehouse_company": "AYALA FAIRVIEW TERRACES - BEBANG FT INC."
+    },
+    {
+      "item_code": "FG012",
+      "warehouse": "SM TANZA - BEBANG MEGA INC.",
+      "null_qty": 10.995,
+      "warehouse_company": "SM TANZA - BEBANG MEGA INC."
+    },
+    {
+      "item_code": "FG018",
+      "warehouse": "SM GRAND CENTRAL - BEBANG GRAND CENTRAL INC.",
+      "null_qty": 10.988,
+      "warehouse_company": "SM GRAND CENTRAL - BEBANG GRAND CENTRAL INC."
+    },
+    {
+      "item_code": "FG019",
+      "warehouse": "FESTIVAL MALL ALABANG - BEBANG FESTIVAL INC.",
+      "null_qty": 10.977,
+      "warehouse_company": "FESTIVAL MALL ALABANG - BEBANG FESTIVAL INC."
+    },
+    {
+      "item_code": "FG007",
+      "warehouse": "SM MARIKINA - BEBANG SM MARIKINA INC.",
+      "null_qty": 10.855,
+      "warehouse_company": "SM MARIKINA - BEBANG SM MARIKINA INC."
+    },
+    {
+      "item_code": "FG016",
+      "warehouse": "SM MALL OF ASIA - BEBANG SMOA INC.",
+      "null_qty": 10.824,
+      "warehouse_company": "SM MALL OF ASIA - BEBANG SMOA INC."
+    },
+    {
+      "item_code": "FG005",
+      "warehouse": "SM SAN JOSE DEL MONTE - JL TRADE OPC",
+      "null_qty": 10.658,
+      "warehouse_company": "SM SAN JOSE DEL MONTE - JL TRADE OPC"
+    },
+    {
+      "item_code": "FG016",
+      "warehouse": "SM MARILAO - BEBANG MARILAO INC.",
+      "null_qty": 10.603,
+      "warehouse_company": "SM MARILAO - BEBANG MARILAO INC."
+    },
+    {
+      "item_code": "FG019",
+      "warehouse": "AYALA FAIRVIEW TERRACES - BEBANG FT INC.",
+      "null_qty": 10.452,
+      "warehouse_company": "AYALA FAIRVIEW TERRACES - BEBANG FT INC."
+    },
+    {
+      "item_code": "FG003",
+      "warehouse": "BF HOMES - BEBANG BF HOMES INC.",
+      "null_qty": 10.424,
+      "warehouse_company": "BF HOMES - BEBANG BF HOMES INC."
+    },
+    {
+      "item_code": "FG007",
+      "warehouse": "NAIA T3 - HALO-HALO TERMINAL FOOD CORP.",
+      "null_qty": 10.419,
+      "warehouse_company": "NAIA T3 - HALO-HALO TERMINAL FOOD CORP."
+    },
+    {
+      "item_code": "FG003",
+      "warehouse": "CTTM TOMAS MORATO - B CUBED VENTURES CORP.",
+      "null_qty": 10.378,
+      "warehouse_company": "CTTM TOMAS MORATO - B CUBED VENTURES CORP."
+    },
+    {
+      "item_code": "FG005",
+      "warehouse": "VISTA MALL TAGUIG - TRICERN FOOD CORP.",
+      "null_qty": 10.358,
+      "warehouse_company": "VISTA MALL TAGUIG - TRICERN FOOD CORP."
+    },
+    {
+      "item_code": "FG006",
+      "warehouse": "SM BICUTAN - BEBANG SM BICUTAN INC.",
+      "null_qty": 10.355,
+      "warehouse_company": "SM BICUTAN - BEBANG SM BICUTAN INC."
+    },
+    {
+      "item_code": "FG017",
+      "warehouse": "BF HOMES - BEBANG BF HOMES INC.",
+      "null_qty": 10.214,
+      "warehouse_company": "BF HOMES - BEBANG BF HOMES INC."
+    },
+    {
+      "item_code": "FG015",
+      "warehouse": "THE GRID ROCKWELL - TASTECARTEL CORP.",
+      "null_qty": 10.1741,
+      "warehouse_company": "THE GRID ROCKWELL - TASTECARTEL CORP."
+    },
+    {
+      "item_code": "FG015",
+      "warehouse": "FESTIVAL MALL ALABANG - BEBANG FESTIVAL INC.",
+      "null_qty": 10.164,
+      "warehouse_company": "FESTIVAL MALL ALABANG - BEBANG FESTIVAL INC."
+    },
+    {
+      "item_code": "FG017",
+      "warehouse": "AYALA SOLENAD - HFFM SOLENAD FOOD SERVICES INC.",
+      "null_qty": 10.072,
+      "warehouse_company": "AYALA SOLENAD - HFFM SOLENAD FOOD SERVICES INC."
+    },
+    {
+      "item_code": "FG004",
+      "warehouse": "SM SANGANDAAN - TUNGSTEN CAPITAL HOLDINGS OPC",
+      "null_qty": 10.0665,
+      "warehouse_company": "SM SANGANDAAN - TUNGSTEN CAPITAL HOLDINGS OPC"
+    },
+    {
+      "item_code": "FG007",
+      "warehouse": "SM SANGANDAAN - TUNGSTEN CAPITAL HOLDINGS OPC",
+      "null_qty": 10.034,
+      "warehouse_company": "SM SANGANDAAN - TUNGSTEN CAPITAL HOLDINGS OPC"
+    },
+    {
+      "item_code": "FG017",
+      "warehouse": "MEGAWORLD VENICE GRAND CANAL - BEBANG VENICE GRAND CANAL INC.",
+      "null_qty": 10.024,
+      "warehouse_company": "MEGAWORLD VENICE GRAND CANAL - BEBANG VENICE GRAND CANAL INC."
+    },
+    {
+      "item_code": "FG015",
+      "warehouse": "SM GRAND CENTRAL - BEBANG GRAND CENTRAL INC.",
+      "null_qty": 10.005,
+      "warehouse_company": "SM GRAND CENTRAL - BEBANG GRAND CENTRAL INC."
+    },
+    {
+      "item_code": "FG006",
+      "warehouse": "UP TOWN MALL BGC - DMD HOLDINGS INC.",
+      "null_qty": 10.0,
+      "warehouse_company": "UP TOWN MALL BGC - DMD HOLDINGS INC."
+    },
+    {
+      "item_code": "FG007",
+      "warehouse": "SM BICUTAN - BEBANG SM BICUTAN INC.",
+      "null_qty": 9.983,
+      "warehouse_company": "SM BICUTAN - BEBANG SM BICUTAN INC."
+    },
+    {
+      "item_code": "FG006",
+      "warehouse": "VISTA MALL TAGUIG - TRICERN FOOD CORP.",
+      "null_qty": 9.946,
+      "warehouse_company": "VISTA MALL TAGUIG - TRICERN FOOD CORP."
+    },
+    {
+      "item_code": "FG016",
+      "warehouse": "D'VERDE CALAMBA - TAJ FOOD CORP.",
+      "null_qty": 9.944,
+      "warehouse_company": "D'VERDE CALAMBA - TAJ FOOD CORP."
+    },
+    {
+      "item_code": "FG005",
+      "warehouse": "SM BICUTAN - BEBANG SM BICUTAN INC.",
+      "null_qty": 9.914,
+      "warehouse_company": "SM BICUTAN - BEBANG SM BICUTAN INC."
+    },
+    {
+      "item_code": "FG007",
+      "warehouse": "D'VERDE CALAMBA - TAJ FOOD CORP.",
+      "null_qty": 9.873,
+      "warehouse_company": "D'VERDE CALAMBA - TAJ FOOD CORP."
+    },
+    {
+      "item_code": "FG003",
+      "warehouse": "SM CLARK - RED TALDAWA FOODS OPC",
+      "null_qty": 9.844,
+      "warehouse_company": "SM CLARK - RED TALDAWA FOODS OPC"
+    },
+    {
+      "item_code": "FG005",
+      "warehouse": "AYALA MARKET MARKET - BEBANG MARKET MARKET INC.",
+      "null_qty": 9.815,
+      "warehouse_company": "AYALA MARKET MARKET - BEBANG MARKET MARKET INC."
+    },
+    {
+      "item_code": "FG009",
+      "warehouse": "AYALA VERMOSA - BEBANG MEGA INC.",
+      "null_qty": 9.812,
+      "warehouse_company": "AYALA VERMOSA - BEBANG MEGA INC."
+    },
+    {
+      "item_code": "FG006",
+      "warehouse": "SM MARIKINA - BEBANG SM MARIKINA INC.",
+      "null_qty": 9.762,
+      "warehouse_company": "SM MARIKINA - BEBANG SM MARIKINA INC."
+    },
+    {
+      "item_code": "FG007",
+      "warehouse": "ROBINSONS GALLERIA SOUTH - TUNGSTEN CAPITAL HOLDINGS OPC",
+      "null_qty": 9.715,
+      "warehouse_company": "ROBINSONS GALLERIA SOUTH - TUNGSTEN CAPITAL HOLDINGS OPC"
+    },
+    {
+      "item_code": "FG006",
+      "warehouse": "SM TANZA - BEBANG MEGA INC.",
+      "null_qty": 9.695,
+      "warehouse_company": "SM TANZA - BEBANG MEGA INC."
+    },
+    {
+      "item_code": "FG006",
+      "warehouse": "LUCKY CHINATOWN - BEBANG LCT INC.",
+      "null_qty": 9.6896,
+      "warehouse_company": "LUCKY CHINATOWN - BEBANG LCT INC."
+    },
+    {
+      "item_code": "FG016",
+      "warehouse": "AYALA EVO - BEBANG MEGA INC.",
+      "null_qty": 9.634,
+      "warehouse_company": "BEBANG MEGA INC."
+    },
+    {
+      "item_code": "FG003",
+      "warehouse": "SM SAN JOSE DEL MONTE - JL TRADE OPC",
+      "null_qty": 9.58,
+      "warehouse_company": "SM SAN JOSE DEL MONTE - JL TRADE OPC"
+    },
+    {
+      "item_code": "FG005",
+      "warehouse": "AYALA SOLENAD - HFFM SOLENAD FOOD SERVICES INC.",
+      "null_qty": 9.567,
+      "warehouse_company": "AYALA SOLENAD - HFFM SOLENAD FOOD SERVICES INC."
+    },
+    {
+      "item_code": "FG018",
+      "warehouse": "EVER COMMONWEALTH - DLS DESSERT CRAFT INC.",
+      "null_qty": 9.524,
+      "warehouse_company": "EVER COMMONWEALTH - DLS DESSERT CRAFT INC."
+    },
+    {
+      "item_code": "FG006",
+      "warehouse": "FESTIVAL MALL ALABANG - BEBANG FESTIVAL INC.",
+      "null_qty": 9.521,
+      "warehouse_company": "FESTIVAL MALL ALABANG - BEBANG FESTIVAL INC."
+    },
+    {
+      "item_code": "FG005",
+      "warehouse": "NAIA T3 - HALO-HALO TERMINAL FOOD CORP.",
+      "null_qty": 9.509,
+      "warehouse_company": "NAIA T3 - HALO-HALO TERMINAL FOOD CORP."
+    },
+    {
+      "item_code": "FG018",
+      "warehouse": "ARANETA GATEWAY - TUNGSTEN CAPITAL HOLDINGS OPC",
+      "null_qty": 9.4964,
+      "warehouse_company": "ARANETA GATEWAY - TUNGSTEN CAPITAL HOLDINGS OPC"
+    },
+    {
+      "item_code": "FG016",
+      "warehouse": "UP TOWN MALL BGC - DMD HOLDINGS INC.",
+      "null_qty": 9.493,
+      "warehouse_company": "UP TOWN MALL BGC - DMD HOLDINGS INC."
+    },
+    {
+      "item_code": "FG007",
+      "warehouse": "EVER COMMONWEALTH - DLS DESSERT CRAFT INC.",
+      "null_qty": 9.491,
+      "warehouse_company": "EVER COMMONWEALTH - DLS DESSERT CRAFT INC."
+    },
+    {
+      "item_code": "FG005",
+      "warehouse": "EVER COMMONWEALTH - DLS DESSERT CRAFT INC.",
+      "null_qty": 9.418,
+      "warehouse_company": "EVER COMMONWEALTH - DLS DESSERT CRAFT INC."
+    },
+    {
+      "item_code": "FG018",
+      "warehouse": "UP TOWN MALL BGC - DMD HOLDINGS INC.",
+      "null_qty": 9.398,
+      "warehouse_company": "UP TOWN MALL BGC - DMD HOLDINGS INC."
+    },
+    {
+      "item_code": "FG017",
+      "warehouse": "D'VERDE CALAMBA - TAJ FOOD CORP.",
+      "null_qty": 9.371,
+      "warehouse_company": "D'VERDE CALAMBA - TAJ FOOD CORP."
+    },
+    {
+      "item_code": "FG003",
+      "warehouse": "SM CALOOCAN - TAJ FOOD CORP.",
+      "null_qty": 9.33,
+      "warehouse_company": "SM CALOOCAN - TAJ FOOD CORP."
+    },
+    {
+      "item_code": "FG015",
+      "warehouse": "SM BICUTAN - BEBANG SM BICUTAN INC.",
+      "null_qty": 9.296,
+      "warehouse_company": "SM BICUTAN - BEBANG SM BICUTAN INC."
+    },
+    {
+      "item_code": "FG006",
+      "warehouse": "SM GRAND CENTRAL - BEBANG GRAND CENTRAL INC.",
+      "null_qty": 9.247,
+      "warehouse_company": "SM GRAND CENTRAL - BEBANG GRAND CENTRAL INC."
+    },
+    {
+      "item_code": "FG015",
+      "warehouse": "BF HOMES - BEBANG BF HOMES INC.",
+      "null_qty": 9.151,
+      "warehouse_company": "BF HOMES - BEBANG BF HOMES INC."
+    },
+    {
+      "item_code": "FG018",
+      "warehouse": "D'VERDE CALAMBA - TAJ FOOD CORP.",
+      "null_qty": 9.106,
+      "warehouse_company": "D'VERDE CALAMBA - TAJ FOOD CORP."
+    },
+    {
+      "item_code": "FG007",
+      "warehouse": "VISTA MALL TAGUIG - TRICERN FOOD CORP.",
+      "null_qty": 9.1,
+      "warehouse_company": "VISTA MALL TAGUIG - TRICERN FOOD CORP."
+    },
+    {
+      "item_code": "FG004",
+      "warehouse": "ROBINSONS GALLERIA SOUTH - TUNGSTEN CAPITAL HOLDINGS OPC",
+      "null_qty": 9.059,
+      "warehouse_company": "ROBINSONS GALLERIA SOUTH - TUNGSTEN CAPITAL HOLDINGS OPC"
+    },
+    {
+      "item_code": "FG015",
+      "warehouse": "Greenhills Ortigas - BEIFRANCHISE FOOD OPC",
+      "null_qty": 9.051,
+      "warehouse_company": null
+    },
+    {
+      "item_code": "FG005",
+      "warehouse": "SM EAST ORTIGAS - BEBANG SMEO INC.",
+      "null_qty": 9.0,
+      "warehouse_company": "SM EAST ORTIGAS - BEBANG SMEO INC."
+    },
+    {
+      "item_code": "FG017",
+      "warehouse": "SM MARILAO - BEBANG MARILAO INC.",
+      "null_qty": 8.9741,
+      "warehouse_company": "SM MARILAO - BEBANG MARILAO INC."
+    },
+    {
+      "item_code": "FG005",
+      "warehouse": "SM NORTH EDSA - BEBANG NORTH EDSA INC.",
+      "null_qty": 8.94,
+      "warehouse_company": "SM NORTH EDSA - BEBANG NORTH EDSA INC."
+    },
+    {
+      "item_code": "FG019",
+      "warehouse": "VISTA MALL TAGUIG - TRICERN FOOD CORP.",
+      "null_qty": 8.925,
+      "warehouse_company": "VISTA MALL TAGUIG - TRICERN FOOD CORP."
+    },
+    {
+      "item_code": "FG005",
+      "warehouse": "MEGAWORLD VENICE GRAND CANAL - BEBANG VENICE GRAND CANAL INC.",
+      "null_qty": 8.832,
+      "warehouse_company": "MEGAWORLD VENICE GRAND CANAL - BEBANG VENICE GRAND CANAL INC."
+    },
+    {
+      "item_code": "FG016",
+      "warehouse": "ARANETA GATEWAY - TUNGSTEN CAPITAL HOLDINGS OPC",
+      "null_qty": 8.6568,
+      "warehouse_company": "ARANETA GATEWAY - TUNGSTEN CAPITAL HOLDINGS OPC"
+    },
+    {
+      "item_code": "FG017",
+      "warehouse": "SM NORTH EDSA - BEBANG NORTH EDSA INC.",
+      "null_qty": 8.575,
+      "warehouse_company": "SM NORTH EDSA - BEBANG NORTH EDSA INC."
+    },
+    {
+      "item_code": "FG005",
+      "warehouse": "ARANETA GATEWAY - TUNGSTEN CAPITAL HOLDINGS OPC",
+      "null_qty": 8.546,
+      "warehouse_company": "ARANETA GATEWAY - TUNGSTEN CAPITAL HOLDINGS OPC"
+    },
+    {
+      "item_code": "FG003",
+      "warehouse": "SM EAST ORTIGAS - BEBANG SMEO INC.",
+      "null_qty": 8.4924,
+      "warehouse_company": "SM EAST ORTIGAS - BEBANG SMEO INC."
+    },
+    {
+      "item_code": "FG018",
+      "warehouse": "CTTM TOMAS MORATO - B CUBED VENTURES CORP.",
+      "null_qty": 8.474,
+      "warehouse_company": "CTTM TOMAS MORATO - B CUBED VENTURES CORP."
+    },
+    {
+      "item_code": "FG018",
+      "warehouse": "SM EAST ORTIGAS - BEBANG SMEO INC.",
+      "null_qty": 8.469,
+      "warehouse_company": "SM EAST ORTIGAS - BEBANG SMEO INC."
+    },
+    {
+      "item_code": "FG019",
+      "warehouse": "D'VERDE CALAMBA - TAJ FOOD CORP.",
+      "null_qty": 8.467,
+      "warehouse_company": "D'VERDE CALAMBA - TAJ FOOD CORP."
+    },
+    {
+      "item_code": "FG015",
+      "warehouse": "SM SAN JOSE DEL MONTE - JL TRADE OPC",
+      "null_qty": 8.456,
+      "warehouse_company": "SM SAN JOSE DEL MONTE - JL TRADE OPC"
+    },
+    {
+      "item_code": "FG006",
+      "warehouse": "MEGAWORLD VENICE GRAND CANAL - BEBANG VENICE GRAND CANAL INC.",
+      "null_qty": 8.417,
+      "warehouse_company": "MEGAWORLD VENICE GRAND CANAL - BEBANG VENICE GRAND CANAL INC."
+    },
+    {
+      "item_code": "FG003",
+      "warehouse": "SM MARIKINA - BEBANG SM MARIKINA INC.",
+      "null_qty": 8.405,
+      "warehouse_company": "SM MARIKINA - BEBANG SM MARIKINA INC."
+    },
+    {
+      "item_code": "FG018",
+      "warehouse": "SM MALL OF ASIA - BEBANG SMOA INC.",
+      "null_qty": 8.377,
+      "warehouse_company": "SM MALL OF ASIA - BEBANG SMOA INC."
+    },
+    {
+      "item_code": "FG005",
+      "warehouse": "SM MARIKINA - BEBANG SM MARIKINA INC.",
+      "null_qty": 8.363,
+      "warehouse_company": "SM MARIKINA - BEBANG SM MARIKINA INC."
+    },
+    {
+      "item_code": "FG006",
+      "warehouse": "SM PULILAN - BEBANG SMM INC.",
+      "null_qty": 8.342,
+      "warehouse_company": "SM PULILAN - BEBANG SMM INC."
+    },
+    {
+      "item_code": "FG005",
+      "warehouse": "SM VALENZUELA - BEBANG SMV INC.",
+      "null_qty": 8.326,
+      "warehouse_company": "SM VALENZUELA - BEBANG SMV INC."
+    },
+    {
+      "item_code": "FG016",
+      "warehouse": "SM BICUTAN - BEBANG SM BICUTAN INC.",
+      "null_qty": 8.314,
+      "warehouse_company": "SM BICUTAN - BEBANG SM BICUTAN INC."
+    },
+    {
+      "item_code": "FG007",
+      "warehouse": "AYALA FAIRVIEW TERRACES - BEBANG FT INC.",
+      "null_qty": 8.28,
+      "warehouse_company": "AYALA FAIRVIEW TERRACES - BEBANG FT INC."
+    },
+    {
+      "item_code": "FG016",
+      "warehouse": "CTTM TOMAS MORATO - B CUBED VENTURES CORP.",
+      "null_qty": 8.275,
+      "warehouse_company": "CTTM TOMAS MORATO - B CUBED VENTURES CORP."
+    },
+    {
+      "item_code": "FG015",
+      "warehouse": "AYALA SOLENAD - HFFM SOLENAD FOOD SERVICES INC.",
+      "null_qty": 8.242,
+      "warehouse_company": "AYALA SOLENAD - HFFM SOLENAD FOOD SERVICES INC."
+    },
+    {
+      "item_code": "FG015",
+      "warehouse": "SM CLARK - RED TALDAWA FOODS OPC",
+      "null_qty": 8.21,
+      "warehouse_company": "SM CLARK - RED TALDAWA FOODS OPC"
+    },
+    {
+      "item_code": "FG016",
+      "warehouse": "SM EAST ORTIGAS - BEBANG SMEO INC.",
+      "null_qty": 8.121,
+      "warehouse_company": "SM EAST ORTIGAS - BEBANG SMEO INC."
+    },
+    {
+      "item_code": "FG006",
+      "warehouse": "AYALA FAIRVIEW TERRACES - BEBANG FT INC.",
+      "null_qty": 8.088,
+      "warehouse_company": "AYALA FAIRVIEW TERRACES - BEBANG FT INC."
+    },
+    {
+      "item_code": "FG007",
+      "warehouse": "ARANETA GATEWAY - TUNGSTEN CAPITAL HOLDINGS OPC",
+      "null_qty": 8.0251,
+      "warehouse_company": "ARANETA GATEWAY - TUNGSTEN CAPITAL HOLDINGS OPC"
+    },
+    {
+      "item_code": "FG015",
+      "warehouse": "SM CALOOCAN - TAJ FOOD CORP.",
+      "null_qty": 8.008,
+      "warehouse_company": "SM CALOOCAN - TAJ FOOD CORP."
+    },
+    {
+      "item_code": "FG019",
+      "warehouse": "AYALA EVO - BEBANG MEGA INC.",
+      "null_qty": 7.981,
+      "warehouse_company": "BEBANG MEGA INC."
+    },
+    {
+      "item_code": "FG004",
+      "warehouse": "SM STA. ROSA - SWEET HARMONY FOOD CORP.",
+      "null_qty": 7.981,
+      "warehouse_company": "SM STA. ROSA - SWEET HARMONY FOOD CORP."
+    },
+    {
+      "item_code": "FG015",
+      "warehouse": "SM MARILAO - BEBANG MARILAO INC.",
+      "null_qty": 7.8959,
+      "warehouse_company": "SM MARILAO - BEBANG MARILAO INC."
+    },
+    {
+      "item_code": "FG016",
+      "warehouse": "THE GRID ROCKWELL - TASTECARTEL CORP.",
+      "null_qty": 7.8301,
+      "warehouse_company": "THE GRID ROCKWELL - TASTECARTEL CORP."
+    },
+    {
+      "item_code": "FG018",
+      "warehouse": "AYALA FAIRVIEW TERRACES - BEBANG FT INC.",
+      "null_qty": 7.829,
+      "warehouse_company": "AYALA FAIRVIEW TERRACES - BEBANG FT INC."
+    },
+    {
+      "item_code": "FG019",
+      "warehouse": "UP TOWN MALL BGC - DMD HOLDINGS INC.",
+      "null_qty": 7.819,
+      "warehouse_company": "UP TOWN MALL BGC - DMD HOLDINGS INC."
+    },
+    {
+      "item_code": "FG013",
+      "warehouse": "CTTM TOMAS MORATO - B CUBED VENTURES CORP.",
+      "null_qty": 7.812,
+      "warehouse_company": "CTTM TOMAS MORATO - B CUBED VENTURES CORP."
+    },
+    {
+      "item_code": "FG016",
+      "warehouse": "BF HOMES - BEBANG BF HOMES INC.",
+      "null_qty": 7.809,
+      "warehouse_company": "BF HOMES - BEBANG BF HOMES INC."
+    },
+    {
+      "item_code": "FG018",
+      "warehouse": "SM SAN JOSE DEL MONTE - JL TRADE OPC",
+      "null_qty": 7.773,
+      "warehouse_company": "SM SAN JOSE DEL MONTE - JL TRADE OPC"
+    },
+    {
+      "item_code": "FG015",
+      "warehouse": "CTTM TOMAS MORATO - B CUBED VENTURES CORP.",
+      "null_qty": 7.691,
+      "warehouse_company": "CTTM TOMAS MORATO - B CUBED VENTURES CORP."
+    },
+    {
+      "item_code": "FG002-A",
+      "warehouse": "SM SANGANDAAN - TUNGSTEN CAPITAL HOLDINGS OPC",
+      "null_qty": 7.679,
+      "warehouse_company": "SM SANGANDAAN - TUNGSTEN CAPITAL HOLDINGS OPC"
+    },
+    {
+      "item_code": "FG019",
+      "warehouse": "SM PULILAN - BEBANG SMM INC.",
+      "null_qty": 7.634,
+      "warehouse_company": "SM PULILAN - BEBANG SMM INC."
+    },
+    {
+      "item_code": "FG017",
+      "warehouse": "SM SAN JOSE DEL MONTE - JL TRADE OPC",
+      "null_qty": 7.627,
+      "warehouse_company": "SM SAN JOSE DEL MONTE - JL TRADE OPC"
+    },
+    {
+      "item_code": "FG016",
+      "warehouse": "THE TERMINAL - BEBANG STARMALL ALABANG INC.",
+      "null_qty": 7.591,
+      "warehouse_company": "THE TERMINAL - BEBANG STARMALL ALABANG INC."
+    },
+    {
+      "item_code": "FG017",
+      "warehouse": "SM EAST ORTIGAS - BEBANG SMEO INC.",
+      "null_qty": 7.563,
+      "warehouse_company": "SM EAST ORTIGAS - BEBANG SMEO INC."
+    },
+    {
+      "item_code": "FG015",
+      "warehouse": "ARANETA GATEWAY - TUNGSTEN CAPITAL HOLDINGS OPC",
+      "null_qty": 7.5584,
+      "warehouse_company": "ARANETA GATEWAY - TUNGSTEN CAPITAL HOLDINGS OPC"
+    },
+    {
+      "item_code": "FG015",
+      "warehouse": "EVER COMMONWEALTH - DLS DESSERT CRAFT INC.",
+      "null_qty": 7.503,
+      "warehouse_company": "EVER COMMONWEALTH - DLS DESSERT CRAFT INC."
+    },
+    {
+      "item_code": "FG003",
+      "warehouse": "UP TOWN MALL BGC - DMD HOLDINGS INC.",
+      "null_qty": 7.373,
+      "warehouse_company": "UP TOWN MALL BGC - DMD HOLDINGS INC."
+    },
+    {
+      "item_code": "FG003",
+      "warehouse": "SM PULILAN - BEBANG SMM INC.",
+      "null_qty": 7.366,
+      "warehouse_company": "SM PULILAN - BEBANG SMM INC."
+    },
+    {
+      "item_code": "FG003",
+      "warehouse": "MEGAWORLD VENICE GRAND CANAL - BEBANG VENICE GRAND CANAL INC.",
+      "null_qty": 7.351,
+      "warehouse_company": "MEGAWORLD VENICE GRAND CANAL - BEBANG VENICE GRAND CANAL INC."
+    },
+    {
+      "item_code": "FG007",
+      "warehouse": "SM GRAND CENTRAL - BEBANG GRAND CENTRAL INC.",
+      "null_qty": 7.289,
+      "warehouse_company": "SM GRAND CENTRAL - BEBANG GRAND CENTRAL INC."
+    },
+    {
+      "item_code": "FG006",
+      "warehouse": "MEGAWIDE PITX - BEBANG PITX INC.",
+      "null_qty": 7.28,
+      "warehouse_company": "MEGAWIDE PITX - BEBANG PITX INC."
+    },
+    {
+      "item_code": "FG017",
+      "warehouse": "MEGAWIDE PITX - BEBANG PITX INC.",
+      "null_qty": 7.279,
+      "warehouse_company": "MEGAWIDE PITX - BEBANG PITX INC."
+    },
+    {
+      "item_code": "FG003",
+      "warehouse": "SM MARILAO - BEBANG MARILAO INC.",
+      "null_qty": 7.244,
+      "warehouse_company": "SM MARILAO - BEBANG MARILAO INC."
+    },
+    {
+      "item_code": "FG016",
+      "warehouse": "ROBINSONS GALLERIA SOUTH - TUNGSTEN CAPITAL HOLDINGS OPC",
+      "null_qty": 7.224,
+      "warehouse_company": "ROBINSONS GALLERIA SOUTH - TUNGSTEN CAPITAL HOLDINGS OPC"
+    },
+    {
+      "item_code": "FG006",
+      "warehouse": "Greenhills Ortigas - BEIFRANCHISE FOOD OPC",
+      "null_qty": 7.149,
+      "warehouse_company": null
+    },
+    {
+      "item_code": "FG006",
+      "warehouse": "SM MALL OF ASIA - BEBANG SMOA INC.",
+      "null_qty": 7.125,
+      "warehouse_company": "SM MALL OF ASIA - BEBANG SMOA INC."
+    },
+    {
+      "item_code": "FG017",
+      "warehouse": "SM GRAND CENTRAL - BEBANG GRAND CENTRAL INC.",
+      "null_qty": 7.107,
+      "warehouse_company": "SM GRAND CENTRAL - BEBANG GRAND CENTRAL INC."
+    },
+    {
+      "item_code": "FG005",
+      "warehouse": "SM PULILAN - BEBANG SMM INC.",
+      "null_qty": 7.081,
+      "warehouse_company": "SM PULILAN - BEBANG SMM INC."
+    },
+    {
+      "item_code": "FG017",
+      "warehouse": "FESTIVAL MALL ALABANG - BEBANG FESTIVAL INC.",
+      "null_qty": 7.034,
+      "warehouse_company": "FESTIVAL MALL ALABANG - BEBANG FESTIVAL INC."
+    },
+    {
+      "item_code": "FG017",
+      "warehouse": "SM CALOOCAN - TAJ FOOD CORP.",
+      "null_qty": 7.015,
+      "warehouse_company": "SM CALOOCAN - TAJ FOOD CORP."
+    },
+    {
+      "item_code": "FG003",
+      "warehouse": "SM MALL OF ASIA - BEBANG SMOA INC.",
+      "null_qty": 6.992,
+      "warehouse_company": "SM MALL OF ASIA - BEBANG SMOA INC."
+    },
+    {
+      "item_code": "FG012",
+      "warehouse": "AYALA VERMOSA - BEBANG MEGA INC.",
+      "null_qty": 6.988,
+      "warehouse_company": "AYALA VERMOSA - BEBANG MEGA INC."
+    },
+    {
+      "item_code": "FG017",
+      "warehouse": "VISTA MALL TAGUIG - TRICERN FOOD CORP.",
+      "null_qty": 6.973,
+      "warehouse_company": "VISTA MALL TAGUIG - TRICERN FOOD CORP."
+    },
+    {
+      "item_code": "FG006",
+      "warehouse": "AYALA UP TOWN CENTER - BEBANG UP TOWN CENTER INC.",
+      "null_qty": 6.969,
+      "warehouse_company": "AYALA UP TOWN CENTER - BEBANG UP TOWN CENTER INC."
+    },
+    {
+      "item_code": "FG016",
+      "warehouse": "SM SANGANDAAN - TUNGSTEN CAPITAL HOLDINGS OPC",
+      "null_qty": 6.9364,
+      "warehouse_company": "SM SANGANDAAN - TUNGSTEN CAPITAL HOLDINGS OPC"
+    },
+    {
+      "item_code": "FG015",
+      "warehouse": "AYALA UP TOWN CENTER - BEBANG UP TOWN CENTER INC.",
+      "null_qty": 6.903,
+      "warehouse_company": "AYALA UP TOWN CENTER - BEBANG UP TOWN CENTER INC."
+    },
+    {
+      "item_code": "FG017",
+      "warehouse": "SM CLARK - RED TALDAWA FOODS OPC",
+      "null_qty": 6.855,
+      "warehouse_company": "SM CLARK - RED TALDAWA FOODS OPC"
+    },
+    {
+      "item_code": "FG017",
+      "warehouse": "Greenhills Ortigas - BEIFRANCHISE FOOD OPC",
+      "null_qty": 6.837,
+      "warehouse_company": null
+    },
+    {
+      "item_code": "FG003",
+      "warehouse": "LUCKY CHINATOWN - BEBANG LCT INC.",
+      "null_qty": 6.8144,
+      "warehouse_company": "LUCKY CHINATOWN - BEBANG LCT INC."
+    },
+    {
+      "item_code": "FG003",
+      "warehouse": "ARANETA GATEWAY - TUNGSTEN CAPITAL HOLDINGS OPC",
+      "null_qty": 6.774,
+      "warehouse_company": "ARANETA GATEWAY - TUNGSTEN CAPITAL HOLDINGS OPC"
+    },
+    {
+      "item_code": "FG005",
+      "warehouse": "CTTM TOMAS MORATO - B CUBED VENTURES CORP.",
+      "null_qty": 6.761,
+      "warehouse_company": "CTTM TOMAS MORATO - B CUBED VENTURES CORP."
+    },
+    {
+      "item_code": "FG018",
+      "warehouse": "SM SANGANDAAN - TUNGSTEN CAPITAL HOLDINGS OPC",
+      "null_qty": 6.756,
+      "warehouse_company": "SM SANGANDAAN - TUNGSTEN CAPITAL HOLDINGS OPC"
+    },
+    {
+      "item_code": "FG015",
+      "warehouse": "D'VERDE CALAMBA - TAJ FOOD CORP.",
+      "null_qty": 6.726,
+      "warehouse_company": "D'VERDE CALAMBA - TAJ FOOD CORP."
+    },
+    {
+      "item_code": "FG003",
+      "warehouse": "SM TANZA - BEBANG MEGA INC.",
+      "null_qty": 6.708,
+      "warehouse_company": "SM TANZA - BEBANG MEGA INC."
+    },
+    {
+      "item_code": "FG007",
+      "warehouse": "AYALA MARKET MARKET - BEBANG MARKET MARKET INC.",
+      "null_qty": 6.695,
+      "warehouse_company": "AYALA MARKET MARKET - BEBANG MARKET MARKET INC."
+    },
+    {
+      "item_code": "FG012",
+      "warehouse": "SM SANGANDAAN - TUNGSTEN CAPITAL HOLDINGS OPC",
+      "null_qty": 6.69,
+      "warehouse_company": "SM SANGANDAAN - TUNGSTEN CAPITAL HOLDINGS OPC"
+    },
+    {
+      "item_code": "FG007",
+      "warehouse": "SM PULILAN - BEBANG SMM INC.",
+      "null_qty": 6.679,
+      "warehouse_company": "SM PULILAN - BEBANG SMM INC."
+    },
+    {
+      "item_code": "FG017",
+      "warehouse": "SM MALL OF ASIA - BEBANG SMOA INC.",
+      "null_qty": 6.634,
+      "warehouse_company": "SM MALL OF ASIA - BEBANG SMOA INC."
+    },
+    {
+      "item_code": "FG006",
+      "warehouse": "SM VALENZUELA - BEBANG SMV INC.",
+      "null_qty": 6.619,
+      "warehouse_company": "SM VALENZUELA - BEBANG SMV INC."
+    },
+    {
+      "item_code": "FG005",
+      "warehouse": "AYALA VERMOSA - BEBANG MEGA INC.",
+      "null_qty": 6.611,
+      "warehouse_company": "AYALA VERMOSA - BEBANG MEGA INC."
+    },
+    {
+      "item_code": "FG003",
+      "warehouse": "SM SANGANDAAN - TUNGSTEN CAPITAL HOLDINGS OPC",
+      "null_qty": 6.606,
+      "warehouse_company": "SM SANGANDAAN - TUNGSTEN CAPITAL HOLDINGS OPC"
+    },
+    {
+      "item_code": "FG007",
+      "warehouse": "SM MALL OF ASIA - BEBANG SMOA INC.",
+      "null_qty": 6.592,
+      "warehouse_company": "SM MALL OF ASIA - BEBANG SMOA INC."
+    },
+    {
+      "item_code": "FG007",
+      "warehouse": "FESTIVAL MALL ALABANG - BEBANG FESTIVAL INC.",
+      "null_qty": 6.59,
+      "warehouse_company": "FESTIVAL MALL ALABANG - BEBANG FESTIVAL INC."
+    },
+    {
+      "item_code": "FG015",
+      "warehouse": "MEGAWORLD VENICE GRAND CANAL - BEBANG VENICE GRAND CANAL INC.",
+      "null_qty": 6.577,
+      "warehouse_company": "MEGAWORLD VENICE GRAND CANAL - BEBANG VENICE GRAND CANAL INC."
+    },
+    {
+      "item_code": "FG016",
+      "warehouse": "FESTIVAL MALL ALABANG - BEBANG FESTIVAL INC.",
+      "null_qty": 6.567,
+      "warehouse_company": "FESTIVAL MALL ALABANG - BEBANG FESTIVAL INC."
+    },
+    {
+      "item_code": "FG007",
+      "warehouse": "THE GRID ROCKWELL - TASTECARTEL CORP.",
+      "null_qty": 6.5251,
+      "warehouse_company": "THE GRID ROCKWELL - TASTECARTEL CORP."
+    },
+    {
+      "item_code": "FG007",
+      "warehouse": "AYALA EVO - BEBANG MEGA INC.",
+      "null_qty": 6.401,
+      "warehouse_company": "BEBANG MEGA INC."
+    },
+    {
+      "item_code": "FG007",
+      "warehouse": "UP TOWN MALL BGC - DMD HOLDINGS INC.",
+      "null_qty": 6.364,
+      "warehouse_company": "UP TOWN MALL BGC - DMD HOLDINGS INC."
+    },
+    {
+      "item_code": "FG006",
+      "warehouse": "THE GRID ROCKWELL - TASTECARTEL CORP.",
+      "null_qty": 6.3208,
+      "warehouse_company": "THE GRID ROCKWELL - TASTECARTEL CORP."
+    },
+    {
+      "item_code": "FG016",
+      "warehouse": "Greenhills Ortigas - BEIFRANCHISE FOOD OPC",
+      "null_qty": 6.307,
+      "warehouse_company": null
+    },
+    {
+      "item_code": "FG019",
+      "warehouse": "SM TANZA - BEBANG MEGA INC.",
+      "null_qty": 6.304,
+      "warehouse_company": "SM TANZA - BEBANG MEGA INC."
+    },
+    {
+      "item_code": "FG005",
+      "warehouse": "AYALA FAIRVIEW TERRACES - BEBANG FT INC.",
+      "null_qty": 6.2734,
+      "warehouse_company": "AYALA FAIRVIEW TERRACES - BEBANG FT INC."
+    },
+    {
+      "item_code": "FG007",
+      "warehouse": "AYALA UP TOWN CENTER - BEBANG UP TOWN CENTER INC.",
+      "null_qty": 6.265,
+      "warehouse_company": "AYALA UP TOWN CENTER - BEBANG UP TOWN CENTER INC."
+    },
+    {
+      "item_code": "FG003",
+      "warehouse": "AYALA MARKET MARKET - BEBANG MARKET MARKET INC.",
+      "null_qty": 6.26,
+      "warehouse_company": "AYALA MARKET MARKET - BEBANG MARKET MARKET INC."
+    },
+    {
+      "item_code": "FG016",
+      "warehouse": "SM PULILAN - BEBANG SMM INC.",
+      "null_qty": 6.257,
+      "warehouse_company": "SM PULILAN - BEBANG SMM INC."
+    },
+    {
+      "item_code": "FG006",
+      "warehouse": "SM SANGANDAAN - TUNGSTEN CAPITAL HOLDINGS OPC",
+      "null_qty": 6.236,
+      "warehouse_company": "SM SANGANDAAN - TUNGSTEN CAPITAL HOLDINGS OPC"
+    },
+    {
+      "item_code": "FG005",
+      "warehouse": "UP TOWN MALL BGC - DMD HOLDINGS INC.",
+      "null_qty": 6.196,
+      "warehouse_company": "UP TOWN MALL BGC - DMD HOLDINGS INC."
+    },
+    {
+      "item_code": "FG015",
+      "warehouse": "SM PULILAN - BEBANG SMM INC.",
+      "null_qty": 6.192,
+      "warehouse_company": "SM PULILAN - BEBANG SMM INC."
+    },
+    {
+      "item_code": "FG019",
+      "warehouse": "MEGAWIDE PITX - BEBANG PITX INC.",
+      "null_qty": 6.165,
+      "warehouse_company": "MEGAWIDE PITX - BEBANG PITX INC."
+    },
+    {
+      "item_code": "FG006",
+      "warehouse": "AYALA MARKET MARKET - BEBANG MARKET MARKET INC.",
+      "null_qty": 6.156,
+      "warehouse_company": "AYALA MARKET MARKET - BEBANG MARKET MARKET INC."
+    },
+    {
+      "item_code": "FG005",
+      "warehouse": "FESTIVAL MALL ALABANG - BEBANG FESTIVAL INC.",
+      "null_qty": 6.154,
+      "warehouse_company": "FESTIVAL MALL ALABANG - BEBANG FESTIVAL INC."
+    },
+    {
+      "item_code": "FG019",
+      "warehouse": "Greenhills Ortigas - BEIFRANCHISE FOOD OPC",
+      "null_qty": 6.152,
+      "warehouse_company": null
+    },
+    {
+      "item_code": "FG005",
+      "warehouse": "THE GRID ROCKWELL - TASTECARTEL CORP.",
+      "null_qty": 6.121,
+      "warehouse_company": "THE GRID ROCKWELL - TASTECARTEL CORP."
+    },
+    {
+      "item_code": "FG003",
+      "warehouse": "VISTA MALL TAGUIG - TRICERN FOOD CORP.",
+      "null_qty": 6.098,
+      "warehouse_company": "VISTA MALL TAGUIG - TRICERN FOOD CORP."
+    },
+    {
+      "item_code": "FG006",
+      "warehouse": "ROBINSONS GALLERIA SOUTH - TUNGSTEN CAPITAL HOLDINGS OPC",
+      "null_qty": 6.097,
+      "warehouse_company": "ROBINSONS GALLERIA SOUTH - TUNGSTEN CAPITAL HOLDINGS OPC"
+    },
+    {
+      "item_code": "FG015",
+      "warehouse": "LUCKY CHINATOWN - BEBANG LCT INC.",
+      "null_qty": 6.0086,
+      "warehouse_company": "LUCKY CHINATOWN - BEBANG LCT INC."
+    },
+    {
+      "item_code": "FG006",
+      "warehouse": "SM EAST ORTIGAS - BEBANG SMEO INC.",
+      "null_qty": 6.0,
+      "warehouse_company": "SM EAST ORTIGAS - BEBANG SMEO INC."
+    },
+    {
+      "item_code": "FG014",
+      "warehouse": "ARANETA GATEWAY - TUNGSTEN CAPITAL HOLDINGS OPC",
+      "null_qty": 5.993,
+      "warehouse_company": "ARANETA GATEWAY - TUNGSTEN CAPITAL HOLDINGS OPC"
+    },
+    {
+      "item_code": "FG015",
+      "warehouse": "UP TOWN MALL BGC - DMD HOLDINGS INC.",
+      "null_qty": 5.992,
+      "warehouse_company": "UP TOWN MALL BGC - DMD HOLDINGS INC."
+    },
+    {
+      "item_code": "FG017",
+      "warehouse": "SM TANZA - BEBANG MEGA INC.",
+      "null_qty": 5.838,
+      "warehouse_company": "SM TANZA - BEBANG MEGA INC."
+    },
+    {
+      "item_code": "FG015",
+      "warehouse": "NAIA T3 - HALO-HALO TERMINAL FOOD CORP.",
+      "null_qty": 5.778,
+      "warehouse_company": "NAIA T3 - HALO-HALO TERMINAL FOOD CORP."
+    },
+    {
+      "item_code": "FG007",
+      "warehouse": "Greenhills Ortigas - BEIFRANCHISE FOOD OPC",
+      "null_qty": 5.771,
+      "warehouse_company": null
+    },
+    {
+      "item_code": "FG018",
+      "warehouse": "VISTA MALL TAGUIG - TRICERN FOOD CORP.",
+      "null_qty": 5.75,
+      "warehouse_company": "VISTA MALL TAGUIG - TRICERN FOOD CORP."
+    },
+    {
+      "item_code": "FG018",
+      "warehouse": "SM VALENZUELA - BEBANG SMV INC.",
+      "null_qty": 5.679,
+      "warehouse_company": "SM VALENZUELA - BEBANG SMV INC."
+    },
+    {
+      "item_code": "FG016",
+      "warehouse": "VISTA MALL TAGUIG - TRICERN FOOD CORP.",
+      "null_qty": 5.609,
+      "warehouse_company": "VISTA MALL TAGUIG - TRICERN FOOD CORP."
+    },
+    {
+      "item_code": "FG017",
+      "warehouse": "AYALA FAIRVIEW TERRACES - BEBANG FT INC.",
+      "null_qty": 5.574,
+      "warehouse_company": "AYALA FAIRVIEW TERRACES - BEBANG FT INC."
+    },
+    {
+      "item_code": "FG006",
+      "warehouse": "D'VERDE CALAMBA - TAJ FOOD CORP.",
+      "null_qty": 5.573,
+      "warehouse_company": "D'VERDE CALAMBA - TAJ FOOD CORP."
+    },
+    {
+      "item_code": "FG005",
+      "warehouse": "SM STA. ROSA - SWEET HARMONY FOOD CORP.",
+      "null_qty": 5.547,
+      "warehouse_company": "SM STA. ROSA - SWEET HARMONY FOOD CORP."
+    },
+    {
+      "item_code": "FG017",
+      "warehouse": "SM BICUTAN - BEBANG SM BICUTAN INC.",
+      "null_qty": 5.487,
+      "warehouse_company": "SM BICUTAN - BEBANG SM BICUTAN INC."
+    },
+    {
+      "item_code": "FG003",
+      "warehouse": "SM BICUTAN - BEBANG SM BICUTAN INC.",
+      "null_qty": 5.463,
+      "warehouse_company": "SM BICUTAN - BEBANG SM BICUTAN INC."
+    },
+    {
+      "item_code": "FG015",
+      "warehouse": "MEGAWIDE PITX - BEBANG PITX INC.",
+      "null_qty": 5.4285,
+      "warehouse_company": "MEGAWIDE PITX - BEBANG PITX INC."
+    },
+    {
+      "item_code": "FG003",
+      "warehouse": "AYALA VERMOSA - BEBANG MEGA INC.",
+      "null_qty": 5.414,
+      "warehouse_company": "AYALA VERMOSA - BEBANG MEGA INC."
+    },
+    {
+      "item_code": "FG019",
+      "warehouse": "THE TERMINAL - BEBANG STARMALL ALABANG INC.",
+      "null_qty": 5.35,
+      "warehouse_company": "THE TERMINAL - BEBANG STARMALL ALABANG INC."
+    },
+    {
+      "item_code": "FG007",
+      "warehouse": "SM VALENZUELA - BEBANG SMV INC.",
+      "null_qty": 5.257,
+      "warehouse_company": "SM VALENZUELA - BEBANG SMV INC."
+    },
+    {
+      "item_code": "FG015",
+      "warehouse": "SM EAST ORTIGAS - BEBANG SMEO INC.",
+      "null_qty": 5.215,
+      "warehouse_company": "SM EAST ORTIGAS - BEBANG SMEO INC."
+    },
+    {
+      "item_code": "FG007",
+      "warehouse": "LUCKY CHINATOWN - BEBANG LCT INC.",
+      "null_qty": 5.2124,
+      "warehouse_company": "LUCKY CHINATOWN - BEBANG LCT INC."
+    },
+    {
+      "item_code": "FG015",
+      "warehouse": "SM SANGANDAAN - TUNGSTEN CAPITAL HOLDINGS OPC",
+      "null_qty": 5.1073,
+      "warehouse_company": "SM SANGANDAAN - TUNGSTEN CAPITAL HOLDINGS OPC"
+    },
+    {
+      "item_code": "FG003",
+      "warehouse": "SM VALENZUELA - BEBANG SMV INC.",
+      "null_qty": 5.084,
+      "warehouse_company": "SM VALENZUELA - BEBANG SMV INC."
+    },
+    {
+      "item_code": "FG018",
+      "warehouse": "SM PULILAN - BEBANG SMM INC.",
+      "null_qty": 5.083,
+      "warehouse_company": "SM PULILAN - BEBANG SMM INC."
+    },
+    {
+      "item_code": "FG017",
+      "warehouse": "AYALA UP TOWN CENTER - BEBANG UP TOWN CENTER INC.",
+      "null_qty": 4.995,
+      "warehouse_company": "AYALA UP TOWN CENTER - BEBANG UP TOWN CENTER INC."
+    },
+    {
+      "item_code": "FG018",
+      "warehouse": "SM TANZA - BEBANG MEGA INC.",
+      "null_qty": 4.993,
+      "warehouse_company": "SM TANZA - BEBANG MEGA INC."
+    },
+    {
+      "item_code": "FG014",
+      "warehouse": "EVER COMMONWEALTH - DLS DESSERT CRAFT INC.",
+      "null_qty": 4.831,
+      "warehouse_company": "EVER COMMONWEALTH - DLS DESSERT CRAFT INC."
+    },
+    {
+      "item_code": "FG007",
+      "warehouse": "MEGAWORLD VENICE GRAND CANAL - BEBANG VENICE GRAND CANAL INC.",
+      "null_qty": 4.816,
+      "warehouse_company": "MEGAWORLD VENICE GRAND CANAL - BEBANG VENICE GRAND CANAL INC."
+    },
+    {
+      "item_code": "FG005",
+      "warehouse": "Greenhills Ortigas - BEIFRANCHISE FOOD OPC",
+      "null_qty": 4.686,
+      "warehouse_company": null
+    },
+    {
+      "item_code": "FG007",
+      "warehouse": "SM TANZA - BEBANG MEGA INC.",
+      "null_qty": 4.685,
+      "warehouse_company": "SM TANZA - BEBANG MEGA INC."
+    },
+    {
+      "item_code": "FG016",
+      "warehouse": "AYALA MARKET MARKET - BEBANG MARKET MARKET INC.",
+      "null_qty": 4.651,
+      "warehouse_company": "AYALA MARKET MARKET - BEBANG MARKET MARKET INC."
+    },
+    {
+      "item_code": "FG017",
+      "warehouse": "SM SANGANDAAN - TUNGSTEN CAPITAL HOLDINGS OPC",
+      "null_qty": 4.6356,
+      "warehouse_company": "SM SANGANDAAN - TUNGSTEN CAPITAL HOLDINGS OPC"
+    },
+    {
+      "item_code": "FG017",
+      "warehouse": "SM VALENZUELA - BEBANG SMV INC.",
+      "null_qty": 4.634,
+      "warehouse_company": "SM VALENZUELA - BEBANG SMV INC."
+    },
+    {
+      "item_code": "FG007",
+      "warehouse": "CTTM TOMAS MORATO - B CUBED VENTURES CORP.",
+      "null_qty": 4.633,
+      "warehouse_company": "CTTM TOMAS MORATO - B CUBED VENTURES CORP."
+    },
+    {
+      "item_code": "FG005",
+      "warehouse": "SM SANGANDAAN - TUNGSTEN CAPITAL HOLDINGS OPC",
+      "null_qty": 4.5549,
+      "warehouse_company": "SM SANGANDAAN - TUNGSTEN CAPITAL HOLDINGS OPC"
+    },
+    {
+      "item_code": "FG006",
+      "warehouse": "ARANETA GATEWAY - TUNGSTEN CAPITAL HOLDINGS OPC",
+      "null_qty": 4.532,
+      "warehouse_company": "ARANETA GATEWAY - TUNGSTEN CAPITAL HOLDINGS OPC"
+    },
+    {
+      "item_code": "FG006",
+      "warehouse": "AYALA EVO - BEBANG MEGA INC.",
+      "null_qty": 4.421,
+      "warehouse_company": "BEBANG MEGA INC."
+    },
+    {
+      "item_code": "FG017",
+      "warehouse": "SM PULILAN - BEBANG SMM INC.",
+      "null_qty": 4.373,
+      "warehouse_company": "SM PULILAN - BEBANG SMM INC."
+    },
+    {
+      "item_code": "FG005",
+      "warehouse": "AYALA UP TOWN CENTER - BEBANG UP TOWN CENTER INC.",
+      "null_qty": 4.363,
+      "warehouse_company": "AYALA UP TOWN CENTER - BEBANG UP TOWN CENTER INC."
+    },
+    {
+      "item_code": "FG018",
+      "warehouse": "MEGAWIDE PITX - BEBANG PITX INC.",
+      "null_qty": 4.315,
+      "warehouse_company": "MEGAWIDE PITX - BEBANG PITX INC."
+    },
+    {
+      "item_code": "FG014",
+      "warehouse": "SM MARIKINA - BEBANG SM MARIKINA INC.",
+      "null_qty": 4.298,
+      "warehouse_company": "SM MARIKINA - BEBANG SM MARIKINA INC."
+    },
+    {
+      "item_code": "FG002-A",
+      "warehouse": "AYALA VERMOSA - BEBANG MEGA INC.",
+      "null_qty": 4.288,
+      "warehouse_company": "AYALA VERMOSA - BEBANG MEGA INC."
+    },
+    {
+      "item_code": "FG015",
+      "warehouse": "SM MALL OF ASIA - BEBANG SMOA INC.",
+      "null_qty": 4.282,
+      "warehouse_company": "SM MALL OF ASIA - BEBANG SMOA INC."
+    },
+    {
+      "item_code": "FG007",
+      "warehouse": "THE TERMINAL - BEBANG STARMALL ALABANG INC.",
+      "null_qty": 4.265,
+      "warehouse_company": "THE TERMINAL - BEBANG STARMALL ALABANG INC."
+    },
+    {
+      "item_code": "FG017",
+      "warehouse": "UP TOWN MALL BGC - DMD HOLDINGS INC.",
+      "null_qty": 4.26,
+      "warehouse_company": "UP TOWN MALL BGC - DMD HOLDINGS INC."
+    },
+    {
+      "item_code": "FG007",
+      "warehouse": "MEGAWIDE PITX - BEBANG PITX INC.",
+      "null_qty": 4.231,
+      "warehouse_company": "MEGAWIDE PITX - BEBANG PITX INC."
+    },
+    {
+      "item_code": "FG014",
+      "warehouse": "SM SAN JOSE DEL MONTE - JL TRADE OPC",
+      "null_qty": 4.205,
+      "warehouse_company": "SM SAN JOSE DEL MONTE - JL TRADE OPC"
+    },
+    {
+      "item_code": "FG017",
+      "warehouse": "EVER COMMONWEALTH - DLS DESSERT CRAFT INC.",
+      "null_qty": 4.163,
+      "warehouse_company": "EVER COMMONWEALTH - DLS DESSERT CRAFT INC."
+    },
+    {
+      "item_code": "FG006",
+      "warehouse": "CTTM TOMAS MORATO - B CUBED VENTURES CORP.",
+      "null_qty": 4.092,
+      "warehouse_company": "CTTM TOMAS MORATO - B CUBED VENTURES CORP."
+    },
+    {
+      "item_code": "FG018",
+      "warehouse": "THE TERMINAL - BEBANG STARMALL ALABANG INC.",
+      "null_qty": 4.059,
+      "warehouse_company": "THE TERMINAL - BEBANG STARMALL ALABANG INC."
+    },
+    {
+      "item_code": "FG005",
+      "warehouse": "SM MALL OF ASIA - BEBANG SMOA INC.",
+      "null_qty": 4.0,
+      "warehouse_company": "SM MALL OF ASIA - BEBANG SMOA INC."
+    },
+    {
+      "item_code": "FG014",
+      "warehouse": "SM TAYTAY - DAY ONES FOOD AND DRINK ESTABLISHMENTS CORP.",
+      "null_qty": 3.922,
+      "warehouse_company": "SM TAYTAY - DAY ONES FOOD AND DRINK ESTABLISHMENTS CORP."
+    },
+    {
+      "item_code": "FG018",
+      "warehouse": "NAIA T3 - HALO-HALO TERMINAL FOOD CORP.",
+      "null_qty": 3.834,
+      "warehouse_company": "NAIA T3 - HALO-HALO TERMINAL FOOD CORP."
+    },
+    {
+      "item_code": "FG017",
+      "warehouse": "CTTM TOMAS MORATO - B CUBED VENTURES CORP.",
+      "null_qty": 3.763,
+      "warehouse_company": "CTTM TOMAS MORATO - B CUBED VENTURES CORP."
+    },
+    {
+      "item_code": "FG003",
+      "warehouse": "MEGAWIDE PITX - BEBANG PITX INC.",
+      "null_qty": 3.688,
+      "warehouse_company": "MEGAWIDE PITX - BEBANG PITX INC."
+    },
+    {
+      "item_code": "FG017",
+      "warehouse": "AYALA MARKET MARKET - BEBANG MARKET MARKET INC.",
+      "null_qty": 3.684,
+      "warehouse_company": "AYALA MARKET MARKET - BEBANG MARKET MARKET INC."
+    },
+    {
+      "item_code": "FG014",
+      "warehouse": "SM NORTH EDSA - BEBANG NORTH EDSA INC.",
+      "null_qty": 3.684,
+      "warehouse_company": "SM NORTH EDSA - BEBANG NORTH EDSA INC."
+    },
+    {
+      "item_code": "FG019",
+      "warehouse": "NAIA T3 - HALO-HALO TERMINAL FOOD CORP.",
+      "null_qty": 3.619,
+      "warehouse_company": "NAIA T3 - HALO-HALO TERMINAL FOOD CORP."
+    },
+    {
+      "item_code": "FG014",
+      "warehouse": "D'VERDE CALAMBA - TAJ FOOD CORP.",
+      "null_qty": 3.466,
+      "warehouse_company": "D'VERDE CALAMBA - TAJ FOOD CORP."
+    },
+    {
+      "item_code": "FG005",
+      "warehouse": "THE TERMINAL - BEBANG STARMALL ALABANG INC.",
+      "null_qty": 3.449,
+      "warehouse_company": "THE TERMINAL - BEBANG STARMALL ALABANG INC."
+    },
+    {
+      "item_code": "FG003",
+      "warehouse": "THE TERMINAL - BEBANG STARMALL ALABANG INC.",
+      "null_qty": 3.43,
+      "warehouse_company": "THE TERMINAL - BEBANG STARMALL ALABANG INC."
+    },
+    {
+      "item_code": "FG014",
+      "warehouse": "SM STA. ROSA - SWEET HARMONY FOOD CORP.",
+      "null_qty": 3.413,
+      "warehouse_company": "SM STA. ROSA - SWEET HARMONY FOOD CORP."
+    },
+    {
+      "item_code": "FG014",
+      "warehouse": "SM CLARK - RED TALDAWA FOODS OPC",
+      "null_qty": 3.349,
+      "warehouse_company": "SM CLARK - RED TALDAWA FOODS OPC"
+    },
+    {
+      "item_code": "FG015",
+      "warehouse": "ROBINSONS GALLERIA SOUTH - TUNGSTEN CAPITAL HOLDINGS OPC",
+      "null_qty": 3.311,
+      "warehouse_company": "ROBINSONS GALLERIA SOUTH - TUNGSTEN CAPITAL HOLDINGS OPC"
+    },
+    {
+      "item_code": "FG014",
+      "warehouse": "ROBINSONS GALLERIA SOUTH - TUNGSTEN CAPITAL HOLDINGS OPC",
+      "null_qty": 3.277,
+      "warehouse_company": "ROBINSONS GALLERIA SOUTH - TUNGSTEN CAPITAL HOLDINGS OPC"
+    },
+    {
+      "item_code": "FG015",
+      "warehouse": "AYALA MARKET MARKET - BEBANG MARKET MARKET INC.",
+      "null_qty": 3.228,
+      "warehouse_company": "AYALA MARKET MARKET - BEBANG MARKET MARKET INC."
+    },
+    {
+      "item_code": "FG017",
+      "warehouse": "THE TERMINAL - BEBANG STARMALL ALABANG INC.",
+      "null_qty": 3.21,
+      "warehouse_company": "THE TERMINAL - BEBANG STARMALL ALABANG INC."
+    },
+    {
+      "item_code": "FG019",
+      "warehouse": "AYALA MARKET MARKET - BEBANG MARKET MARKET INC.",
+      "null_qty": 3.187,
+      "warehouse_company": "AYALA MARKET MARKET - BEBANG MARKET MARKET INC."
+    },
+    {
+      "item_code": "FG017",
+      "warehouse": "LUCKY CHINATOWN - BEBANG LCT INC.",
+      "null_qty": 3.0829,
+      "warehouse_company": "LUCKY CHINATOWN - BEBANG LCT INC."
+    },
+    {
+      "item_code": "FG015",
+      "warehouse": "AYALA VERMOSA - BEBANG MEGA INC.",
+      "null_qty": 3.061,
+      "warehouse_company": "AYALA VERMOSA - BEBANG MEGA INC."
+    },
+    {
+      "item_code": "FG018",
+      "warehouse": "AYALA MARKET MARKET - BEBANG MARKET MARKET INC.",
+      "null_qty": 3.007,
+      "warehouse_company": "AYALA MARKET MARKET - BEBANG MARKET MARKET INC."
+    },
+    {
+      "item_code": "FG017",
+      "warehouse": "AYALA EVO - BEBANG MEGA INC.",
+      "null_qty": 3.005,
+      "warehouse_company": "BEBANG MEGA INC."
+    },
+    {
+      "item_code": "FG003",
+      "warehouse": "NAIA T3 - HALO-HALO TERMINAL FOOD CORP.",
+      "null_qty": 3.0,
+      "warehouse_company": "NAIA T3 - HALO-HALO TERMINAL FOOD CORP."
+    },
+    {
+      "item_code": "FG015",
+      "warehouse": "SM VALENZUELA - BEBANG SMV INC.",
+      "null_qty": 2.966,
+      "warehouse_company": "SM VALENZUELA - BEBANG SMV INC."
+    },
+    {
+      "item_code": "FG015",
+      "warehouse": "AYALA EVO - BEBANG MEGA INC.",
+      "null_qty": 2.881,
+      "warehouse_company": "BEBANG MEGA INC."
+    },
+    {
+      "item_code": "FG016",
+      "warehouse": "MEGAWIDE PITX - BEBANG PITX INC.",
+      "null_qty": 2.869,
+      "warehouse_company": "MEGAWIDE PITX - BEBANG PITX INC."
+    },
+    {
+      "item_code": "FG014",
+      "warehouse": "SM EAST ORTIGAS - BEBANG SMEO INC.",
+      "null_qty": 2.808,
+      "warehouse_company": "SM EAST ORTIGAS - BEBANG SMEO INC."
+    },
+    {
+      "item_code": "FG015",
+      "warehouse": "VISTA MALL TAGUIG - TRICERN FOOD CORP.",
+      "null_qty": 2.641,
+      "warehouse_company": "VISTA MALL TAGUIG - TRICERN FOOD CORP."
+    },
+    {
+      "item_code": "FG014",
+      "warehouse": "AYALA UP TOWN CENTER - BEBANG UP TOWN CENTER INC.",
+      "null_qty": 2.628,
+      "warehouse_company": "AYALA UP TOWN CENTER - BEBANG UP TOWN CENTER INC."
+    },
+    {
+      "item_code": "FG014",
+      "warehouse": "SM TANZA - BEBANG MEGA INC.",
+      "null_qty": 2.557,
+      "warehouse_company": "SM TANZA - BEBANG MEGA INC."
+    },
+    {
+      "item_code": "FG014",
+      "warehouse": "AYALA MARKET MARKET - BEBANG MARKET MARKET INC.",
+      "null_qty": 2.548,
+      "warehouse_company": "AYALA MARKET MARKET - BEBANG MARKET MARKET INC."
+    },
+    {
+      "item_code": "FG014",
+      "warehouse": "CTTM TOMAS MORATO - B CUBED VENTURES CORP.",
+      "null_qty": 2.496,
+      "warehouse_company": "CTTM TOMAS MORATO - B CUBED VENTURES CORP."
+    },
+    {
+      "item_code": "FG014",
+      "warehouse": "SM CALOOCAN - TAJ FOOD CORP.",
+      "null_qty": 2.359,
+      "warehouse_company": "SM CALOOCAN - TAJ FOOD CORP."
+    },
+    {
+      "item_code": "FG014",
+      "warehouse": "SM BICUTAN - BEBANG SM BICUTAN INC.",
+      "null_qty": 2.352,
+      "warehouse_company": "SM BICUTAN - BEBANG SM BICUTAN INC."
+    },
+    {
+      "item_code": "FG014",
+      "warehouse": "SM MALL OF ASIA - BEBANG SMOA INC.",
+      "null_qty": 2.345,
+      "warehouse_company": "SM MALL OF ASIA - BEBANG SMOA INC."
+    },
+    {
+      "item_code": "FG018",
+      "warehouse": "AYALA EVO - BEBANG MEGA INC.",
+      "null_qty": 2.34,
+      "warehouse_company": "BEBANG MEGA INC."
+    },
+    {
+      "item_code": "FG015",
+      "warehouse": "THE TERMINAL - BEBANG STARMALL ALABANG INC.",
+      "null_qty": 2.309,
+      "warehouse_company": "THE TERMINAL - BEBANG STARMALL ALABANG INC."
+    },
+    {
+      "item_code": "FG017",
+      "warehouse": "NAIA T3 - HALO-HALO TERMINAL FOOD CORP.",
+      "null_qty": 2.264,
+      "warehouse_company": "NAIA T3 - HALO-HALO TERMINAL FOOD CORP."
+    },
+    {
+      "item_code": "FG017",
+      "warehouse": "AYALA VERMOSA - BEBANG MEGA INC.",
+      "null_qty": 2.238,
+      "warehouse_company": "AYALA VERMOSA - BEBANG MEGA INC."
+    },
+    {
+      "item_code": "FG014",
+      "warehouse": "AYALA FAIRVIEW TERRACES - BEBANG FT INC.",
+      "null_qty": 2.198,
+      "warehouse_company": "AYALA FAIRVIEW TERRACES - BEBANG FT INC."
+    },
+    {
+      "item_code": "FG014",
+      "warehouse": "THE GRID ROCKWELL - TASTECARTEL CORP.",
+      "null_qty": 2.10949,
+      "warehouse_company": "THE GRID ROCKWELL - TASTECARTEL CORP."
+    },
+    {
+      "item_code": "FG004",
+      "warehouse": "AYALA VERMOSA - BEBANG MEGA INC.",
+      "null_qty": 2.092,
+      "warehouse_company": "AYALA VERMOSA - BEBANG MEGA INC."
+    },
+    {
+      "item_code": "FG014",
+      "warehouse": "AYALA EVO - BEBANG MEGA INC.",
+      "null_qty": 2.041,
+      "warehouse_company": "BEBANG MEGA INC."
+    },
+    {
+      "item_code": "FG007",
+      "warehouse": "AYALA VERMOSA - BEBANG MEGA INC.",
+      "null_qty": 2.033,
+      "warehouse_company": "AYALA VERMOSA - BEBANG MEGA INC."
+    },
+    {
+      "item_code": "FG014",
+      "warehouse": "AYALA VERMOSA - BEBANG MEGA INC.",
+      "null_qty": 2.02,
+      "warehouse_company": "AYALA VERMOSA - BEBANG MEGA INC."
+    },
+    {
+      "item_code": "FG006",
+      "warehouse": "THE TERMINAL - BEBANG STARMALL ALABANG INC.",
+      "null_qty": 2.0,
+      "warehouse_company": "THE TERMINAL - BEBANG STARMALL ALABANG INC."
+    },
+    {
+      "item_code": "FG014",
+      "warehouse": "SM MARILAO - BEBANG MARILAO INC.",
+      "null_qty": 1.98,
+      "warehouse_company": "SM MARILAO - BEBANG MARILAO INC."
+    },
+    {
+      "item_code": "FG014",
+      "warehouse": "SM PULILAN - BEBANG SMM INC.",
+      "null_qty": 1.96,
+      "warehouse_company": "SM PULILAN - BEBANG SMM INC."
+    },
+    {
+      "item_code": "FG003",
+      "warehouse": "AYALA EVO - BEBANG MEGA INC.",
+      "null_qty": 1.932,
+      "warehouse_company": "BEBANG MEGA INC."
+    },
+    {
+      "item_code": "FG006",
+      "warehouse": "AYALA VERMOSA - BEBANG MEGA INC.",
+      "null_qty": 1.706,
+      "warehouse_company": "AYALA VERMOSA - BEBANG MEGA INC."
+    },
+    {
+      "item_code": "FG017",
+      "warehouse": "THE GRID ROCKWELL - TASTECARTEL CORP.",
+      "null_qty": 1.7043,
+      "warehouse_company": "THE GRID ROCKWELL - TASTECARTEL CORP."
+    },
+    {
+      "item_code": "FG014",
+      "warehouse": "VISTA MALL TAGUIG - TRICERN FOOD CORP.",
+      "null_qty": 1.702,
+      "warehouse_company": "VISTA MALL TAGUIG - TRICERN FOOD CORP."
+    },
+    {
+      "item_code": "FG014",
+      "warehouse": "MEGAWORLD VENICE GRAND CANAL - BEBANG VENICE GRAND CANAL INC.",
+      "null_qty": 1.697,
+      "warehouse_company": "MEGAWORLD VENICE GRAND CANAL - BEBANG VENICE GRAND CANAL INC."
+    },
+    {
+      "item_code": "FG015",
+      "warehouse": "SM TANZA - BEBANG MEGA INC.",
+      "null_qty": 1.694,
+      "warehouse_company": "SM TANZA - BEBANG MEGA INC."
+    },
+    {
+      "item_code": "FG014",
+      "warehouse": "MEGAWIDE PITX - BEBANG PITX INC.",
+      "null_qty": 1.661,
+      "warehouse_company": "MEGAWIDE PITX - BEBANG PITX INC."
+    },
+    {
+      "item_code": "FG014",
+      "warehouse": "LUCKY CHINATOWN - BEBANG LCT INC.",
+      "null_qty": 1.485,
+      "warehouse_company": "LUCKY CHINATOWN - BEBANG LCT INC."
+    },
+    {
+      "item_code": "FG014",
+      "warehouse": "NAIA T3 - HALO-HALO TERMINAL FOOD CORP.",
+      "null_qty": 1.376,
+      "warehouse_company": "NAIA T3 - HALO-HALO TERMINAL FOOD CORP."
+    },
+    {
+      "item_code": "FG014",
+      "warehouse": "FESTIVAL MALL ALABANG - BEBANG FESTIVAL INC.",
+      "null_qty": 1.29,
+      "warehouse_company": "FESTIVAL MALL ALABANG - BEBANG FESTIVAL INC."
+    },
+    {
+      "item_code": "FG014",
+      "warehouse": "SM VALENZUELA - BEBANG SMV INC.",
+      "null_qty": 1.236,
+      "warehouse_company": "SM VALENZUELA - BEBANG SMV INC."
+    },
+    {
+      "item_code": "FG014",
+      "warehouse": "AYALA SOLENAD - HFFM SOLENAD FOOD SERVICES INC.",
+      "null_qty": 1.2,
+      "warehouse_company": "AYALA SOLENAD - HFFM SOLENAD FOOD SERVICES INC."
+    },
+    {
+      "item_code": "FG014",
+      "warehouse": "THE TERMINAL - BEBANG STARMALL ALABANG INC.",
+      "null_qty": 1.1578,
+      "warehouse_company": "THE TERMINAL - BEBANG STARMALL ALABANG INC."
+    },
+    {
+      "item_code": "FG014",
+      "warehouse": "Greenhills Ortigas - BEIFRANCHISE FOOD OPC",
+      "null_qty": 1.13,
+      "warehouse_company": null
+    },
+    {
+      "item_code": "FG014",
+      "warehouse": "SM SANGANDAAN - TUNGSTEN CAPITAL HOLDINGS OPC",
+      "null_qty": 1.121,
+      "warehouse_company": "SM SANGANDAAN - TUNGSTEN CAPITAL HOLDINGS OPC"
+    },
+    {
+      "item_code": "FG016",
+      "warehouse": "NAIA T3 - HALO-HALO TERMINAL FOOD CORP.",
+      "null_qty": 0.936,
+      "warehouse_company": "NAIA T3 - HALO-HALO TERMINAL FOOD CORP."
+    },
+    {
+      "item_code": "FG014",
+      "warehouse": "BF HOMES - BEBANG BF HOMES INC.",
+      "null_qty": 0.9,
+      "warehouse_company": "BF HOMES - BEBANG BF HOMES INC."
+    },
+    {
+      "item_code": "FG014",
+      "warehouse": "SM GRAND CENTRAL - BEBANG GRAND CENTRAL INC.",
+      "null_qty": 0.738,
+      "warehouse_company": "SM GRAND CENTRAL - BEBANG GRAND CENTRAL INC."
+    },
+    {
+      "item_code": "FG014",
+      "warehouse": "UP TOWN MALL BGC - DMD HOLDINGS INC.",
+      "null_qty": 0.586,
+      "warehouse_company": "UP TOWN MALL BGC - DMD HOLDINGS INC."
+    },
+    {
+      "item_code": "FG016",
+      "warehouse": "SM TANZA - BEBANG MEGA INC.",
+      "null_qty": 0.147,
+      "warehouse_company": "SM TANZA - BEBANG MEGA INC."
+    }
+  ]
+}
