@@ -253,6 +253,13 @@ function validateReceipt(rowData) {
  * Shared handler — reads new rows from a source sheet's Receipts tab since
  * last run, writes each into Sheet C consolidated + (validated → Pending GR)
  * or (invalid → Variance Queue), and posts Chat notifications.
+ *
+ * Multi-line delivery support (Phase 10): header fields (RR#, PO#, Supplier,
+ * SI#, Trucker, Plate, Received By) auto-inherit from the most recent prior
+ * row with a non-blank value in each column. This lets the 3PL type header
+ * fields once for the first line of a delivery and leave them blank on
+ * subsequent lines (just Material Code + Qty + UoM + dates). Per-line fields
+ * (Material, Qty, UoM, Production/Expiration Date, Notes) are NEVER inherited.
  */
 function _handleNewReceipts(sourceSheetId, sourceLabel) {
   const props = PropertiesService.getScriptProperties();
@@ -275,11 +282,22 @@ function _handleNewReceipts(sourceSheetId, sourceLabel) {
   let latestMs = lastSeen;
   let processed = 0;
   for (let i = 1; i < data.length; i++) {
-    const row = data[i];
-    const tsRaw = row[COL_TIMESTAMP];
+    const rawRow = data[i];
+    const tsRaw = rawRow[COL_TIMESTAMP];
     if (!tsRaw) continue;
     const rowMs = new Date(tsRaw).getTime();
     if (isNaN(rowMs) || rowMs <= lastSeen) continue;
+
+    // Phase 10: inherit blank header fields from the most recent prior row
+    // that has them populated. Lets 3PL type shared fields once per delivery.
+    const row = _fillInheritedHeaders(data, i);
+    const inherited = [];
+    const HEADER_COLS = [COL_RR, COL_PO, COL_SUPPLIER, COL_SI_NUM,
+                         COL_TRUCKER, COL_PLATE, COL_RECEIVED_BY];
+    for (const c of HEADER_COLS) {
+      if (!_isBlank(rawRow[c]) && _isBlank(row[c])) continue;
+      if (_isBlank(rawRow[c]) && !_isBlank(row[c])) inherited.push(c);
+    }
 
     const validation = validateReceipt(row);
 
@@ -309,7 +327,8 @@ function _handleNewReceipts(sourceSheetId, sourceLabel) {
         'PENDING', // Status
         false,     // Picked_Up_By_AppSheet
       ]);
-      _logAudit(auditLog, 'receipt_edit', sourceLabel, i + 1, 'Pending_GR_written', 'OK', '');
+      _logAudit(auditLog, 'receipt_edit', sourceLabel, i + 1, 'Pending_GR_written', 'OK',
+                inherited.length ? 'inherited_cols=' + inherited.join(',') : '');
       postChatNotification({
         source: sourceLabel,
         po: row[COL_PO],
@@ -341,6 +360,39 @@ function _handleNewReceipts(sourceSheetId, sourceLabel) {
 function handleNewReceipt_3MD() { _handleNewReceipts(SHEET_A, '3MD'); }
 function handleNewReceipt_Pinnacle() { _handleNewReceipts(SHEET_B, 'Pinnacle'); }
 function handleNewReceipt_Shaw() { _handleNewReceipts(SHEET_D, 'Shaw'); }
+
+/**
+ * _isBlank — treats '', null, undefined, whitespace-only strings as blank.
+ */
+function _isBlank(v) {
+  if (v === null || v === undefined) return true;
+  return String(v).trim() === '';
+}
+
+/**
+ * _fillInheritedHeaders — returns a copy of data[rowIdx] with blank header
+ * fields populated from the most recent prior row that has them. Per-line
+ * fields are NEVER inherited.
+ *
+ * Inherited header columns: RR#, PO#, Supplier, SI#, Trucker, Plate, Received By.
+ * Per-line (never inherited): Material Code/Desc, Qty, UoM, Production Date,
+ * Expiration Date, Notes, Timestamp, 3PL.
+ */
+function _fillInheritedHeaders(data, rowIdx) {
+  const HEADER_COLS = [COL_RR, COL_PO, COL_SUPPLIER, COL_SI_NUM,
+                       COL_TRUCKER, COL_PLATE, COL_RECEIVED_BY];
+  const row = data[rowIdx].slice();  // shallow copy
+  for (const col of HEADER_COLS) {
+    if (!_isBlank(row[col])) continue;
+    for (let j = rowIdx - 1; j >= 1; j--) {
+      if (!_isBlank(data[j][col])) {
+        row[col] = data[j][col];
+        break;
+      }
+    }
+  }
+  return row;
+}
 
 // ========================================================================
 // Chat notifications
@@ -779,12 +831,14 @@ function handleSiUpload(e) {
 
   const timestamp = new Date();
 
-  // Attempt match by (PO#, SI#) — normalize whitespace + case
+  // Attempt match by (PO#, SI#) — normalize whitespace + case.
+  // Phase 10: match ALL consolidated rows with the same (PO#, SI#), not just
+  // the first. Multi-line deliveries create N consolidated rows sharing the
+  // PO#/SI#; every one must be tagged SI_Matched when the supplier uploads.
   const normPo = String(poNumber).trim().toUpperCase();
   const normSi = String(siNumber).trim().toUpperCase();
 
-  let matchedRow = -1;
-  let matchedRRNumber = '';
+  const matchedConsolidatedRows = [];  // [{ rowIdx, rr }]
   if (normPo && normSi) {
     const data = consolidated.getDataRange().getValues();
     // col indexes (0-based in data): 3=RR, 4=PO, 10=SI Number
@@ -792,32 +846,34 @@ function handleSiUpload(e) {
       const rowPo = String(data[i][4] || '').trim().toUpperCase();
       const rowSi = String(data[i][10] || '').trim().toUpperCase();
       if (rowPo === normPo && rowSi === normSi) {
-        matchedRow = i + 1;  // 1-based for setValue
-        matchedRRNumber = data[i][3];
-        break;
+        matchedConsolidatedRows.push({ rowIdx: i + 1, rr: data[i][3] });
       }
     }
   }
 
-  const matchStatus = matchedRow > 0 ? 'MATCHED' : 'ORPHAN';
+  const matchStatus = matchedConsolidatedRows.length > 0 ? 'MATCHED' : 'ORPHAN';
+  const matchedRRList = matchedConsolidatedRows.map(function(m) { return m.rr; }).join(',');
 
   // Write into 03_Supplier_SI_Uploads
   siUploads.appendRow([
     timestamp, supplierName, poNumber, siNumber, siDate,
-    amount, siPdfLink, notes, matchStatus, matchedRRNumber,
-    matchedRow > 0 ? timestamp : '',
+    amount, siPdfLink, notes, matchStatus, matchedRRList,
+    matchedConsolidatedRows.length > 0 ? timestamp : '',
   ]);
 
-  if (matchedRow > 0) {
-    // Tag the matched DR row in consolidated:
+  if (matchedConsolidatedRows.length > 0) {
+    // Tag EVERY matched DR row in consolidated:
     // col T = SI_Matched (20), col U = SI_Upload_Link (21), col V = SI_Match_Timestamp (22)
-    consolidated.getRange(matchedRow, 20).setValue(true);
-    consolidated.getRange(matchedRow, 21).setValue(siPdfLink);
-    consolidated.getRange(matchedRow, 22).setValue(timestamp);
+    for (const m of matchedConsolidatedRows) {
+      consolidated.getRange(m.rowIdx, 20).setValue(true);
+      consolidated.getRange(m.rowIdx, 21).setValue(siPdfLink);
+      consolidated.getRange(m.rowIdx, 22).setValue(timestamp);
+    }
 
-    // Also tag Pending GR row if present
+    // Also tag EVERY matching Pending GR row (same multi-line fix)
     const pending = masterSs.getSheetByName('06_Pending_GR');
     const pendingData = pending.getDataRange().getValues();
+    let pendingTagged = 0;
     for (let i = 1; i < pendingData.length; i++) {
       const rowPo = String(pendingData[i][3] || '').trim().toUpperCase();
       const rowSi = String(pendingData[i][9] || '').trim().toUpperCase();
@@ -825,13 +881,14 @@ function handleSiUpload(e) {
         // Update SI PDF Link (col 11 = K, 1-based index 11)
         pending.getRange(i + 1, 11).setValue(siPdfLink);
         pending.getRange(i + 1, 12).setValue('READY');
-        break;
+        pendingTagged++;
       }
     }
 
-    _logAudit(auditLog, 'handleSiUpload', supplierName, matchedRow,
-              'SI_matched_to_RR_' + matchedRRNumber, 'OK',
-              'PO=' + poNumber + ' SI=' + siNumber);
+    _logAudit(auditLog, 'handleSiUpload', supplierName, matchedConsolidatedRows.length,
+              'SI_matched_' + matchedConsolidatedRows.length + '_DR_rows', 'OK',
+              'PO=' + poNumber + ' SI=' + siNumber +
+              ' RRs=' + matchedRRList + ' pendingTagged=' + pendingTagged);
   } else {
     // Orphan: write to 04_Match_Queue for manual resolution
     matchQueue.appendRow([
