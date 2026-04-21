@@ -7,23 +7,23 @@ For suppliers delivering goods to BEI or BEI's 3PL warehouses (3MD, Pinnacle).
 ## Q: What am I supposed to do?
 
 After every delivery you make to BEI or our 3PL warehouses, upload your
-Sales Invoice (SI) through your dedicated link. We sent it to you by
-email and it looks like this:
+Sales Invoice (SI) via our form:
 
-```
-https://docs.google.com/forms/d/e/1FAIpQLS.../viewform?usp=pp_url&entry.XXXX=YourCompanyName
-```
+**https://docs.google.com/forms/d/e/1FAIpQLSc3UC9f_3gefDYNgpOqNx7UCw_5BDrRh9T8-GQeyHHWSxdITw/viewform**
+
+Bookmark it. Same link for every delivery, every supplier.
 
 On the form:
-1. **Supplier Name** — pre-selected from your BEI link (dropdown; confirm it's your company).
-2. **Warehouse** — pick the one you delivered to (3MD, Pinnacle, or Shaw BLVD).
-3. **PO Number** and **SI Number** — type exactly as printed on your SI.
+1. **Warehouse** — pick which BEI warehouse you delivered to (3MD, Pinnacle, or Shaw BLVD).
+2. **PO Number** — copy from your BEI PO exactly as printed (e.g. `PO-2026-1234`).
+3. **SI Number** — your sales invoice number, exactly as printed on your SI.
 4. **SI Date** — pick the date.
 5. **Amount** — type the PHP total.
 6. **Upload SI Copy** — tap, pick your PDF or photo from the device.
 7. Submit.
 
-That's it. 30-60 seconds.
+That's it. 30-60 seconds. We identify you from the PO Number automatically,
+so you don't need to type your company name.
 
 ## Q: Why am I doing this?
 
@@ -77,12 +77,10 @@ business days, email Ian with the PO Number and SI Number.
 No. Copy-paste from the PO exactly as printed. The form accepts any
 format.
 
-## Q: Can I share my link with my team?
+## Q: Can I share the form link with my team?
 
-Yes. The link pre-selects your company in the Supplier Name dropdown so
-there's no typo risk — anyone on your team who handles BEI deliveries
-can use the same link.
-Just don't upload the same SI twice.
+Yes — it's the same link for everyone. Share with anyone who handles
+BEI deliveries. Just don't upload the same SI twice.
 
 ## Q: I made a typo after submitting — can I fix it?
 
@@ -96,10 +94,12 @@ Only BEI staff (accounting + IT + CEO) can see your uploaded PDF. It's
 stored in BEI's Google Drive, not publicly shared and not indexed by
 search engines.
 
-## Q: I'm a new supplier and don't have a pre-filled link yet.
+## Q: I'm a new supplier. Where do I find the upload link?
 
-Email Cayla (`cayla@bebang.ph`) with your company name. She'll generate
-and send your link within a day.
+Use the same form as every other BEI supplier:
+https://docs.google.com/forms/d/e/1FAIpQLSc3UC9f_3gefDYNgpOqNx7UCw_5BDrRh9T8-GQeyHHWSxdITw/viewform
+
+As long as BEI has issued you a PO, your upload will match automatically.
 
 ## Q: What if my delivery covers multiple of your warehouses on the same day?
 
@@ -111,8 +111,8 @@ automatically.
 
 ## Quick reference
 
-- **Your pre-filled link:** in your onboarding email (subject "BEI
-  Supplier SI Upload — fastest path to payment"). If lost, email Cayla.
+- **Form URL (bookmark this):**
+  https://docs.google.com/forms/d/e/1FAIpQLSc3UC9f_3gefDYNgpOqNx7UCw_5BDrRh9T8-GQeyHHWSxdITw/viewform
 - **Questions about the upload tool:** `sam@bebang.ph` (subject line:
   "BEI Supplier SI Upload")
 - **Payment status / AP queries:** your normal contact at BEI AP
