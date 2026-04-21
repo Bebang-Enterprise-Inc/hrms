@@ -157,4 +157,4 @@ rows appearing):
 
 ---
 
-_Version 2026-04-21 (S210 Phase 11 guide pack)._
+_Version 2026-04-21._

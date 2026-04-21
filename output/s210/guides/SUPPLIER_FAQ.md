@@ -4,111 +4,116 @@ For suppliers delivering goods to BEI or BEI's 3PL warehouses (3MD, Pinnacle).
 
 ---
 
-## Q: Why is BEI asking me to upload my SI via a form instead of sending paper to the warehouse?
+## Q: What am I supposed to do?
 
-Paper SIs get lost or delayed between the warehouse and BEI's accounting
-team. When we can't find the paper SI, your payment is stuck even if your
-delivery was perfect. Uploading a scan directly to BEI bypasses the
-warehouse hand-off entirely and gets your payment queued immediately.
+After every delivery you make to BEI or our 3PL warehouses, upload your
+Sales Invoice (SI) through your dedicated link. We sent it to you by
+email and it looks like this:
 
-## Q: How does this affect my payment timing?
+```
+https://docs.google.com/forms/d/e/1FAIpQLS.../viewform?usp=pp_url&entry.XXXX=YourCompanyName
+```
 
-- **Before:** BEI waited for the paper SI to arrive at their office.
-  Could take days or weeks. Payment started only after BEI manually typed
-  the delivery into their system from the paper SI.
-- **After:** The moment the 3PL warehouse logs the delivery, BEI's system
-  drafts the payment request. When you upload your SI, it's matched
-  against the delivery automatically. Payment is scheduled to release on
-  your contracted payment terms (Net 15, Net 30, Net 45, etc.) counted
-  from the delivery date.
+On the form:
+1. Your company name is auto-filled.
+2. Type the PO Number and SI Number exactly as printed on your SI.
+3. Pick the SI Date and type the Amount.
+4. Tap **Upload SI Copy** and pick your PDF or photo from the device.
+5. Submit.
 
-## Q: What if I can't scan to PDF — can I upload a photo instead?
+That's it. 30-60 seconds.
 
-Yes. The form accepts either PDF or image (JPG, PNG). Tap "Upload SI
-Copy" on the form and pick the file from your phone. Maximum file size is
-10 MB, one file per submission.
+## Q: Why am I doing this?
 
-Clear phone photos work fine as long as the SI number, date, line items,
-and totals are legible.
+It's the fastest path to payment. Before, paper SIs moved through the
+3PL warehouse to our accounting team and often got delayed — your
+payment was stuck waiting on paper. Now we process payment as soon as
+we see the delivery + your uploaded SI, without waiting on paper.
 
-## Q: I still need to send the paper SI to BEI's accounting team, right?
+## Q: Can I upload a phone photo instead of a PDF?
 
-Yes — paper SI is still required for BIR's 3-year retention rule. But
-**paper SI is no longer a payment gate**. We process your RFP from the
-delivery receipt + your uploaded scan. The paper SI catches up later.
+Yes. PDF, JPG, and PNG are all accepted. Max 10 MB, one file per
+submission. Phone photos are fine as long as the SI number, date, line
+items, and totals are legible.
 
-## Q: What happens if the delivery receipt and my SI don't match?
+## Q: Do I still send the paper SI to BEI's accounting team?
 
-Nothing bad — we pay based on what the warehouse logged as received. If
-your SI shows more than was received, BEI pays the received quantity and
-the variance gets flagged for your sales/billing team to reconcile with
-ours. Disputes happen AFTER payment, not before.
+Yes, keep doing that. Upload is in addition to paper, not a replacement.
+The upload is what speeds up payment.
 
-## Q: What's in my pre-filled URL? Can I share it with my team?
+## Q: How fast will I be paid after I upload?
 
-Your pre-filled URL auto-fills your Supplier Name so you don't mistype
-it. It's safe to share with anyone on your team who handles BEI deliveries.
-It doesn't give them access to anything else.
+Per your contracted payment terms (Net 15, Net 30, Net 45, Net 60)
+counted from the delivery date. Uploading doesn't change the terms —
+it removes the paper-chasing delays that used to push actual payment
+past the contractual date.
 
-If you have multiple people who might upload, each of them can use the
-same URL. Just don't upload the same SI twice.
+## Q: I got a message saying my SI is "Orphan" — what does that mean?
 
-## Q: The form says my SI is "Orphan" — what does that mean?
+It means the system couldn't match your upload to a delivery record.
+Usually one of:
 
-It means your (PO Number, SI Number) combination didn't match any delivery
-in BEI's system yet. Likely causes:
+1. **Too early** — you uploaded before the warehouse logged the delivery.
+   The system retries every minute and will auto-match once the
+   delivery appears.
+2. **Typo** — PO Number or SI Number doesn't match. Double-check both
+   on your SI. If correct on your side, email Ian so he can check the
+   warehouse record.
+3. **Wrong warehouse** — you delivered somewhere BEI isn't tracking yet.
+   Email Ian.
 
-1. You uploaded the SI before the 3PL logged the delivery. BEI's system
-   re-checks every minute — it will auto-match once the delivery appears.
-2. There's a typo in your PO Number or SI Number. Double-check both.
-3. You're delivering to a 3PL that isn't onboarded yet. Contact BEI.
+Your upload is NOT lost. It sits in our queue until resolved.
 
-Your upload is NOT lost. It sits in a "Match Queue" until resolved.
+## Q: How do I know BEI received my upload?
 
-## Q: How do I know BEI received my SI upload?
+Google shows a confirmation page right after you submit. We don't send
+an email confirmation yet. If you don't see payment progress after 3
+business days, email Ian with the PO Number and SI Number.
 
-After submitting the form, Google shows a confirmation. BEI's system
-logs the upload immediately. If you don't see movement after 2 hours,
-email `ian@bebang.ph` with the PO Number and SI Number you submitted.
+## Q: My PO number is long or has dashes — does that matter?
 
-## Q: Do I get a receipt or confirmation email?
+No. Copy-paste from the PO exactly as printed. The form accepts any
+format.
 
-Not currently. Submission shows a Google Forms confirmation page. The
-match status (MATCHED / ORPHAN) is tracked internally. You'll see payment
-in your bank account per your contracted terms.
+## Q: Can I share my link with my team?
 
-If you need explicit per-SI confirmations, reply to BEI's rollout email —
-we can wire that as an enhancement.
+Yes. The link is unique to your company (it auto-fills your name) but
+anyone on your team who handles BEI deliveries can use the same link.
+Just don't upload the same SI twice.
 
-## Q: What if I deliver to multiple BEI warehouses on the same day?
+## Q: I made a typo after submitting — can I fix it?
 
-Upload one SI per delivery. If one SI covers a multi-drop delivery across
-warehouses, upload the same SI once — BEI's system matches it against all
-corresponding delivery receipts.
+Yes. Submit again with the correct values. Add a note in the "Notes"
+field like "Correction for PO-1234 SI-5678 — previous had a typo" so
+our team knows to dismiss the first one.
 
-## Q: Is my data secure?
+## Q: Is my upload secure?
 
-- The upload URL is unique per supplier (your Supplier Name pre-filled)
-- Only BEI staff have access to the form submissions
-- Your PDF is stored in Google Drive under BEI's account, not publicly
-  shared
-- BEI's accounting team + IT + the CEO are the only viewers
+Only BEI staff (accounting + IT + CEO) can see your uploaded PDF. It's
+stored in BEI's Google Drive, not publicly shared and not indexed by
+search engines.
 
-## Q: What if I'm a new supplier and don't have a pre-filled URL yet?
+## Q: I'm a new supplier and don't have a pre-filled link yet.
 
-Contact Cayla at BEI to get your dedicated URL. Once your supplier record
-is in BEI's system, Cayla generates and emails you the link.
+Email Cayla (`cayla@bebang.ph`) with your company name. She'll generate
+and send your link within a day.
+
+## Q: What if my delivery covers multiple of your warehouses on the same day?
+
+Upload the SI once. If one SI covers drops to multiple warehouses, our
+system matches it against every corresponding delivery record
+automatically.
 
 ---
 
 ## Quick reference
 
-- **Form URL (if your pre-filled link is lost):**
-  https://docs.google.com/forms/d/e/1FAIpQLSc3UC9f_3gefDYNgpOqNx7UCw_5BDrRh9T8-GQeyHHWSxdITw/viewform
-- **Questions:** `sam@bebang.ph` (subject line: "BEI Supplier SI Upload")
-- **Payment status:** contact BEI Accounts Payable per your usual channel
+- **Your pre-filled link:** in your onboarding email (subject "BEI
+  Supplier SI Upload — fastest path to payment"). If lost, email Cayla.
+- **Questions about the upload tool:** `sam@bebang.ph` (subject line:
+  "BEI Supplier SI Upload")
+- **Payment status / AP queries:** your normal contact at BEI AP
 
 ---
 
-_Version 2026-04-21. Share this FAQ with your accounts receivable / billing
-team so they understand the new process._
+_Share this with anyone on your team who handles BEI invoices._
