@@ -5006,6 +5006,13 @@ def upload_official_receipt(name, or_number, or_date, or_amount, or_attachment=N
     pay_req.or_uploaded_date = _now_dt()
     pay_req.or_status = "OR Received"
     pay_req.status = "Closed"
+    # Persist variance for downstream review (S194-21 cert + AP dashboard).
+    # Frappe silently drops fields not in the DocType; the schema migration
+    # in this PR adds or_variance_pct + or_variance_flagged.
+    if hasattr(pay_req, "or_variance_pct"):
+        pay_req.or_variance_pct = round(variance_pct, 2)
+    if hasattr(pay_req, "or_variance_flagged"):
+        pay_req.or_variance_flagged = 0 if amount_match else 1
     pay_req.save(ignore_permissions=True)
 
     msg = _("Official Receipt uploaded successfully. Transaction closed.")
