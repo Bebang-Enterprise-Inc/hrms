@@ -1,0 +1,241 @@
+{
+  "aranete_submit": {
+    "picks": [
+      {
+        "item_code": "FG001",
+        "qty_requested": 768,
+        "suggested_qty": 1536.4,
+        "recommended_qty": 1536.4,
+        "unit_price": 14.78,
+        "deviation_reason": "Stock Correction"
+      },
+      {
+        "item_code": "PM001",
+        "qty_requested": 534,
+        "suggested_qty": 1069.47,
+        "recommended_qty": 1069.47,
+        "unit_price": 3.92,
+        "deviation_reason": "Stock Correction"
+      },
+      {
+        "item_code": "PM002",
+        "qty_requested": 577,
+        "suggested_qty": 1154.47,
+        "recommended_qty": 1154.47,
+        "unit_price": 0.9,
+        "deviation_reason": "Stock Correction"
+      }
+    ],
+    "result": {
+      "success": true,
+      "name": "BEI-ORD-2026-00398",
+      "status": "Pending Approval",
+      "requires_area_supervisor_review": true,
+      "requires_regional_manager_review": false,
+      "requires_fallback_approval": false,
+      "edited_lines_count": 3,
+      "message": "Order BEI-ORD-2026-00398 submitted successfully",
+      "approval_queue_status": "created",
+      "approval_queue_name": "BEI-APQ-2026-00737",
+      "approval_approver_source": "area_supervisor",
+      "approval_assigned_approver": "test.area@bebang.ph",
+      "fallback_approver": null,
+      "submitted_after_cutoff": true,
+      "requires_dual_approval": true,
+      "approval_stage": "Pending Area Supervisor",
+      "is_emergency": false,
+      "cargo_category": "DRY",
+      "dropped_invalid_lines": 0
+    },
+    "wh": "ARANETA GATEWAY - TUNGSTEN CAPITAL HOLDINGS OPC"
+  },
+  "festival_submit": {
+    "picks": [
+      {
+        "item_code": "FG001",
+        "qty_requested": 575,
+        "suggested_qty": 1151.85,
+        "recommended_qty": 1151.85,
+        "unit_price": 14.78,
+        "deviation_reason": "Stock Correction"
+      },
+      {
+        "item_code": "PM007",
+        "qty_requested": 580,
+        "suggested_qty": 1160.93,
+        "recommended_qty": 1160.93,
+        "unit_price": 98.21,
+        "deviation_reason": "Stock Correction"
+      }
+    ],
+    "result": {
+      "success": true,
+      "name": "BEI-ORD-2026-00399",
+      "status": "Pending Approval",
+      "requires_area_supervisor_review": true,
+      "requires_regional_manager_review": false,
+      "requires_fallback_approval": false,
+      "edited_lines_count": 2,
+      "message": "Order BEI-ORD-2026-00399 submitted successfully",
+      "approval_queue_status": "created",
+      "approval_queue_name": "BEI-APQ-2026-00738",
+      "approval_approver_source": "area_supervisor",
+      "approval_assigned_approver": "test.area@bebang.ph",
+      "fallback_approver": null,
+      "submitted_after_cutoff": true,
+      "requires_dual_approval": true,
+      "approval_stage": "Pending Area Supervisor",
+      "is_emergency": false,
+      "cargo_category": "DRY",
+      "dropped_invalid_lines": 0
+    },
+    "wh": "FESTIVAL MALL ALABANG - BEBANG FESTIVAL INC."
+  },
+  "aranete_backend_state": {
+    "order": "BEI-ORD-2026-00398",
+    "status": "Pending Approval",
+    "approval_stage": "Pending Area Supervisor",
+    "requires_dual_approval": 1,
+    "queue_entries": [
+      {
+        "name": "BEI-APQ-2026-00525",
+        "status": "Approved",
+        "assigned_approver": "test.area@bebang.ph"
+      },
+      {
+        "name": "BEI-APQ-2026-00526",
+        "status": "Approved",
+        "assigned_approver": "ian@bebang.ph"
+      },
+      {
+        "name": "BEI-APQ-2026-00527",
+        "status": "Approved",
+        "assigned_approver": "test.area@bebang.ph"
+      },
+      {
+        "name": "BEI-APQ-2026-00535",
+        "status": "Approved",
+        "assigned_approver": "test.area@bebang.ph"
+      },
+      {
+        "name": "BEI-APQ-2026-00565",
+        "status": "Approved",
+        "assigned_approver": "test.area@bebang.ph"
+      },
+      {
+        "name": "BEI-APQ-2026-00566",
+        "status": "Approved",
+        "assigned_approver": "ian@bebang.ph"
+      },
+      {
+        "name": "BEI-APQ-2026-00593",
+        "status": "Approved",
+        "assigned_approver": "test.area@bebang.ph"
+      },
+      {
+        "name": "BEI-APQ-2026-00639",
+        "status": "Approved",
+        "assigned_approver": "test.area@bebang.ph"
+      },
+      {
+        "name": "BEI-APQ-2026-00685",
+        "status": "Approved",
+        "assigned_approver": "test.area@bebang.ph"
+      },
+      {
+        "name": "BEI-APQ-2026-00737",
+        "status": "Pending",
+        "assigned_approver": "test.area@bebang.ph"
+      }
+    ],
+    "items": [
+      {
+        "item_code": "PM002",
+        "qty_requested": 577.0,
+        "suggested_qty": 1154.47,
+        "is_edited": 1
+      },
+      {
+        "item_code": "FG001",
+        "qty_requested": 768.0,
+        "suggested_qty": 1536.4,
+        "is_edited": 1
+      },
+      {
+        "item_code": "PM001",
+        "qty_requested": 534.0,
+        "suggested_qty": 1069.47,
+        "is_edited": 1
+      }
+    ],
+    "edited_count": 3
+  },
+  "festival_backend_state": {
+    "order": "BEI-ORD-2026-00399",
+    "status": "Pending Approval",
+    "approval_stage": "Pending Area Supervisor",
+    "requires_dual_approval": 1,
+    "queue_entries": [
+      {
+        "name": "BEI-APQ-2026-00528",
+        "status": "Approved",
+        "assigned_approver": "test.area@bebang.ph"
+      },
+      {
+        "name": "BEI-APQ-2026-00536",
+        "status": "Approved",
+        "assigned_approver": "test.area@bebang.ph"
+      },
+      {
+        "name": "BEI-APQ-2026-00567",
+        "status": "Approved",
+        "assigned_approver": "test.area@bebang.ph"
+      },
+      {
+        "name": "BEI-APQ-2026-00568",
+        "status": "Approved",
+        "assigned_approver": "ian@bebang.ph"
+      },
+      {
+        "name": "BEI-APQ-2026-00594",
+        "status": "Approved",
+        "assigned_approver": "test.area@bebang.ph"
+      },
+      {
+        "name": "BEI-APQ-2026-00640",
+        "status": "Approved",
+        "assigned_approver": "test.area@bebang.ph"
+      },
+      {
+        "name": "BEI-APQ-2026-00686",
+        "status": "Approved",
+        "assigned_approver": "test.area@bebang.ph"
+      },
+      {
+        "name": "BEI-APQ-2026-00738",
+        "status": "Pending",
+        "assigned_approver": "test.area@bebang.ph"
+      }
+    ],
+    "items": [
+      {
+        "item_code": "PM007",
+        "qty_requested": 580.0,
+        "suggested_qty": 1160.93,
+        "is_edited": 1
+      },
+      {
+        "item_code": "FG001",
+        "qty_requested": 575.0,
+        "suggested_qty": 1151.85,
+        "is_edited": 1
+      }
+    ],
+    "edited_count": 2
+  },
+  "ui_visible_to_test_area": {
+    "total": 2,
+    "aranete_visible": true,
+    "festival_visible": true
+  }
+}
