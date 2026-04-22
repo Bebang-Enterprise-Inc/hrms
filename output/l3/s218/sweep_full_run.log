@@ -1,0 +1,705 @@
+
+[2026-04-22T10:01:37] S212 LAUNCHER starting spec=tests/e2e/specs/s209-all-stores.spec.ts
+
+Running 49 tests using 1 worker
+
+[1A[2K[1/49] [chromium] › tests\e2e\specs\s209-all-stores.spec.ts:161:9 › S209 — 49-store happy chain › happy chain — ARANETA GATEWAY - TUNGSTEN CAPITAL HOLDINGS OPC
+[1A[2K[chromium] › tests\e2e\specs\s209-all-stores.spec.ts:161:9 › S209 — 49-store happy chain › happy chain — ARANETA GATEWAY - TUNGSTEN CAPITAL HOLDINGS OPC
+[S209 preflight] [S209] total=49 mutated=0 already_set=49 snapshot=F:\Dropbox\Projects\BEI-ERP\output\l3\s209\area_access_snapshot.json
+
+[1A[2K[OrderApprovalPage.approve] BEI-ORD-2026-00398 already approved (status=Approved); skipping UI click.
+
+[1A[2K[2/49] [chromium] › tests\e2e\specs\s209-all-stores.spec.ts:161:9 › S209 — 49-store happy chain › happy chain — AYALA EVO CITY - BEBANG MEGA INC.
+[1A[2K[3/49] [chromium] › tests\e2e\specs\s209-all-stores.spec.ts:161:9 › S209 — 49-store happy chain › happy chain — AYALA FAIRVIEW TERRACES - BEBANG FT INC.
+[1A[2K[chromium] › tests\e2e\specs\s209-all-stores.spec.ts:161:9 › S209 — 49-store happy chain › happy chain — AYALA FAIRVIEW TERRACES - BEBANG FT INC.
+[OrderApprovalPage.approve] BEI-ORD-2026-00399 already approved (status=Approved); skipping UI click.
+
+[1A[2K[4/49] [chromium] › tests\e2e\specs\s209-all-stores.spec.ts:161:9 › S209 — 49-store happy chain › happy chain — AYALA MARKET MARKET - BEBANG MARKET MARKET INC.
+[1A[2K[chromium] › tests\e2e\specs\s209-all-stores.spec.ts:161:9 › S209 — 49-store happy chain › happy chain — AYALA MARKET MARKET - BEBANG MARKET MARKET INC.
+[S209 revert] ok=true [S209] reverted=0 skipped=49 errors=0
+
+[1A[2K  1) [chromium] › tests\e2e\specs\s209-all-stores.spec.ts:161:9 › S209 — 49-store happy chain › happy chain — AYALA MARKET MARKET - BEBANG MARKET MARKET INC. 
+
+    TimeoutError: locator.waitFor: Timeout 30000ms exceeded.
+    Call log:
+    [2m  - waiting for getByText('BEI-ORD-2026-00400').first() to be visible[22m
+
+
+       at pages\OrderApprovalPage.ts:26
+
+      24 |     //    renders the detail pane with the approve button.
+      25 |     const byText = this.page.getByText(orderId, { exact: false }).first();
+    > 26 |     await byText.waitFor({ state: "visible", timeout: 30_000 });
+         |                  ^
+      27 |     await byText.click();
+      28 |   }
+      29 |
+        at OrderApprovalPage.openOrder (F:\Dropbox\Projects\bei-tasks\tests\e2e\pages\OrderApprovalPage.ts:26:18)
+        at OrderApprovalPage.approve (F:\Dropbox\Projects\bei-tasks\tests\e2e\pages\OrderApprovalPage.ts:90:5)
+        at F:\Dropbox\Projects\bei-tasks\tests\e2e\specs\s209-all-stores.spec.ts:208:9
+
+    Error Context: C:\Users\Sam\AppData\Local\Temp\bei-pw-artifacts\specs-s209-all-stores-S209-debb9---BEBANG-MARKET-MARKET-INC--chromium\error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    C:\Users\Sam\AppData\Local\Temp\bei-pw-artifacts\specs-s209-all-stores-S209-debb9---BEBANG-MARKET-MARKET-INC--chromium\trace.zip
+    Usage:
+
+        npx playwright show-trace C:\Users\Sam\AppData\Local\Temp\bei-pw-artifacts\specs-s209-all-stores-S209-debb9---BEBANG-MARKET-MARKET-INC--chromium\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+[1A[2K[5/49] [chromium] › tests\e2e\specs\s209-all-stores.spec.ts:161:9 › S209 — 49-store happy chain › happy chain — AYALA SOLENAD - HFFM SOLENAD FOOD SERVICES INC.
+[1A[2K[chromium] › tests\e2e\specs\s209-all-stores.spec.ts:161:9 › S209 — 49-store happy chain › happy chain — AYALA SOLENAD - HFFM SOLENAD FOOD SERVICES INC.
+[S209 preflight] [S209] total=49 mutated=0 already_set=49 snapshot=F:\Dropbox\Projects\BEI-ERP\output\l3\s209\area_access_snapshot.json
+
+[1A[2K[OrderApprovalPage.approve] BEI-ORD-2026-00401 already approved (status=Approved); skipping UI click.
+
+[1A[2K[S209 revert] ok=true [S209] reverted=0 skipped=49 errors=0
+
+[1A[2K  2) [chromium] › tests\e2e\specs\s209-all-stores.spec.ts:161:9 › S209 — 49-store happy chain › happy chain — AYALA SOLENAD - HFFM SOLENAD FOOD SERVICES INC. 
+
+    Error: DispatchPage: dispatch did not register for MAT-MR-2026-00325 within 30s (status=Ordered, per_transferred=undefined)
+
+       at pages\DispatchPage.ts:170
+
+      168 |     }
+      169 |     await this.waitForToast(/dispatched|transfer created|success/i).catch(() => {
+    > 170 |       throw new Error(
+          |             ^
+      171 |         `DispatchPage: dispatch did not register for ${mrName} within 30s ` +
+      172 |           `(status=${lastSnap.status}, per_transferred=${lastSnap.per_transferred})`
+      173 |       );
+        at F:\Dropbox\Projects\bei-tasks\tests\e2e\pages\DispatchPage.ts:170:13
+        at DispatchPage.dispatch (F:\Dropbox\Projects\bei-tasks\tests\e2e\pages\DispatchPage.ts:169:5)
+        at F:\Dropbox\Projects\bei-tasks\tests\e2e\specs\s209-all-stores.spec.ts:230:9
+
+    Error Context: C:\Users\Sam\AppData\Local\Temp\bei-pw-artifacts\specs-s209-all-stores-S209-26df0--SOLENAD-FOOD-SERVICES-INC--chromium\error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    C:\Users\Sam\AppData\Local\Temp\bei-pw-artifacts\specs-s209-all-stores-S209-26df0--SOLENAD-FOOD-SERVICES-INC--chromium\trace.zip
+    Usage:
+
+        npx playwright show-trace C:\Users\Sam\AppData\Local\Temp\bei-pw-artifacts\specs-s209-all-stores-S209-26df0--SOLENAD-FOOD-SERVICES-INC--chromium\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+[1A[2K[6/49] [chromium] › tests\e2e\specs\s209-all-stores.spec.ts:161:9 › S209 — 49-store happy chain › happy chain — AYALA UP TOWN CENTER - BEBANG UP TOWN CENTER INC.
+[1A[2K[chromium] › tests\e2e\specs\s209-all-stores.spec.ts:161:9 › S209 — 49-store happy chain › happy chain — AYALA UP TOWN CENTER - BEBANG UP TOWN CENTER INC.
+[S209 preflight] [S209] total=49 mutated=0 already_set=49 snapshot=F:\Dropbox\Projects\BEI-ERP\output\l3\s209\area_access_snapshot.json
+
+[1A[2K[OrderApprovalPage.approve] BEI-ORD-2026-00402 already approved (status=Approved); skipping UI click.
+
+[1A[2K[7/49] [chromium] › tests\e2e\specs\s209-all-stores.spec.ts:161:9 › S209 — 49-store happy chain › happy chain — AYALA VERMOSA - BEBANG MEGA INC.
+[1A[2K[chromium] › tests\e2e\specs\s209-all-stores.spec.ts:161:9 › S209 — 49-store happy chain › happy chain — AYALA VERMOSA - BEBANG MEGA INC.
+[S209 revert] ok=true [S209] reverted=0 skipped=49 errors=0
+
+[1A[2K  3) [chromium] › tests\e2e\specs\s209-all-stores.spec.ts:161:9 › S209 — 49-store happy chain › happy chain — AYALA VERMOSA - BEBANG MEGA INC. 
+
+    Error: WarehouseApprovalPage: Approve button for MAT-MR-2026-00260 not visible after reload
+
+       at pages\WarehouseApprovalPage.ts:37
+
+      35 |       await this.page.waitForTimeout(1_500);
+      36 |       if (!(await waitForBtn(20_000))) {
+    > 37 |         throw new Error(
+         |               ^
+      38 |           `WarehouseApprovalPage: Approve button for ${mrName} not visible after reload`
+      39 |         );
+      40 |       }
+        at WarehouseApprovalPage.approve (F:\Dropbox\Projects\bei-tasks\tests\e2e\pages\WarehouseApprovalPage.ts:37:15)
+        at F:\Dropbox\Projects\bei-tasks\tests\e2e\specs\s209-all-stores.spec.ts:227:9
+
+    Error Context: C:\Users\Sam\AppData\Local\Temp\bei-pw-artifacts\specs-s209-all-stores-S209-b5607--VERMOSA---BEBANG-MEGA-INC--chromium\error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    C:\Users\Sam\AppData\Local\Temp\bei-pw-artifacts\specs-s209-all-stores-S209-b5607--VERMOSA---BEBANG-MEGA-INC--chromium\trace.zip
+    Usage:
+
+        npx playwright show-trace C:\Users\Sam\AppData\Local\Temp\bei-pw-artifacts\specs-s209-all-stores-S209-b5607--VERMOSA---BEBANG-MEGA-INC--chromium\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+[1A[2K[8/49] [chromium] › tests\e2e\specs\s209-all-stores.spec.ts:161:9 › S209 — 49-store happy chain › happy chain — BF HOMES - BEBANG BF HOMES INC.
+[1A[2K[chromium] › tests\e2e\specs\s209-all-stores.spec.ts:161:9 › S209 — 49-store happy chain › happy chain — BF HOMES - BEBANG BF HOMES INC.
+[S209 preflight] [S209] total=49 mutated=0 already_set=49 snapshot=F:\Dropbox\Projects\BEI-ERP\output\l3\s209\area_access_snapshot.json
+
+[1A[2K[OrderApprovalPage.approve] BEI-ORD-2026-00404 already approved (status=Approved); skipping UI click.
+
+[1A[2K[9/49] [chromium] › tests\e2e\specs\s209-all-stores.spec.ts:161:9 › S209 — 49-store happy chain › happy chain — CTTM TOMAS MORATO - B CUBED VENTURES CORP.
+[1A[2K[chromium] › tests\e2e\specs\s209-all-stores.spec.ts:161:9 › S209 — 49-store happy chain › happy chain — CTTM TOMAS MORATO - B CUBED VENTURES CORP.
+[OrderApprovalPage.approve] BEI-ORD-2026-00405 already approved (status=Approved); skipping UI click.
+
+[1A[2K[S209 revert] ok=true [S209] reverted=0 skipped=49 errors=0
+
+[1A[2K  4) [chromium] › tests\e2e\specs\s209-all-stores.spec.ts:161:9 › S209 — 49-store happy chain › happy chain — CTTM TOMAS MORATO - B CUBED VENTURES CORP. 
+
+    Error: DispatchPage: dispatch did not register for MAT-MR-2026-00328 within 30s (status=Ordered, per_transferred=undefined)
+
+       at pages\DispatchPage.ts:170
+
+      168 |     }
+      169 |     await this.waitForToast(/dispatched|transfer created|success/i).catch(() => {
+    > 170 |       throw new Error(
+          |             ^
+      171 |         `DispatchPage: dispatch did not register for ${mrName} within 30s ` +
+      172 |           `(status=${lastSnap.status}, per_transferred=${lastSnap.per_transferred})`
+      173 |       );
+        at F:\Dropbox\Projects\bei-tasks\tests\e2e\pages\DispatchPage.ts:170:13
+        at DispatchPage.dispatch (F:\Dropbox\Projects\bei-tasks\tests\e2e\pages\DispatchPage.ts:169:5)
+        at F:\Dropbox\Projects\bei-tasks\tests\e2e\specs\s209-all-stores.spec.ts:230:9
+
+    Error Context: C:\Users\Sam\AppData\Local\Temp\bei-pw-artifacts\specs-s209-all-stores-S209-8e52d-TO---B-CUBED-VENTURES-CORP--chromium\error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    C:\Users\Sam\AppData\Local\Temp\bei-pw-artifacts\specs-s209-all-stores-S209-8e52d-TO---B-CUBED-VENTURES-CORP--chromium\trace.zip
+    Usage:
+
+        npx playwright show-trace C:\Users\Sam\AppData\Local\Temp\bei-pw-artifacts\specs-s209-all-stores-S209-8e52d-TO---B-CUBED-VENTURES-CORP--chromium\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+[1A[2K[10/49] [chromium] › tests\e2e\specs\s209-all-stores.spec.ts:161:9 › S209 — 49-store happy chain › happy chain — D'VERDE CALAMBA - TAJ FOOD CORP.
+[1A[2K[chromium] › tests\e2e\specs\s209-all-stores.spec.ts:161:9 › S209 — 49-store happy chain › happy chain — D'VERDE CALAMBA - TAJ FOOD CORP.
+[S209 preflight] [S209] total=49 mutated=0 already_set=49 snapshot=F:\Dropbox\Projects\BEI-ERP\output\l3\s209\area_access_snapshot.json
+
+[1A[2K[OrderApprovalPage.approve] BEI-ORD-2026-00406 already approved (status=Approved); skipping UI click.
+
+[1A[2K[11/49] [chromium] › tests\e2e\specs\s209-all-stores.spec.ts:161:9 › S209 — 49-store happy chain › happy chain — EVER COMMONWEALTH - DLS DESSERT CRAFT INC.
+[1A[2K[chromium] › tests\e2e\specs\s209-all-stores.spec.ts:161:9 › S209 — 49-store happy chain › happy chain — EVER COMMONWEALTH - DLS DESSERT CRAFT INC.
+[OrderApprovalPage.approve] BEI-ORD-2026-00407 already approved (status=Approved); skipping UI click.
+
+[1A[2K[12/49] [chromium] › tests\e2e\specs\s209-all-stores.spec.ts:161:9 › S209 — 49-store happy chain › happy chain — FESTIVAL MALL ALABANG - BEBANG FESTIVAL INC.
+[1A[2K[chromium] › tests\e2e\specs\s209-all-stores.spec.ts:161:9 › S209 — 49-store happy chain › happy chain — FESTIVAL MALL ALABANG - BEBANG FESTIVAL INC.
+[S209 revert] ok=true [S209] reverted=0 skipped=49 errors=0
+
+[1A[2K  5) [chromium] › tests\e2e\specs\s209-all-stores.spec.ts:161:9 › S209 — 49-store happy chain › happy chain — FESTIVAL MALL ALABANG - BEBANG FESTIVAL INC. 
+
+    TimeoutError: locator.waitFor: Timeout 30000ms exceeded.
+    Call log:
+    [2m  - waiting for getByText('BEI-ORD-2026-00408').first() to be visible[22m
+
+
+       at pages\OrderApprovalPage.ts:26
+
+      24 |     //    renders the detail pane with the approve button.
+      25 |     const byText = this.page.getByText(orderId, { exact: false }).first();
+    > 26 |     await byText.waitFor({ state: "visible", timeout: 30_000 });
+         |                  ^
+      27 |     await byText.click();
+      28 |   }
+      29 |
+        at OrderApprovalPage.openOrder (F:\Dropbox\Projects\bei-tasks\tests\e2e\pages\OrderApprovalPage.ts:26:18)
+        at OrderApprovalPage.approve (F:\Dropbox\Projects\bei-tasks\tests\e2e\pages\OrderApprovalPage.ts:90:5)
+        at F:\Dropbox\Projects\bei-tasks\tests\e2e\specs\s209-all-stores.spec.ts:208:9
+
+    Error Context: C:\Users\Sam\AppData\Local\Temp\bei-pw-artifacts\specs-s209-all-stores-S209-bfd26-BANG---BEBANG-FESTIVAL-INC--chromium\error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    C:\Users\Sam\AppData\Local\Temp\bei-pw-artifacts\specs-s209-all-stores-S209-bfd26-BANG---BEBANG-FESTIVAL-INC--chromium\trace.zip
+    Usage:
+
+        npx playwright show-trace C:\Users\Sam\AppData\Local\Temp\bei-pw-artifacts\specs-s209-all-stores-S209-bfd26-BANG---BEBANG-FESTIVAL-INC--chromium\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+[1A[2K[13/49] [chromium] › tests\e2e\specs\s209-all-stores.spec.ts:161:9 › S209 — 49-store happy chain › happy chain — LUCKY CHINATOWN - BEBANG LCT INC.
+[1A[2K[chromium] › tests\e2e\specs\s209-all-stores.spec.ts:161:9 › S209 — 49-store happy chain › happy chain — LUCKY CHINATOWN - BEBANG LCT INC.
+[S209 preflight] [S209] total=49 mutated=0 already_set=49 snapshot=F:\Dropbox\Projects\BEI-ERP\output\l3\s209\area_access_snapshot.json
+
+[1A[2K[OrderApprovalPage.approve] BEI-ORD-2026-00409 already approved (status=Approved); skipping UI click.
+
+[1A[2K[14/49] [chromium] › tests\e2e\specs\s209-all-stores.spec.ts:161:9 › S209 — 49-store happy chain › happy chain — MEGAWIDE PITX - BEBANG PITX INC.
+[1A[2K[chromium] › tests\e2e\specs\s209-all-stores.spec.ts:161:9 › S209 — 49-store happy chain › happy chain — MEGAWIDE PITX - BEBANG PITX INC.
+[S209 revert] ok=true [S209] reverted=0 skipped=49 errors=0
+
+[1A[2K  6) [chromium] › tests\e2e\specs\s209-all-stores.spec.ts:161:9 › S209 — 49-store happy chain › happy chain — MEGAWIDE PITX - BEBANG PITX INC. 
+
+    TimeoutError: locator.waitFor: Timeout 30000ms exceeded.
+    Call log:
+    [2m  - waiting for getByText('BEI-ORD-2026-00410').first() to be visible[22m
+
+
+       at pages\OrderApprovalPage.ts:26
+
+      24 |     //    renders the detail pane with the approve button.
+      25 |     const byText = this.page.getByText(orderId, { exact: false }).first();
+    > 26 |     await byText.waitFor({ state: "visible", timeout: 30_000 });
+         |                  ^
+      27 |     await byText.click();
+      28 |   }
+      29 |
+        at OrderApprovalPage.openOrder (F:\Dropbox\Projects\bei-tasks\tests\e2e\pages\OrderApprovalPage.ts:26:18)
+        at OrderApprovalPage.approve (F:\Dropbox\Projects\bei-tasks\tests\e2e\pages\OrderApprovalPage.ts:90:5)
+        at F:\Dropbox\Projects\bei-tasks\tests\e2e\specs\s209-all-stores.spec.ts:208:9
+
+    Error Context: C:\Users\Sam\AppData\Local\Temp\bei-pw-artifacts\specs-s209-all-stores-S209-4deaa-IDE-PITX---BEBANG-PITX-INC--chromium\error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    C:\Users\Sam\AppData\Local\Temp\bei-pw-artifacts\specs-s209-all-stores-S209-4deaa-IDE-PITX---BEBANG-PITX-INC--chromium\trace.zip
+    Usage:
+
+        npx playwright show-trace C:\Users\Sam\AppData\Local\Temp\bei-pw-artifacts\specs-s209-all-stores-S209-4deaa-IDE-PITX---BEBANG-PITX-INC--chromium\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+[1A[2K[15/49] [chromium] › tests\e2e\specs\s209-all-stores.spec.ts:161:9 › S209 — 49-store happy chain › happy chain — MEGAWORLD PASEO CENTER - BEBANG PASEO INC.
+[1A[2K[chromium] › tests\e2e\specs\s209-all-stores.spec.ts:161:9 › S209 — 49-store happy chain › happy chain — MEGAWORLD PASEO CENTER - BEBANG PASEO INC.
+[S209 preflight] [S209] total=49 mutated=0 already_set=49 snapshot=F:\Dropbox\Projects\BEI-ERP\output\l3\s209\area_access_snapshot.json
+
+[1A[2K[OrderApprovalPage.approve] BEI-ORD-2026-00411 already approved (status=Approved); skipping UI click.
+
+[1A[2K[16/49] [chromium] › tests\e2e\specs\s209-all-stores.spec.ts:161:9 › S209 — 49-store happy chain › happy chain — MEGAWORLD VENICE GRAND CANAL - BEBANG VENICE GRAND CANAL INC.
+[1A[2K[chromium] › tests\e2e\specs\s209-all-stores.spec.ts:161:9 › S209 — 49-store happy chain › happy chain — MEGAWORLD VENICE GRAND CANAL - BEBANG VENICE GRAND CANAL INC.
+[S209 revert] ok=true [S209] reverted=0 skipped=49 errors=0
+
+[1A[2K  7) [chromium] › tests\e2e\specs\s209-all-stores.spec.ts:161:9 › S209 — 49-store happy chain › happy chain — MEGAWORLD VENICE GRAND CANAL - BEBANG VENICE GRAND CANAL INC. 
+
+    TimeoutError: locator.waitFor: Timeout 30000ms exceeded.
+    Call log:
+    [2m  - waiting for getByText('BEI-ORD-2026-00412').first() to be visible[22m
+
+
+       at pages\OrderApprovalPage.ts:26
+
+      24 |     //    renders the detail pane with the approve button.
+      25 |     const byText = this.page.getByText(orderId, { exact: false }).first();
+    > 26 |     await byText.waitFor({ state: "visible", timeout: 30_000 });
+         |                  ^
+      27 |     await byText.click();
+      28 |   }
+      29 |
+        at OrderApprovalPage.openOrder (F:\Dropbox\Projects\bei-tasks\tests\e2e\pages\OrderApprovalPage.ts:26:18)
+        at OrderApprovalPage.approve (F:\Dropbox\Projects\bei-tasks\tests\e2e\pages\OrderApprovalPage.ts:90:5)
+        at F:\Dropbox\Projects\bei-tasks\tests\e2e\specs\s209-all-stores.spec.ts:208:9
+
+    Error Context: C:\Users\Sam\AppData\Local\Temp\bei-pw-artifacts\specs-s209-all-stores-S209-18a37-ANG-VENICE-GRAND-CANAL-INC--chromium\error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    C:\Users\Sam\AppData\Local\Temp\bei-pw-artifacts\specs-s209-all-stores-S209-18a37-ANG-VENICE-GRAND-CANAL-INC--chromium\trace.zip
+    Usage:
+
+        npx playwright show-trace C:\Users\Sam\AppData\Local\Temp\bei-pw-artifacts\specs-s209-all-stores-S209-18a37-ANG-VENICE-GRAND-CANAL-INC--chromium\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+[1A[2K[17/49] [chromium] › tests\e2e\specs\s209-all-stores.spec.ts:161:9 › S209 — 49-store happy chain › happy chain — NAIA T3 - HALO-HALO TERMINAL FOOD CORP.
+[1A[2K[chromium] › tests\e2e\specs\s209-all-stores.spec.ts:161:9 › S209 — 49-store happy chain › happy chain — NAIA T3 - HALO-HALO TERMINAL FOOD CORP.
+[S209 preflight] [S209] total=49 mutated=0 already_set=49 snapshot=F:\Dropbox\Projects\BEI-ERP\output\l3\s209\area_access_snapshot.json
+
+[1A[2K[S209 revert] ok=true [S209] reverted=0 skipped=49 errors=0
+
+[1A[2K  8) [chromium] › tests\e2e\specs\s209-all-stores.spec.ts:161:9 › S209 — 49-store happy chain › happy chain — NAIA T3 - HALO-HALO TERMINAL FOOD CORP. 
+
+    TimeoutError: locator.waitFor: Timeout 30000ms exceeded.
+    Call log:
+    [2m  - waiting for getByText('BEI-ORD-2026-00413').first() to be visible[22m
+
+
+       at pages\OrderApprovalPage.ts:26
+
+      24 |     //    renders the detail pane with the approve button.
+      25 |     const byText = this.page.getByText(orderId, { exact: false }).first();
+    > 26 |     await byText.waitFor({ state: "visible", timeout: 30_000 });
+         |                  ^
+      27 |     await byText.click();
+      28 |   }
+      29 |
+        at OrderApprovalPage.openOrder (F:\Dropbox\Projects\bei-tasks\tests\e2e\pages\OrderApprovalPage.ts:26:18)
+        at OrderApprovalPage.approve (F:\Dropbox\Projects\bei-tasks\tests\e2e\pages\OrderApprovalPage.ts:90:5)
+        at F:\Dropbox\Projects\bei-tasks\tests\e2e\specs\s209-all-stores.spec.ts:208:9
+
+    Error Context: C:\Users\Sam\AppData\Local\Temp\bei-pw-artifacts\specs-s209-all-stores-S209-d09d0-LO-HALO-TERMINAL-FOOD-CORP--chromium\error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    C:\Users\Sam\AppData\Local\Temp\bei-pw-artifacts\specs-s209-all-stores-S209-d09d0-LO-HALO-TERMINAL-FOOD-CORP--chromium\trace.zip
+    Usage:
+
+        npx playwright show-trace C:\Users\Sam\AppData\Local\Temp\bei-pw-artifacts\specs-s209-all-stores-S209-d09d0-LO-HALO-TERMINAL-FOOD-CORP--chromium\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+[1A[2K[18/49] [chromium] › tests\e2e\specs\s209-all-stores.spec.ts:161:9 › S209 — 49-store happy chain › happy chain — ORTIGAS ESTANCIA - BB ESTANCIA FOOD CORP.
+[1A[2K[chromium] › tests\e2e\specs\s209-all-stores.spec.ts:161:9 › S209 — 49-store happy chain › happy chain — ORTIGAS ESTANCIA - BB ESTANCIA FOOD CORP.
+[S209 preflight] [S209] total=49 mutated=0 already_set=49 snapshot=F:\Dropbox\Projects\BEI-ERP\output\l3\s209\area_access_snapshot.json
+
+[1A[2K[S209 revert] ok=true [S209] reverted=0 skipped=49 errors=0
+
+[1A[2K  9) [chromium] › tests\e2e\specs\s209-all-stores.spec.ts:161:9 › S209 — 49-store happy chain › happy chain — ORTIGAS ESTANCIA - BB ESTANCIA FOOD CORP. 
+
+    Error: Material Request for order BEI-ORD-2026-00414 (polled 30000ms, last=0)
+
+    [2mexpect([22m[31mreceived[39m[2m).[22mtoBeGreaterThan[2m([22m[32mexpected[39m[2m)[22m
+
+    Expected: > [32m0[39m
+    Received:   [31m0[39m
+
+       at assertions\orderAssertions.ts:48
+
+      46 |     finalRows.length,
+      47 |     `Material Request for order ${orderId} (polled ${timeoutMs}ms, last=${lastCount})`
+    > 48 |   ).toBeGreaterThan(0);
+         |     ^
+      49 |   return finalRows[0].name;
+      50 | }
+      51 |
+        at assertMRCreatedForOrder (F:\Dropbox\Projects\bei-tasks\tests\e2e\assertions\orderAssertions.ts:48:5)
+        at F:\Dropbox\Projects\bei-tasks\tests\e2e\specs\s209-all-stores.spec.ts:221:24
+
+    Error Context: C:\Users\Sam\AppData\Local\Temp\bei-pw-artifacts\specs-s209-all-stores-S209-a56d9-IA---BB-ESTANCIA-FOOD-CORP--chromium\error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    C:\Users\Sam\AppData\Local\Temp\bei-pw-artifacts\specs-s209-all-stores-S209-a56d9-IA---BB-ESTANCIA-FOOD-CORP--chromium\trace.zip
+    Usage:
+
+        npx playwright show-trace C:\Users\Sam\AppData\Local\Temp\bei-pw-artifacts\specs-s209-all-stores-S209-a56d9-IA---BB-ESTANCIA-FOOD-CORP--chromium\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+[1A[2K[19/49] [chromium] › tests\e2e\specs\s209-all-stores.spec.ts:161:9 › S209 — 49-store happy chain › happy chain — ORTIGAS GREENHILLS - BEIFRANCHISE FOOD OPC
+[1A[2K[chromium] › tests\e2e\specs\s209-all-stores.spec.ts:161:9 › S209 — 49-store happy chain › happy chain — ORTIGAS GREENHILLS - BEIFRANCHISE FOOD OPC
+[S209 preflight] [S209] total=49 mutated=0 already_set=49 snapshot=F:\Dropbox\Projects\BEI-ERP\output\l3\s209\area_access_snapshot.json
+
+[1A[2K[S209 revert] ok=true [S209] reverted=0 skipped=49 errors=0
+
+[1A[2K  10) [chromium] › tests\e2e\specs\s209-all-stores.spec.ts:161:9 › S209 — 49-store happy chain › happy chain — ORTIGAS GREENHILLS - BEIFRANCHISE FOOD OPC 
+
+    Error: Material Request for order BEI-ORD-2026-00415 (polled 30000ms, last=0)
+
+    [2mexpect([22m[31mreceived[39m[2m).[22mtoBeGreaterThan[2m([22m[32mexpected[39m[2m)[22m
+
+    Expected: > [32m0[39m
+    Received:   [31m0[39m
+
+       at assertions\orderAssertions.ts:48
+
+      46 |     finalRows.length,
+      47 |     `Material Request for order ${orderId} (polled ${timeoutMs}ms, last=${lastCount})`
+    > 48 |   ).toBeGreaterThan(0);
+         |     ^
+      49 |   return finalRows[0].name;
+      50 | }
+      51 |
+        at assertMRCreatedForOrder (F:\Dropbox\Projects\bei-tasks\tests\e2e\assertions\orderAssertions.ts:48:5)
+        at F:\Dropbox\Projects\bei-tasks\tests\e2e\specs\s209-all-stores.spec.ts:221:24
+
+    Error Context: C:\Users\Sam\AppData\Local\Temp\bei-pw-artifacts\specs-s209-all-stores-S209-64758-LLS---BEIFRANCHISE-FOOD-OPC-chromium\error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    C:\Users\Sam\AppData\Local\Temp\bei-pw-artifacts\specs-s209-all-stores-S209-64758-LLS---BEIFRANCHISE-FOOD-OPC-chromium\trace.zip
+    Usage:
+
+        npx playwright show-trace C:\Users\Sam\AppData\Local\Temp\bei-pw-artifacts\specs-s209-all-stores-S209-64758-LLS---BEIFRANCHISE-FOOD-OPC-chromium\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+[1A[2K[20/49] [chromium] › tests\e2e\specs\s209-all-stores.spec.ts:161:9 › S209 — 49-store happy chain › happy chain — ROBINSONS ANTIPOLO - BEBANG ENTERPRISE INC.
+[1A[2K[chromium] › tests\e2e\specs\s209-all-stores.spec.ts:161:9 › S209 — 49-store happy chain › happy chain — ROBINSONS ANTIPOLO - BEBANG ENTERPRISE INC.
+[S209 preflight] [S209] total=49 mutated=0 already_set=49 snapshot=F:\Dropbox\Projects\BEI-ERP\output\l3\s209\area_access_snapshot.json
+
+[1A[2K[S209 revert] ok=true [S209] reverted=0 skipped=49 errors=0
+
+[1A[2K  11) [chromium] › tests\e2e\specs\s209-all-stores.spec.ts:161:9 › S209 — 49-store happy chain › happy chain — ROBINSONS ANTIPOLO - BEBANG ENTERPRISE INC. 
+
+    Error: Material Request for order BEI-ORD-2026-00416 (polled 30000ms, last=0)
+
+    [2mexpect([22m[31mreceived[39m[2m).[22mtoBeGreaterThan[2m([22m[32mexpected[39m[2m)[22m
+
+    Expected: > [32m0[39m
+    Received:   [31m0[39m
+
+       at assertions\orderAssertions.ts:48
+
+      46 |     finalRows.length,
+      47 |     `Material Request for order ${orderId} (polled ${timeoutMs}ms, last=${lastCount})`
+    > 48 |   ).toBeGreaterThan(0);
+         |     ^
+      49 |   return finalRows[0].name;
+      50 | }
+      51 |
+        at assertMRCreatedForOrder (F:\Dropbox\Projects\bei-tasks\tests\e2e\assertions\orderAssertions.ts:48:5)
+        at F:\Dropbox\Projects\bei-tasks\tests\e2e\specs\s209-all-stores.spec.ts:221:24
+
+    Error Context: C:\Users\Sam\AppData\Local\Temp\bei-pw-artifacts\specs-s209-all-stores-S209-7f568-LO---BEBANG-ENTERPRISE-INC--chromium\error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    C:\Users\Sam\AppData\Local\Temp\bei-pw-artifacts\specs-s209-all-stores-S209-7f568-LO---BEBANG-ENTERPRISE-INC--chromium\trace.zip
+    Usage:
+
+        npx playwright show-trace C:\Users\Sam\AppData\Local\Temp\bei-pw-artifacts\specs-s209-all-stores-S209-7f568-LO---BEBANG-ENTERPRISE-INC--chromium\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+[1A[2K[21/49] [chromium] › tests\e2e\specs\s209-all-stores.spec.ts:161:9 › S209 — 49-store happy chain › happy chain — ROBINSONS GALLERIA SOUTH - TUNGSTEN CAPITAL HOLDINGS OPC
+[1A[2K[chromium] › tests\e2e\specs\s209-all-stores.spec.ts:161:9 › S209 — 49-store happy chain › happy chain — ROBINSONS GALLERIA SOUTH - TUNGSTEN CAPITAL HOLDINGS OPC
+[S209 preflight] [S209] total=49 mutated=0 already_set=49 snapshot=F:\Dropbox\Projects\BEI-ERP\output\l3\s209\area_access_snapshot.json
+
+[1A[2K[OrderApprovalPage.approve] BEI-ORD-2026-00417 already approved (status=Approved); skipping UI click.
+
+[1A[2K[22/49] [chromium] › tests\e2e\specs\s209-all-stores.spec.ts:161:9 › S209 — 49-store happy chain › happy chain — ROBINSONS GENERAL TRIAS - BEBANG MEGA INC.
+[1A[2K[chromium] › tests\e2e\specs\s209-all-stores.spec.ts:161:9 › S209 — 49-store happy chain › happy chain — ROBINSONS GENERAL TRIAS - BEBANG MEGA INC.
+[OrderApprovalPage.approve] BEI-ORD-2026-00418 already approved (status=Approved); skipping UI click.
+
+[1A[2K[23/49] [chromium] › tests\e2e\specs\s209-all-stores.spec.ts:161:9 › S209 — 49-store happy chain › happy chain — ROBINSONS IMUS - BEBANG MEGA INC.
+[1A[2K[chromium] › tests\e2e\specs\s209-all-stores.spec.ts:161:9 › S209 — 49-store happy chain › happy chain — ROBINSONS IMUS - BEBANG MEGA INC.
+[OrderApprovalPage.approve] BEI-ORD-2026-00419 already approved (status=Approved); skipping UI click.
+
+[1A[2K[24/49] [chromium] › tests\e2e\specs\s209-all-stores.spec.ts:161:9 › S209 — 49-store happy chain › happy chain — ROBINSONS PLACE DASMARINAS - FREEZE DELIGHT INC.
+[1A[2K[25/49] [chromium] › tests\e2e\specs\s209-all-stores.spec.ts:161:9 › S209 — 49-store happy chain › happy chain — SM BICUTAN - BEBANG SM BICUTAN INC.
+[1A[2K[chromium] › tests\e2e\specs\s209-all-stores.spec.ts:161:9 › S209 — 49-store happy chain › happy chain — SM BICUTAN - BEBANG SM BICUTAN INC.
+[OrderApprovalPage.approve] BEI-ORD-2026-00420 already approved (status=Approved); skipping UI click.
+
+[1A[2K[S209 revert] ok=true [S209] reverted=0 skipped=49 errors=0
+
+[1A[2K  12) [chromium] › tests\e2e\specs\s209-all-stores.spec.ts:161:9 › S209 — 49-store happy chain › happy chain — SM BICUTAN - BEBANG SM BICUTAN INC. 
+
+    Error: DispatchPage: dispatch did not register for MAT-MR-2026-00336 within 30s (status=Ordered, per_transferred=undefined)
+
+       at pages\DispatchPage.ts:170
+
+      168 |     }
+      169 |     await this.waitForToast(/dispatched|transfer created|success/i).catch(() => {
+    > 170 |       throw new Error(
+          |             ^
+      171 |         `DispatchPage: dispatch did not register for ${mrName} within 30s ` +
+      172 |           `(status=${lastSnap.status}, per_transferred=${lastSnap.per_transferred})`
+      173 |       );
+        at F:\Dropbox\Projects\bei-tasks\tests\e2e\pages\DispatchPage.ts:170:13
+        at DispatchPage.dispatch (F:\Dropbox\Projects\bei-tasks\tests\e2e\pages\DispatchPage.ts:169:5)
+        at F:\Dropbox\Projects\bei-tasks\tests\e2e\specs\s209-all-stores.spec.ts:230:9
+
+    Error Context: C:\Users\Sam\AppData\Local\Temp\bei-pw-artifacts\specs-s209-all-stores-S209-5a134-AN---BEBANG-SM-BICUTAN-INC--chromium\error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    C:\Users\Sam\AppData\Local\Temp\bei-pw-artifacts\specs-s209-all-stores-S209-5a134-AN---BEBANG-SM-BICUTAN-INC--chromium\trace.zip
+    Usage:
+
+        npx playwright show-trace C:\Users\Sam\AppData\Local\Temp\bei-pw-artifacts\specs-s209-all-stores-S209-5a134-AN---BEBANG-SM-BICUTAN-INC--chromium\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+[1A[2K[26/49] [chromium] › tests\e2e\specs\s209-all-stores.spec.ts:161:9 › S209 — 49-store happy chain › happy chain — SM CALOOCAN - TAJ FOOD CORP.
+[1A[2K[chromium] › tests\e2e\specs\s209-all-stores.spec.ts:161:9 › S209 — 49-store happy chain › happy chain — SM CALOOCAN - TAJ FOOD CORP.
+[S209 preflight] [S209] total=49 mutated=0 already_set=49 snapshot=F:\Dropbox\Projects\BEI-ERP\output\l3\s209\area_access_snapshot.json
+
+[1A[2K[OrderApprovalPage.approve] BEI-ORD-2026-00421 already approved (status=Approved); skipping UI click.
+
+[1A[2K[27/49] [chromium] › tests\e2e\specs\s209-all-stores.spec.ts:161:9 › S209 — 49-store happy chain › happy chain — SM CLARK - RED TALDAWA FOODS OPC
+[1A[2K[chromium] › tests\e2e\specs\s209-all-stores.spec.ts:161:9 › S209 — 49-store happy chain › happy chain — SM CLARK - RED TALDAWA FOODS OPC
+[OrderApprovalPage.approve] BEI-ORD-2026-00422 already approved (status=Approved); skipping UI click.
+
+[1A[2K[28/49] [chromium] › tests\e2e\specs\s209-all-stores.spec.ts:161:9 › S209 — 49-store happy chain › happy chain — SM EAST ORTIGAS - BEBANG SMEO INC.
+[1A[2K[chromium] › tests\e2e\specs\s209-all-stores.spec.ts:161:9 › S209 — 49-store happy chain › happy chain — SM EAST ORTIGAS - BEBANG SMEO INC.
+[OrderApprovalPage.approve] BEI-ORD-2026-00423 already approved (status=Approved); skipping UI click.
+
+[1A[2K[29/49] [chromium] › tests\e2e\specs\s209-all-stores.spec.ts:161:9 › S209 — 49-store happy chain › happy chain — SM GRAND CENTRAL - BEBANG GRAND CENTRAL INC.
+[1A[2K[chromium] › tests\e2e\specs\s209-all-stores.spec.ts:161:9 › S209 — 49-store happy chain › happy chain — SM GRAND CENTRAL - BEBANG GRAND CENTRAL INC.
+[OrderApprovalPage.approve] BEI-ORD-2026-00424 already approved (status=Approved); skipping UI click.
+
+[1A[2K[S209 revert] ok=true [S209] reverted=0 skipped=49 errors=0
+
+[1A[2K  13) [chromium] › tests\e2e\specs\s209-all-stores.spec.ts:161:9 › S209 — 49-store happy chain › happy chain — SM GRAND CENTRAL - BEBANG GRAND CENTRAL INC. 
+
+    Error: DispatchPage: dispatch did not register for MAT-MR-2026-00340 within 30s (status=Ordered, per_transferred=undefined)
+
+       at pages\DispatchPage.ts:170
+
+      168 |     }
+      169 |     await this.waitForToast(/dispatched|transfer created|success/i).catch(() => {
+    > 170 |       throw new Error(
+          |             ^
+      171 |         `DispatchPage: dispatch did not register for ${mrName} within 30s ` +
+      172 |           `(status=${lastSnap.status}, per_transferred=${lastSnap.per_transferred})`
+      173 |       );
+        at F:\Dropbox\Projects\bei-tasks\tests\e2e\pages\DispatchPage.ts:170:13
+        at DispatchPage.dispatch (F:\Dropbox\Projects\bei-tasks\tests\e2e\pages\DispatchPage.ts:169:5)
+        at F:\Dropbox\Projects\bei-tasks\tests\e2e\specs\s209-all-stores.spec.ts:230:9
+
+    Error Context: C:\Users\Sam\AppData\Local\Temp\bei-pw-artifacts\specs-s209-all-stores-S209-dae88---BEBANG-GRAND-CENTRAL-INC--chromium\error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    C:\Users\Sam\AppData\Local\Temp\bei-pw-artifacts\specs-s209-all-stores-S209-dae88---BEBANG-GRAND-CENTRAL-INC--chromium\trace.zip
+    Usage:
+
+        npx playwright show-trace C:\Users\Sam\AppData\Local\Temp\bei-pw-artifacts\specs-s209-all-stores-S209-dae88---BEBANG-GRAND-CENTRAL-INC--chromium\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+[1A[2K[30/49] [chromium] › tests\e2e\specs\s209-all-stores.spec.ts:161:9 › S209 — 49-store happy chain › happy chain — SM MALL OF ASIA - BEBANG SMOA INC.
+[1A[2K[chromium] › tests\e2e\specs\s209-all-stores.spec.ts:161:9 › S209 — 49-store happy chain › happy chain — SM MALL OF ASIA - BEBANG SMOA INC.
+[S209 preflight] [S209] total=49 mutated=0 already_set=49 snapshot=F:\Dropbox\Projects\BEI-ERP\output\l3\s209\area_access_snapshot.json
+
+[1A[2K[OrderApprovalPage.approve] BEI-ORD-2026-00425 already approved (status=Approved); skipping UI click.
+
+[1A[2K[31/49] [chromium] › tests\e2e\specs\s209-all-stores.spec.ts:161:9 › S209 — 49-store happy chain › happy chain — SM MANILA - BEBANG ENTERPRISE INC.
+[1A[2K[chromium] › tests\e2e\specs\s209-all-stores.spec.ts:161:9 › S209 — 49-store happy chain › happy chain — SM MANILA - BEBANG ENTERPRISE INC.
+[OrderApprovalPage.approve] BEI-ORD-2026-00426 already approved (status=Approved); skipping UI click.
+
+[1A[2K[32/49] [chromium] › tests\e2e\specs\s209-all-stores.spec.ts:161:9 › S209 — 49-store happy chain › happy chain — SM MARIKINA - BEBANG SM MARIKINA INC.
+[1A[2K[chromium] › tests\e2e\specs\s209-all-stores.spec.ts:161:9 › S209 — 49-store happy chain › happy chain — SM MARIKINA - BEBANG SM MARIKINA INC.
+[OrderApprovalPage.approve] BEI-ORD-2026-00427 already approved (status=Approved); skipping UI click.
+
+[1A[2K[S209 revert] ok=true [S209] reverted=0 skipped=49 errors=0
+
+[1A[2K  14) [chromium] › tests\e2e\specs\s209-all-stores.spec.ts:161:9 › S209 — 49-store happy chain › happy chain — SM MARIKINA - BEBANG SM MARIKINA INC. 
+
+    Error: DispatchPage: dispatch did not register for MAT-MR-2026-00343 within 30s (status=Ordered, per_transferred=undefined)
+
+       at pages\DispatchPage.ts:170
+
+      168 |     }
+      169 |     await this.waitForToast(/dispatched|transfer created|success/i).catch(() => {
+    > 170 |       throw new Error(
+          |             ^
+      171 |         `DispatchPage: dispatch did not register for ${mrName} within 30s ` +
+      172 |           `(status=${lastSnap.status}, per_transferred=${lastSnap.per_transferred})`
+      173 |       );
+        at F:\Dropbox\Projects\bei-tasks\tests\e2e\pages\DispatchPage.ts:170:13
+        at DispatchPage.dispatch (F:\Dropbox\Projects\bei-tasks\tests\e2e\pages\DispatchPage.ts:169:5)
+        at F:\Dropbox\Projects\bei-tasks\tests\e2e\specs\s209-all-stores.spec.ts:230:9
+
+    Error Context: C:\Users\Sam\AppData\Local\Temp\bei-pw-artifacts\specs-s209-all-stores-S209-e3d3b-A---BEBANG-SM-MARIKINA-INC--chromium\error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    C:\Users\Sam\AppData\Local\Temp\bei-pw-artifacts\specs-s209-all-stores-S209-e3d3b-A---BEBANG-SM-MARIKINA-INC--chromium\trace.zip
+    Usage:
+
+        npx playwright show-trace C:\Users\Sam\AppData\Local\Temp\bei-pw-artifacts\specs-s209-all-stores-S209-e3d3b-A---BEBANG-SM-MARIKINA-INC--chromium\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+[1A[2K[33/49] [chromium] › tests\e2e\specs\s209-all-stores.spec.ts:161:9 › S209 — 49-store happy chain › happy chain — SM MARILAO - BEBANG MARILAO INC.
+[1A[2K[chromium] › tests\e2e\specs\s209-all-stores.spec.ts:161:9 › S209 — 49-store happy chain › happy chain — SM MARILAO - BEBANG MARILAO INC.
+[S209 preflight] [S209] total=49 mutated=0 already_set=49 snapshot=F:\Dropbox\Projects\BEI-ERP\output\l3\s209\area_access_snapshot.json
+
+[1A[2K[OrderApprovalPage.approve] BEI-ORD-2026-00428 already approved (status=Approved); skipping UI click.
+
+[1A[2K[34/49] [chromium] › tests\e2e\specs\s209-all-stores.spec.ts:161:9 › S209 — 49-store happy chain › happy chain — SM MEGAMALL - BEBANG ENTERPRISE INC.
+[1A[2K[chromium] › tests\e2e\specs\s209-all-stores.spec.ts:161:9 › S209 — 49-store happy chain › happy chain — SM MEGAMALL - BEBANG ENTERPRISE INC.
+[OrderApprovalPage.approve] BEI-ORD-2026-00429 already approved (status=Approved); skipping UI click.
+
+[1A[2K[35/49] [chromium] › tests\e2e\specs\s209-all-stores.spec.ts:161:9 › S209 — 49-store happy chain › happy chain — SM NORTH EDSA - BEBANG NORTH EDSA INC.
+[1A[2K[chromium] › tests\e2e\specs\s209-all-stores.spec.ts:161:9 › S209 — 49-store happy chain › happy chain — SM NORTH EDSA - BEBANG NORTH EDSA INC.
+[OrderApprovalPage.approve] BEI-ORD-2026-00430 already approved (status=Approved); skipping UI click.
+
+[1A[2K[36/49] [chromium] › tests\e2e\specs\s209-all-stores.spec.ts:161:9 › S209 — 49-store happy chain › happy chain — SM PULILAN - BEBANG SMM INC.
+[1A[2K[chromium] › tests\e2e\specs\s209-all-stores.spec.ts:161:9 › S209 — 49-store happy chain › happy chain — SM PULILAN - BEBANG SMM INC.
+[OrderApprovalPage.approve] BEI-ORD-2026-00431 already approved (status=Approved); skipping UI click.
+
+[1A[2K[37/49] [chromium] › tests\e2e\specs\s209-all-stores.spec.ts:161:9 › S209 — 49-store happy chain › happy chain — SM SAN JOSE DEL MONTE - JL TRADE OPC
+[1A[2K[chromium] › tests\e2e\specs\s209-all-stores.spec.ts:161:9 › S209 — 49-store happy chain › happy chain — SM SAN JOSE DEL MONTE - JL TRADE OPC
+[OrderApprovalPage.approve] BEI-ORD-2026-00432 already approved (status=Approved); skipping UI click.
+
+[1A[2K[38/49] [chromium] › tests\e2e\specs\s209-all-stores.spec.ts:161:9 › S209 — 49-store happy chain › happy chain — SM SANGANDAAN - TUNGSTEN CAPITAL HOLDINGS OPC
+[1A[2K[chromium] › tests\e2e\specs\s209-all-stores.spec.ts:161:9 › S209 — 49-store happy chain › happy chain — SM SANGANDAAN - TUNGSTEN CAPITAL HOLDINGS OPC
+[OrderApprovalPage.approve] BEI-ORD-2026-00433 already approved (status=Approved); skipping UI click.
+
+[1A[2K[39/49] [chromium] › tests\e2e\specs\s209-all-stores.spec.ts:161:9 › S209 — 49-store happy chain › happy chain — SM SOUTHMALL - BEBANG ENTERPRISE INC.
+[1A[2K[chromium] › tests\e2e\specs\s209-all-stores.spec.ts:161:9 › S209 — 49-store happy chain › happy chain — SM SOUTHMALL - BEBANG ENTERPRISE INC.
+[OrderApprovalPage.approve] BEI-ORD-2026-00434 already approved (status=Approved); skipping UI click.
+
+[1A[2K[40/49] [chromium] › tests\e2e\specs\s209-all-stores.spec.ts:161:9 › S209 — 49-store happy chain › happy chain — SM STA. ROSA - SWEET HARMONY FOOD CORP.
+[1A[2K[chromium] › tests\e2e\specs\s209-all-stores.spec.ts:161:9 › S209 — 49-store happy chain › happy chain — SM STA. ROSA - SWEET HARMONY FOOD CORP.
+[S209 revert] ok=true [S209] reverted=0 skipped=49 errors=0
+
+[1A[2K  15) [chromium] › tests\e2e\specs\s209-all-stores.spec.ts:161:9 › S209 — 49-store happy chain › happy chain — SM STA. ROSA - SWEET HARMONY FOOD CORP. 
+
+    Error: Material Request for order BEI-ORD-2026-00435 (polled 30000ms, last=0)
+
+    [2mexpect([22m[31mreceived[39m[2m).[22mtoBeGreaterThan[2m([22m[32mexpected[39m[2m)[22m
+
+    Expected: > [32m0[39m
+    Received:   [31m0[39m
+
+       at assertions\orderAssertions.ts:48
+
+      46 |     finalRows.length,
+      47 |     `Material Request for order ${orderId} (polled ${timeoutMs}ms, last=${lastCount})`
+    > 48 |   ).toBeGreaterThan(0);
+         |     ^
+      49 |   return finalRows[0].name;
+      50 | }
+      51 |
+        at assertMRCreatedForOrder (F:\Dropbox\Projects\bei-tasks\tests\e2e\assertions\orderAssertions.ts:48:5)
+        at F:\Dropbox\Projects\bei-tasks\tests\e2e\specs\s209-all-stores.spec.ts:221:24
+
+    Error Context: C:\Users\Sam\AppData\Local\Temp\bei-pw-artifacts\specs-s209-all-stores-S209-83891----SWEET-HARMONY-FOOD-CORP--chromium\error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    C:\Users\Sam\AppData\Local\Temp\bei-pw-artifacts\specs-s209-all-stores-S209-83891----SWEET-HARMONY-FOOD-CORP--chromium\trace.zip
+    Usage:
+
+        npx playwright show-trace C:\Users\Sam\AppData\Local\Temp\bei-pw-artifacts\specs-s209-all-stores-S209-83891----SWEET-HARMONY-FOOD-CORP--chromium\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+[1A[2K[41/49] [chromium] › tests\e2e\specs\s209-all-stores.spec.ts:161:9 › S209 — 49-store happy chain › happy chain — SM TANZA - BEBANG MEGA INC.
+[1A[2K[chromium] › tests\e2e\specs\s209-all-stores.spec.ts:161:9 › S209 — 49-store happy chain › happy chain — SM TANZA - BEBANG MEGA INC.
+[S209 preflight] [S209] total=49 mutated=0 already_set=49 snapshot=F:\Dropbox\Projects\BEI-ERP\output\l3\s209\area_access_snapshot.json
+
+[1A[2K[OrderApprovalPage.approve] BEI-ORD-2026-00436 already approved (status=Approved); skipping UI click.
+
+[1A[2K[42/49] [chromium] › tests\e2e\specs\s209-all-stores.spec.ts:161:9 › S209 — 49-store happy chain › happy chain — SM TAYTAY - DAY ONES FOOD AND DRINK ESTABLISHMENTS CORP.
+[1A[2K[chromium] › tests\e2e\specs\s209-all-stores.spec.ts:161:9 › S209 — 49-store happy chain › happy chain — SM TAYTAY - DAY ONES FOOD AND DRINK ESTABLISHMENTS CORP.
+[OrderApprovalPage.approve] BEI-ORD-2026-00437 already approved (status=Approved); skipping UI click.
+
+[1A[2K[43/49] [chromium] › tests\e2e\specs\s209-all-stores.spec.ts:161:9 › S209 — 49-store happy chain › happy chain — SM VALENZUELA - BEBANG SMV INC.
+[1A[2K[chromium] › tests\e2e\specs\s209-all-stores.spec.ts:161:9 › S209 — 49-store happy chain › happy chain — SM VALENZUELA - BEBANG SMV INC.
+[OrderApprovalPage.approve] BEI-ORD-2026-00438 already approved (status=Approved); skipping UI click.
+
+[1A[2K[44/49] [chromium] › tests\e2e\specs\s209-all-stores.spec.ts:161:9 › S209 — 49-store happy chain › happy chain — STA. LUCIA EAST GRAND MALL - BEBANG SM MARIKINA INC.
+[1A[2K[chromium] › tests\e2e\specs\s209-all-stores.spec.ts:161:9 › S209 — 49-store happy chain › happy chain — STA. LUCIA EAST GRAND MALL - BEBANG SM MARIKINA INC.
+[OrderApprovalPage.approve] BEI-ORD-2026-00439 already approved (status=Approved); skipping UI click.
+
+[1A[2K[45/49] [chromium] › tests\e2e\specs\s209-all-stores.spec.ts:161:9 › S209 — 49-store happy chain › happy chain — THE GRID ROCKWELL - TASTECARTEL CORP.
+[1A[2K[chromium] › tests\e2e\specs\s209-all-stores.spec.ts:161:9 › S209 — 49-store happy chain › happy chain — THE GRID ROCKWELL - TASTECARTEL CORP.
+[OrderApprovalPage.approve] BEI-ORD-2026-00440 already approved (status=Approved); skipping UI click.
+
+[1A[2K[46/49] [chromium] › tests\e2e\specs\s209-all-stores.spec.ts:161:9 › S209 — 49-store happy chain › happy chain — THE TERMINAL - BEBANG STARMALL ALABANG INC.
+[1A[2K[chromium] › tests\e2e\specs\s209-all-stores.spec.ts:161:9 › S209 — 49-store happy chain › happy chain — THE TERMINAL - BEBANG STARMALL ALABANG INC.
+[OrderApprovalPage.approve] BEI-ORD-2026-00441 already approved (status=Approved); skipping UI click.
+
+[1A[2K[47/49] [chromium] › tests\e2e\specs\s209-all-stores.spec.ts:161:9 › S209 — 49-store happy chain › happy chain — UP TOWN MALL BGC - DMD HOLDINGS INC.
+[1A[2K[chromium] › tests\e2e\specs\s209-all-stores.spec.ts:161:9 › S209 — 49-store happy chain › happy chain — UP TOWN MALL BGC - DMD HOLDINGS INC.
+[OrderApprovalPage.approve] BEI-ORD-2026-00442 already approved (status=Approved); skipping UI click.
+
+[1A[2K[48/49] [chromium] › tests\e2e\specs\s209-all-stores.spec.ts:161:9 › S209 — 49-store happy chain › happy chain — VISTA MALL TAGUIG - TRICERN FOOD CORP.
+[1A[2K[chromium] › tests\e2e\specs\s209-all-stores.spec.ts:161:9 › S209 — 49-store happy chain › happy chain — VISTA MALL TAGUIG - TRICERN FOOD CORP.
+[OrderApprovalPage.approve] BEI-ORD-2026-00443 already approved (status=Approved); skipping UI click.
+
+[1A[2K[49/49] [chromium] › tests\e2e\specs\s209-all-stores.spec.ts:161:9 › S209 — 49-store happy chain › happy chain — XENTROMALL MONTALBAN - PERPETUAL FOOD CORP.
+[1A[2K[chromium] › tests\e2e\specs\s209-all-stores.spec.ts:161:9 › S209 — 49-store happy chain › happy chain — XENTROMALL MONTALBAN - PERPETUAL FOOD CORP.
+[S209 revert] ok=true [S209] reverted=0 skipped=49 errors=0
+
+[1A[2K  15 failed
+    [chromium] › tests\e2e\specs\s209-all-stores.spec.ts:161:9 › S209 — 49-store happy chain › happy chain — AYALA MARKET MARKET - BEBANG MARKET MARKET INC. 
+    [chromium] › tests\e2e\specs\s209-all-stores.spec.ts:161:9 › S209 — 49-store happy chain › happy chain — AYALA SOLENAD - HFFM SOLENAD FOOD SERVICES INC. 
+    [chromium] › tests\e2e\specs\s209-all-stores.spec.ts:161:9 › S209 — 49-store happy chain › happy chain — AYALA VERMOSA - BEBANG MEGA INC. 
+    [chromium] › tests\e2e\specs\s209-all-stores.spec.ts:161:9 › S209 — 49-store happy chain › happy chain — CTTM TOMAS MORATO - B CUBED VENTURES CORP. 
+    [chromium] › tests\e2e\specs\s209-all-stores.spec.ts:161:9 › S209 — 49-store happy chain › happy chain — FESTIVAL MALL ALABANG - BEBANG FESTIVAL INC. 
+    [chromium] › tests\e2e\specs\s209-all-stores.spec.ts:161:9 › S209 — 49-store happy chain › happy chain — MEGAWIDE PITX - BEBANG PITX INC. 
+    [chromium] › tests\e2e\specs\s209-all-stores.spec.ts:161:9 › S209 — 49-store happy chain › happy chain — MEGAWORLD VENICE GRAND CANAL - BEBANG VENICE GRAND CANAL INC. 
+    [chromium] › tests\e2e\specs\s209-all-stores.spec.ts:161:9 › S209 — 49-store happy chain › happy chain — NAIA T3 - HALO-HALO TERMINAL FOOD CORP. 
+    [chromium] › tests\e2e\specs\s209-all-stores.spec.ts:161:9 › S209 — 49-store happy chain › happy chain — ORTIGAS ESTANCIA - BB ESTANCIA FOOD CORP. 
+    [chromium] › tests\e2e\specs\s209-all-stores.spec.ts:161:9 › S209 — 49-store happy chain › happy chain — ORTIGAS GREENHILLS - BEIFRANCHISE FOOD OPC 
+    [chromium] › tests\e2e\specs\s209-all-stores.spec.ts:161:9 › S209 — 49-store happy chain › happy chain — ROBINSONS ANTIPOLO - BEBANG ENTERPRISE INC. 
+    [chromium] › tests\e2e\specs\s209-all-stores.spec.ts:161:9 › S209 — 49-store happy chain › happy chain — SM BICUTAN - BEBANG SM BICUTAN INC. 
+    [chromium] › tests\e2e\specs\s209-all-stores.spec.ts:161:9 › S209 — 49-store happy chain › happy chain — SM GRAND CENTRAL - BEBANG GRAND CENTRAL INC. 
+    [chromium] › tests\e2e\specs\s209-all-stores.spec.ts:161:9 › S209 — 49-store happy chain › happy chain — SM MARIKINA - BEBANG SM MARIKINA INC. 
+    [chromium] › tests\e2e\specs\s209-all-stores.spec.ts:161:9 › S209 — 49-store happy chain › happy chain — SM STA. ROSA - SWEET HARMONY FOOD CORP. 
+  3 skipped
+  31 passed (55.2m)
