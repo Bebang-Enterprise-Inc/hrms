@@ -90,6 +90,12 @@ def main() -> int:
 			"--reporter=line",
 			f"--timeout={args.timeout}",
 			f"--retries={args.retries}",
+			# S217: override any BEI playwright.config maxFailures so the sweep
+			# runs all 49 tests. Our kill-on-defect monitor handles the
+			# early-stop decision — Playwright's built-in max-fail must not
+			# pre-empt it (S216 R1 hit the default at 8 fails, leaving 31
+			# tests unrun).
+			"--max-failures=0",
 		]
 		playwright_proc = subprocess.Popen(cmd, **popen_kwargs)
 		args.pid_file.write_text(str(playwright_proc.pid), encoding="utf-8")
