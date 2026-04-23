@@ -1,0 +1,91 @@
+[
+  {
+    "store": "SM TANZA - BEBANG MEGA INC.",
+    "company": "SM TANZA - BEBANG MEGA INC.",
+    "customer": "SM TANZA - BEBANG MEGA INC.",
+    "tin": "010-885-436-00000",
+    "pass": true,
+    "orderId": "BEI-ORD-2026-00437",
+    "mrName": "MAT-MR-2026-00428",
+    "siName": "ACC-SINV-2026-00234"
+  },
+  {
+    "store": "SM TAYTAY - DAY ONES FOOD AND DRINK ESTABLISHMENTS CORP.",
+    "company": "SM TAYTAY - DAY ONES FOOD AND DRINK ESTABLISHMENTS CORP.",
+    "customer": "SM TAYTAY - DAY ONES FOOD AND DRINK ESTABLISHMENTS CORP.",
+    "tin": "010-939-944-00000",
+    "pass": true,
+    "orderId": "BEI-ORD-2026-00438",
+    "mrName": "MAT-MR-2026-00429",
+    "siName": "ACC-SINV-2026-00235"
+  },
+  {
+    "store": "SM VALENZUELA - BEBANG SMV INC.",
+    "company": "SM VALENZUELA - BEBANG SMV INC.",
+    "customer": "SM VALENZUELA - BEBANG SMV INC.",
+    "tin": "665-313-198-00000",
+    "pass": true,
+    "orderId": "BEI-ORD-2026-00439",
+    "mrName": "MAT-MR-2026-00430",
+    "siName": "ACC-SINV-2026-00236"
+  },
+  {
+    "store": "STA. LUCIA EAST GRAND MALL - BEBANG SM MARIKINA INC.",
+    "company": "STA. LUCIA EAST GRAND MALL - BEBANG SM MARIKINA INC.",
+    "customer": "STA. LUCIA EAST GRAND MALL - BEBANG SM MARIKINA INC.",
+    "tin": "670-282-332-00000",
+    "pass": true,
+    "orderId": "BEI-ORD-2026-00440",
+    "mrName": "MAT-MR-2026-00431",
+    "siName": "ACC-SINV-2026-00237"
+  },
+  {
+    "store": "THE GRID ROCKWELL - TASTECARTEL CORP.",
+    "company": "THE GRID ROCKWELL - TASTECARTEL CORP.",
+    "customer": "THE GRID ROCKWELL - TASTECARTEL CORP.",
+    "tin": "672-270-879-00000",
+    "pass": true,
+    "orderId": "BEI-ORD-2026-00441",
+    "mrName": "MAT-MR-2026-00432",
+    "siName": "ACC-SINV-2026-00238"
+  },
+  {
+    "store": "THE TERMINAL - BEBANG STARMALL ALABANG INC.",
+    "company": "THE TERMINAL - BEBANG STARMALL ALABANG INC.",
+    "customer": "THE TERMINAL - BEBANG STARMALL ALABANG INC.",
+    "tin": "670-277-140-00000",
+    "pass": true,
+    "orderId": "BEI-ORD-2026-00442",
+    "mrName": "MAT-MR-2026-00433",
+    "siName": "ACC-SINV-2026-00239"
+  },
+  {
+    "store": "UP TOWN MALL BGC - DMD HOLDINGS INC.",
+    "company": "UP TOWN MALL BGC - DMD HOLDINGS INC.",
+    "customer": "UP TOWN MALL BGC - DMD HOLDINGS INC.",
+    "tin": "649-154-841-00000",
+    "pass": true,
+    "orderId": "BEI-ORD-2026-00443",
+    "mrName": "MAT-MR-2026-00434",
+    "siName": "ACC-SINV-2026-00240"
+  },
+  {
+    "store": "VISTA MALL TAGUIG - TRICERN FOOD CORP.",
+    "company": "VISTA MALL TAGUIG - TRICERN FOOD CORP.",
+    "customer": "VISTA MALL TAGUIG - TRICERN FOOD CORP.",
+    "tin": "010-038-108-00000",
+    "pass": true,
+    "orderId": "BEI-ORD-2026-00444",
+    "mrName": "MAT-MR-2026-00435",
+    "siName": "ACC-SINV-2026-00241"
+  },
+  {
+    "store": "XENTROMALL MONTALBAN - PERPETUAL FOOD CORP.",
+    "company": "XENTROMALL MONTALBAN - PERPETUAL FOOD CORP.",
+    "customer": "XENTROMALL MONTALBAN - PERPETUAL FOOD CORP.",
+    "tin": "698-838-619-00000",
+    "pass": false,
+    "failedAt": "precondition",
+    "error": "PRECONDITION_BLOCKED: No orderable items at all for warehouse \"XENTROMALL MONTALBAN - PERPETUAL FOOD CORP.\" (store \"XENTROMALL MONTALBAN - PERPETUAL FOOD CORP.\"). Check get_orderable_items endpoint."
+  }
+]
