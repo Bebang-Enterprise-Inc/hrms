@@ -91,6 +91,8 @@
     "or_number",
     "or_date",
     "or_amount",
+    "or_variance_pct",
+    "or_variance_flagged",
     "or_attachment_section",
     "or_attachment",
     "or_uploaded_by",
@@ -625,6 +627,21 @@
       "fieldname": "or_amount",
       "fieldtype": "Currency",
       "label": "OR Amount"
+    },
+    {
+      "fieldname": "or_variance_pct",
+      "fieldtype": "Percent",
+      "label": "OR Variance %",
+      "read_only": 1,
+      "description": "abs(payment_amount - or_amount) / payment_amount * 100"
+    },
+    {
+      "default": "0",
+      "fieldname": "or_variance_flagged",
+      "fieldtype": "Check",
+      "label": "OR Variance Flagged",
+      "read_only": 1,
+      "description": "Set to 1 by upload_official_receipt when variance > 5%"
     },
     {
       "fieldname": "or_attachment_section",

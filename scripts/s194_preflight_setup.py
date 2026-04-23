@@ -182,7 +182,14 @@ def cmd_create_item(args: argparse.Namespace) -> None:
         "item_name": args.name,
         "stock_uom": "Nos",  # Frappe-default UoM; required field on Item
         "is_stock_item": 0,  # tests don't need stock-tracked items
-        "standard_rate": 50000,  # PR form gates submit on non-zero rate
+        # Rate authorized by Sam (CEO) on 2026-04-22 to make S194-21
+        # mathematically satisfiable (qty=1 invoice = 100K + 12% VAT = 112K
+        # >= test's paymentAmount=100K). Other tests verified safe at 100K:
+        # - Boundary tests (S194-13/14) still trigger their thresholds
+        # - TIN gate (S194-15) still > 250K threshold at qty=6
+        # - Match-passing tests still chain (po=gr=invoice)
+        # - Variance tests already exceed thresholds; behaviour preserved
+        "standard_rate": 100000,
     }
     if args.group:
         fields["item_group"] = args.group
