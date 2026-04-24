@@ -1,23 +1,782 @@
 {
-  "success": [
+  "success": [],
+  "failures": [],
+  "skipped": [
+    {
+      "doctype": "Sales Invoice",
+      "name": "ACC-SINV-2026-00274",
+      "reason": "already_cancelled"
+    },
+    {
+      "doctype": "Sales Invoice",
+      "name": "ACC-SINV-2026-00273",
+      "reason": "already_cancelled"
+    },
+    {
+      "doctype": "Sales Invoice",
+      "name": "ACC-SINV-2026-00272",
+      "reason": "already_cancelled"
+    },
+    {
+      "doctype": "Sales Invoice",
+      "name": "ACC-SINV-2026-00271",
+      "reason": "already_cancelled"
+    },
+    {
+      "doctype": "Sales Invoice",
+      "name": "ACC-SINV-2026-00270",
+      "reason": "already_cancelled"
+    },
+    {
+      "doctype": "Sales Invoice",
+      "name": "ACC-SINV-2026-00269",
+      "reason": "already_cancelled"
+    },
+    {
+      "doctype": "Sales Invoice",
+      "name": "ACC-SINV-2026-00268",
+      "reason": "already_cancelled"
+    },
+    {
+      "doctype": "Sales Invoice",
+      "name": "ACC-SINV-2026-00267",
+      "reason": "already_cancelled"
+    },
+    {
+      "doctype": "Sales Invoice",
+      "name": "ACC-SINV-2026-00266",
+      "reason": "already_cancelled"
+    },
+    {
+      "doctype": "Sales Invoice",
+      "name": "ACC-SINV-2026-00265",
+      "reason": "already_cancelled"
+    },
+    {
+      "doctype": "Sales Invoice",
+      "name": "ACC-SINV-2026-00264",
+      "reason": "already_cancelled"
+    },
+    {
+      "doctype": "Sales Invoice",
+      "name": "ACC-SINV-2026-00263",
+      "reason": "already_cancelled"
+    },
+    {
+      "doctype": "Sales Invoice",
+      "name": "ACC-SINV-2026-00262",
+      "reason": "already_cancelled"
+    },
+    {
+      "doctype": "Sales Invoice",
+      "name": "ACC-SINV-2026-00261",
+      "reason": "already_cancelled"
+    },
+    {
+      "doctype": "Sales Invoice",
+      "name": "ACC-SINV-2026-00260",
+      "reason": "already_cancelled"
+    },
+    {
+      "doctype": "Sales Invoice",
+      "name": "ACC-SINV-2026-00259",
+      "reason": "already_cancelled"
+    },
+    {
+      "doctype": "Sales Invoice",
+      "name": "ACC-SINV-2026-00258",
+      "reason": "already_cancelled"
+    },
+    {
+      "doctype": "Sales Invoice",
+      "name": "ACC-SINV-2026-00257",
+      "reason": "already_cancelled"
+    },
+    {
+      "doctype": "Sales Invoice",
+      "name": "ACC-SINV-2026-00256",
+      "reason": "already_cancelled"
+    },
+    {
+      "doctype": "Sales Invoice",
+      "name": "ACC-SINV-2026-00255",
+      "reason": "already_cancelled"
+    },
+    {
+      "doctype": "Sales Invoice",
+      "name": "ACC-SINV-2026-00254",
+      "reason": "already_cancelled"
+    },
+    {
+      "doctype": "Sales Invoice",
+      "name": "ACC-SINV-2026-00253",
+      "reason": "already_cancelled"
+    },
+    {
+      "doctype": "Sales Invoice",
+      "name": "ACC-SINV-2026-00252",
+      "reason": "already_cancelled"
+    },
+    {
+      "doctype": "Sales Invoice",
+      "name": "ACC-SINV-2026-00251",
+      "reason": "already_cancelled"
+    },
+    {
+      "doctype": "Sales Invoice",
+      "name": "ACC-SINV-2026-00250",
+      "reason": "already_cancelled"
+    },
+    {
+      "doctype": "Sales Invoice",
+      "name": "ACC-SINV-2026-00249",
+      "reason": "already_cancelled"
+    },
+    {
+      "doctype": "Sales Invoice",
+      "name": "ACC-SINV-2026-00248",
+      "reason": "already_cancelled"
+    },
+    {
+      "doctype": "Sales Invoice",
+      "name": "ACC-SINV-2026-00247",
+      "reason": "already_cancelled"
+    },
+    {
+      "doctype": "Sales Invoice",
+      "name": "ACC-SINV-2026-00246",
+      "reason": "already_cancelled"
+    },
+    {
+      "doctype": "Sales Invoice",
+      "name": "ACC-SINV-2026-00245",
+      "reason": "already_cancelled"
+    },
+    {
+      "doctype": "Sales Invoice",
+      "name": "ACC-SINV-2026-00244",
+      "reason": "already_cancelled"
+    },
+    {
+      "doctype": "Sales Invoice",
+      "name": "ACC-SINV-2026-00243",
+      "reason": "already_cancelled"
+    },
+    {
+      "doctype": "Sales Invoice",
+      "name": "ACC-SINV-2026-00242",
+      "reason": "already_cancelled"
+    },
     {
       "doctype": "BEI Warehouse Receiving",
-      "name": "BEI-WHR-2026-00075",
-      "action": "deleted_draft"
+      "name": "BEI-WHR-2026-00134",
+      "reason": "not_found"
+    },
+    {
+      "doctype": "BEI Warehouse Receiving",
+      "name": "BEI-WHR-2026-00133",
+      "reason": "not_found"
+    },
+    {
+      "doctype": "BEI Warehouse Receiving",
+      "name": "BEI-WHR-2026-00132",
+      "reason": "not_found"
+    },
+    {
+      "doctype": "BEI Warehouse Receiving",
+      "name": "BEI-WHR-2026-00131",
+      "reason": "not_found"
+    },
+    {
+      "doctype": "BEI Warehouse Receiving",
+      "name": "BEI-WHR-2026-00130",
+      "reason": "not_found"
+    },
+    {
+      "doctype": "BEI Warehouse Receiving",
+      "name": "BEI-WHR-2026-00129",
+      "reason": "not_found"
+    },
+    {
+      "doctype": "BEI Warehouse Receiving",
+      "name": "BEI-WHR-2026-00128",
+      "reason": "not_found"
+    },
+    {
+      "doctype": "BEI Warehouse Receiving",
+      "name": "BEI-WHR-2026-00127",
+      "reason": "not_found"
+    },
+    {
+      "doctype": "BEI Warehouse Receiving",
+      "name": "BEI-WHR-2026-00126",
+      "reason": "not_found"
+    },
+    {
+      "doctype": "BEI Warehouse Receiving",
+      "name": "BEI-WHR-2026-00125",
+      "reason": "not_found"
+    },
+    {
+      "doctype": "BEI Warehouse Receiving",
+      "name": "BEI-WHR-2026-00124",
+      "reason": "not_found"
+    },
+    {
+      "doctype": "BEI Warehouse Receiving",
+      "name": "BEI-WHR-2026-00123",
+      "reason": "not_found"
+    },
+    {
+      "doctype": "BEI Warehouse Receiving",
+      "name": "BEI-WHR-2026-00122",
+      "reason": "not_found"
+    },
+    {
+      "doctype": "BEI Warehouse Receiving",
+      "name": "BEI-WHR-2026-00121",
+      "reason": "not_found"
+    },
+    {
+      "doctype": "BEI Warehouse Receiving",
+      "name": "BEI-WHR-2026-00120",
+      "reason": "not_found"
+    },
+    {
+      "doctype": "BEI Warehouse Receiving",
+      "name": "BEI-WHR-2026-00119",
+      "reason": "not_found"
+    },
+    {
+      "doctype": "BEI Warehouse Receiving",
+      "name": "BEI-WHR-2026-00118",
+      "reason": "not_found"
+    },
+    {
+      "doctype": "BEI Warehouse Receiving",
+      "name": "BEI-WHR-2026-00117",
+      "reason": "not_found"
+    },
+    {
+      "doctype": "BEI Warehouse Receiving",
+      "name": "BEI-WHR-2026-00116",
+      "reason": "not_found"
+    },
+    {
+      "doctype": "BEI Warehouse Receiving",
+      "name": "BEI-WHR-2026-00115",
+      "reason": "not_found"
+    },
+    {
+      "doctype": "BEI Warehouse Receiving",
+      "name": "BEI-WHR-2026-00114",
+      "reason": "not_found"
+    },
+    {
+      "doctype": "BEI Warehouse Receiving",
+      "name": "BEI-WHR-2026-00113",
+      "reason": "not_found"
+    },
+    {
+      "doctype": "BEI Warehouse Receiving",
+      "name": "BEI-WHR-2026-00112",
+      "reason": "not_found"
+    },
+    {
+      "doctype": "BEI Warehouse Receiving",
+      "name": "BEI-WHR-2026-00111",
+      "reason": "not_found"
+    },
+    {
+      "doctype": "BEI Warehouse Receiving",
+      "name": "BEI-WHR-2026-00110",
+      "reason": "not_found"
+    },
+    {
+      "doctype": "BEI Warehouse Receiving",
+      "name": "BEI-WHR-2026-00109",
+      "reason": "not_found"
+    },
+    {
+      "doctype": "BEI Warehouse Receiving",
+      "name": "BEI-WHR-2026-00108",
+      "reason": "not_found"
+    },
+    {
+      "doctype": "BEI Warehouse Receiving",
+      "name": "BEI-WHR-2026-00107",
+      "reason": "not_found"
+    },
+    {
+      "doctype": "BEI Warehouse Receiving",
+      "name": "BEI-WHR-2026-00106",
+      "reason": "not_found"
+    },
+    {
+      "doctype": "BEI Warehouse Receiving",
+      "name": "BEI-WHR-2026-00105",
+      "reason": "not_found"
+    },
+    {
+      "doctype": "BEI Warehouse Receiving",
+      "name": "BEI-WHR-2026-00104",
+      "reason": "not_found"
+    },
+    {
+      "doctype": "BEI Warehouse Receiving",
+      "name": "BEI-WHR-2026-00103",
+      "reason": "not_found"
+    },
+    {
+      "doctype": "BEI Warehouse Receiving",
+      "name": "BEI-WHR-2026-00102",
+      "reason": "not_found"
+    },
+    {
+      "doctype": "Material Request",
+      "name": "MAT-MR-2026-00474",
+      "reason": "already_cancelled"
+    },
+    {
+      "doctype": "Material Request",
+      "name": "MAT-MR-2026-00473",
+      "reason": "already_cancelled"
+    },
+    {
+      "doctype": "Material Request",
+      "name": "MAT-MR-2026-00472",
+      "reason": "already_cancelled"
+    },
+    {
+      "doctype": "Material Request",
+      "name": "MAT-MR-2026-00471",
+      "reason": "already_cancelled"
+    },
+    {
+      "doctype": "Material Request",
+      "name": "MAT-MR-2026-00470",
+      "reason": "already_cancelled"
+    },
+    {
+      "doctype": "Material Request",
+      "name": "MAT-MR-2026-00469",
+      "reason": "already_cancelled"
+    },
+    {
+      "doctype": "Material Request",
+      "name": "MAT-MR-2026-00468",
+      "reason": "already_cancelled"
+    },
+    {
+      "doctype": "Material Request",
+      "name": "MAT-MR-2026-00467",
+      "reason": "already_cancelled"
+    },
+    {
+      "doctype": "Material Request",
+      "name": "MAT-MR-2026-00315",
+      "reason": "already_cancelled"
+    },
+    {
+      "doctype": "Material Request",
+      "name": "MAT-MR-2026-00427",
+      "reason": "already_cancelled"
+    },
+    {
+      "doctype": "Material Request",
+      "name": "MAT-MR-2026-00466",
+      "reason": "already_cancelled"
+    },
+    {
+      "doctype": "Material Request",
+      "name": "MAT-MR-2026-00465",
+      "reason": "already_cancelled"
+    },
+    {
+      "doctype": "Material Request",
+      "name": "MAT-MR-2026-00464",
+      "reason": "already_cancelled"
+    },
+    {
+      "doctype": "Material Request",
+      "name": "MAT-MR-2026-00463",
+      "reason": "already_cancelled"
+    },
+    {
+      "doctype": "Material Request",
+      "name": "MAT-MR-2026-00462",
+      "reason": "already_cancelled"
+    },
+    {
+      "doctype": "Material Request",
+      "name": "MAT-MR-2026-00461",
+      "reason": "already_cancelled"
+    },
+    {
+      "doctype": "Material Request",
+      "name": "MAT-MR-2026-00460",
+      "reason": "already_cancelled"
+    },
+    {
+      "doctype": "Material Request",
+      "name": "MAT-MR-2026-00459",
+      "reason": "already_cancelled"
+    },
+    {
+      "doctype": "Material Request",
+      "name": "MAT-MR-2026-00458",
+      "reason": "already_cancelled"
+    },
+    {
+      "doctype": "Material Request",
+      "name": "MAT-MR-2026-00457",
+      "reason": "already_cancelled"
+    },
+    {
+      "doctype": "Material Request",
+      "name": "MAT-MR-2026-00456",
+      "reason": "already_cancelled"
+    },
+    {
+      "doctype": "Material Request",
+      "name": "MAT-MR-2026-00455",
+      "reason": "already_cancelled"
+    },
+    {
+      "doctype": "Material Request",
+      "name": "MAT-MR-2026-00454",
+      "reason": "already_cancelled"
+    },
+    {
+      "doctype": "Material Request",
+      "name": "MAT-MR-2026-00453",
+      "reason": "already_cancelled"
+    },
+    {
+      "doctype": "Material Request",
+      "name": "MAT-MR-2026-00300",
+      "reason": "already_cancelled"
+    },
+    {
+      "doctype": "Material Request",
+      "name": "MAT-MR-2026-00452",
+      "reason": "already_cancelled"
+    },
+    {
+      "doctype": "Material Request",
+      "name": "MAT-MR-2026-00451",
+      "reason": "already_cancelled"
+    },
+    {
+      "doctype": "Material Request",
+      "name": "MAT-MR-2026-00297",
+      "reason": "already_cancelled"
+    },
+    {
+      "doctype": "Material Request",
+      "name": "MAT-MR-2026-00450",
+      "reason": "already_cancelled"
+    },
+    {
+      "doctype": "Material Request",
+      "name": "MAT-MR-2026-00449",
+      "reason": "already_cancelled"
+    },
+    {
+      "doctype": "Material Request",
+      "name": "MAT-MR-2026-00448",
+      "reason": "already_cancelled"
+    },
+    {
+      "doctype": "Material Request",
+      "name": "MAT-MR-2026-00447",
+      "reason": "already_cancelled"
+    },
+    {
+      "doctype": "Material Request",
+      "name": "MAT-MR-2026-00446",
+      "reason": "already_cancelled"
+    },
+    {
+      "doctype": "Material Request",
+      "name": "MAT-MR-2026-00445",
+      "reason": "already_cancelled"
+    },
+    {
+      "doctype": "Material Request",
+      "name": "MAT-MR-2026-00444",
+      "reason": "already_cancelled"
+    },
+    {
+      "doctype": "Material Request",
+      "name": "MAT-MR-2026-00443",
+      "reason": "already_cancelled"
+    },
+    {
+      "doctype": "Material Request",
+      "name": "MAT-MR-2026-00442",
+      "reason": "already_cancelled"
+    },
+    {
+      "doctype": "Material Request",
+      "name": "MAT-MR-2026-00441",
+      "reason": "already_cancelled"
+    },
+    {
+      "doctype": "Material Request",
+      "name": "MAT-MR-2026-00440",
+      "reason": "already_cancelled"
+    },
+    {
+      "doctype": "Material Request",
+      "name": "MAT-MR-2026-00439",
+      "reason": "already_cancelled"
+    },
+    {
+      "doctype": "Material Request",
+      "name": "MAT-MR-2026-00438",
+      "reason": "already_cancelled"
+    },
+    {
+      "doctype": "Material Request",
+      "name": "MAT-MR-2026-00437",
+      "reason": "already_cancelled"
+    },
+    {
+      "doctype": "Material Request",
+      "name": "MAT-MR-2026-00436",
+      "reason": "already_cancelled"
     },
     {
       "doctype": "BEI Store Order",
-      "name": "BEI-ORD-2026-00338",
-      "action": "deleted_draft"
-    }
-  ],
-  "failures": [
+      "name": "BEI-ORD-2026-00444",
+      "reason": "not_found"
+    },
     {
-      "doctype": "Material Request",
-      "name": "MAT-MR-2026-00224",
-      "error": "Cannot delete or cancel because Material Request <a href=\"https://hq.bebang.ph/app/material-request/MAT-MR-2026-00224\">MAT-MR-2026-00224</a> is linked with Stock Entry <a href=\"https://hq.bebang.ph/app/stock-entry/MAT-STE-2026-00555\">MAT-STE-2026-00555</a> "
+      "doctype": "BEI Store Order",
+      "name": "BEI-ORD-2026-00443",
+      "reason": "not_found"
+    },
+    {
+      "doctype": "BEI Store Order",
+      "name": "BEI-ORD-2026-00442",
+      "reason": "not_found"
+    },
+    {
+      "doctype": "BEI Store Order",
+      "name": "BEI-ORD-2026-00441",
+      "reason": "not_found"
+    },
+    {
+      "doctype": "BEI Store Order",
+      "name": "BEI-ORD-2026-00440",
+      "reason": "not_found"
+    },
+    {
+      "doctype": "BEI Store Order",
+      "name": "BEI-ORD-2026-00439",
+      "reason": "not_found"
+    },
+    {
+      "doctype": "BEI Store Order",
+      "name": "BEI-ORD-2026-00438",
+      "reason": "not_found"
+    },
+    {
+      "doctype": "BEI Store Order",
+      "name": "BEI-ORD-2026-00437",
+      "reason": "not_found"
+    },
+    {
+      "doctype": "BEI Store Order",
+      "name": "BEI-ORD-2026-00436",
+      "reason": "not_found"
+    },
+    {
+      "doctype": "BEI Store Order",
+      "name": "BEI-ORD-2026-00435",
+      "reason": "not_found"
+    },
+    {
+      "doctype": "BEI Store Order",
+      "name": "BEI-ORD-2026-00434",
+      "reason": "not_found"
+    },
+    {
+      "doctype": "BEI Store Order",
+      "name": "BEI-ORD-2026-00433",
+      "reason": "not_found"
+    },
+    {
+      "doctype": "BEI Store Order",
+      "name": "BEI-ORD-2026-00432",
+      "reason": "not_found"
+    },
+    {
+      "doctype": "BEI Store Order",
+      "name": "BEI-ORD-2026-00431",
+      "reason": "not_found"
+    },
+    {
+      "doctype": "BEI Store Order",
+      "name": "BEI-ORD-2026-00430",
+      "reason": "not_found"
+    },
+    {
+      "doctype": "BEI Store Order",
+      "name": "BEI-ORD-2026-00429",
+      "reason": "not_found"
+    },
+    {
+      "doctype": "BEI Store Order",
+      "name": "BEI-ORD-2026-00428",
+      "reason": "not_found"
+    },
+    {
+      "doctype": "BEI Store Order",
+      "name": "BEI-ORD-2026-00427",
+      "reason": "not_found"
+    },
+    {
+      "doctype": "BEI Store Order",
+      "name": "BEI-ORD-2026-00426",
+      "reason": "not_found"
+    },
+    {
+      "doctype": "BEI Store Order",
+      "name": "BEI-ORD-2026-00425",
+      "reason": "not_found"
+    },
+    {
+      "doctype": "BEI Store Order",
+      "name": "BEI-ORD-2026-00424",
+      "reason": "not_found"
+    },
+    {
+      "doctype": "BEI Store Order",
+      "name": "BEI-ORD-2026-00423",
+      "reason": "not_found"
+    },
+    {
+      "doctype": "BEI Store Order",
+      "name": "BEI-ORD-2026-00422",
+      "reason": "not_found"
+    },
+    {
+      "doctype": "BEI Store Order",
+      "name": "BEI-ORD-2026-00421",
+      "reason": "not_found"
+    },
+    {
+      "doctype": "BEI Store Order",
+      "name": "BEI-ORD-2026-00420",
+      "reason": "not_found"
+    },
+    {
+      "doctype": "BEI Store Order",
+      "name": "BEI-ORD-2026-00419",
+      "reason": "not_found"
+    },
+    {
+      "doctype": "BEI Store Order",
+      "name": "BEI-ORD-2026-00418",
+      "reason": "not_found"
+    },
+    {
+      "doctype": "BEI Store Order",
+      "name": "BEI-ORD-2026-00417",
+      "reason": "not_found"
+    },
+    {
+      "doctype": "BEI Store Order",
+      "name": "BEI-ORD-2026-00416",
+      "reason": "not_found"
+    },
+    {
+      "doctype": "BEI Store Order",
+      "name": "BEI-ORD-2026-00415",
+      "reason": "not_found"
+    },
+    {
+      "doctype": "BEI Store Order",
+      "name": "BEI-ORD-2026-00414",
+      "reason": "not_found"
+    },
+    {
+      "doctype": "BEI Store Order",
+      "name": "BEI-ORD-2026-00413",
+      "reason": "not_found"
+    },
+    {
+      "doctype": "BEI Store Order",
+      "name": "BEI-ORD-2026-00412",
+      "reason": "not_found"
+    },
+    {
+      "doctype": "BEI Store Order",
+      "name": "BEI-ORD-2026-00411",
+      "reason": "not_found"
+    },
+    {
+      "doctype": "BEI Store Order",
+      "name": "BEI-ORD-2026-00410",
+      "reason": "not_found"
+    },
+    {
+      "doctype": "BEI Store Order",
+      "name": "BEI-ORD-2026-00409",
+      "reason": "not_found"
+    },
+    {
+      "doctype": "BEI Store Order",
+      "name": "BEI-ORD-2026-00408",
+      "reason": "not_found"
+    },
+    {
+      "doctype": "BEI Store Order",
+      "name": "BEI-ORD-2026-00407",
+      "reason": "not_found"
+    },
+    {
+      "doctype": "BEI Store Order",
+      "name": "BEI-ORD-2026-00406",
+      "reason": "not_found"
+    },
+    {
+      "doctype": "BEI Store Order",
+      "name": "BEI-ORD-2026-00405",
+      "reason": "not_found"
+    },
+    {
+      "doctype": "BEI Store Order",
+      "name": "BEI-ORD-2026-00404",
+      "reason": "not_found"
+    },
+    {
+      "doctype": "BEI Store Order",
+      "name": "BEI-ORD-2026-00403",
+      "reason": "not_found"
+    },
+    {
+      "doctype": "BEI Store Order",
+      "name": "BEI-ORD-2026-00402",
+      "reason": "not_found"
+    },
+    {
+      "doctype": "BEI Store Order",
+      "name": "BEI-ORD-2026-00401",
+      "reason": "not_found"
+    },
+    {
+      "doctype": "BEI Store Order",
+      "name": "BEI-ORD-2026-00400",
+      "reason": "not_found"
+    },
+    {
+      "doctype": "BEI Store Order",
+      "name": "BEI-ORD-2026-00399",
+      "reason": "not_found"
     }
   ],
-  "skipped": [],
-  "total": 3
+  "total": 155
 }
