@@ -1,0 +1,1 @@
+{"phase": "0", "status": "complete", "timestamp": "2026-04-25T09:52:10Z", "preflight_violations": 1, "preflight_violations_allowed": ["BILLING_CUST_TIN_EMPTY:ORTIGAS GREENHILLS - BEIFRANCHISE FOOD OPC"], "next_phase": "1", "branch_head_sha": "dd664302b36eadab0035d6553b3a371af49d467f"}
