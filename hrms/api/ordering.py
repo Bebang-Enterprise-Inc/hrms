@@ -15,6 +15,7 @@ from frappe.utils import get_time, getdate, now, now_datetime, nowdate, today
 # P0-10: Import centralized RBAC role sets
 from hrms.utils.scm_roles import ORDERING_APPROVAL_ROLES, ORDERING_STORE_ROLES, ORDERING_WAREHOUSE_ROLES
 from hrms.utils.scm_roles import check_scm_permission as _check_ordering_permission
+from hrms.utils.sentry import set_backend_observability_context
 
 
 def _normalize_submit_items(items: Any) -> list[dict[str, Any]]:
@@ -226,15 +227,24 @@ def get_order_review_queue(date: str | None = None, status: str | None = None) -
 	Get all BEI Store Orders for review, optionally filtered by date and status.
 
 	Args:
-	    date (str, optional): Filter by order_date (defaults to today)
+	    date (str, optional): Filter by order_date. Empty string or None => no date filter
+	        (show all dates). S223 DEFECT-11 fix: previously defaulted to today which
+	        narrowed the queue and hid orders submitted with delivery dates ≠ today.
 	    status (str, optional): Filter by status
 
 	Returns:
 	    dict: {"orders": [...], "total": int}
 	"""
+	set_backend_observability_context(
+		module="ordering",
+		action="get_order_review_queue",
+		mutation_type="read",
+	)
 	_check_ordering_permission(ORDERING_WAREHOUSE_ROLES, "view order review queue")
 
-	filter_date = date or today()
+	# S223 DEFECT-11: empty/None date means "no date filter" — see SQL clause below.
+	# Treat empty string as None so the SQL `(%(date)s IS NULL OR ...)` short-circuits.
+	filter_date = (date or "").strip() or None
 	current_user = frappe.session.user
 	current_roles = set(frappe.get_roles(current_user))
 	from hrms.api.store import _get_order_approval_fallback_user
@@ -291,7 +301,7 @@ def get_order_review_queue(date: str | None = None, status: str | None = None) -
 		LEFT JOIN `tabWarehouse` wh ON wh.name = so.store
 		LEFT JOIN `tabWarehouse` wh_parent ON wh_parent.name = wh.parent_warehouse
 		LEFT JOIN `tabBEI Store Order Item` soi ON soi.parent = so.name
-		WHERE so.order_date = %(date)s
+		WHERE (%(date)s IS NULL OR so.order_date = %(date)s)
 		  AND so.docstatus < 2
 		  AND (%(status)s IS NULL OR so.status = %(status)s)
 		  AND (

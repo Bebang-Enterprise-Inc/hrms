@@ -1,0 +1,127 @@
+{
+  "control": {
+    "wh": "ARANETA GATEWAY - TUNGSTEN CAPITAL HOLDINGS OPC",
+    "stages": {
+      "submit": {
+        "order_name": "BEI-ORD-2026-00399",
+        "ok": true,
+        "submit_resp": {
+          "success": true,
+          "name": "BEI-ORD-2026-00399",
+          "status": "Pending Approval",
+          "requires_area_supervisor_review": true,
+          "requires_regional_manager_review": false,
+          "requires_fallback_approval": false,
+          "edited_lines_count": 3,
+          "message": "Order BEI-ORD-2026-00399 submitted successfully",
+          "approval_queue_status": "created",
+          "approval_queue_name": "BEI-APQ-2026-00923",
+          "approval_approver_source": "area_supervisor",
+          "approval_assigned_approver": "test.area@bebang.ph",
+          "fallback_approver": null,
+          "submitted_after_cutoff": true,
+          "requires_dual_approval": true,
+          "approval_stage": "Pending Area Supervisor",
+          "is_emergency": false,
+          "cargo_category": "DRY",
+          "dropped_invalid_lines": 0
+        }
+      },
+      "approve_order": {
+        "error": "PermissionError: Order BEI-ORD-2026-00399 is currently assigned to ian@bebang.ph.",
+        "tb": "Traceback (most recent call last):\n  File \"/tmp/s223pa.py\", line 59, in probe_store\n    approve_resp = approve_order(order_name=order_name)\n                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/frappe/frappe-bench/apps/frappe/frappe/utils/typing_validations.py\", line 32, in wrapper\n    return func(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/frappe/frappe-bench/apps/hrms/hrms/api/store.py\", line 3454, in approve_order\n    frappe.throw(\n  File \"/home/frappe/frap"
+      },
+      "mr_lookup_pre_scm": {
+        "mr_name": "MAT-MR-2026-00436"
+      },
+      "scm_approve": {
+        "resp": {
+          "success": true,
+          "message": "Material Request MAT-MR-2026-00436 approved"
+        },
+        "mr_name": "MAT-MR-2026-00436"
+      },
+      "mr_lookup_post_scm": {
+        "mr_name": null,
+        "error": "no submitted MR found"
+      }
+    },
+    "created_docs": [
+      [
+        "BEI Store Order",
+        "BEI-ORD-2026-00399"
+      ]
+    ]
+  },
+  "pattern_a": {
+    "wh": "AYALA SOLENAD - HFFM SOLENAD FOOD SERVICES INC.",
+    "stages": {
+      "submit": {
+        "order_name": "BEI-ORD-2026-00400",
+        "ok": true,
+        "submit_resp": {
+          "success": true,
+          "name": "BEI-ORD-2026-00400",
+          "status": "Pending Approval",
+          "requires_area_supervisor_review": true,
+          "requires_regional_manager_review": false,
+          "requires_fallback_approval": false,
+          "edited_lines_count": 2,
+          "message": "Order BEI-ORD-2026-00400 submitted successfully",
+          "approval_queue_status": "created",
+          "approval_queue_name": "BEI-APQ-2026-00924",
+          "approval_approver_source": "area_supervisor",
+          "approval_assigned_approver": "test.area@bebang.ph",
+          "fallback_approver": null,
+          "submitted_after_cutoff": true,
+          "requires_dual_approval": true,
+          "approval_stage": "Pending Area Supervisor",
+          "is_emergency": false,
+          "cargo_category": "DRY",
+          "dropped_invalid_lines": 0
+        }
+      },
+      "approve_order": {
+        "resp": {
+          "success": true,
+          "name": "BEI-ORD-2026-00400",
+          "status": "Pending Approval",
+          "approval_stage": "Pending Warehouse Manager",
+          "message": "Order BEI-ORD-2026-00400 approved by Area Supervisor. Awaiting Warehouse Manager approval."
+        }
+      },
+      "mr_lookup_pre_scm": {
+        "mr_name": "MAT-MR-2026-00437"
+      },
+      "scm_approve": {
+        "resp": {
+          "success": true,
+          "message": "Material Request MAT-MR-2026-00437 approved"
+        },
+        "mr_name": "MAT-MR-2026-00437"
+      },
+      "mr_lookup_post_scm": {
+        "mr_name": null,
+        "error": "no submitted MR found"
+      }
+    },
+    "created_docs": [
+      [
+        "BEI Store Order",
+        "BEI-ORD-2026-00400"
+      ]
+    ]
+  },
+  "cleanup": [
+    [
+      "BEI Store Order",
+      "BEI-ORD-2026-00400",
+      "ok"
+    ],
+    [
+      "BEI Store Order",
+      "BEI-ORD-2026-00399",
+      "ok"
+    ]
+  ]
+}

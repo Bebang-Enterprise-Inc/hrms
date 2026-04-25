@@ -38,6 +38,47 @@ DEFECT-11 will surface ONCE Phase 6 reverts the S221 fallback. The narrowing aff
 
 ---
 
+## Phase 2A SSM Probe Findings (2026-04-25 PHT)
+
+**Probe artifacts:**
+- `output/s223/verification/pattern_a_probe_results.json` — full probe output
+- `output/s223/verification/mr_state_diag.json` — MR state inspection
+- `scripts/s223_pattern_a_probe.py` — probe script
+- `scripts/s223_diag_mr_state.py` — diagnostic script
+
+**Key code-level findings:**
+
+1. **Approval flow architecture:** `approve_order` is a TWO-STAGE flow:
+   - Stage 1 (test.area): transitions to "Pending Warehouse Manager", returns success, **MR NOT created yet**.
+   - Stage 2 (test.scm via `approve_order` with Warehouse Manager role): transitions to "Fully Approved", AND calls `_create_mr_for_store_order` which submits the MR (docstatus=1).
+   - `approve_material_request` (warehouse approval queue button): operates on the EXISTING submitted MR — only sets `status="Ordered"` and `per_ordered=100`. Does NOT submit (already submitted) and does NOT cancel.
+
+2. **Status transition gates the queue surfaces:**
+   - `get_pending_material_requests` filters `status IN ['Pending', 'Partially Ordered']` AND `docstatus=1`. After MR creation (status=Pending) → MR shows in `/dashboard/warehouse/approve` queue.
+   - After `approve_material_request` sets status="Ordered" → MR drops OUT of pending queue, into `get_ready_for_dispatch` queue.
+
+3. **Probe limitation:** the probe called `approve_order` only ONCE (as test.area). Stage 2 was attempted via `approve_material_request` instead of a second `approve_order` as test.scm. This means the probe found stale MRs from previous days' runs (matching `custom_store_order` due to docname sequence reuse after cleanup) rather than fresh MRs from today's run. The `mr_lookup_post_scm` returned None because stale MRs were already at docstatus=2 (cancelled). **No fresh `create_stock_transfer` attempt was made by the probe.**
+
+4. **Stale MR data evidence (likely unrelated to current sprint):**
+   - MAT-MR-2026-00437 has `custom_destination_warehouse = AYALA FAIRVIEW TERRACES - BEBANG FT INC.` despite `custom_store_order = BEI-ORD-2026-00400` (current order is for AYALA SOLENAD). This is from yesterday's run; the MR docname reuse is artifactual.
+
+**What this means for Phase 2A's CEO-mandated manual reproduction:**
+- The probe confirmed the approval flow architecture matches the plan's understanding.
+- The actual `create_stock_transfer` failure mode for Pattern A's 6 stores remains unverified in this session — would require either (a) a refined probe that does both approval stages OR (b) live browser repro per the plan's CEO directive.
+
+**Likely Pattern A root cause (code-analysis hypothesis, requires live verification):**
+The dispatch modal stays OPEN because `result.success === false` keeps the dialog mounted (per `bei-tasks/app/dashboard/warehouse/dispatch/page.tsx:74-99`):
+```tsx
+if (result.success) { closeTransferDialog(true); ... return; }
+handleError(result.error || "...", {...});  // toast shown, dialog stays open
+```
+
+If the backend `create_stock_transfer` raises a `frappe.ValidationError` (e.g., insufficient stock at PINNACLE/3MD source warehouses, intercompany contract resolution miss, or SCM permission gate), the route.ts catch block at line 850-870 returns `{success: false, error: "..."}` with proper status code. The frontend shows the error toast but keeps the dialog open. The DispatchPage Page Object's 30s poll for `MR.per_transferred > 0` or SE existence times out (no SE created → no signal). Test fails.
+
+**Pattern A fix design (Phase 2B):** improve error visibility + add a data-testid the test can read to detect the error state. Closing the modal on error would HIDE the error from real users (anti-pattern per "Correct Over Fast" rule). The right fix is to surface the error CLEARLY in-modal and provide a testable error indicator.
+
+---
+
 ## Pattern A Investigation Summary (Phase 2A will produce fresh trace)
 
 **What is broken (in product terms):** clicking the inner "Create Transfer" button inside the warehouse dispatch dialog does NOT result in a Stock Entry being created for these 6 stores. The dialog stays open. No Stock Entry exists. No success toast. Either no error toast OR an error toast that the test doesn't see.
