@@ -3,7 +3,7 @@
 | Phase | Task | Status | Evidence path | Skipped? | If skipped, why? |
 |---|---|---|---|---|---|
 | 0 | Boot + both worktrees + canonical preflight | DONE | output/s225/verification/canonical_preflight.txt, baseline.json | NO | — |
-| 1 | Validate S224 PR #687 + Pattern B + Pattern C | PENDING | — | — | — |
+| 1 | Validate S224 PR #687 + Pattern B + Pattern C | **BLOCKED — STOP for Sam decision** | output/s225/verification/{s224_deploy_sha_check,s224_pattern_b_validation,s224_pattern_c_validation,phase_1_decision}.{json,md}, output/l3/s225/sweep_ledger.json | PARTIAL | Sweep returned 2/6 PASS (both flaky). Per plan ≤4/6 = STOP. **S224 IS deployed (REST probes pass + 4/4 markers).** Sweep failures are S223 DEFECT-11 reappearance (auto-promoted MR not in SCM queue), unrelated to S224. See phase_1_decision.md. |
 | 2 | Warehouse duplicate audit | PENDING | — | — | — |
 | 3 | Consolidation (Sam-gated) | PENDING | — | — | — |
 | 4 | FOR UPDATE lock implementation | PENDING | — | — | — |

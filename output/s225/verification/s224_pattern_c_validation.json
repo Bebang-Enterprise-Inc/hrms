@@ -1,0 +1,52 @@
+{
+  "checked_at_local": "2026-04-27T00:06:24+0800",
+  "ssm_command_id": "73c3e0c1-4c55-4d94-b8ad-a90cc881572c",
+  "ssm_status": "Success",
+  "instance_id": "i-026b7477d27bd46d6",
+  "probe_estancia": {
+    "label": "probe_estancia",
+    "input": "Estancia",
+    "expect": "resolve_to_ortigas_estancia",
+    "resolved_warehouse": "ORTIGAS ESTANCIA - BB ESTANCIA FOOD CORP.",
+    "error": null,
+    "ok": true
+  },
+  "probe_estancia_uppercase": {
+    "label": "probe_estancia_uppercase",
+    "input": "ESTANCIA",
+    "expect": "resolve_to_ortigas_estancia",
+    "resolved_warehouse": "ORTIGAS ESTANCIA - BB ESTANCIA FOOD CORP.",
+    "error": null,
+    "ok": true
+  },
+  "probe_estancia_titlecase": {
+    "label": "probe_estancia_titlecase",
+    "input": "ortigas estancia",
+    "expect": "resolve_to_ortigas_estancia",
+    "resolved_warehouse": "ORTIGAS ESTANCIA - BB ESTANCIA FOOD CORP.",
+    "error": null,
+    "ok": true
+  },
+  "probe_ambiguous": {
+    "label": "probe_ambiguous",
+    "input": "Bebang",
+    "expect": "throw_ambiguous",
+    "error": "Ambiguous store identifier 'Bebang' \u2014 matches multiple warehouses: AYALA EVO CITY - BEBANG MEGA INC., AYALA FAIRVIEW TERRACES - BEBANG FT INC., AYALA MARKET MARKET - BEBANG MARKET MARKET INC., AYALA UP TOWN CENTER - BEBANG UP TOWN CENTER INC., AYALA VERMOSA - BEBANG MEGA INC.. Use the full canonical name.",
+    "error_class": "ValidationError",
+    "ok": true
+  },
+  "estancia_warehouses_in_db": [
+    {
+      "name": "ORTIGAS ESTANCIA - BB ESTANCIA FOOD CORP.",
+      "warehouse_name": "ORTIGAS ESTANCIA",
+      "company": "ORTIGAS ESTANCIA - BB ESTANCIA FOOD CORP.",
+      "disabled": 0,
+      "is_group": 0
+    }
+  ],
+  "status": "PASS",
+  "pass_count": 3,
+  "ambiguous_throws": true,
+  "raw_stdout": "{\"probe_estancia\": {\"label\": \"probe_estancia\", \"input\": \"Estancia\", \"expect\": \"resolve_to_ortigas_estancia\", \"resolved_warehouse\": \"ORTIGAS ESTANCIA - BB ESTANCIA FOOD CORP.\", \"error\": null, \"ok\": true}, \"probe_estancia_uppercase\": {\"label\": \"probe_estancia_uppercase\", \"input\": \"ESTANCIA\", \"expect\": \"resolve_to_ortigas_estancia\", \"resolved_warehouse\": \"ORTIGAS ESTANCIA - BB ESTANCIA FOOD CORP.\", \"error\": null, \"ok\": true}, \"probe_estancia_titlecase\": {\"label\": \"probe_estancia_titlecase\", \"input\": \"ortigas estancia\", \"expect\": \"resolve_to_ortigas_estancia\", \"resolved_warehouse\": \"ORTIGAS ESTANCIA - BB ESTANCIA FOOD CORP.\", \"error\": null, \"ok\": true}, \"probe_ambiguous\": {\"label\": \"probe_ambiguous\", \"input\": \"Bebang\", \"expect\": \"throw_ambiguous\", \"error\": \"Ambiguous store identifier 'Bebang' \\u2014 matches multiple warehouses: AYALA EVO CITY - BEBANG MEGA INC., AYALA FAIRVIEW TERRACES - BEBANG FT INC., AYALA MARKET MARKET - BEBANG MARKET MARKET INC., AYALA UP TOWN CENTER - BEBANG UP TOWN CENTER INC., AYALA VERMOSA - BEBANG MEGA INC.. Use the full canonical name.\", \"error_class\": \"ValidationError\", \"ok\": true}, \"estancia_warehouses_in_db\": [{\"name\": \"ORTIGAS ESTANCIA - BB ESTANCIA FOOD CORP.\", \"warehouse_name\": \"ORTIGAS ESTANCIA\", \"company\": \"ORTIGAS ESTANCIA - BB ESTANCIA FOOD CORP.\", \"disabled\": 0, \"is_group\": 0}], \"status\": \"PASS\", \"pass_count\": 3, \"ambiguous_throws\": true}\n",
+  "raw_stderr": ""
+}

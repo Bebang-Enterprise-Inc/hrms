@@ -1,14 +1,40 @@
 {
-  "phase": "0",
-  "status": "complete",
-  "timestamp": "2026-04-27T00:00:31+08:00",
+  "phase": "1",
+  "status": "blocked",
+  "blocker": "phase_1_outcome_matrix_stop_at_2_of_6_pass",
+  "timestamp": "2026-04-27T00:50:00+08:00",
   "evidence_paths": [
     "output/s225/verification/canonical_preflight.txt",
-    "output/s225/verification/baseline.json"
+    "output/s225/verification/baseline.json",
+    "output/s225/verification/s224_deploy_sha_check.json",
+    "output/s225/verification/s224_pattern_b_validation.json",
+    "output/s225/verification/s224_pattern_c_validation.json",
+    "output/s225/verification/phase_1_decision.md",
+    "output/l3/s225/sweep_ledger.json"
   ],
-  "next_phase": "1",
-  "blockers": [],
+  "next_phase": "2 (pending Sam decision per phase_1_decision.md)",
+  "blockers": [
+    "Sweep returned 2/6 PASS (both flaky). Per plan outcome matrix ≤4/6 = STOP, surface to Sam.",
+    "S224 deploy IS verified via REST probes (Pattern B already_approved confirmed; Pattern C 3/3 fuzzy + 1 ambiguous-throw confirmed); 4/4 code markers in container.",
+    "Sweep failures are NOT Pattern B/C — all 'S223 DEFECT-11 reappearance' or browser-closed lifecycle issues."
+  ],
   "canonical_postcheck_violations": 0,
-  "branch_head_sha": "b6355e35c10edef2828afb3a283386874a7e728e",
-  "notes": "Phase 0 complete. Both worktrees spawned (hrms + bei-tasks). Canonical preflight 49 stores, 0 violations. S224 PR #687 verified MERGED at 2026-04-26T12:42:54Z."
+  "branch_head_sha": "edbf5ec0635b1f5b58ec3af3cebb05a5ba30b2b1",
+  "phase_1_summary": {
+    "deploy_verified": true,
+    "pattern_b_rest_probe": "PASS",
+    "pattern_c_rest_probe": "PASS",
+    "container_code_markers": "4/4",
+    "targeted_sweep": {
+      "total_tests": 6,
+      "hard_passes": 0,
+      "flaky_passes_on_retry": 2,
+      "hard_fails": 4,
+      "stores_pattern_b_failures": 0,
+      "stores_pattern_c_failures": 0,
+      "stores_s223_defect_11_reappearance": 4,
+      "stores_browser_lifecycle_failures": 2
+    }
+  },
+  "decision_request": "See output/s225/verification/phase_1_decision.md — three options A/B/C presented to Sam"
 }

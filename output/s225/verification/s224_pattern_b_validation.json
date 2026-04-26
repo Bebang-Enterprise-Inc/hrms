@@ -1,0 +1,34 @@
+{
+  "checked_at_local": "2026-04-27T00:05:17+0800",
+  "ssm_command_id": "9398ff10-15f0-4c88-980c-b3ba08ca0d87",
+  "ssm_status": "Success",
+  "instance_id": "i-026b7477d27bd46d6",
+  "inner_result": {
+    "step": "built_approved_items",
+    "mr_name": "MAT-MR-2026-00135",
+    "approved_items_count": 3,
+    "approved_items_sample": [
+      {
+        "item_code": "FG002",
+        "qty": 84.0
+      },
+      {
+        "item_code": "FG001",
+        "qty": 2220.0
+      }
+    ],
+    "called_as": "test.scm@bebang.ph",
+    "call_succeeded": true,
+    "response": {
+      "success": true,
+      "message": "Material Request MAT-MR-2026-00135 already approved (status=Ordered) \u2014 no-op",
+      "already_approved": true
+    },
+    "already_approved": true,
+    "status": "PASS"
+  },
+  "status": "PASS",
+  "already_approved": true,
+  "raw_stdout": "{\"step\": \"built_approved_items\", \"mr_name\": \"MAT-MR-2026-00135\", \"approved_items_count\": 3, \"approved_items_sample\": [{\"item_code\": \"FG002\", \"qty\": 84.0}, {\"item_code\": \"FG001\", \"qty\": 2220.0}], \"called_as\": \"test.scm@bebang.ph\", \"call_succeeded\": true, \"response\": {\"success\": true, \"message\": \"Material Request MAT-MR-2026-00135 already approved (status=Ordered) \\u2014 no-op\", \"already_approved\": true}, \"already_approved\": true, \"status\": \"PASS\"}\n",
+  "raw_stderr": ""
+}
