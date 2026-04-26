@@ -1089,6 +1089,11 @@ def get_pending_material_requests():
 	"""
 	Get Material Requests pending approval/fulfillment.
 	"""
+	set_backend_observability_context(
+		module="warehouse",
+		action="get_pending_material_requests",
+		mutation_type="read",
+	)
 	mrs = frappe.get_all(
 		"Material Request",
 		filters={
@@ -1214,6 +1219,12 @@ def approve_material_request(mr_name=None, approved_items=None):
 	    mr_name: Material Request name
 	    approved_items: JSON array of {item_code, approved_qty}
 	"""
+	set_backend_observability_context(
+		module="warehouse",
+		action="approve_material_request",
+		mutation_type="update",
+		extras={"mr_name": mr_name},
+	)
 	check_scm_permission(SCM_APPROVAL_ROLES, "approve material requests")
 
 	if not mr_name or not approved_items:
@@ -1224,12 +1235,24 @@ def approve_material_request(mr_name=None, approved_items=None):
 	if not frappe.db.exists("Material Request", mr_name):
 		frappe.throw(_("Material Request not found"))
 
-	# G-102: Row lock to prevent double-approval race condition
+	# G-102: Row lock to prevent double-approval race condition.
+	# S224 idempotency fix: if MR is already "Ordered" it was either auto-promoted at
+	# creation time (BEI on_submit hook for store-order MRs) or approved in a parallel
+	# request — either way, the caller's intent ("approve this MR") is already
+	# satisfied. Return success-with-noop instead of throwing so the SCM UI does not
+	# show a confusing error for an MR that is in the desired state.
+	# Sentry evidence: during the S223 L3 sweep window, 5 of the 14 failed stores hit
+	# this exact "already been approved" path because the MR auto-promotes at
+	# _create_mr_for_store_order time. Throwing here was a Pattern B root cause.
 	current_status = frappe.db.sql(
 		"SELECT status FROM `tabMaterial Request` WHERE name = %s FOR UPDATE", mr_name
 	)[0][0]
 	if current_status == "Ordered":
-		frappe.throw(_("Material Request {0} has already been approved").format(mr_name))
+		return {
+			"success": True,
+			"message": f"Material Request {mr_name} already approved (status=Ordered) — no-op",
+			"already_approved": True,
+		}
 
 	# Store approval info as comment
 	approval_summary = []

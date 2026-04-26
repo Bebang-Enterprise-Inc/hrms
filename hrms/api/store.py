@@ -270,6 +270,39 @@ def resolve_warehouse(store_or_branch):
 	if alias_warehouse and frappe.db.exists("Warehouse", alias_warehouse):
 		return alias_warehouse
 
+	# S224: case-insensitive substring fallback so legacy callers passing partial
+	# names ("Estancia", "Araneta Gateway - Bebang Enterprise Inc.") resolve to the
+	# canonical warehouse instead of throwing. Sentry confirmed Pattern C
+	# (NAIA T3, ORTIGAS ESTANCIA, ORTIGAS GREENHILLS) hit this path because callers
+	# pass non-canonical store identifiers (e.g. just "Estancia" or stale company
+	# names). Match against `warehouse_name` (the human-readable short form) and
+	# also against the docname so both display-name and full-canonical lookups
+	# succeed. Returns at most ONE match — if multiple non-disabled, non-group
+	# warehouses match, we keep throwing because the input is ambiguous.
+	candidates = frappe.db.sql(
+		"""
+		SELECT name FROM `tabWarehouse`
+		WHERE disabled = 0
+		  AND is_group = 0
+		  AND (
+			  LOWER(warehouse_name) LIKE LOWER(%(s)s)
+			  OR LOWER(name) LIKE LOWER(%(s)s)
+		  )
+		LIMIT 5
+		""",
+		{"s": f"%{store_or_branch.strip()}%"},
+		as_dict=False,
+	)
+	candidates = [c[0] for c in (candidates or [])]
+	if len(candidates) == 1:
+		return candidates[0]
+	if len(candidates) > 1:
+		frappe.throw(
+			_("Ambiguous store identifier {0!r} — matches multiple warehouses: {1}. Use the full canonical name.").format(
+				store_or_branch, ", ".join(candidates[:5])
+			)
+		)
+
 	frappe.throw(_("Could not find Store: {0}").format(store_or_branch))
 
 
@@ -3824,6 +3857,25 @@ def _create_mr_for_store_order(order):
 	creation time. Errors are NO LONGER swallowed silently — the savepoint
 	rolls back and the caller sees the underlying exception.
 	"""
+	# S224: explicit observability for Pattern C silent-fail diagnostic.
+	# This helper inherits its caller's Sentry scope (from approve_order) but
+	# the helper-specific phase + store-identity tags make Pattern C events
+	# (NAIA T3, ORTIGAS ESTANCIA) findable in Sentry without trace
+	# correlation.
+	from hrms.utils.sentry import set_backend_observability_context
+
+	set_backend_observability_context(
+		module="ordering",
+		action="_create_mr_for_store_order",
+		mutation_type="create",
+		phase="mr_creation",
+		extras={
+			"order_name": order.name,
+			"store_warehouse": getattr(order, "store", None),
+			"cargo_category": getattr(order, "cargo_category", None),
+			"item_count": len(order.items or []),
+		},
+	)
 	# S163 HARD BLOCKER: any grouped sibling row still in "Pending" must be
 	# resolved by SCM before MR creation.
 	pending_seqs = sorted(

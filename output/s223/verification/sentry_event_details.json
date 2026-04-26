@@ -1,0 +1,3616 @@
+{
+  "events": [
+    {
+      "project": "bei-hrms",
+      "eventID": "772da3b1e3664945839fcd6100d36f89",
+      "title": "ValidationError: The Batch BACKFILL-20260421-FG004-3MD-LOGISTICS-CAMANGYANAN of an item FG004 has negative stock in the warehouse 3MD LOGISTICS - CAMANGYANAN - BKI as of 26-04-2026 14:01:58. Please ad",
+      "culprit": "frappe in _raise_exception",
+      "dateCreated": "2026-04-26T06:01:58.236000Z",
+      "level": null,
+      "tags": {
+        "action": "handle_exception",
+        "endpoint_or_job": "hrms.api.warehouse.create_stock_transfer",
+        "environment": "development",
+        "error_source": "api_validation",
+        "frappe_cmd": "hrms.api.warehouse.create_stock_transfer",
+        "handled": "yes",
+        "http_method": "POST",
+        "level": "warning",
+        "mechanism": "generic",
+        "module": "warehouse",
+        "mutation_type": "mutation",
+        "phase": "backend_exception",
+        "release": "bei-hrms@16.0.0-dev",
+        "route": "/api/method/hrms.api.warehouse.create_stock_transfer",
+        "route_action": "create_stock_transfer",
+        "runtime": "CPython 3.11.6",
+        "runtime.name": "CPython",
+        "server_name": "83707892ee80",
+        "surface": "frappe_request",
+        "user": "id:test.scm@bebang.ph"
+      },
+      "user": null,
+      "request_url": "",
+      "request_method": null,
+      "request_data": "",
+      "traceback": [
+        {
+          "filename": "erpnext/stock/doctype/serial_and_batch_bundle/serial_and_batch_bundle.py",
+          "function": "validate_batch_quantity",
+          "lineNo": 1459,
+          "context": [
+            [
+              1454,
+              "\t\tif self.type_of_transaction != \"Outward\" or ("
+            ],
+            [
+              1455,
+              "\t\t\tself.voucher_type == \"Stock Reconciliation\" and self.type_of_transaction == \"Outward\""
+            ],
+            [
+              1456,
+              "\t\t):"
+            ]
+          ]
+        },
+        {
+          "filename": "erpnext/stock/doctype/serial_and_batch_bundle/serial_and_batch_bundle.py",
+          "function": "get_batchwise_available_qty",
+          "lineNo": 1516,
+          "context": [
+            [
+              1511,
+              "\t\t\t\tavailable_qty[row.batch_no] += flt(row.qty)"
+            ],
+            [
+              1512,
+              "\t\t\telse:"
+            ],
+            [
+              1513,
+              "\t\t\t\tavailable_qty[row.batch_no] = flt(row.qty)"
+            ]
+          ]
+        },
+        {
+          "filename": "erpnext/stock/doctype/serial_and_batch_bundle/serial_and_batch_bundle.py",
+          "function": "throw_negative_batch",
+          "lineNo": 1492,
+          "context": [
+            [
+              1487,
+              "\t\t\tbold(self.warehouse),"
+            ],
+            [
+              1488,
+              "\t\t\tdate_msg,"
+            ],
+            [
+              1489,
+              "\t\t\tbold(abs(flt(available_qty, precision))),"
+            ]
+          ]
+        },
+        {
+          "filename": "__init__.py",
+          "function": "throw",
+          "lineNo": 619,
+          "context": [
+            [
+              614,
+              "\t:param is_minimizable: [optional] Allow users to minimize the modal"
+            ],
+            [
+              615,
+              "\t:param wide: [optional] Show wide modal"
+            ],
+            [
+              616,
+              "\t:param as_list: [optional] If `msg` is a list, render as un-ordered list."
+            ]
+          ]
+        },
+        {
+          "filename": "__init__.py",
+          "function": "msgprint",
+          "lineNo": 584,
+          "context": [
+            [
+              579,
+              ""
+            ],
+            [
+              580,
+              "\tif realtime:"
+            ],
+            [
+              581,
+              "\t\tpublish_realtime(event=\"msgprint\", message=out)"
+            ]
+          ]
+        },
+        {
+          "filename": "__init__.py",
+          "function": "_raise_exception",
+          "lineNo": 535,
+          "context": [
+            [
+              530,
+              "\t\t\t\texc.args = (msg,)"
+            ],
+            [
+              531,
+              "\t\t\telse:"
+            ],
+            [
+              532,
+              "\t\t\t\texc = ValidationError(msg)"
+            ]
+          ]
+        },
+        {
+          "_exception": "NegativeStockError",
+          "_value": "\n\t\t\tThe Batch <strong>BACKFILL-20260421-FG004-3MD-LOGISTICS-CAMANGYANAN</strong> of an item <strong>FG004</strong> has negative stock in the warehouse <strong>3MD LOGISTICS - CAMANGYANAN - BKI</strong> as of 26-04-2026 14:01:58.\n\t\t\tPlease add a stock quantity of <strong>5.0</strong> to proceed with "
+        },
+        {
+          "filename": "__init__.py",
+          "function": "call",
+          "lineNo": 1764,
+          "context": [
+            [
+              1759,
+              "\tif isinstance(fn, str):"
+            ],
+            [
+              1760,
+              "\t\tfn = get_attr(fn)"
+            ],
+            [
+              1761,
+              ""
+            ]
+          ]
+        },
+        {
+          "filename": "frappe/utils/typing_validations.py",
+          "function": "wrapper",
+          "lineNo": 32,
+          "context": [
+            [
+              27,
+              "\t\t:param kwargs: Function keyword arguments.\"\"\""
+            ],
+            [
+              28,
+              ""
+            ],
+            [
+              29,
+              "\t\tif apply_condition():"
+            ]
+          ]
+        },
+        {
+          "filename": "hrms/api/warehouse.py",
+          "function": "create_stock_transfer",
+          "lineNo": 1696,
+          "context": [
+            [
+              1691,
+              "\t\t\t\t\t\"Please check stock levels or do a stock receipt first.\""
+            ],
+            [
+              1692,
+              "\t\t\t\t).format(item_name, qty, short_wh),"
+            ],
+            [
+              1693,
+              "\t\t\t\ttitle=_(\"Insufficient Stock\"),"
+            ]
+          ]
+        },
+        {
+          "filename": "__init__.py",
+          "function": "throw",
+          "lineNo": 619,
+          "context": [
+            [
+              614,
+              "\t:param is_minimizable: [optional] Allow users to minimize the modal"
+            ],
+            [
+              615,
+              "\t:param wide: [optional] Show wide modal"
+            ],
+            [
+              616,
+              "\t:param as_list: [optional] If `msg` is a list, render as un-ordered list."
+            ]
+          ]
+        },
+        {
+          "filename": "__init__.py",
+          "function": "msgprint",
+          "lineNo": 584,
+          "context": [
+            [
+              579,
+              ""
+            ],
+            [
+              580,
+              "\tif realtime:"
+            ],
+            [
+              581,
+              "\t\tpublish_realtime(event=\"msgprint\", message=out)"
+            ]
+          ]
+        },
+        {
+          "filename": "__init__.py",
+          "function": "_raise_exception",
+          "lineNo": 535,
+          "context": [
+            [
+              530,
+              "\t\t\t\texc.args = (msg,)"
+            ],
+            [
+              531,
+              "\t\t\telse:"
+            ],
+            [
+              532,
+              "\t\t\t\texc = ValidationError(msg)"
+            ]
+          ]
+        },
+        {
+          "_exception": "ValidationError",
+          "_value": "The Batch BACKFILL-20260421-FG004-3MD-LOGISTICS-CAMANGYANAN of an item FG004 has negative stock in the warehouse 3MD LOGISTICS - CAMANGYANAN - BKI as of 26-04-2026 14:01:58. Please add a stock quantity of 5.0 to proceed with this entry. If it is not possible to make an adjustment entry, please enabl"
+        }
+      ],
+      "breadcrumbs": [
+        {
+          "category": "redis",
+          "message": "SET b'_3ca82e0039adc3d1|document_cache::Bin::kete1k606f' [Filtered]",
+          "level": "info",
+          "data": {
+            "db.operation": "SET",
+            "redis.command": "SET",
+            "redis.is_cluster": "False",
+            "redis.key": "_3ca82e0039adc3d1|document_cache::Bin::kete1k606f"
+          }
+        },
+        {
+          "category": "redis",
+          "message": "DEL b'_3ca82e0039adc3d1|document_cache::Bin::kete1k606f'",
+          "level": "info",
+          "data": {
+            "db.operation": "DEL",
+            "redis.command": "DEL",
+            "redis.is_cluster": "False",
+            "redis.key": "_3ca82e0039adc3d1|document_cache::Bin::kete1k606f"
+          }
+        },
+        {
+          "category": "redis",
+          "message": "DEL b'_3ca82e0039adc3d1|document_cache::Bin::kete1k606f'",
+          "level": "info",
+          "data": {
+            "db.operation": "DEL",
+            "redis.command": "DEL",
+            "redis.is_cluster": "False",
+            "redis.key": "_3ca82e0039adc3d1|document_cache::Bin::kete1k606f"
+          }
+        },
+        {
+          "category": "redis",
+          "message": "GET b'_3ca82e0039adc3d1|document_cache::Serial and Batch Bundle::5078c856a30305e5638a'",
+          "level": "info",
+          "data": {
+            "db.operation": "GET",
+            "redis.command": "GET",
+            "redis.is_cluster": "False",
+            "redis.key": "_3ca82e0039adc3d1|document_cache::Serial and Batch Bundle::5078c856a30305e5638a"
+          }
+        },
+        {
+          "category": "redis",
+          "message": "SET b'_3ca82e0039adc3d1|document_cache::Serial and Batch Bundle::5078c856a30305e5638a' [Filtered]",
+          "level": "info",
+          "data": {
+            "db.operation": "SET",
+            "redis.command": "SET",
+            "redis.is_cluster": "False",
+            "redis.key": "_3ca82e0039adc3d1|document_cache::Serial and Batch Bundle::5078c856a30305e5638a"
+          }
+        },
+        {
+          "category": "redis",
+          "message": "GET b'_3ca82e0039adc3d1|dynamic_link_map::Serial and Batch Bundle::voucher_type'",
+          "level": "info",
+          "data": {
+            "db.operation": "GET",
+            "redis.command": "GET",
+            "redis.is_cluster": "False",
+            "redis.key": "_3ca82e0039adc3d1|dynamic_link_map::Serial and Batch Bundle::voucher_type"
+          }
+        },
+        {
+          "category": "redis",
+          "message": "DEL b'_3ca82e0039adc3d1|document_cache::Serial and Batch Bundle::5078c856a30305e5638a'",
+          "level": "info",
+          "data": {
+            "db.operation": "DEL",
+            "redis.command": "DEL",
+            "redis.is_cluster": "False",
+            "redis.key": "_3ca82e0039adc3d1|document_cache::Serial and Batch Bundle::5078c856a30305e5638a"
+          }
+        },
+        {
+          "category": "redis",
+          "message": "DEL b'_3ca82e0039adc3d1|document_cache::Serial and Batch Bundle::5078c856a30305e5638a'",
+          "level": "info",
+          "data": {
+            "db.operation": "DEL",
+            "redis.command": "DEL",
+            "redis.is_cluster": "False",
+            "redis.key": "_3ca82e0039adc3d1|document_cache::Serial and Batch Bundle::5078c856a30305e5638a"
+          }
+        },
+        {
+          "category": "redis",
+          "message": "DEL b'_3ca82e0039adc3d1|notification_count:Serial and Batch Bundle'",
+          "level": "info",
+          "data": {
+            "db.operation": "DEL",
+            "redis.command": "DEL",
+            "redis.is_cluster": "False",
+            "redis.key": "_3ca82e0039adc3d1|notification_count:Serial and Batch Bundle"
+          }
+        },
+        {
+          "category": "bei.backend",
+          "message": "handle_exception",
+          "level": "info",
+          "data": {
+            "endpoint_or_job": "hrms.api.warehouse.create_stock_transfer",
+            "module": "None",
+            "mutation_type": "mutation",
+            "phase": "backend_exception",
+            "route": "/api/method/hrms.api.warehouse.create_stock_transfer"
+          }
+        }
+      ]
+    },
+    {
+      "project": "bei-hrms",
+      "eventID": "34985733bbad4159b632f7c186ab7d88",
+      "title": "ValidationError: Material Request MAT-MR-2026-00495 has already been approved",
+      "culprit": "frappe in _raise_exception",
+      "dateCreated": "2026-04-26T06:01:53.325000Z",
+      "level": null,
+      "tags": {
+        "action": "handle_exception",
+        "endpoint_or_job": "hrms.api.warehouse.approve_material_request",
+        "environment": "development",
+        "error_source": "api_validation",
+        "frappe_cmd": "hrms.api.warehouse.approve_material_request",
+        "handled": "yes",
+        "http_method": "POST",
+        "level": "warning",
+        "mechanism": "generic",
+        "mutation_type": "mutation",
+        "phase": "backend_exception",
+        "release": "bei-hrms@16.0.0-dev",
+        "route": "/api/method/hrms.api.warehouse.approve_material_request",
+        "route_action": "approve_material_request",
+        "runtime": "CPython 3.11.6",
+        "runtime.name": "CPython",
+        "server_name": "83707892ee80",
+        "surface": "frappe_request",
+        "user": "id:test.scm@bebang.ph"
+      },
+      "user": null,
+      "request_url": "",
+      "request_method": null,
+      "request_data": "",
+      "traceback": [
+        {
+          "filename": "__init__.py",
+          "function": "call",
+          "lineNo": 1764,
+          "context": [
+            [
+              1759,
+              "\tif isinstance(fn, str):"
+            ],
+            [
+              1760,
+              "\t\tfn = get_attr(fn)"
+            ],
+            [
+              1761,
+              ""
+            ]
+          ]
+        },
+        {
+          "filename": "frappe/utils/typing_validations.py",
+          "function": "wrapper",
+          "lineNo": 32,
+          "context": [
+            [
+              27,
+              "\t\t:param kwargs: Function keyword arguments.\"\"\""
+            ],
+            [
+              28,
+              ""
+            ],
+            [
+              29,
+              "\t\tif apply_condition():"
+            ]
+          ]
+        },
+        {
+          "filename": "hrms/api/warehouse.py",
+          "function": "approve_material_request",
+          "lineNo": 1232,
+          "context": [
+            [
+              1227,
+              "\t# G-102: Row lock to prevent double-approval race condition"
+            ],
+            [
+              1228,
+              "\tcurrent_status = frappe.db.sql("
+            ],
+            [
+              1229,
+              "\t\t\"SELECT status FROM `tabMaterial Request` WHERE name = %s FOR UPDATE\", mr_name"
+            ]
+          ]
+        },
+        {
+          "filename": "__init__.py",
+          "function": "throw",
+          "lineNo": 619,
+          "context": [
+            [
+              614,
+              "\t:param is_minimizable: [optional] Allow users to minimize the modal"
+            ],
+            [
+              615,
+              "\t:param wide: [optional] Show wide modal"
+            ],
+            [
+              616,
+              "\t:param as_list: [optional] If `msg` is a list, render as un-ordered list."
+            ]
+          ]
+        },
+        {
+          "filename": "__init__.py",
+          "function": "msgprint",
+          "lineNo": 584,
+          "context": [
+            [
+              579,
+              ""
+            ],
+            [
+              580,
+              "\tif realtime:"
+            ],
+            [
+              581,
+              "\t\tpublish_realtime(event=\"msgprint\", message=out)"
+            ]
+          ]
+        },
+        {
+          "filename": "__init__.py",
+          "function": "_raise_exception",
+          "lineNo": 535,
+          "context": [
+            [
+              530,
+              "\t\t\t\texc.args = (msg,)"
+            ],
+            [
+              531,
+              "\t\t\telse:"
+            ],
+            [
+              532,
+              "\t\t\t\texc = ValidationError(msg)"
+            ]
+          ]
+        },
+        {
+          "_exception": "ValidationError",
+          "_value": "Material Request MAT-MR-2026-00495 has already been approved"
+        }
+      ],
+      "breadcrumbs": [
+        {
+          "category": "redis",
+          "message": "HGET b'_3ca82e0039adc3d1|defaults' [Filtered]",
+          "level": "info",
+          "data": {
+            "db.operation": "HGET",
+            "redis.command": "HGET",
+            "redis.is_cluster": "False"
+          }
+        },
+        {
+          "category": "redis",
+          "message": "HGET b'_3ca82e0039adc3d1|user_permissions' [Filtered]",
+          "level": "info",
+          "data": {
+            "db.operation": "HGET",
+            "redis.command": "HGET",
+            "redis.is_cluster": "False"
+          }
+        },
+        {
+          "category": "redis",
+          "message": "HGET b'_3ca82e0039adc3d1|defaults' [Filtered]",
+          "level": "info",
+          "data": {
+            "db.operation": "HGET",
+            "redis.command": "HGET",
+            "redis.is_cluster": "False"
+          }
+        },
+        {
+          "category": "redis",
+          "message": "GET b'_3ca82e0039adc3d1|all_apps'",
+          "level": "info",
+          "data": {
+            "db.operation": "GET",
+            "redis.command": "GET",
+            "redis.is_cluster": "False",
+            "redis.key": "_3ca82e0039adc3d1|all_apps"
+          }
+        },
+        {
+          "category": "redis",
+          "message": "GET b'_3ca82e0039adc3d1|recorder-intercept'",
+          "level": "info",
+          "data": {
+            "db.operation": "GET",
+            "redis.command": "GET",
+            "redis.is_cluster": "False",
+            "redis.key": "_3ca82e0039adc3d1|recorder-intercept"
+          }
+        },
+        {
+          "category": "frappe.request",
+          "message": "Request to /api/method/hrms.api.warehouse.approve_material_request",
+          "level": "info",
+          "data": {
+            "doctype": "",
+            "method": ""
+          }
+        },
+        {
+          "category": "redis",
+          "message": "GET b'_3ca82e0039adc3d1|server_script_map'",
+          "level": "info",
+          "data": {
+            "db.operation": "GET",
+            "redis.command": "GET",
+            "redis.is_cluster": "False",
+            "redis.key": "_3ca82e0039adc3d1|server_script_map"
+          }
+        },
+        {
+          "category": "redis",
+          "message": "HGET b'_3ca82e0039adc3d1|roles' [Filtered]",
+          "level": "info",
+          "data": {
+            "db.operation": "HGET",
+            "redis.command": "HGET",
+            "redis.is_cluster": "False"
+          }
+        },
+        {
+          "category": "redis",
+          "message": "HGET b'_3ca82e0039adc3d1|merged_translations' [Filtered]",
+          "level": "info",
+          "data": {
+            "db.operation": "HGET",
+            "redis.command": "HGET",
+            "redis.is_cluster": "False"
+          }
+        },
+        {
+          "category": "bei.backend",
+          "message": "handle_exception",
+          "level": "info",
+          "data": {
+            "endpoint_or_job": "hrms.api.warehouse.approve_material_request",
+            "module": "None",
+            "mutation_type": "mutation",
+            "phase": "backend_exception",
+            "route": "/api/method/hrms.api.warehouse.approve_material_request"
+          }
+        }
+      ]
+    },
+    {
+      "project": "bei-hrms",
+      "eventID": "86f9320136ef4afe92411f89ce7812d0",
+      "title": "ValidationError: Material Request MAT-MR-2026-00494 has already been approved",
+      "culprit": "frappe in _raise_exception",
+      "dateCreated": "2026-04-26T06:00:39.535000Z",
+      "level": null,
+      "tags": {
+        "action": "handle_exception",
+        "endpoint_or_job": "hrms.api.warehouse.approve_material_request",
+        "environment": "development",
+        "error_source": "api_validation",
+        "frappe_cmd": "hrms.api.warehouse.approve_material_request",
+        "handled": "yes",
+        "http_method": "POST",
+        "level": "warning",
+        "mechanism": "generic",
+        "mutation_type": "mutation",
+        "phase": "backend_exception",
+        "release": "bei-hrms@16.0.0-dev",
+        "route": "/api/method/hrms.api.warehouse.approve_material_request",
+        "route_action": "approve_material_request",
+        "runtime": "CPython 3.11.6",
+        "runtime.name": "CPython",
+        "server_name": "83707892ee80",
+        "surface": "frappe_request",
+        "user": "id:test.scm@bebang.ph"
+      },
+      "user": null,
+      "request_url": "",
+      "request_method": null,
+      "request_data": "",
+      "traceback": [
+        {
+          "filename": "__init__.py",
+          "function": "call",
+          "lineNo": 1764,
+          "context": [
+            [
+              1759,
+              "\tif isinstance(fn, str):"
+            ],
+            [
+              1760,
+              "\t\tfn = get_attr(fn)"
+            ],
+            [
+              1761,
+              ""
+            ]
+          ]
+        },
+        {
+          "filename": "frappe/utils/typing_validations.py",
+          "function": "wrapper",
+          "lineNo": 32,
+          "context": [
+            [
+              27,
+              "\t\t:param kwargs: Function keyword arguments.\"\"\""
+            ],
+            [
+              28,
+              ""
+            ],
+            [
+              29,
+              "\t\tif apply_condition():"
+            ]
+          ]
+        },
+        {
+          "filename": "hrms/api/warehouse.py",
+          "function": "approve_material_request",
+          "lineNo": 1232,
+          "context": [
+            [
+              1227,
+              "\t# G-102: Row lock to prevent double-approval race condition"
+            ],
+            [
+              1228,
+              "\tcurrent_status = frappe.db.sql("
+            ],
+            [
+              1229,
+              "\t\t\"SELECT status FROM `tabMaterial Request` WHERE name = %s FOR UPDATE\", mr_name"
+            ]
+          ]
+        },
+        {
+          "filename": "__init__.py",
+          "function": "throw",
+          "lineNo": 619,
+          "context": [
+            [
+              614,
+              "\t:param is_minimizable: [optional] Allow users to minimize the modal"
+            ],
+            [
+              615,
+              "\t:param wide: [optional] Show wide modal"
+            ],
+            [
+              616,
+              "\t:param as_list: [optional] If `msg` is a list, render as un-ordered list."
+            ]
+          ]
+        },
+        {
+          "filename": "__init__.py",
+          "function": "msgprint",
+          "lineNo": 584,
+          "context": [
+            [
+              579,
+              ""
+            ],
+            [
+              580,
+              "\tif realtime:"
+            ],
+            [
+              581,
+              "\t\tpublish_realtime(event=\"msgprint\", message=out)"
+            ]
+          ]
+        },
+        {
+          "filename": "__init__.py",
+          "function": "_raise_exception",
+          "lineNo": 535,
+          "context": [
+            [
+              530,
+              "\t\t\t\texc.args = (msg,)"
+            ],
+            [
+              531,
+              "\t\t\telse:"
+            ],
+            [
+              532,
+              "\t\t\t\texc = ValidationError(msg)"
+            ]
+          ]
+        },
+        {
+          "_exception": "ValidationError",
+          "_value": "Material Request MAT-MR-2026-00494 has already been approved"
+        }
+      ],
+      "breadcrumbs": [
+        {
+          "category": "redis",
+          "message": "HGET b'_3ca82e0039adc3d1|defaults' [Filtered]",
+          "level": "info",
+          "data": {
+            "db.operation": "HGET",
+            "redis.command": "HGET",
+            "redis.is_cluster": "False"
+          }
+        },
+        {
+          "category": "redis",
+          "message": "HGET b'_3ca82e0039adc3d1|user_permissions' [Filtered]",
+          "level": "info",
+          "data": {
+            "db.operation": "HGET",
+            "redis.command": "HGET",
+            "redis.is_cluster": "False"
+          }
+        },
+        {
+          "category": "redis",
+          "message": "HGET b'_3ca82e0039adc3d1|defaults' [Filtered]",
+          "level": "info",
+          "data": {
+            "db.operation": "HGET",
+            "redis.command": "HGET",
+            "redis.is_cluster": "False"
+          }
+        },
+        {
+          "category": "redis",
+          "message": "GET b'_3ca82e0039adc3d1|all_apps'",
+          "level": "info",
+          "data": {
+            "db.operation": "GET",
+            "redis.command": "GET",
+            "redis.is_cluster": "False",
+            "redis.key": "_3ca82e0039adc3d1|all_apps"
+          }
+        },
+        {
+          "category": "redis",
+          "message": "GET b'_3ca82e0039adc3d1|recorder-intercept'",
+          "level": "info",
+          "data": {
+            "db.operation": "GET",
+            "redis.command": "GET",
+            "redis.is_cluster": "False",
+            "redis.key": "_3ca82e0039adc3d1|recorder-intercept"
+          }
+        },
+        {
+          "category": "frappe.request",
+          "message": "Request to /api/method/hrms.api.warehouse.approve_material_request",
+          "level": "info",
+          "data": {
+            "doctype": "",
+            "method": ""
+          }
+        },
+        {
+          "category": "redis",
+          "message": "GET b'_3ca82e0039adc3d1|server_script_map'",
+          "level": "info",
+          "data": {
+            "db.operation": "GET",
+            "redis.command": "GET",
+            "redis.is_cluster": "False",
+            "redis.key": "_3ca82e0039adc3d1|server_script_map"
+          }
+        },
+        {
+          "category": "redis",
+          "message": "HGET b'_3ca82e0039adc3d1|roles' [Filtered]",
+          "level": "info",
+          "data": {
+            "db.operation": "HGET",
+            "redis.command": "HGET",
+            "redis.is_cluster": "False"
+          }
+        },
+        {
+          "category": "redis",
+          "message": "HGET b'_3ca82e0039adc3d1|merged_translations' [Filtered]",
+          "level": "info",
+          "data": {
+            "db.operation": "HGET",
+            "redis.command": "HGET",
+            "redis.is_cluster": "False"
+          }
+        },
+        {
+          "category": "bei.backend",
+          "message": "handle_exception",
+          "level": "info",
+          "data": {
+            "endpoint_or_job": "hrms.api.warehouse.approve_material_request",
+            "module": "None",
+            "mutation_type": "mutation",
+            "phase": "backend_exception",
+            "route": "/api/method/hrms.api.warehouse.approve_material_request"
+          }
+        }
+      ]
+    },
+    {
+      "project": "bei-hrms",
+      "eventID": "459c5c70b8c743c28bd7e664155fc32c",
+      "title": "ValidationError: Material Request MAT-MR-2026-00493 has already been approved",
+      "culprit": "frappe in _raise_exception",
+      "dateCreated": "2026-04-26T05:59:24.775000Z",
+      "level": null,
+      "tags": {
+        "action": "handle_exception",
+        "endpoint_or_job": "hrms.api.warehouse.approve_material_request",
+        "environment": "development",
+        "error_source": "api_validation",
+        "frappe_cmd": "hrms.api.warehouse.approve_material_request",
+        "handled": "yes",
+        "http_method": "POST",
+        "level": "warning",
+        "mechanism": "generic",
+        "mutation_type": "mutation",
+        "phase": "backend_exception",
+        "release": "bei-hrms@16.0.0-dev",
+        "route": "/api/method/hrms.api.warehouse.approve_material_request",
+        "route_action": "approve_material_request",
+        "runtime": "CPython 3.11.6",
+        "runtime.name": "CPython",
+        "server_name": "83707892ee80",
+        "surface": "frappe_request",
+        "user": "id:test.scm@bebang.ph"
+      },
+      "user": null,
+      "request_url": "",
+      "request_method": null,
+      "request_data": "",
+      "traceback": [
+        {
+          "filename": "__init__.py",
+          "function": "call",
+          "lineNo": 1764,
+          "context": [
+            [
+              1759,
+              "\tif isinstance(fn, str):"
+            ],
+            [
+              1760,
+              "\t\tfn = get_attr(fn)"
+            ],
+            [
+              1761,
+              ""
+            ]
+          ]
+        },
+        {
+          "filename": "frappe/utils/typing_validations.py",
+          "function": "wrapper",
+          "lineNo": 32,
+          "context": [
+            [
+              27,
+              "\t\t:param kwargs: Function keyword arguments.\"\"\""
+            ],
+            [
+              28,
+              ""
+            ],
+            [
+              29,
+              "\t\tif apply_condition():"
+            ]
+          ]
+        },
+        {
+          "filename": "hrms/api/warehouse.py",
+          "function": "approve_material_request",
+          "lineNo": 1232,
+          "context": [
+            [
+              1227,
+              "\t# G-102: Row lock to prevent double-approval race condition"
+            ],
+            [
+              1228,
+              "\tcurrent_status = frappe.db.sql("
+            ],
+            [
+              1229,
+              "\t\t\"SELECT status FROM `tabMaterial Request` WHERE name = %s FOR UPDATE\", mr_name"
+            ]
+          ]
+        },
+        {
+          "filename": "__init__.py",
+          "function": "throw",
+          "lineNo": 619,
+          "context": [
+            [
+              614,
+              "\t:param is_minimizable: [optional] Allow users to minimize the modal"
+            ],
+            [
+              615,
+              "\t:param wide: [optional] Show wide modal"
+            ],
+            [
+              616,
+              "\t:param as_list: [optional] If `msg` is a list, render as un-ordered list."
+            ]
+          ]
+        },
+        {
+          "filename": "__init__.py",
+          "function": "msgprint",
+          "lineNo": 584,
+          "context": [
+            [
+              579,
+              ""
+            ],
+            [
+              580,
+              "\tif realtime:"
+            ],
+            [
+              581,
+              "\t\tpublish_realtime(event=\"msgprint\", message=out)"
+            ]
+          ]
+        },
+        {
+          "filename": "__init__.py",
+          "function": "_raise_exception",
+          "lineNo": 535,
+          "context": [
+            [
+              530,
+              "\t\t\t\texc.args = (msg,)"
+            ],
+            [
+              531,
+              "\t\t\telse:"
+            ],
+            [
+              532,
+              "\t\t\t\texc = ValidationError(msg)"
+            ]
+          ]
+        },
+        {
+          "_exception": "ValidationError",
+          "_value": "Material Request MAT-MR-2026-00493 has already been approved"
+        }
+      ],
+      "breadcrumbs": [
+        {
+          "category": "redis",
+          "message": "HGET b'_3ca82e0039adc3d1|defaults' [Filtered]",
+          "level": "info",
+          "data": {
+            "db.operation": "HGET",
+            "redis.command": "HGET",
+            "redis.is_cluster": "False"
+          }
+        },
+        {
+          "category": "redis",
+          "message": "HGET b'_3ca82e0039adc3d1|user_permissions' [Filtered]",
+          "level": "info",
+          "data": {
+            "db.operation": "HGET",
+            "redis.command": "HGET",
+            "redis.is_cluster": "False"
+          }
+        },
+        {
+          "category": "redis",
+          "message": "HGET b'_3ca82e0039adc3d1|defaults' [Filtered]",
+          "level": "info",
+          "data": {
+            "db.operation": "HGET",
+            "redis.command": "HGET",
+            "redis.is_cluster": "False"
+          }
+        },
+        {
+          "category": "redis",
+          "message": "GET b'_3ca82e0039adc3d1|all_apps'",
+          "level": "info",
+          "data": {
+            "db.operation": "GET",
+            "redis.command": "GET",
+            "redis.is_cluster": "False",
+            "redis.key": "_3ca82e0039adc3d1|all_apps"
+          }
+        },
+        {
+          "category": "redis",
+          "message": "GET b'_3ca82e0039adc3d1|recorder-intercept'",
+          "level": "info",
+          "data": {
+            "db.operation": "GET",
+            "redis.command": "GET",
+            "redis.is_cluster": "False",
+            "redis.key": "_3ca82e0039adc3d1|recorder-intercept"
+          }
+        },
+        {
+          "category": "frappe.request",
+          "message": "Request to /api/method/hrms.api.warehouse.approve_material_request",
+          "level": "info",
+          "data": {
+            "doctype": "",
+            "method": ""
+          }
+        },
+        {
+          "category": "redis",
+          "message": "GET b'_3ca82e0039adc3d1|server_script_map'",
+          "level": "info",
+          "data": {
+            "db.operation": "GET",
+            "redis.command": "GET",
+            "redis.is_cluster": "False",
+            "redis.key": "_3ca82e0039adc3d1|server_script_map"
+          }
+        },
+        {
+          "category": "redis",
+          "message": "HGET b'_3ca82e0039adc3d1|roles' [Filtered]",
+          "level": "info",
+          "data": {
+            "db.operation": "HGET",
+            "redis.command": "HGET",
+            "redis.is_cluster": "False"
+          }
+        },
+        {
+          "category": "redis",
+          "message": "HGET b'_3ca82e0039adc3d1|merged_translations' [Filtered]",
+          "level": "info",
+          "data": {
+            "db.operation": "HGET",
+            "redis.command": "HGET",
+            "redis.is_cluster": "False"
+          }
+        },
+        {
+          "category": "bei.backend",
+          "message": "handle_exception",
+          "level": "info",
+          "data": {
+            "endpoint_or_job": "hrms.api.warehouse.approve_material_request",
+            "module": "None",
+            "mutation_type": "mutation",
+            "phase": "backend_exception",
+            "route": "/api/method/hrms.api.warehouse.approve_material_request"
+          }
+        }
+      ]
+    },
+    {
+      "project": "bei-hrms",
+      "eventID": "897ab9bc55834024bcbd10a7fe69d1b0",
+      "title": "ValidationError: The Batch BACKFILL-20260421-FG004-3MD-LOGISTICS-CAMANGYANAN of an item FG004 has negative stock in the warehouse 3MD LOGISTICS - CAMANGYANAN - BKI as of 26-04-2026 13:57:31. Please ad",
+      "culprit": "frappe in _raise_exception",
+      "dateCreated": "2026-04-26T05:57:31.683000Z",
+      "level": null,
+      "tags": {
+        "action": "handle_exception",
+        "endpoint_or_job": "hrms.api.warehouse.create_stock_transfer",
+        "environment": "development",
+        "error_source": "api_validation",
+        "frappe_cmd": "hrms.api.warehouse.create_stock_transfer",
+        "handled": "yes",
+        "http_method": "POST",
+        "level": "warning",
+        "mechanism": "generic",
+        "module": "warehouse",
+        "mutation_type": "mutation",
+        "phase": "backend_exception",
+        "release": "bei-hrms@16.0.0-dev",
+        "route": "/api/method/hrms.api.warehouse.create_stock_transfer",
+        "route_action": "create_stock_transfer",
+        "runtime": "CPython 3.11.6",
+        "runtime.name": "CPython",
+        "server_name": "83707892ee80",
+        "surface": "frappe_request",
+        "user": "id:test.scm@bebang.ph"
+      },
+      "user": null,
+      "request_url": "",
+      "request_method": null,
+      "request_data": "",
+      "traceback": [
+        {
+          "filename": "erpnext/stock/doctype/serial_and_batch_bundle/serial_and_batch_bundle.py",
+          "function": "validate_batch_quantity",
+          "lineNo": 1459,
+          "context": [
+            [
+              1454,
+              "\t\tif self.type_of_transaction != \"Outward\" or ("
+            ],
+            [
+              1455,
+              "\t\t\tself.voucher_type == \"Stock Reconciliation\" and self.type_of_transaction == \"Outward\""
+            ],
+            [
+              1456,
+              "\t\t):"
+            ]
+          ]
+        },
+        {
+          "filename": "erpnext/stock/doctype/serial_and_batch_bundle/serial_and_batch_bundle.py",
+          "function": "get_batchwise_available_qty",
+          "lineNo": 1516,
+          "context": [
+            [
+              1511,
+              "\t\t\t\tavailable_qty[row.batch_no] += flt(row.qty)"
+            ],
+            [
+              1512,
+              "\t\t\telse:"
+            ],
+            [
+              1513,
+              "\t\t\t\tavailable_qty[row.batch_no] = flt(row.qty)"
+            ]
+          ]
+        },
+        {
+          "filename": "erpnext/stock/doctype/serial_and_batch_bundle/serial_and_batch_bundle.py",
+          "function": "throw_negative_batch",
+          "lineNo": 1492,
+          "context": [
+            [
+              1487,
+              "\t\t\tbold(self.warehouse),"
+            ],
+            [
+              1488,
+              "\t\t\tdate_msg,"
+            ],
+            [
+              1489,
+              "\t\t\tbold(abs(flt(available_qty, precision))),"
+            ]
+          ]
+        },
+        {
+          "filename": "__init__.py",
+          "function": "throw",
+          "lineNo": 619,
+          "context": [
+            [
+              614,
+              "\t:param is_minimizable: [optional] Allow users to minimize the modal"
+            ],
+            [
+              615,
+              "\t:param wide: [optional] Show wide modal"
+            ],
+            [
+              616,
+              "\t:param as_list: [optional] If `msg` is a list, render as un-ordered list."
+            ]
+          ]
+        },
+        {
+          "filename": "__init__.py",
+          "function": "msgprint",
+          "lineNo": 584,
+          "context": [
+            [
+              579,
+              ""
+            ],
+            [
+              580,
+              "\tif realtime:"
+            ],
+            [
+              581,
+              "\t\tpublish_realtime(event=\"msgprint\", message=out)"
+            ]
+          ]
+        },
+        {
+          "filename": "__init__.py",
+          "function": "_raise_exception",
+          "lineNo": 535,
+          "context": [
+            [
+              530,
+              "\t\t\t\texc.args = (msg,)"
+            ],
+            [
+              531,
+              "\t\t\telse:"
+            ],
+            [
+              532,
+              "\t\t\t\texc = ValidationError(msg)"
+            ]
+          ]
+        },
+        {
+          "_exception": "NegativeStockError",
+          "_value": "\n\t\t\tThe Batch <strong>BACKFILL-20260421-FG004-3MD-LOGISTICS-CAMANGYANAN</strong> of an item <strong>FG004</strong> has negative stock in the warehouse <strong>3MD LOGISTICS - CAMANGYANAN - BKI</strong> as of 26-04-2026 13:57:31.\n\t\t\tPlease add a stock quantity of <strong>5.0</strong> to proceed with "
+        },
+        {
+          "filename": "__init__.py",
+          "function": "call",
+          "lineNo": 1764,
+          "context": [
+            [
+              1759,
+              "\tif isinstance(fn, str):"
+            ],
+            [
+              1760,
+              "\t\tfn = get_attr(fn)"
+            ],
+            [
+              1761,
+              ""
+            ]
+          ]
+        },
+        {
+          "filename": "frappe/utils/typing_validations.py",
+          "function": "wrapper",
+          "lineNo": 32,
+          "context": [
+            [
+              27,
+              "\t\t:param kwargs: Function keyword arguments.\"\"\""
+            ],
+            [
+              28,
+              ""
+            ],
+            [
+              29,
+              "\t\tif apply_condition():"
+            ]
+          ]
+        },
+        {
+          "filename": "hrms/api/warehouse.py",
+          "function": "create_stock_transfer",
+          "lineNo": 1696,
+          "context": [
+            [
+              1691,
+              "\t\t\t\t\t\"Please check stock levels or do a stock receipt first.\""
+            ],
+            [
+              1692,
+              "\t\t\t\t).format(item_name, qty, short_wh),"
+            ],
+            [
+              1693,
+              "\t\t\t\ttitle=_(\"Insufficient Stock\"),"
+            ]
+          ]
+        },
+        {
+          "filename": "__init__.py",
+          "function": "throw",
+          "lineNo": 619,
+          "context": [
+            [
+              614,
+              "\t:param is_minimizable: [optional] Allow users to minimize the modal"
+            ],
+            [
+              615,
+              "\t:param wide: [optional] Show wide modal"
+            ],
+            [
+              616,
+              "\t:param as_list: [optional] If `msg` is a list, render as un-ordered list."
+            ]
+          ]
+        },
+        {
+          "filename": "__init__.py",
+          "function": "msgprint",
+          "lineNo": 584,
+          "context": [
+            [
+              579,
+              ""
+            ],
+            [
+              580,
+              "\tif realtime:"
+            ],
+            [
+              581,
+              "\t\tpublish_realtime(event=\"msgprint\", message=out)"
+            ]
+          ]
+        },
+        {
+          "filename": "__init__.py",
+          "function": "_raise_exception",
+          "lineNo": 535,
+          "context": [
+            [
+              530,
+              "\t\t\t\texc.args = (msg,)"
+            ],
+            [
+              531,
+              "\t\t\telse:"
+            ],
+            [
+              532,
+              "\t\t\t\texc = ValidationError(msg)"
+            ]
+          ]
+        },
+        {
+          "_exception": "ValidationError",
+          "_value": "The Batch BACKFILL-20260421-FG004-3MD-LOGISTICS-CAMANGYANAN of an item FG004 has negative stock in the warehouse 3MD LOGISTICS - CAMANGYANAN - BKI as of 26-04-2026 13:57:31. Please add a stock quantity of 5.0 to proceed with this entry. If it is not possible to make an adjustment entry, please enabl"
+        }
+      ],
+      "breadcrumbs": [
+        {
+          "category": "redis",
+          "message": "HGET b'_3ca82e0039adc3d1|workflow' [Filtered]",
+          "level": "info",
+          "data": {
+            "db.operation": "HGET",
+            "redis.command": "HGET",
+            "redis.is_cluster": "False"
+          }
+        },
+        {
+          "category": "redis",
+          "message": "HGET b'_3ca82e0039adc3d1|assignment_rule_map' [Filtered]",
+          "level": "info",
+          "data": {
+            "db.operation": "HGET",
+            "redis.command": "HGET",
+            "redis.is_cluster": "False"
+          }
+        },
+        {
+          "category": "redis",
+          "message": "HGET b'_3ca82e0039adc3d1|assignment_rule_map' [Filtered]",
+          "level": "info",
+          "data": {
+            "db.operation": "HGET",
+            "redis.command": "HGET",
+            "redis.is_cluster": "False"
+          }
+        },
+        {
+          "category": "redis",
+          "message": "GET b'_3ca82e0039adc3d1|document_cache::Serial and Batch Bundle::e7d56967afdd3029596f'",
+          "level": "info",
+          "data": {
+            "db.operation": "GET",
+            "redis.command": "GET",
+            "redis.is_cluster": "False",
+            "redis.key": "_3ca82e0039adc3d1|document_cache::Serial and Batch Bundle::e7d56967afdd3029596f"
+          }
+        },
+        {
+          "category": "redis",
+          "message": "SET b'_3ca82e0039adc3d1|document_cache::Serial and Batch Bundle::e7d56967afdd3029596f' [Filtered]",
+          "level": "info",
+          "data": {
+            "db.operation": "SET",
+            "redis.command": "SET",
+            "redis.is_cluster": "False",
+            "redis.key": "_3ca82e0039adc3d1|document_cache::Serial and Batch Bundle::e7d56967afdd3029596f"
+          }
+        },
+        {
+          "category": "redis",
+          "message": "GET b'_3ca82e0039adc3d1|dynamic_link_map::Serial and Batch Bundle::voucher_type'",
+          "level": "info",
+          "data": {
+            "db.operation": "GET",
+            "redis.command": "GET",
+            "redis.is_cluster": "False",
+            "redis.key": "_3ca82e0039adc3d1|dynamic_link_map::Serial and Batch Bundle::voucher_type"
+          }
+        },
+        {
+          "category": "redis",
+          "message": "DEL b'_3ca82e0039adc3d1|document_cache::Serial and Batch Bundle::e7d56967afdd3029596f'",
+          "level": "info",
+          "data": {
+            "db.operation": "DEL",
+            "redis.command": "DEL",
+            "redis.is_cluster": "False",
+            "redis.key": "_3ca82e0039adc3d1|document_cache::Serial and Batch Bundle::e7d56967afdd3029596f"
+          }
+        },
+        {
+          "category": "redis",
+          "message": "DEL b'_3ca82e0039adc3d1|document_cache::Serial and Batch Bundle::e7d56967afdd3029596f'",
+          "level": "info",
+          "data": {
+            "db.operation": "DEL",
+            "redis.command": "DEL",
+            "redis.is_cluster": "False",
+            "redis.key": "_3ca82e0039adc3d1|document_cache::Serial and Batch Bundle::e7d56967afdd3029596f"
+          }
+        },
+        {
+          "category": "redis",
+          "message": "DEL b'_3ca82e0039adc3d1|notification_count:Serial and Batch Bundle'",
+          "level": "info",
+          "data": {
+            "db.operation": "DEL",
+            "redis.command": "DEL",
+            "redis.is_cluster": "False",
+            "redis.key": "_3ca82e0039adc3d1|notification_count:Serial and Batch Bundle"
+          }
+        },
+        {
+          "category": "bei.backend",
+          "message": "handle_exception",
+          "level": "info",
+          "data": {
+            "endpoint_or_job": "hrms.api.warehouse.create_stock_transfer",
+            "module": "None",
+            "mutation_type": "mutation",
+            "phase": "backend_exception",
+            "route": "/api/method/hrms.api.warehouse.create_stock_transfer"
+          }
+        }
+      ]
+    },
+    {
+      "project": "bei-hrms",
+      "eventID": "933fa1360c6f43ceac32bab0bc307646",
+      "title": "ValidationError: Material Request MAT-MR-2026-00492 has already been approved",
+      "culprit": "frappe in _raise_exception",
+      "dateCreated": "2026-04-26T05:57:26.879000Z",
+      "level": null,
+      "tags": {
+        "action": "handle_exception",
+        "endpoint_or_job": "hrms.api.warehouse.approve_material_request",
+        "environment": "development",
+        "error_source": "api_validation",
+        "frappe_cmd": "hrms.api.warehouse.approve_material_request",
+        "handled": "yes",
+        "http_method": "POST",
+        "level": "warning",
+        "mechanism": "generic",
+        "mutation_type": "mutation",
+        "phase": "backend_exception",
+        "release": "bei-hrms@16.0.0-dev",
+        "route": "/api/method/hrms.api.warehouse.approve_material_request",
+        "route_action": "approve_material_request",
+        "runtime": "CPython 3.11.6",
+        "runtime.name": "CPython",
+        "server_name": "83707892ee80",
+        "surface": "frappe_request",
+        "user": "id:test.scm@bebang.ph"
+      },
+      "user": null,
+      "request_url": "",
+      "request_method": null,
+      "request_data": "",
+      "traceback": [
+        {
+          "filename": "__init__.py",
+          "function": "call",
+          "lineNo": 1764,
+          "context": [
+            [
+              1759,
+              "\tif isinstance(fn, str):"
+            ],
+            [
+              1760,
+              "\t\tfn = get_attr(fn)"
+            ],
+            [
+              1761,
+              ""
+            ]
+          ]
+        },
+        {
+          "filename": "frappe/utils/typing_validations.py",
+          "function": "wrapper",
+          "lineNo": 32,
+          "context": [
+            [
+              27,
+              "\t\t:param kwargs: Function keyword arguments.\"\"\""
+            ],
+            [
+              28,
+              ""
+            ],
+            [
+              29,
+              "\t\tif apply_condition():"
+            ]
+          ]
+        },
+        {
+          "filename": "hrms/api/warehouse.py",
+          "function": "approve_material_request",
+          "lineNo": 1232,
+          "context": [
+            [
+              1227,
+              "\t# G-102: Row lock to prevent double-approval race condition"
+            ],
+            [
+              1228,
+              "\tcurrent_status = frappe.db.sql("
+            ],
+            [
+              1229,
+              "\t\t\"SELECT status FROM `tabMaterial Request` WHERE name = %s FOR UPDATE\", mr_name"
+            ]
+          ]
+        },
+        {
+          "filename": "__init__.py",
+          "function": "throw",
+          "lineNo": 619,
+          "context": [
+            [
+              614,
+              "\t:param is_minimizable: [optional] Allow users to minimize the modal"
+            ],
+            [
+              615,
+              "\t:param wide: [optional] Show wide modal"
+            ],
+            [
+              616,
+              "\t:param as_list: [optional] If `msg` is a list, render as un-ordered list."
+            ]
+          ]
+        },
+        {
+          "filename": "__init__.py",
+          "function": "msgprint",
+          "lineNo": 584,
+          "context": [
+            [
+              579,
+              ""
+            ],
+            [
+              580,
+              "\tif realtime:"
+            ],
+            [
+              581,
+              "\t\tpublish_realtime(event=\"msgprint\", message=out)"
+            ]
+          ]
+        },
+        {
+          "filename": "__init__.py",
+          "function": "_raise_exception",
+          "lineNo": 535,
+          "context": [
+            [
+              530,
+              "\t\t\t\texc.args = (msg,)"
+            ],
+            [
+              531,
+              "\t\t\telse:"
+            ],
+            [
+              532,
+              "\t\t\t\texc = ValidationError(msg)"
+            ]
+          ]
+        },
+        {
+          "_exception": "ValidationError",
+          "_value": "Material Request MAT-MR-2026-00492 has already been approved"
+        }
+      ],
+      "breadcrumbs": [
+        {
+          "category": "redis",
+          "message": "HGET b'_3ca82e0039adc3d1|defaults' [Filtered]",
+          "level": "info",
+          "data": {
+            "db.operation": "HGET",
+            "redis.command": "HGET",
+            "redis.is_cluster": "False"
+          }
+        },
+        {
+          "category": "redis",
+          "message": "HGET b'_3ca82e0039adc3d1|user_permissions' [Filtered]",
+          "level": "info",
+          "data": {
+            "db.operation": "HGET",
+            "redis.command": "HGET",
+            "redis.is_cluster": "False"
+          }
+        },
+        {
+          "category": "redis",
+          "message": "HGET b'_3ca82e0039adc3d1|defaults' [Filtered]",
+          "level": "info",
+          "data": {
+            "db.operation": "HGET",
+            "redis.command": "HGET",
+            "redis.is_cluster": "False"
+          }
+        },
+        {
+          "category": "redis",
+          "message": "GET b'_3ca82e0039adc3d1|all_apps'",
+          "level": "info",
+          "data": {
+            "db.operation": "GET",
+            "redis.command": "GET",
+            "redis.is_cluster": "False",
+            "redis.key": "_3ca82e0039adc3d1|all_apps"
+          }
+        },
+        {
+          "category": "redis",
+          "message": "GET b'_3ca82e0039adc3d1|recorder-intercept'",
+          "level": "info",
+          "data": {
+            "db.operation": "GET",
+            "redis.command": "GET",
+            "redis.is_cluster": "False",
+            "redis.key": "_3ca82e0039adc3d1|recorder-intercept"
+          }
+        },
+        {
+          "category": "frappe.request",
+          "message": "Request to /api/method/hrms.api.warehouse.approve_material_request",
+          "level": "info",
+          "data": {
+            "doctype": "",
+            "method": ""
+          }
+        },
+        {
+          "category": "redis",
+          "message": "GET b'_3ca82e0039adc3d1|server_script_map'",
+          "level": "info",
+          "data": {
+            "db.operation": "GET",
+            "redis.command": "GET",
+            "redis.is_cluster": "False",
+            "redis.key": "_3ca82e0039adc3d1|server_script_map"
+          }
+        },
+        {
+          "category": "redis",
+          "message": "HGET b'_3ca82e0039adc3d1|roles' [Filtered]",
+          "level": "info",
+          "data": {
+            "db.operation": "HGET",
+            "redis.command": "HGET",
+            "redis.is_cluster": "False"
+          }
+        },
+        {
+          "category": "redis",
+          "message": "HGET b'_3ca82e0039adc3d1|merged_translations' [Filtered]",
+          "level": "info",
+          "data": {
+            "db.operation": "HGET",
+            "redis.command": "HGET",
+            "redis.is_cluster": "False"
+          }
+        },
+        {
+          "category": "bei.backend",
+          "message": "handle_exception",
+          "level": "info",
+          "data": {
+            "endpoint_or_job": "hrms.api.warehouse.approve_material_request",
+            "module": "None",
+            "mutation_type": "mutation",
+            "phase": "backend_exception",
+            "route": "/api/method/hrms.api.warehouse.approve_material_request"
+          }
+        }
+      ]
+    },
+    {
+      "project": "bei-hrms",
+      "eventID": "f179beacf5c64045be09083e83821664",
+      "title": "ValidationError: Material Request MAT-MR-2026-00491 has already been approved",
+      "culprit": "frappe in _raise_exception",
+      "dateCreated": "2026-04-26T05:56:13.507000Z",
+      "level": null,
+      "tags": {
+        "action": "handle_exception",
+        "endpoint_or_job": "hrms.api.warehouse.approve_material_request",
+        "environment": "development",
+        "error_source": "api_validation",
+        "frappe_cmd": "hrms.api.warehouse.approve_material_request",
+        "handled": "yes",
+        "http_method": "POST",
+        "level": "warning",
+        "mechanism": "generic",
+        "mutation_type": "mutation",
+        "phase": "backend_exception",
+        "release": "bei-hrms@16.0.0-dev",
+        "route": "/api/method/hrms.api.warehouse.approve_material_request",
+        "route_action": "approve_material_request",
+        "runtime": "CPython 3.11.6",
+        "runtime.name": "CPython",
+        "server_name": "83707892ee80",
+        "surface": "frappe_request",
+        "user": "id:test.scm@bebang.ph"
+      },
+      "user": null,
+      "request_url": "",
+      "request_method": null,
+      "request_data": "",
+      "traceback": [
+        {
+          "filename": "__init__.py",
+          "function": "call",
+          "lineNo": 1764,
+          "context": [
+            [
+              1759,
+              "\tif isinstance(fn, str):"
+            ],
+            [
+              1760,
+              "\t\tfn = get_attr(fn)"
+            ],
+            [
+              1761,
+              ""
+            ]
+          ]
+        },
+        {
+          "filename": "frappe/utils/typing_validations.py",
+          "function": "wrapper",
+          "lineNo": 32,
+          "context": [
+            [
+              27,
+              "\t\t:param kwargs: Function keyword arguments.\"\"\""
+            ],
+            [
+              28,
+              ""
+            ],
+            [
+              29,
+              "\t\tif apply_condition():"
+            ]
+          ]
+        },
+        {
+          "filename": "hrms/api/warehouse.py",
+          "function": "approve_material_request",
+          "lineNo": 1232,
+          "context": [
+            [
+              1227,
+              "\t# G-102: Row lock to prevent double-approval race condition"
+            ],
+            [
+              1228,
+              "\tcurrent_status = frappe.db.sql("
+            ],
+            [
+              1229,
+              "\t\t\"SELECT status FROM `tabMaterial Request` WHERE name = %s FOR UPDATE\", mr_name"
+            ]
+          ]
+        },
+        {
+          "filename": "__init__.py",
+          "function": "throw",
+          "lineNo": 619,
+          "context": [
+            [
+              614,
+              "\t:param is_minimizable: [optional] Allow users to minimize the modal"
+            ],
+            [
+              615,
+              "\t:param wide: [optional] Show wide modal"
+            ],
+            [
+              616,
+              "\t:param as_list: [optional] If `msg` is a list, render as un-ordered list."
+            ]
+          ]
+        },
+        {
+          "filename": "__init__.py",
+          "function": "msgprint",
+          "lineNo": 584,
+          "context": [
+            [
+              579,
+              ""
+            ],
+            [
+              580,
+              "\tif realtime:"
+            ],
+            [
+              581,
+              "\t\tpublish_realtime(event=\"msgprint\", message=out)"
+            ]
+          ]
+        },
+        {
+          "filename": "__init__.py",
+          "function": "_raise_exception",
+          "lineNo": 535,
+          "context": [
+            [
+              530,
+              "\t\t\t\texc.args = (msg,)"
+            ],
+            [
+              531,
+              "\t\t\telse:"
+            ],
+            [
+              532,
+              "\t\t\t\texc = ValidationError(msg)"
+            ]
+          ]
+        },
+        {
+          "_exception": "ValidationError",
+          "_value": "Material Request MAT-MR-2026-00491 has already been approved"
+        }
+      ],
+      "breadcrumbs": [
+        {
+          "category": "redis",
+          "message": "HGET b'_3ca82e0039adc3d1|defaults' [Filtered]",
+          "level": "info",
+          "data": {
+            "db.operation": "HGET",
+            "redis.command": "HGET",
+            "redis.is_cluster": "False"
+          }
+        },
+        {
+          "category": "redis",
+          "message": "HGET b'_3ca82e0039adc3d1|user_permissions' [Filtered]",
+          "level": "info",
+          "data": {
+            "db.operation": "HGET",
+            "redis.command": "HGET",
+            "redis.is_cluster": "False"
+          }
+        },
+        {
+          "category": "redis",
+          "message": "HGET b'_3ca82e0039adc3d1|defaults' [Filtered]",
+          "level": "info",
+          "data": {
+            "db.operation": "HGET",
+            "redis.command": "HGET",
+            "redis.is_cluster": "False"
+          }
+        },
+        {
+          "category": "redis",
+          "message": "GET b'_3ca82e0039adc3d1|all_apps'",
+          "level": "info",
+          "data": {
+            "db.operation": "GET",
+            "redis.command": "GET",
+            "redis.is_cluster": "False",
+            "redis.key": "_3ca82e0039adc3d1|all_apps"
+          }
+        },
+        {
+          "category": "redis",
+          "message": "GET b'_3ca82e0039adc3d1|recorder-intercept'",
+          "level": "info",
+          "data": {
+            "db.operation": "GET",
+            "redis.command": "GET",
+            "redis.is_cluster": "False",
+            "redis.key": "_3ca82e0039adc3d1|recorder-intercept"
+          }
+        },
+        {
+          "category": "frappe.request",
+          "message": "Request to /api/method/hrms.api.warehouse.approve_material_request",
+          "level": "info",
+          "data": {
+            "doctype": "",
+            "method": ""
+          }
+        },
+        {
+          "category": "redis",
+          "message": "GET b'_3ca82e0039adc3d1|server_script_map'",
+          "level": "info",
+          "data": {
+            "db.operation": "GET",
+            "redis.command": "GET",
+            "redis.is_cluster": "False",
+            "redis.key": "_3ca82e0039adc3d1|server_script_map"
+          }
+        },
+        {
+          "category": "redis",
+          "message": "HGET b'_3ca82e0039adc3d1|roles' [Filtered]",
+          "level": "info",
+          "data": {
+            "db.operation": "HGET",
+            "redis.command": "HGET",
+            "redis.is_cluster": "False"
+          }
+        },
+        {
+          "category": "redis",
+          "message": "HGET b'_3ca82e0039adc3d1|merged_translations' [Filtered]",
+          "level": "info",
+          "data": {
+            "db.operation": "HGET",
+            "redis.command": "HGET",
+            "redis.is_cluster": "False"
+          }
+        },
+        {
+          "category": "bei.backend",
+          "message": "handle_exception",
+          "level": "info",
+          "data": {
+            "endpoint_or_job": "hrms.api.warehouse.approve_material_request",
+            "module": "None",
+            "mutation_type": "mutation",
+            "phase": "backend_exception",
+            "route": "/api/method/hrms.api.warehouse.approve_material_request"
+          }
+        }
+      ]
+    },
+    {
+      "project": "bei-hrms",
+      "eventID": "fcb4cb810d6b463ab8e846e87656e6e6",
+      "title": "ValidationError: Material Request MAT-MR-2026-00490 has already been approved",
+      "culprit": "frappe in _raise_exception",
+      "dateCreated": "2026-04-26T05:55:00.018000Z",
+      "level": null,
+      "tags": {
+        "action": "handle_exception",
+        "endpoint_or_job": "hrms.api.warehouse.approve_material_request",
+        "environment": "development",
+        "error_source": "api_validation",
+        "frappe_cmd": "hrms.api.warehouse.approve_material_request",
+        "handled": "yes",
+        "http_method": "POST",
+        "level": "warning",
+        "mechanism": "generic",
+        "mutation_type": "mutation",
+        "phase": "backend_exception",
+        "release": "bei-hrms@16.0.0-dev",
+        "route": "/api/method/hrms.api.warehouse.approve_material_request",
+        "route_action": "approve_material_request",
+        "runtime": "CPython 3.11.6",
+        "runtime.name": "CPython",
+        "server_name": "83707892ee80",
+        "surface": "frappe_request",
+        "user": "id:test.scm@bebang.ph"
+      },
+      "user": null,
+      "request_url": "",
+      "request_method": null,
+      "request_data": "",
+      "traceback": [
+        {
+          "filename": "__init__.py",
+          "function": "call",
+          "lineNo": 1764,
+          "context": [
+            [
+              1759,
+              "\tif isinstance(fn, str):"
+            ],
+            [
+              1760,
+              "\t\tfn = get_attr(fn)"
+            ],
+            [
+              1761,
+              ""
+            ]
+          ]
+        },
+        {
+          "filename": "frappe/utils/typing_validations.py",
+          "function": "wrapper",
+          "lineNo": 32,
+          "context": [
+            [
+              27,
+              "\t\t:param kwargs: Function keyword arguments.\"\"\""
+            ],
+            [
+              28,
+              ""
+            ],
+            [
+              29,
+              "\t\tif apply_condition():"
+            ]
+          ]
+        },
+        {
+          "filename": "hrms/api/warehouse.py",
+          "function": "approve_material_request",
+          "lineNo": 1232,
+          "context": [
+            [
+              1227,
+              "\t# G-102: Row lock to prevent double-approval race condition"
+            ],
+            [
+              1228,
+              "\tcurrent_status = frappe.db.sql("
+            ],
+            [
+              1229,
+              "\t\t\"SELECT status FROM `tabMaterial Request` WHERE name = %s FOR UPDATE\", mr_name"
+            ]
+          ]
+        },
+        {
+          "filename": "__init__.py",
+          "function": "throw",
+          "lineNo": 619,
+          "context": [
+            [
+              614,
+              "\t:param is_minimizable: [optional] Allow users to minimize the modal"
+            ],
+            [
+              615,
+              "\t:param wide: [optional] Show wide modal"
+            ],
+            [
+              616,
+              "\t:param as_list: [optional] If `msg` is a list, render as un-ordered list."
+            ]
+          ]
+        },
+        {
+          "filename": "__init__.py",
+          "function": "msgprint",
+          "lineNo": 584,
+          "context": [
+            [
+              579,
+              ""
+            ],
+            [
+              580,
+              "\tif realtime:"
+            ],
+            [
+              581,
+              "\t\tpublish_realtime(event=\"msgprint\", message=out)"
+            ]
+          ]
+        },
+        {
+          "filename": "__init__.py",
+          "function": "_raise_exception",
+          "lineNo": 535,
+          "context": [
+            [
+              530,
+              "\t\t\t\texc.args = (msg,)"
+            ],
+            [
+              531,
+              "\t\t\telse:"
+            ],
+            [
+              532,
+              "\t\t\t\texc = ValidationError(msg)"
+            ]
+          ]
+        },
+        {
+          "_exception": "ValidationError",
+          "_value": "Material Request MAT-MR-2026-00490 has already been approved"
+        }
+      ],
+      "breadcrumbs": [
+        {
+          "category": "redis",
+          "message": "HGET b'_3ca82e0039adc3d1|defaults' [Filtered]",
+          "level": "info",
+          "data": {
+            "db.operation": "HGET",
+            "redis.command": "HGET",
+            "redis.is_cluster": "False"
+          }
+        },
+        {
+          "category": "redis",
+          "message": "HGET b'_3ca82e0039adc3d1|user_permissions' [Filtered]",
+          "level": "info",
+          "data": {
+            "db.operation": "HGET",
+            "redis.command": "HGET",
+            "redis.is_cluster": "False"
+          }
+        },
+        {
+          "category": "redis",
+          "message": "HGET b'_3ca82e0039adc3d1|defaults' [Filtered]",
+          "level": "info",
+          "data": {
+            "db.operation": "HGET",
+            "redis.command": "HGET",
+            "redis.is_cluster": "False"
+          }
+        },
+        {
+          "category": "redis",
+          "message": "GET b'_3ca82e0039adc3d1|all_apps'",
+          "level": "info",
+          "data": {
+            "db.operation": "GET",
+            "redis.command": "GET",
+            "redis.is_cluster": "False",
+            "redis.key": "_3ca82e0039adc3d1|all_apps"
+          }
+        },
+        {
+          "category": "redis",
+          "message": "GET b'_3ca82e0039adc3d1|recorder-intercept'",
+          "level": "info",
+          "data": {
+            "db.operation": "GET",
+            "redis.command": "GET",
+            "redis.is_cluster": "False",
+            "redis.key": "_3ca82e0039adc3d1|recorder-intercept"
+          }
+        },
+        {
+          "category": "frappe.request",
+          "message": "Request to /api/method/hrms.api.warehouse.approve_material_request",
+          "level": "info",
+          "data": {
+            "doctype": "",
+            "method": ""
+          }
+        },
+        {
+          "category": "redis",
+          "message": "GET b'_3ca82e0039adc3d1|server_script_map'",
+          "level": "info",
+          "data": {
+            "db.operation": "GET",
+            "redis.command": "GET",
+            "redis.is_cluster": "False",
+            "redis.key": "_3ca82e0039adc3d1|server_script_map"
+          }
+        },
+        {
+          "category": "redis",
+          "message": "HGET b'_3ca82e0039adc3d1|roles' [Filtered]",
+          "level": "info",
+          "data": {
+            "db.operation": "HGET",
+            "redis.command": "HGET",
+            "redis.is_cluster": "False"
+          }
+        },
+        {
+          "category": "redis",
+          "message": "HGET b'_3ca82e0039adc3d1|merged_translations' [Filtered]",
+          "level": "info",
+          "data": {
+            "db.operation": "HGET",
+            "redis.command": "HGET",
+            "redis.is_cluster": "False"
+          }
+        },
+        {
+          "category": "bei.backend",
+          "message": "handle_exception",
+          "level": "info",
+          "data": {
+            "endpoint_or_job": "hrms.api.warehouse.approve_material_request",
+            "module": "None",
+            "mutation_type": "mutation",
+            "phase": "backend_exception",
+            "route": "/api/method/hrms.api.warehouse.approve_material_request"
+          }
+        }
+      ]
+    },
+    {
+      "project": "bei-tasks",
+      "eventID": "c498ccc807ef4917968e63cbbea44b77",
+      "title": "FrappeHttpError: Material Request MAT-MR-2026-00495 has already been approved",
+      "culprit": "POST /api/warehouse",
+      "dateCreated": "2026-04-26T06:01:53.439000Z",
+      "level": null,
+      "tags": {
+        "action": "warehouse_route_handler",
+        "browser": "HeadlessChrome 145",
+        "browser.name": "HeadlessChrome",
+        "client_os": "Windows",
+        "client_os.name": "Windows",
+        "endpoint_or_job": "/api/warehouse",
+        "environment": "production",
+        "handled": "yes",
+        "level": "error",
+        "mechanism": "generic",
+        "module": "warehouse",
+        "mutation_type": "mutation",
+        "os": "Linux",
+        "os.name": "Linux",
+        "phase": "route_handler",
+        "release": "5a52eea061e79972aad404502469cb091a3e25d2",
+        "route": "/api/warehouse",
+        "route_action": "approve_mr",
+        "runtime": "node v22.22.2",
+        "runtime.name": "node",
+        "server_name": "169.254.0.37",
+        "status_code": "417",
+        "surface": "next_route_handler",
+        "transaction": "POST /api/warehouse",
+        "turbopack": "True",
+        "upstream_method": "hrms.api.warehouse.approve_material_request",
+        "url": "https://my.bebang.ph/api/warehouse"
+      },
+      "user": null,
+      "request_url": "https://my.bebang.ph/api/warehouse",
+      "request_method": "POST",
+      "request_data": "None",
+      "traceback": [
+        {
+          "filename": "task/node_modules/next/dist/compiled/next-server/app-route-turbo.runtime.prod.js",
+          "function": "rM.handle",
+          "lineNo": 5,
+          "context": []
+        },
+        {
+          "filename": "task/node_modules/next/dist/compiled/next-server/app-route-turbo.runtime.prod.js",
+          "function": "rM.do",
+          "lineNo": 5,
+          "context": []
+        },
+        {
+          "filename": "../../../app/api/warehouse/route.ts",
+          "function": "$",
+          "lineNo": 789,
+          "context": [
+            [
+              784,
+              "          return NextResponse.json("
+            ],
+            [
+              785,
+              "            { success: false, error: \"mr_name is required\" },"
+            ],
+            [
+              786,
+              "            { status: 400 }"
+            ]
+          ]
+        },
+        {
+          "filename": "node:internal/process/task_queues",
+          "function": "process.processTicksAndRejections",
+          "lineNo": 103,
+          "context": []
+        },
+        {
+          "filename": "../../../app/api/warehouse/route.ts",
+          "function": "P",
+          "lineNo": 136,
+          "context": [
+            [
+              131,
+              "    body: JSON.stringify(params),"
+            ],
+            [
+              132,
+              "  });"
+            ],
+            [
+              133,
+              ""
+            ]
+          ]
+        },
+        {
+          "filename": "../../../app/api/warehouse/route.ts",
+          "function": "A",
+          "lineNo": 77,
+          "context": [
+            [
+              72,
+              "  statusCode: number,"
+            ],
+            [
+              73,
+              "  responseBody: string,"
+            ],
+            [
+              74,
+              "  upstreamMethod: string,"
+            ]
+          ]
+        },
+        {
+          "_exception": "FrappeHttpError",
+          "_value": "Material Request MAT-MR-2026-00495 has already been approved"
+        }
+      ],
+      "breadcrumbs": [
+        {
+          "category": "bei.observability",
+          "message": "warehouse_route_handler",
+          "level": "error",
+          "data": {
+            "endpoint_or_job": "/api/warehouse",
+            "module": "warehouse",
+            "route": "/api/warehouse",
+            "status_code": "417",
+            "upstream_method": "hrms.api.warehouse.approve_material_request"
+          }
+        }
+      ]
+    },
+    {
+      "project": "bei-tasks",
+      "eventID": "41e844cb263e4130ab700d090700c496",
+      "title": "Error: Material Request MAT-MR-2026-00495 has already been approved",
+      "culprit": "/dashboard/warehouse/approve",
+      "dateCreated": "2026-04-26T06:01:53.732000Z",
+      "level": null,
+      "tags": {
+        "action": "approve_mr",
+        "branch": "unknown",
+        "browser": "Chrome 145.0.7632",
+        "browser.name": "Chrome",
+        "department": "unknown",
+        "designation": "unknown",
+        "endpoint_or_job": "/api/warehouse",
+        "environment": "production",
+        "handled": "yes",
+        "level": "warning",
+        "mechanism": "generic",
+        "module": "warehouse",
+        "mutation_type": "mutation",
+        "os": "Windows >=10",
+        "os.name": "Windows",
+        "phase": "mutation",
+        "release": "5a52eea061e79972aad404502469cb091a3e25d2",
+        "replayId": "fb640945a96b404dbc9f07eef24fbdd2",
+        "route": "/api/warehouse",
+        "route_action": "approve_mr",
+        "status_code": "417",
+        "surface": "shared_mutation_helper",
+        "transaction": "/dashboard/warehouse/approve",
+        "turbopack": "True",
+        "url": "https://my.bebang.ph/dashboard/warehouse/approve",
+        "user": "username:test.scm"
+      },
+      "user": "test.scm",
+      "request_url": "https://my.bebang.ph/dashboard/warehouse/approve",
+      "request_method": null,
+      "request_data": "None",
+      "traceback": [
+        {
+          "filename": "app/dashboard/warehouse/approve/page.tsx",
+          "function": "j",
+          "lineNo": 50,
+          "context": [
+            [
+              45,
+              ""
+            ],
+            [
+              46,
+              "      if (approvedItems.length === 0) {"
+            ],
+            [
+              47,
+              "        throw new Error(\"No approvable items found\");"
+            ]
+          ]
+        },
+        {
+          "filename": "hooks/use-warehouse.ts",
+          "function": "d",
+          "lineNo": 367,
+          "context": [
+            [
+              362,
+              "      error: \"Failed to parse warehouse response\","
+            ],
+            [
+              363,
+              "    }))) as T;"
+            ],
+            [
+              364,
+              ""
+            ]
+          ]
+        },
+        {
+          "_exception": "Error",
+          "_value": "Material Request MAT-MR-2026-00495 has already been approved"
+        }
+      ],
+      "breadcrumbs": [
+        {
+          "category": "fetch",
+          "message": "",
+          "level": "info",
+          "data": {
+            "__span": "a108e1ab630c816f",
+            "method": "GET",
+            "status_code": "200",
+            "url": "https://my.bebang.ph/dashboard/warehouse/approve/MAT-MR-2026-00120?_rsc=1b92c"
+          }
+        },
+        {
+          "category": "fetch",
+          "message": "",
+          "level": "info",
+          "data": {
+            "__span": "bab681dbc0fcb3c2",
+            "method": "GET",
+            "status_code": "200",
+            "url": "https://my.bebang.ph/dashboard/warehouse/approve/MAT-MR-2026-00495?_rsc=1b92c"
+          }
+        },
+        {
+          "category": "ui.click",
+          "message": "button.inline-flex.items-center.justify-center.gap-2.whitespace-nowrap.text-sm.font-medium.transition-all.disabled:pointer-events-none.disabled:opacity-50.[&_svg]:pointer-events-none.[&_svg:not([class",
+          "level": "info",
+          "data": {}
+        },
+        {
+          "category": "fetch",
+          "message": "",
+          "level": "info",
+          "data": {
+            "__span": "a3447f12ca4bc0e2",
+            "method": "GET",
+            "status_code": "200",
+            "url": "/api/warehouse?action=mr_approval_context&mr_name=MAT-MR-2026-00495"
+          }
+        },
+        {
+          "category": "fetch",
+          "message": "",
+          "level": "info",
+          "data": {
+            "__span": "a7a30b679308bc82",
+            "method": "POST",
+            "request_body_size": "189",
+            "status_code": "200",
+            "url": "/api/warehouse"
+          }
+        },
+        {
+          "category": "ui.click",
+          "message": "button.inline-flex.items-center.justify-center.gap-2.whitespace-nowrap.text-sm.font-medium.transition-all.disabled:pointer-events-none.disabled:opacity-50.[&_svg]:pointer-events-none.[&_svg:not([class",
+          "level": "info",
+          "data": {}
+        },
+        {
+          "category": "fetch",
+          "message": "",
+          "level": "info",
+          "data": {
+            "__span": "bce8b46bb06297bf",
+            "method": "GET",
+            "status_code": "200",
+            "url": "/api/warehouse?action=pending_mrs"
+          }
+        },
+        {
+          "category": "fetch",
+          "message": "",
+          "level": "info",
+          "data": {
+            "__span": "b0016f7d5588aaa5",
+            "method": "GET",
+            "status_code": "200",
+            "url": "/api/warehouse?action=mr_approval_context&mr_name=MAT-MR-2026-00495"
+          }
+        },
+        {
+          "category": "fetch",
+          "message": "",
+          "level": "warning",
+          "data": {
+            "__span": "abe7d96043c71af1",
+            "method": "POST",
+            "request_body_size": "189",
+            "status_code": "417",
+            "url": "/api/warehouse"
+          }
+        },
+        {
+          "category": "bei.observability",
+          "message": "approve_mr",
+          "level": "warning",
+          "data": {
+            "endpoint_or_job": "/api/warehouse",
+            "module": "warehouse",
+            "route": "/api/warehouse",
+            "status_code": "417"
+          }
+        }
+      ]
+    },
+    {
+      "project": "bei-tasks",
+      "eventID": "555b4f3a84a64e008b03653b15867761",
+      "title": "Error: Material Request MAT-MR-2026-00494 has already been approved",
+      "culprit": "/dashboard/warehouse/approve",
+      "dateCreated": "2026-04-26T06:00:39.949000Z",
+      "level": null,
+      "tags": {
+        "action": "approve_mr",
+        "branch": "unknown",
+        "browser": "Chrome 145.0.7632",
+        "browser.name": "Chrome",
+        "department": "unknown",
+        "designation": "unknown",
+        "endpoint_or_job": "/api/warehouse",
+        "environment": "production",
+        "handled": "yes",
+        "level": "warning",
+        "mechanism": "generic",
+        "module": "warehouse",
+        "mutation_type": "mutation",
+        "os": "Windows >=10",
+        "os.name": "Windows",
+        "phase": "mutation",
+        "release": "5a52eea061e79972aad404502469cb091a3e25d2",
+        "replayId": "5629e3e621294cec956c621dcd326023",
+        "route": "/api/warehouse",
+        "route_action": "approve_mr",
+        "status_code": "417",
+        "surface": "shared_mutation_helper",
+        "transaction": "/dashboard/warehouse/approve",
+        "turbopack": "True",
+        "url": "https://my.bebang.ph/dashboard/warehouse/approve",
+        "user": "username:test.scm"
+      },
+      "user": "test.scm",
+      "request_url": "https://my.bebang.ph/dashboard/warehouse/approve",
+      "request_method": null,
+      "request_data": "None",
+      "traceback": [
+        {
+          "filename": "app/dashboard/warehouse/approve/page.tsx",
+          "function": "j",
+          "lineNo": 50,
+          "context": [
+            [
+              45,
+              ""
+            ],
+            [
+              46,
+              "      if (approvedItems.length === 0) {"
+            ],
+            [
+              47,
+              "        throw new Error(\"No approvable items found\");"
+            ]
+          ]
+        },
+        {
+          "filename": "hooks/use-warehouse.ts",
+          "function": "d",
+          "lineNo": 367,
+          "context": [
+            [
+              362,
+              "      error: \"Failed to parse warehouse response\","
+            ],
+            [
+              363,
+              "    }))) as T;"
+            ],
+            [
+              364,
+              ""
+            ]
+          ]
+        },
+        {
+          "_exception": "Error",
+          "_value": "Material Request MAT-MR-2026-00494 has already been approved"
+        }
+      ],
+      "breadcrumbs": [
+        {
+          "category": "fetch",
+          "message": "",
+          "level": "info",
+          "data": {
+            "__span": "9bff3e8c708a2f46",
+            "method": "GET",
+            "status_code": "200",
+            "url": "https://my.bebang.ph/dashboard/warehouse/approve/MAT-MR-2026-00120?_rsc=1b92c"
+          }
+        },
+        {
+          "category": "sentry.transaction",
+          "message": "8e43b6a27b6c4013932440ed8b8d17eb",
+          "level": "info",
+          "data": {}
+        },
+        {
+          "category": "ui.click",
+          "message": "button.inline-flex.items-center.justify-center.gap-2.whitespace-nowrap.text-sm.font-medium.transition-all.disabled:pointer-events-none.disabled:opacity-50.[&_svg]:pointer-events-none.[&_svg:not([class",
+          "level": "info",
+          "data": {}
+        },
+        {
+          "category": "fetch",
+          "message": "",
+          "level": "info",
+          "data": {
+            "__span": "a57ddd7faecc232a",
+            "method": "GET",
+            "status_code": "200",
+            "url": "/api/warehouse?action=mr_approval_context&mr_name=MAT-MR-2026-00494"
+          }
+        },
+        {
+          "category": "fetch",
+          "message": "",
+          "level": "info",
+          "data": {
+            "__span": "a43cc15b6fc745f9",
+            "method": "POST",
+            "request_body_size": "189",
+            "status_code": "200",
+            "url": "/api/warehouse"
+          }
+        },
+        {
+          "category": "ui.click",
+          "message": "button.inline-flex.items-center.justify-center.gap-2.whitespace-nowrap.text-sm.font-medium.transition-all.disabled:pointer-events-none.disabled:opacity-50.[&_svg]:pointer-events-none.[&_svg:not([class",
+          "level": "info",
+          "data": {}
+        },
+        {
+          "category": "fetch",
+          "message": "",
+          "level": "info",
+          "data": {
+            "__span": "8f9c7c79e94a7c04",
+            "method": "GET",
+            "status_code": "200",
+            "url": "/api/warehouse?action=pending_mrs"
+          }
+        },
+        {
+          "category": "fetch",
+          "message": "",
+          "level": "info",
+          "data": {
+            "__span": "86b00e369079f7e4",
+            "method": "GET",
+            "status_code": "200",
+            "url": "/api/warehouse?action=mr_approval_context&mr_name=MAT-MR-2026-00494"
+          }
+        },
+        {
+          "category": "fetch",
+          "message": "",
+          "level": "warning",
+          "data": {
+            "__span": "b4b095450e153ed7",
+            "method": "POST",
+            "request_body_size": "189",
+            "status_code": "417",
+            "url": "/api/warehouse"
+          }
+        },
+        {
+          "category": "bei.observability",
+          "message": "approve_mr",
+          "level": "warning",
+          "data": {
+            "endpoint_or_job": "/api/warehouse",
+            "module": "warehouse",
+            "route": "/api/warehouse",
+            "status_code": "417"
+          }
+        }
+      ]
+    },
+    {
+      "project": "bei-tasks",
+      "eventID": "14e27b53fd2c4d61a2c5966720e2ac0c",
+      "title": "FrappeHttpError: Material Request MAT-MR-2026-00494 has already been approved",
+      "culprit": "POST /api/warehouse",
+      "dateCreated": "2026-04-26T06:00:39.654000Z",
+      "level": null,
+      "tags": {
+        "action": "warehouse_route_handler",
+        "browser": "HeadlessChrome 145",
+        "browser.name": "HeadlessChrome",
+        "client_os": "Windows",
+        "client_os.name": "Windows",
+        "endpoint_or_job": "/api/warehouse",
+        "environment": "production",
+        "handled": "yes",
+        "level": "error",
+        "mechanism": "generic",
+        "module": "warehouse",
+        "mutation_type": "mutation",
+        "os": "Linux",
+        "os.name": "Linux",
+        "phase": "route_handler",
+        "release": "5a52eea061e79972aad404502469cb091a3e25d2",
+        "route": "/api/warehouse",
+        "route_action": "approve_mr",
+        "runtime": "node v22.22.2",
+        "runtime.name": "node",
+        "server_name": "169.254.54.11",
+        "status_code": "417",
+        "surface": "next_route_handler",
+        "transaction": "POST /api/warehouse",
+        "turbopack": "True",
+        "upstream_method": "hrms.api.warehouse.approve_material_request",
+        "url": "https://my.bebang.ph/api/warehouse"
+      },
+      "user": null,
+      "request_url": "https://my.bebang.ph/api/warehouse",
+      "request_method": "POST",
+      "request_data": "None",
+      "traceback": [
+        {
+          "filename": "task/node_modules/next/dist/compiled/next-server/app-route-turbo.runtime.prod.js",
+          "function": "rM.handle",
+          "lineNo": 5,
+          "context": []
+        },
+        {
+          "filename": "task/node_modules/next/dist/compiled/next-server/app-route-turbo.runtime.prod.js",
+          "function": "rM.do",
+          "lineNo": 5,
+          "context": []
+        },
+        {
+          "filename": "../../../app/api/warehouse/route.ts",
+          "function": "$",
+          "lineNo": 789,
+          "context": [
+            [
+              784,
+              "          return NextResponse.json("
+            ],
+            [
+              785,
+              "            { success: false, error: \"mr_name is required\" },"
+            ],
+            [
+              786,
+              "            { status: 400 }"
+            ]
+          ]
+        },
+        {
+          "filename": "node:internal/process/task_queues",
+          "function": "process.processTicksAndRejections",
+          "lineNo": 103,
+          "context": []
+        },
+        {
+          "filename": "../../../app/api/warehouse/route.ts",
+          "function": "P",
+          "lineNo": 136,
+          "context": [
+            [
+              131,
+              "    body: JSON.stringify(params),"
+            ],
+            [
+              132,
+              "  });"
+            ],
+            [
+              133,
+              ""
+            ]
+          ]
+        },
+        {
+          "filename": "../../../app/api/warehouse/route.ts",
+          "function": "A",
+          "lineNo": 77,
+          "context": [
+            [
+              72,
+              "  statusCode: number,"
+            ],
+            [
+              73,
+              "  responseBody: string,"
+            ],
+            [
+              74,
+              "  upstreamMethod: string,"
+            ]
+          ]
+        },
+        {
+          "_exception": "FrappeHttpError",
+          "_value": "Material Request MAT-MR-2026-00494 has already been approved"
+        }
+      ],
+      "breadcrumbs": [
+        {
+          "category": "bei.observability",
+          "message": "warehouse_route_handler",
+          "level": "error",
+          "data": {
+            "endpoint_or_job": "/api/warehouse",
+            "module": "warehouse",
+            "route": "/api/warehouse",
+            "status_code": "417",
+            "upstream_method": "hrms.api.warehouse.approve_material_request"
+          }
+        }
+      ]
+    },
+    {
+      "project": "bei-tasks",
+      "eventID": "87d8fb99df774059a504f066190bd54a",
+      "title": "Error: Material Request MAT-MR-2026-00493 has already been approved",
+      "culprit": "/dashboard/warehouse/approve",
+      "dateCreated": "2026-04-26T05:59:25.209000Z",
+      "level": null,
+      "tags": {
+        "action": "approve_mr",
+        "branch": "unknown",
+        "browser": "Chrome 145.0.7632",
+        "browser.name": "Chrome",
+        "department": "unknown",
+        "designation": "unknown",
+        "endpoint_or_job": "/api/warehouse",
+        "environment": "production",
+        "handled": "yes",
+        "level": "warning",
+        "mechanism": "generic",
+        "module": "warehouse",
+        "mutation_type": "mutation",
+        "os": "Windows >=10",
+        "os.name": "Windows",
+        "phase": "mutation",
+        "release": "5a52eea061e79972aad404502469cb091a3e25d2",
+        "replayId": "6b9a69b3794444dc94c834a3152c4c22",
+        "route": "/api/warehouse",
+        "route_action": "approve_mr",
+        "status_code": "417",
+        "surface": "shared_mutation_helper",
+        "transaction": "/dashboard/warehouse/approve",
+        "turbopack": "True",
+        "url": "https://my.bebang.ph/dashboard/warehouse/approve",
+        "user": "username:test.scm"
+      },
+      "user": "test.scm",
+      "request_url": "https://my.bebang.ph/dashboard/warehouse/approve",
+      "request_method": null,
+      "request_data": "None",
+      "traceback": [
+        {
+          "filename": "app/dashboard/warehouse/approve/page.tsx",
+          "function": "j",
+          "lineNo": 50,
+          "context": [
+            [
+              45,
+              ""
+            ],
+            [
+              46,
+              "      if (approvedItems.length === 0) {"
+            ],
+            [
+              47,
+              "        throw new Error(\"No approvable items found\");"
+            ]
+          ]
+        },
+        {
+          "filename": "hooks/use-warehouse.ts",
+          "function": "d",
+          "lineNo": 367,
+          "context": [
+            [
+              362,
+              "      error: \"Failed to parse warehouse response\","
+            ],
+            [
+              363,
+              "    }))) as T;"
+            ],
+            [
+              364,
+              ""
+            ]
+          ]
+        },
+        {
+          "_exception": "Error",
+          "_value": "Material Request MAT-MR-2026-00493 has already been approved"
+        }
+      ],
+      "breadcrumbs": [
+        {
+          "category": "fetch",
+          "message": "",
+          "level": "info",
+          "data": {
+            "__span": "ac02147b291575cf",
+            "method": "GET",
+            "status_code": "200",
+            "url": "https://my.bebang.ph/dashboard/warehouse/approve/MAT-MR-2026-00493?_rsc=1b92c"
+          }
+        },
+        {
+          "category": "fetch",
+          "message": "",
+          "level": "info",
+          "data": {
+            "__span": "8e109df47d6663c4",
+            "method": "GET",
+            "status_code": "200",
+            "url": "https://my.bebang.ph/dashboard/warehouse/approve/MAT-MR-2026-00120?_rsc=1b92c"
+          }
+        },
+        {
+          "category": "ui.click",
+          "message": "button.inline-flex.items-center.justify-center.gap-2.whitespace-nowrap.text-sm.font-medium.transition-all.disabled:pointer-events-none.disabled:opacity-50.[&_svg]:pointer-events-none.[&_svg:not([class",
+          "level": "info",
+          "data": {}
+        },
+        {
+          "category": "fetch",
+          "message": "",
+          "level": "info",
+          "data": {
+            "__span": "910c7aa21cb431ef",
+            "method": "GET",
+            "status_code": "200",
+            "url": "/api/warehouse?action=mr_approval_context&mr_name=MAT-MR-2026-00493"
+          }
+        },
+        {
+          "category": "fetch",
+          "message": "",
+          "level": "info",
+          "data": {
+            "__span": "be95dde4cc2e9917",
+            "method": "POST",
+            "request_body_size": "189",
+            "status_code": "200",
+            "url": "/api/warehouse"
+          }
+        },
+        {
+          "category": "ui.click",
+          "message": "button.inline-flex.items-center.justify-center.gap-2.whitespace-nowrap.text-sm.font-medium.transition-all.disabled:pointer-events-none.disabled:opacity-50.[&_svg]:pointer-events-none.[&_svg:not([class",
+          "level": "info",
+          "data": {}
+        },
+        {
+          "category": "fetch",
+          "message": "",
+          "level": "info",
+          "data": {
+            "__span": "90f94dd4db368818",
+            "method": "GET",
+            "status_code": "200",
+            "url": "/api/warehouse?action=pending_mrs"
+          }
+        },
+        {
+          "category": "fetch",
+          "message": "",
+          "level": "info",
+          "data": {
+            "__span": "a8304ff83e93dca6",
+            "method": "GET",
+            "status_code": "200",
+            "url": "/api/warehouse?action=mr_approval_context&mr_name=MAT-MR-2026-00493"
+          }
+        },
+        {
+          "category": "fetch",
+          "message": "",
+          "level": "warning",
+          "data": {
+            "__span": "be3fb179059c1eb8",
+            "method": "POST",
+            "request_body_size": "189",
+            "status_code": "417",
+            "url": "/api/warehouse"
+          }
+        },
+        {
+          "category": "bei.observability",
+          "message": "approve_mr",
+          "level": "warning",
+          "data": {
+            "endpoint_or_job": "/api/warehouse",
+            "module": "warehouse",
+            "route": "/api/warehouse",
+            "status_code": "417"
+          }
+        }
+      ]
+    },
+    {
+      "project": "bei-tasks",
+      "eventID": "732d05b3df3d4b948d64946a9a1ae71a",
+      "title": "FrappeHttpError: Material Request MAT-MR-2026-00493 has already been approved",
+      "culprit": "POST /api/warehouse",
+      "dateCreated": "2026-04-26T05:59:24.901000Z",
+      "level": null,
+      "tags": {
+        "action": "warehouse_route_handler",
+        "browser": "HeadlessChrome 145",
+        "browser.name": "HeadlessChrome",
+        "client_os": "Windows",
+        "client_os.name": "Windows",
+        "endpoint_or_job": "/api/warehouse",
+        "environment": "production",
+        "handled": "yes",
+        "level": "error",
+        "mechanism": "generic",
+        "module": "warehouse",
+        "mutation_type": "mutation",
+        "os": "Linux",
+        "os.name": "Linux",
+        "phase": "route_handler",
+        "release": "5a52eea061e79972aad404502469cb091a3e25d2",
+        "route": "/api/warehouse",
+        "route_action": "approve_mr",
+        "runtime": "node v22.22.2",
+        "runtime.name": "node",
+        "server_name": "169.254.37.191",
+        "status_code": "417",
+        "surface": "next_route_handler",
+        "transaction": "POST /api/warehouse",
+        "turbopack": "True",
+        "upstream_method": "hrms.api.warehouse.approve_material_request",
+        "url": "https://my.bebang.ph/api/warehouse"
+      },
+      "user": null,
+      "request_url": "https://my.bebang.ph/api/warehouse",
+      "request_method": "POST",
+      "request_data": "None",
+      "traceback": [
+        {
+          "filename": "task/node_modules/next/dist/compiled/next-server/app-route-turbo.runtime.prod.js",
+          "function": "rM.handle",
+          "lineNo": 5,
+          "context": []
+        },
+        {
+          "filename": "task/node_modules/next/dist/compiled/next-server/app-route-turbo.runtime.prod.js",
+          "function": "rM.do",
+          "lineNo": 5,
+          "context": []
+        },
+        {
+          "filename": "../../../app/api/warehouse/route.ts",
+          "function": "$",
+          "lineNo": 789,
+          "context": [
+            [
+              784,
+              "          return NextResponse.json("
+            ],
+            [
+              785,
+              "            { success: false, error: \"mr_name is required\" },"
+            ],
+            [
+              786,
+              "            { status: 400 }"
+            ]
+          ]
+        },
+        {
+          "filename": "node:internal/process/task_queues",
+          "function": "process.processTicksAndRejections",
+          "lineNo": 103,
+          "context": []
+        },
+        {
+          "filename": "../../../app/api/warehouse/route.ts",
+          "function": "P",
+          "lineNo": 136,
+          "context": [
+            [
+              131,
+              "    body: JSON.stringify(params),"
+            ],
+            [
+              132,
+              "  });"
+            ],
+            [
+              133,
+              ""
+            ]
+          ]
+        },
+        {
+          "filename": "../../../app/api/warehouse/route.ts",
+          "function": "A",
+          "lineNo": 77,
+          "context": [
+            [
+              72,
+              "  statusCode: number,"
+            ],
+            [
+              73,
+              "  responseBody: string,"
+            ],
+            [
+              74,
+              "  upstreamMethod: string,"
+            ]
+          ]
+        },
+        {
+          "_exception": "FrappeHttpError",
+          "_value": "Material Request MAT-MR-2026-00493 has already been approved"
+        }
+      ],
+      "breadcrumbs": [
+        {
+          "category": "bei.observability",
+          "message": "warehouse_route_handler",
+          "level": "error",
+          "data": {
+            "endpoint_or_job": "/api/warehouse",
+            "module": "warehouse",
+            "route": "/api/warehouse",
+            "status_code": "417",
+            "upstream_method": "hrms.api.warehouse.approve_material_request"
+          }
+        }
+      ]
+    },
+    {
+      "project": "bei-tasks",
+      "eventID": "53eccf99003942dcaf621a63c460b7b2",
+      "title": "Error: Material Request MAT-MR-2026-00492 has already been approved",
+      "culprit": "/dashboard/warehouse/approve",
+      "dateCreated": "2026-04-26T05:57:27.305000Z",
+      "level": null,
+      "tags": {
+        "action": "approve_mr",
+        "branch": "unknown",
+        "browser": "Chrome 145.0.7632",
+        "browser.name": "Chrome",
+        "department": "unknown",
+        "designation": "unknown",
+        "endpoint_or_job": "/api/warehouse",
+        "environment": "production",
+        "handled": "yes",
+        "level": "warning",
+        "mechanism": "generic",
+        "module": "warehouse",
+        "mutation_type": "mutation",
+        "os": "Windows >=10",
+        "os.name": "Windows",
+        "phase": "mutation",
+        "release": "5a52eea061e79972aad404502469cb091a3e25d2",
+        "replayId": "f0484e4d2a8f4e1598e76be9103be6d8",
+        "route": "/api/warehouse",
+        "route_action": "approve_mr",
+        "status_code": "417",
+        "surface": "shared_mutation_helper",
+        "transaction": "/dashboard/warehouse/approve",
+        "turbopack": "True",
+        "url": "https://my.bebang.ph/dashboard/warehouse/approve",
+        "user": "username:test.scm"
+      },
+      "user": "test.scm",
+      "request_url": "https://my.bebang.ph/dashboard/warehouse/approve",
+      "request_method": null,
+      "request_data": "None",
+      "traceback": [
+        {
+          "filename": "app/dashboard/warehouse/approve/page.tsx",
+          "function": "j",
+          "lineNo": 50,
+          "context": [
+            [
+              45,
+              ""
+            ],
+            [
+              46,
+              "      if (approvedItems.length === 0) {"
+            ],
+            [
+              47,
+              "        throw new Error(\"No approvable items found\");"
+            ]
+          ]
+        },
+        {
+          "filename": "hooks/use-warehouse.ts",
+          "function": "d",
+          "lineNo": 367,
+          "context": [
+            [
+              362,
+              "      error: \"Failed to parse warehouse response\","
+            ],
+            [
+              363,
+              "    }))) as T;"
+            ],
+            [
+              364,
+              ""
+            ]
+          ]
+        },
+        {
+          "_exception": "Error",
+          "_value": "Material Request MAT-MR-2026-00492 has already been approved"
+        }
+      ],
+      "breadcrumbs": [
+        {
+          "category": "fetch",
+          "message": "",
+          "level": "info",
+          "data": {
+            "__span": "8cd811a2c7c3afc4",
+            "method": "GET",
+            "status_code": "200",
+            "url": "https://my.bebang.ph/dashboard/warehouse/approve/MAT-MR-2026-00120?_rsc=1b92c"
+          }
+        },
+        {
+          "category": "fetch",
+          "message": "",
+          "level": "info",
+          "data": {
+            "__span": "9f7add7f5c2a38d0",
+            "method": "GET",
+            "status_code": "200",
+            "url": "https://my.bebang.ph/dashboard/warehouse/approve/MAT-MR-2026-00492?_rsc=1b92c"
+          }
+        },
+        {
+          "category": "ui.click",
+          "message": "button.inline-flex.items-center.justify-center.gap-2.whitespace-nowrap.text-sm.font-medium.transition-all.disabled:pointer-events-none.disabled:opacity-50.[&_svg]:pointer-events-none.[&_svg:not([class",
+          "level": "info",
+          "data": {}
+        },
+        {
+          "category": "fetch",
+          "message": "",
+          "level": "info",
+          "data": {
+            "__span": "9808d0660a2c3cff",
+            "method": "GET",
+            "status_code": "200",
+            "url": "/api/warehouse?action=mr_approval_context&mr_name=MAT-MR-2026-00492"
+          }
+        },
+        {
+          "category": "fetch",
+          "message": "",
+          "level": "info",
+          "data": {
+            "__span": "9ea67d0924bddef7",
+            "method": "POST",
+            "request_body_size": "189",
+            "status_code": "200",
+            "url": "/api/warehouse"
+          }
+        },
+        {
+          "category": "ui.click",
+          "message": "button.inline-flex.items-center.justify-center.gap-2.whitespace-nowrap.text-sm.font-medium.transition-all.disabled:pointer-events-none.disabled:opacity-50.[&_svg]:pointer-events-none.[&_svg:not([class",
+          "level": "info",
+          "data": {}
+        },
+        {
+          "category": "fetch",
+          "message": "",
+          "level": "info",
+          "data": {
+            "__span": "9182be474b85a9ba",
+            "method": "GET",
+            "status_code": "200",
+            "url": "/api/warehouse?action=pending_mrs"
+          }
+        },
+        {
+          "category": "fetch",
+          "message": "",
+          "level": "info",
+          "data": {
+            "__span": "a7a7ad382ea2051e",
+            "method": "GET",
+            "status_code": "200",
+            "url": "/api/warehouse?action=mr_approval_context&mr_name=MAT-MR-2026-00492"
+          }
+        },
+        {
+          "category": "fetch",
+          "message": "",
+          "level": "warning",
+          "data": {
+            "__span": "a4b001c0701af17a",
+            "method": "POST",
+            "request_body_size": "189",
+            "status_code": "417",
+            "url": "/api/warehouse"
+          }
+        },
+        {
+          "category": "bei.observability",
+          "message": "approve_mr",
+          "level": "warning",
+          "data": {
+            "endpoint_or_job": "/api/warehouse",
+            "module": "warehouse",
+            "route": "/api/warehouse",
+            "status_code": "417"
+          }
+        }
+      ]
+    },
+    {
+      "project": "bei-tasks",
+      "eventID": "9257746851ac4246b5c7da5b261c5373",
+      "title": "FrappeHttpError: Material Request MAT-MR-2026-00492 has already been approved",
+      "culprit": "POST /api/warehouse",
+      "dateCreated": "2026-04-26T05:57:26.999000Z",
+      "level": null,
+      "tags": {
+        "action": "warehouse_route_handler",
+        "browser": "HeadlessChrome 145",
+        "browser.name": "HeadlessChrome",
+        "client_os": "Windows",
+        "client_os.name": "Windows",
+        "endpoint_or_job": "/api/warehouse",
+        "environment": "production",
+        "handled": "yes",
+        "level": "error",
+        "mechanism": "generic",
+        "module": "warehouse",
+        "mutation_type": "mutation",
+        "os": "Linux",
+        "os.name": "Linux",
+        "phase": "route_handler",
+        "release": "5a52eea061e79972aad404502469cb091a3e25d2",
+        "route": "/api/warehouse",
+        "route_action": "approve_mr",
+        "runtime": "node v22.22.2",
+        "runtime.name": "node",
+        "server_name": "169.254.0.37",
+        "status_code": "417",
+        "surface": "next_route_handler",
+        "transaction": "POST /api/warehouse",
+        "turbopack": "True",
+        "upstream_method": "hrms.api.warehouse.approve_material_request",
+        "url": "https://my.bebang.ph/api/warehouse"
+      },
+      "user": null,
+      "request_url": "https://my.bebang.ph/api/warehouse",
+      "request_method": "POST",
+      "request_data": "None",
+      "traceback": [
+        {
+          "filename": "task/node_modules/next/dist/compiled/next-server/app-route-turbo.runtime.prod.js",
+          "function": "rM.handle",
+          "lineNo": 5,
+          "context": []
+        },
+        {
+          "filename": "task/node_modules/next/dist/compiled/next-server/app-route-turbo.runtime.prod.js",
+          "function": "rM.do",
+          "lineNo": 5,
+          "context": []
+        },
+        {
+          "filename": "../../../app/api/warehouse/route.ts",
+          "function": "$",
+          "lineNo": 789,
+          "context": [
+            [
+              784,
+              "          return NextResponse.json("
+            ],
+            [
+              785,
+              "            { success: false, error: \"mr_name is required\" },"
+            ],
+            [
+              786,
+              "            { status: 400 }"
+            ]
+          ]
+        },
+        {
+          "filename": "node:internal/process/task_queues",
+          "function": "process.processTicksAndRejections",
+          "lineNo": 103,
+          "context": []
+        },
+        {
+          "filename": "../../../app/api/warehouse/route.ts",
+          "function": "P",
+          "lineNo": 136,
+          "context": [
+            [
+              131,
+              "    body: JSON.stringify(params),"
+            ],
+            [
+              132,
+              "  });"
+            ],
+            [
+              133,
+              ""
+            ]
+          ]
+        },
+        {
+          "filename": "../../../app/api/warehouse/route.ts",
+          "function": "A",
+          "lineNo": 77,
+          "context": [
+            [
+              72,
+              "  statusCode: number,"
+            ],
+            [
+              73,
+              "  responseBody: string,"
+            ],
+            [
+              74,
+              "  upstreamMethod: string,"
+            ]
+          ]
+        },
+        {
+          "_exception": "FrappeHttpError",
+          "_value": "Material Request MAT-MR-2026-00492 has already been approved"
+        }
+      ],
+      "breadcrumbs": [
+        {
+          "category": "bei.observability",
+          "message": "warehouse_route_handler",
+          "level": "error",
+          "data": {
+            "endpoint_or_job": "/api/warehouse",
+            "module": "warehouse",
+            "route": "/api/warehouse",
+            "status_code": "417",
+            "upstream_method": "hrms.api.warehouse.approve_material_request"
+          }
+        }
+      ]
+    }
+  ]
+}
