@@ -1,0 +1,219 @@
+{
+  "submit_order errors 7d": {
+    "bei-hrms": {
+      "error": "HTTP Error 400: Bad Request"
+    },
+    "bei-tasks": {
+      "error": "HTTP Error 400: Bad Request"
+    }
+  },
+  "approve_order errors 7d": {
+    "bei-hrms": {
+      "error": "HTTP Error 400: Bad Request"
+    },
+    "bei-tasks": {
+      "error": "HTTP Error 400: Bad Request"
+    }
+  },
+  "MR Creation Error 7d": {
+    "bei-hrms": {
+      "error": "HTTP Error 400: Bad Request"
+    },
+    "bei-tasks": {
+      "error": "HTTP Error 400: Bad Request"
+    }
+  },
+  "NAIA T3 7d": {
+    "bei-hrms": {
+      "error": "HTTP Error 400: Bad Request"
+    },
+    "bei-tasks": {
+      "error": "HTTP Error 400: Bad Request"
+    }
+  },
+  "ORTIGAS ESTANCIA 7d": {
+    "bei-hrms": {
+      "error": "HTTP Error 400: Bad Request"
+    },
+    "bei-tasks": {
+      "error": "HTTP Error 400: Bad Request"
+    }
+  },
+  "ORTIGAS GREENHILLS 7d": {
+    "bei-hrms": {
+      "error": "HTTP Error 400: Bad Request"
+    },
+    "bei-tasks": {
+      "error": "HTTP Error 400: Bad Request"
+    }
+  },
+  "create_mr_for_store_order 7d": {
+    "bei-hrms": {
+      "error": "HTTP Error 400: Bad Request"
+    },
+    "bei-tasks": {
+      "error": "HTTP Error 400: Bad Request"
+    }
+  },
+  "module:ordering 24h": {
+    "bei-hrms": [
+      {
+        "id": "7438477334",
+        "title": "ValidationError: Could not find Store: Estancia",
+        "level": "warning",
+        "count": "4",
+        "userCount": 1,
+        "firstSeen": "2026-04-24T08:48:00.039622Z",
+        "lastSeen": "2026-04-26T09:58:50.022687Z",
+        "metadata": {
+          "value": "Could not find Store: Estancia",
+          "type": "ValidationError",
+          "filename": "__init__.py",
+          "function": "_raise_exception",
+          "in_app_frame_mix": "system-only",
+          "sdk": {
+            "name": "sentry.python",
+            "name_normalized": "sentry.python"
+          },
+          "initial_priority": 50,
+          "title": null
+        },
+        "permalink": "https://bebang-enterprise-inc.sentry.io/issues/7438477334/"
+      },
+      {
+        "id": "7384302085",
+        "title": "OperationalError: (1054, \"Unknown column 'i.custom_store_ordering_uom' in 'SELECT'\")",
+        "level": "error",
+        "count": "36",
+        "userCount": 2,
+        "firstSeen": "2026-04-03T05:21:17.608148Z",
+        "lastSeen": "2026-04-05T09:10:54.508907Z",
+        "metadata": {
+          "value": "(1054, \"Unknown column 'i.custom_store_ordering_uom' in 'SELECT'\")",
+          "type": "OperationalError",
+          "filename": "pymysql/err.py",
+          "function": "raise_mysql_exception",
+          "in_app_frame_mix": "system-only",
+          "sdk": {
+            "name": "sentry.python",
+            "name_normalized": "sentry.python"
+          },
+          "initial_priority": 75,
+          "title": null
+        },
+        "permalink": "https://bebang-enterprise-inc.sentry.io/issues/7384302085/"
+      },
+      {
+        "id": "7255376571",
+        "title": "New Exception collected in error log",
+        "level": "error",
+        "count": "2961",
+        "userCount": 1,
+        "firstSeen": "2026-02-10T11:58:41.917294Z",
+        "lastSeen": "2026-04-26T07:15:22.498077Z",
+        "metadata": {
+          "title": "New Exception collected in error log",
+          "sdk": {
+            "name": "sentry.python",
+            "name_normalized": "sentry.python"
+          },
+          "initial_priority": 75
+        },
+        "permalink": "https://bebang-enterprise-inc.sentry.io/issues/7255376571/"
+      },
+      {
+        "id": "7381435249",
+        "title": "ValidationError: Could not find Store: Araneta Gateway - Bebang Enterprise Inc.",
+        "level": "warning",
+        "count": "2",
+        "userCount": 1,
+        "firstSeen": "2026-04-02T00:28:53.032300Z",
+        "lastSeen": "2026-04-02T00:34:04.575037Z",
+        "metadata": {
+          "value": "Could not find Store: Araneta Gateway - Bebang Enterprise Inc.",
+          "type": "ValidationError",
+          "filename": "__init__.py",
+          "function": "_raise_exception",
+          "in_app_frame_mix": "system-only",
+          "sdk": {
+            "name": "sentry.python",
+            "name_normalized": "sentry.python"
+          },
+          "initial_priority": 50,
+          "title": null
+        },
+        "permalink": "https://bebang-enterprise-inc.sentry.io/issues/7381435249/"
+      }
+    ],
+    "bei-tasks": [
+      {
+        "id": "7348720674",
+        "title": "Error: Frappe API error: 500 - pymysql.err.OperationalError: (1054, \"Unknown column 'i.custom_store_ordering_uom' in 'SELECT'\")",
+        "level": "error",
+        "count": "141",
+        "userCount": 1,
+        "firstSeen": "2026-03-19T17:20:48.532000Z",
+        "lastSeen": "2026-04-05T09:10:51.573000Z",
+        "metadata": {
+          "value": "Frappe API error: 500 - pymysql.err.OperationalError: (1054, \"Unknown column 'i.custom_store_ordering_uom' in 'SELECT'\")",
+          "type": "Error",
+          "filename": "lib/observed-fetch.ts",
+          "function": "u",
+          "in_app_frame_mix": "mixed",
+          "sdk": {
+            "name": "sentry.javascript.nextjs",
+            "name_normalized": "sentry.javascript.nextjs"
+          },
+          "initial_priority": 75,
+          "title": null
+        },
+        "permalink": "https://bebang-enterprise-inc.sentry.io/issues/7348720674/"
+      },
+      {
+        "id": "7359651962",
+        "title": "Error: Frappe API error: 521 - <!DOCTYPE html>",
+        "level": "error",
+        "count": "8",
+        "userCount": 1,
+        "firstSeen": "2026-03-24T08:29:22.678000Z",
+        "lastSeen": "2026-04-03T15:44:04.687000Z",
+        "metadata": {
+          "value": "Frappe API error: 521 - <!DOCTYPE html>\n<!--[if lt IE 7]> <html class=\"no-js ie6 oldie\" lang=\"en-US\"> <![endif]-->\n<!--[if IE 7]>    <html class=\"no-js ie7 oldie\" lang=\"en-US\"> <![endif]-->\n<!--[if IE 8]>    <html class=\"no-js ie8 oldie\" lang=\"en-US\"> <![endif]-->\n<!--[if gt IE 8]><!--> <html class=\"no-js\" lang=\"en-US\"> <!--<![endif]-->\n<head>\n\n<title>bebang.ph | 521: Web server is down</title>\n<meta charset=\"UTF-8\" />\n<meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\" />\n<meta http-equiv=\"X-UA-Compatible\" content=\"IE=Edge\" />\n<meta name=\"robots\" content=\"noindex, nofollow\" />\n<meta name=\"viewport\" content=\"width=device-width,initial-scale=1\" />\n<link rel=\"stylesheet\" id=\"cf_styles-css\" href=\"/cdn-cgi/styles/main.css\" />\n</head>\n<body>\n<div id=\"cf-wrapper\">\n    <div id=\"cf-error-details\" class=\"p-0\">\n        <header class=\"mx-auto pt-10 lg:pt-6 lg:px-8 w-240 lg:w-full mb-8\">\n            <h1 class=\"inline-block sm:block sm:mb-2 font-light text-60 lg:text-4xl text-black-dark leading-tight mr-...",
+          "type": "Error",
+          "filename": "app:///5xx-error-landing",
+          "function": "Visit <a href=\"",
+          "in_app_frame_mix": "mixed",
+          "sdk": {
+            "name": "sentry.javascript.nextjs",
+            "name_normalized": "sentry.javascript.nextjs"
+          },
+          "initial_priority": 75,
+          "title": null
+        },
+        "permalink": "https://bebang-enterprise-inc.sentry.io/issues/7359651962/"
+      },
+      {
+        "id": "7385270178",
+        "title": "Error: Frappe API error: 521 - <!DOCTYPE html>",
+        "level": "error",
+        "count": "1",
+        "userCount": 1,
+        "firstSeen": "2026-04-03T15:44:01.584000Z",
+        "lastSeen": "2026-04-03T15:44:01.584000Z",
+        "metadata": {
+          "value": "Frappe API error: 521 - <!DOCTYPE html>\n<!--[if lt IE 7]> <html class=\"no-js ie6 oldie\" lang=\"en-US\"> <![endif]-->\n<!--[if IE 7]>    <html class=\"no-js ie7 oldie\" lang=\"en-US\"> <![endif]-->\n<!--[if IE 8]>    <html class=\"no-js ie8 oldie\" lang=\"en-US\"> <![endif]-->\n<!--[if gt IE 8]><!--> <html class=\"no-js\" lang=\"en-US\"> <!--<![endif]-->\n<head>\n\n\n<title>hq.bebang.ph | 521: Web server is down</title>\n<meta charset=\"UTF-8\" />\n<meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\" />\n<meta http-equiv=\"X-UA-Compatible\" content=\"IE=Edge\" />\n<meta name=\"robots\" content=\"noindex, nofollow\" />\n<meta name=\"viewport\" content=\"width=device-width,initial-scale=1\" />\n<link rel=\"stylesheet\" id=\"cf_styles-css\" href=\"/cdn-cgi/styles/main.css\" />\n\n\n</head>\n<body>\n<div id=\"cf-wrapper\">\n    <div id=\"cf-error-details\" class=\"p-0\">\n        <header class=\"mx-auto pt-10 lg:pt-6 lg:px-8 w-240 lg:w-full mb-8\">\n            <h1 class=\"inline-block sm:block sm:mb-2 font-light text-60 lg:text-4xl text-black-dark leading-tig...",
+          "type": "Error",
+          "filename": "app:///5xx-error-landing",
+          "function": "Visit <a href=\"",
+          "in_app_frame_mix": "mixed",
+          "sdk": {
+            "name": "sentry.javascript.nextjs",
+            "name_normalized": "sentry.javascript.nextjs"
+          },
+          "initial_priority": 75
+        },
+        "permalink": "https://bebang-enterprise-inc.sentry.io/issues/7385270178/"
+      }
+    ]
+  }
+}

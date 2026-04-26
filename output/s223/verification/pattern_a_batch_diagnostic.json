@@ -1,0 +1,319 @@
+{
+  "targets": [
+    {
+      "batch": "BACKFILL-20260421-FG004-3MD-LOGISTICS-CAMANGYANAN",
+      "warehouse": "3MD LOGISTICS - CAMANGYANAN - BKI",
+      "batch_exists": true,
+      "batch_item": "FG004",
+      "batch_creation": "2026-04-21 11:45:07.948111",
+      "batch_modified": "2026-04-21 11:45:08.021478",
+      "batch_disabled": 0,
+      "bin_actual_qty": 1095.0,
+      "item_code": "FG004",
+      "batch_sle_total": 1095.0,
+      "recent_sles": [
+        {
+          "name": "MAT-SLE-2026-28376",
+          "posting_date": "2026-03-28",
+          "posting_time": "21:17:45.131571",
+          "voucher_type": "Stock Reconciliation",
+          "voucher_no": "MAT-RECO-2026-01992",
+          "actual_qty": 1095.0,
+          "qty_after_transaction": 1095.0
+        }
+      ],
+      "first_sles": [
+        {
+          "name": "MAT-SLE-2026-28376",
+          "posting_date": "2026-03-28",
+          "voucher_type": "Stock Reconciliation",
+          "voucher_no": "MAT-RECO-2026-01992",
+          "actual_qty": 1095.0
+        }
+      ]
+    },
+    {
+      "batch": "BACKFILL-20260421-FG004-PINNACLE-COLD-STORAGE-SOLUTIONS",
+      "warehouse": "PINNACLE COLD STORAGE SOLUTIONS - BKI",
+      "batch_exists": true,
+      "batch_item": "FG004",
+      "batch_creation": "2026-04-21 11:45:07.841044",
+      "batch_modified": "2026-04-21 11:45:07.853648",
+      "batch_disabled": 0,
+      "bin_actual_qty": 1897.0,
+      "item_code": "FG004",
+      "batch_sle_total": 1897.0,
+      "recent_sles": [
+        {
+          "name": "MAT-SLE-2026-70556",
+          "posting_date": "2026-04-17",
+          "posting_time": "7:01:12.499782",
+          "voucher_type": "Stock Reconciliation",
+          "voucher_no": "MAT-RECO-2026-03148",
+          "actual_qty": 876.0,
+          "qty_after_transaction": 1897.0
+        },
+        {
+          "name": "MAT-SLE-2026-70555",
+          "posting_date": "2026-04-17",
+          "posting_time": "7:01:12.499782",
+          "voucher_type": "Stock Reconciliation",
+          "voucher_no": "MAT-RECO-2026-03148",
+          "actual_qty": -876.0,
+          "qty_after_transaction": 1021.0
+        },
+        {
+          "name": "MAT-SLE-2026-36407",
+          "posting_date": "2026-03-31",
+          "posting_time": "22:49:49.451693",
+          "voucher_type": "Stock Reconciliation",
+          "voucher_no": "MAT-RECO-2026-02520",
+          "actual_qty": 876.0,
+          "qty_after_transaction": 1897.0
+        },
+        {
+          "name": "MAT-SLE-2026-36406",
+          "posting_date": "2026-03-31",
+          "posting_time": "22:49:49.451693",
+          "voucher_type": "Stock Reconciliation",
+          "voucher_no": "MAT-RECO-2026-02520",
+          "actual_qty": -950.0,
+          "qty_after_transaction": 1021.0
+        },
+        {
+          "name": "MAT-SLE-2026-33505",
+          "posting_date": "2026-03-30",
+          "posting_time": "11:00:14.316590",
+          "voucher_type": "Stock Reconciliation",
+          "voucher_no": "MAT-RECO-2026-02395",
+          "actual_qty": 950.0,
+          "qty_after_transaction": 1971.0
+        },
+        {
+          "name": "MAT-SLE-2026-33504",
+          "posting_date": "2026-03-30",
+          "posting_time": "11:00:14.316590",
+          "voucher_type": "Stock Reconciliation",
+          "voucher_no": "MAT-RECO-2026-02395",
+          "actual_qty": -950.0,
+          "qty_after_transaction": 1021.0
+        },
+        {
+          "name": "MAT-SLE-2026-32850",
+          "posting_date": "2026-03-29",
+          "posting_time": "17:53:17.684837",
+          "voucher_type": "Stock Reconciliation",
+          "voucher_no": "MAT-RECO-2026-02297",
+          "actual_qty": 950.0,
+          "qty_after_transaction": 1971.0
+        },
+        {
+          "name": "MAT-SLE-2026-32849",
+          "posting_date": "2026-03-29",
+          "posting_time": "17:53:17.684837",
+          "voucher_type": "Stock Reconciliation",
+          "voucher_no": "MAT-RECO-2026-02297",
+          "actual_qty": -1021.0,
+          "qty_after_transaction": 1021.0
+        },
+        {
+          "name": "MAT-SLE-2026-32720",
+          "posting_date": "2026-03-29",
+          "posting_time": "1:20:55.997464",
+          "voucher_type": "Stock Reconciliation",
+          "voucher_no": "MAT-RECO-2026-02180",
+          "actual_qty": 1021.0,
+          "qty_after_transaction": 2042.0
+        },
+        {
+          "name": "MAT-SLE-2026-28455",
+          "posting_date": "2026-03-28",
+          "posting_time": "21:17:51.281889",
+          "voucher_type": "Stock Reconciliation",
+          "voucher_no": "MAT-RECO-2026-01994",
+          "actual_qty": 1021.0,
+          "qty_after_transaction": 1021.0
+        }
+      ],
+      "first_sles": [
+        {
+          "name": "MAT-SLE-2026-28455",
+          "posting_date": "2026-03-28",
+          "voucher_type": "Stock Reconciliation",
+          "voucher_no": "MAT-RECO-2026-01994",
+          "actual_qty": 1021.0
+        },
+        {
+          "name": "MAT-SLE-2026-32720",
+          "posting_date": "2026-03-29",
+          "voucher_type": "Stock Reconciliation",
+          "voucher_no": "MAT-RECO-2026-02180",
+          "actual_qty": 1021.0
+        },
+        {
+          "name": "MAT-SLE-2026-32849",
+          "posting_date": "2026-03-29",
+          "voucher_type": "Stock Reconciliation",
+          "voucher_no": "MAT-RECO-2026-02297",
+          "actual_qty": -1021.0
+        },
+        {
+          "name": "MAT-SLE-2026-32850",
+          "posting_date": "2026-03-29",
+          "voucher_type": "Stock Reconciliation",
+          "voucher_no": "MAT-RECO-2026-02297",
+          "actual_qty": 950.0
+        },
+        {
+          "name": "MAT-SLE-2026-33504",
+          "posting_date": "2026-03-30",
+          "voucher_type": "Stock Reconciliation",
+          "voucher_no": "MAT-RECO-2026-02395",
+          "actual_qty": -950.0
+        },
+        {
+          "name": "MAT-SLE-2026-33505",
+          "posting_date": "2026-03-30",
+          "voucher_type": "Stock Reconciliation",
+          "voucher_no": "MAT-RECO-2026-02395",
+          "actual_qty": 950.0
+        },
+        {
+          "name": "MAT-SLE-2026-36406",
+          "posting_date": "2026-03-31",
+          "voucher_type": "Stock Reconciliation",
+          "voucher_no": "MAT-RECO-2026-02520",
+          "actual_qty": -950.0
+        },
+        {
+          "name": "MAT-SLE-2026-36407",
+          "posting_date": "2026-03-31",
+          "voucher_type": "Stock Reconciliation",
+          "voucher_no": "MAT-RECO-2026-02520",
+          "actual_qty": 876.0
+        },
+        {
+          "name": "MAT-SLE-2026-70555",
+          "posting_date": "2026-04-17",
+          "voucher_type": "Stock Reconciliation",
+          "voucher_no": "MAT-RECO-2026-03148",
+          "actual_qty": -876.0
+        },
+        {
+          "name": "MAT-SLE-2026-70556",
+          "posting_date": "2026-04-17",
+          "voucher_type": "Stock Reconciliation",
+          "voucher_no": "MAT-RECO-2026-03148",
+          "actual_qty": 876.0
+        }
+      ]
+    }
+  ],
+  "item_fg004": {
+    "item_name": "BUKO PANDAN JELLY",
+    "stock_uom": "KG",
+    "is_stock_item": 1
+  },
+  "positive_fg004_batches": [
+    {
+      "batch_no": "BACKFILL-20260421-FG004-PINNACLE-COLD-STORAGE-SOLUTIONS",
+      "warehouse": "PINNACLE COLD STORAGE SOLUTIONS - BKI",
+      "total": 1897.0
+    },
+    {
+      "batch_no": "BACKFILL-20260421-FG004-3MD-LOGISTICS-CAMANGYANAN",
+      "warehouse": "3MD LOGISTICS - CAMANGYANAN - BKI",
+      "total": 1095.0
+    },
+    {
+      "batch_no": "BACKFILL-20260421-FG004-3MD-LOGISTICS-CAMANGYANAN",
+      "warehouse": "3MD LOGISTICS \u2013 CAMANGYANAN - BKI",
+      "total": 648.0
+    },
+    {
+      "batch_no": "BACKFILL-20260421-FG004-SHAW-BLVD",
+      "warehouse": "SHAW BLVD - BKI",
+      "total": 231.0
+    },
+    {
+      "batch_no": "BACKFILL-20260421-FG004-SM-SAN-JOSE-DEL-MONTE-JL-TRADE-OPC",
+      "warehouse": "SM SAN JOSE DEL MONTE - JL TRADE OPC",
+      "total": 67.463
+    },
+    {
+      "batch_no": "BACKFILL-20260421-FG004-ARANETA-GATEWAY-TUNGSTEN-CAPITAL-HOLDING",
+      "warehouse": "ARANETA GATEWAY - TUNGSTEN CAPITAL HOLDINGS OPC",
+      "total": 55.999
+    },
+    {
+      "batch_no": "BACKFILL-20260421-FG004-SM-NORTH-EDSA-BEBANG-NORTH-EDSA-INC",
+      "warehouse": "SM NORTH EDSA - BEBANG NORTH EDSA INC.",
+      "total": 55.87
+    },
+    {
+      "batch_no": "BACKFILL-20260421-FG004-SM-CLARK-RED-TALDAWA-FOODS-OPC",
+      "warehouse": "SM CLARK - RED TALDAWA FOODS OPC",
+      "total": 55.409
+    },
+    {
+      "batch_no": "BACKFILL-20260421-FG004-AYALA-FAIRVIEW-TERRACES-BEBANG-FT-INC",
+      "warehouse": "AYALA FAIRVIEW TERRACES - BEBANG FT INC.",
+      "total": 51.025
+    },
+    {
+      "batch_no": "BACKFILL-20260421-FG004-SM-MARILAO-BEBANG-MARILAO-INC",
+      "warehouse": "SM MARILAO - BEBANG MARILAO INC.",
+      "total": 49.3411
+    },
+    {
+      "batch_no": "BACKFILL-20260421-FG004-SM-TAYTAY-DAY-ONES-FOOD-AND-DRINK-ESTABL",
+      "warehouse": "SM TAYTAY - DAY ONES FOOD AND DRINK ESTABLISHMENTS CORP.",
+      "total": 49.138
+    },
+    {
+      "batch_no": "BACKFILL-20260421-FG004-BF-HOMES-BEBANG-BF-HOMES-INC",
+      "warehouse": "BF HOMES - BEBANG BF HOMES INC.",
+      "total": 43.024
+    },
+    {
+      "batch_no": "BACKFILL-20260421-FG004-D-VERDE-CALAMBA-TAJ-FOOD-CORP",
+      "warehouse": "D'VERDE CALAMBA - TAJ FOOD CORP.",
+      "total": 42.349
+    },
+    {
+      "batch_no": "BACKFILL-20260421-FG004-SM-EAST-ORTIGAS-BEBANG-SMEO-INC",
+      "warehouse": "SM EAST ORTIGAS - BEBANG SMEO INC.",
+      "total": 42.284
+    },
+    {
+      "batch_no": "BACKFILL-20260421-FG004-SM-MALL-OF-ASIA-BEBANG-SMOA-INC",
+      "warehouse": "SM MALL OF ASIA - BEBANG SMOA INC.",
+      "total": 39.0
+    },
+    {
+      "batch_no": "BACKFILL-20260421-FG004-UP-TOWN-MALL-BGC-DMD-HOLDINGS-INC",
+      "warehouse": "UP TOWN MALL BGC - DMD HOLDINGS INC.",
+      "total": 36.928
+    },
+    {
+      "batch_no": "BACKFILL-20260421-FG004-SM-VALENZUELA-BEBANG-SMV-INC",
+      "warehouse": "SM VALENZUELA - BEBANG SMV INC.",
+      "total": 36.13
+    },
+    {
+      "batch_no": "BACKFILL-20260421-FG004-AYALA-UP-TOWN-CENTER-BEBANG-UP-TOWN-CENT",
+      "warehouse": "AYALA UP TOWN CENTER - BEBANG UP TOWN CENTER INC.",
+      "total": 35.564
+    },
+    {
+      "batch_no": "BACKFILL-20260421-FG004-THE-GRID-ROCKWELL-TASTECARTEL-CORP",
+      "warehouse": "THE GRID ROCKWELL - TASTECARTEL CORP.",
+      "total": 35.3034
+    },
+    {
+      "batch_no": "BACKFILL-20260421-FG004-MEGAWIDE-PITX-BEBANG-PITX-INC",
+      "warehouse": "MEGAWIDE PITX - BEBANG PITX INC.",
+      "total": 34.3605
+    }
+  ]
+}

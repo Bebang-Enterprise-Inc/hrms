@@ -1,0 +1,907 @@
+{
+  "issues": [
+    {
+      "id": "7438477334",
+      "title": "ValidationError: Could not find Store: Estancia",
+      "lastSeen": "2026-04-26T09:58:50.022687Z",
+      "count": "4",
+      "permalink": "https://bebang-enterprise-inc.sentry.io/issues/7438477334/",
+      "event": {
+        "eventID": "4af6c929f9bb4a22b349deceb758f159",
+        "dateCreated": "2026-04-26T09:58:50.022000Z",
+        "tags": {
+          "action": "handle_exception",
+          "endpoint_or_job": "hrms.api.store.validate_order_schedule",
+          "environment": "development",
+          "error_source": "api_validation",
+          "frappe_cmd": "hrms.api.store.validate_order_schedule",
+          "handled": "yes",
+          "http_method": "GET",
+          "level": "warning",
+          "mechanism": "generic",
+          "module": "ordering",
+          "mutation_type": "load",
+          "phase": "backend_exception",
+          "release": "bei-hrms@16.0.0-dev",
+          "route": "/api/method/hrms.api.store.validate_order_schedule",
+          "route_action": "validate_order_schedule",
+          "runtime": "CPython 3.11.6",
+          "runtime.name": "CPython",
+          "server_name": "83707892ee80",
+          "surface": "frappe_request",
+          "user": "id:sam@bebang.ph"
+        },
+        "user": null,
+        "exceptions": [
+          {
+            "type": "ValidationError",
+            "value": "Could not find Store: Estancia",
+            "frames_tail": [
+              {
+                "file": "frappe/app.py",
+                "func": "application",
+                "line": 120,
+                "context": [
+                  [
+                    123,
+                    "\t\t\tresponse = frappe.utils.response.download_backup(request.path)"
+                  ],
+                  [
+                    124,
+                    ""
+                  ],
+                  [
+                    125,
+                    "\t\telif request.path.startswith(\"/private/files/\"):"
+                  ]
+                ]
+              },
+              {
+                "file": "frappe/api/__init__.py",
+                "func": "handle",
+                "line": 52,
+                "context": [
+                  [
+                    55,
+                    ""
+                  ],
+                  [
+                    56,
+                    "\tif data is not None:"
+                  ],
+                  [
+                    57,
+                    "\t\tfrappe.response[\"data\"] = data"
+                  ]
+                ]
+              },
+              {
+                "file": "frappe/api/v1.py",
+                "func": "handle_rpc_call",
+                "line": 40,
+                "context": [
+                  [
+                    43,
+                    "def create_doc(doctype: str):"
+                  ],
+                  [
+                    44,
+                    "\tdata = get_request_form_data()"
+                  ],
+                  [
+                    45,
+                    "\tdata.pop(\"doctype\", None)"
+                  ]
+                ]
+              },
+              {
+                "file": "frappe/handler.py",
+                "func": "handle",
+                "line": 53,
+                "context": [
+                  [
+                    56,
+                    "\tif data is not None:"
+                  ],
+                  [
+                    57,
+                    "\t\tif isinstance(data, Response):"
+                  ],
+                  [
+                    58,
+                    "\t\t\t# method returns a response object, pass it on"
+                  ]
+                ]
+              },
+              {
+                "file": "frappe/handler.py",
+                "func": "execute_cmd",
+                "line": 86,
+                "context": [
+                  [
+                    89,
+                    "def run_server_script(server_script):"
+                  ],
+                  [
+                    90,
+                    "\tresponse = frappe.get_doc(\"Server Script\", server_script).execute_method()"
+                  ],
+                  [
+                    91,
+                    ""
+                  ]
+                ]
+              },
+              {
+                "file": "__init__.py",
+                "func": "call",
+                "line": 1764,
+                "context": [
+                  [
+                    1767,
+                    "_cached_inspect_signature = functools.lru_cache(inspect.signature)"
+                  ],
+                  [
+                    1768,
+                    ""
+                  ],
+                  [
+                    1769,
+                    ""
+                  ]
+                ]
+              },
+              {
+                "file": "frappe/utils/typing_validations.py",
+                "func": "wrapper",
+                "line": 32,
+                "context": [
+                  [
+                    35,
+                    ""
+                  ],
+                  [
+                    36,
+                    ""
+                  ],
+                  [
+                    37,
+                    "def qualified_name(obj) -> str:"
+                  ]
+                ]
+              },
+              {
+                "file": "hrms/api/store.py",
+                "func": "validate_order_schedule",
+                "line": 3011,
+                "context": [
+                  [
+                    3014,
+                    "\tnext_delivery_day = getdate(target_delivery).strftime(\"%A, %Y-%m-%d\")"
+                  ],
+                  [
+                    3015,
+                    ""
+                  ],
+                  [
+                    3016,
+                    "\twindow = _validate_order_window(target_delivery, store=store)"
+                  ]
+                ]
+              },
+              {
+                "file": "hrms/api/store.py",
+                "func": "resolve_warehouse",
+                "line": 273,
+                "context": [
+                  [
+                    276,
+                    "def resolve_employee_store_context(employee):"
+                  ],
+                  [
+                    277,
+                    "\t\"\"\"Resolve a warehouse for an employee, falling back to the reporting chain."
+                  ],
+                  [
+                    278,
+                    ""
+                  ]
+                ]
+              },
+              {
+                "file": "__init__.py",
+                "func": "throw",
+                "line": 619,
+                "context": [
+                  [
+                    622,
+                    "\t\ttitle=title,"
+                  ],
+                  [
+                    623,
+                    "\t\tindicator=\"red\","
+                  ],
+                  [
+                    624,
+                    "\t\tis_minimizable=is_minimizable,"
+                  ]
+                ]
+              },
+              {
+                "file": "__init__.py",
+                "func": "msgprint",
+                "line": 584,
+                "context": [
+                  [
+                    587,
+                    "def clear_messages():"
+                  ],
+                  [
+                    588,
+                    "\tlocal.message_log = []"
+                  ],
+                  [
+                    589,
+                    ""
+                  ]
+                ]
+              },
+              {
+                "file": "__init__.py",
+                "func": "_raise_exception",
+                "line": 535,
+                "context": [
+                  [
+                    538,
+                    "\t\t_raise_exception()"
+                  ],
+                  [
+                    539,
+                    "\t\treturn"
+                  ],
+                  [
+                    540,
+                    ""
+                  ]
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "7384302085",
+      "title": "OperationalError: (1054, \"Unknown column 'i.custom_store_ordering_uom' in 'SELECT'\")",
+      "lastSeen": "2026-04-05T09:10:54.508907Z",
+      "count": "36",
+      "permalink": "https://bebang-enterprise-inc.sentry.io/issues/7384302085/",
+      "event": {
+        "eventID": "67c6f32fe05c4f5db361f087f49e4fe8",
+        "dateCreated": "2026-04-05T09:10:54.508000Z",
+        "tags": {
+          "action": "handle_exception",
+          "endpoint_or_job": "hrms.api.store.get_orderable_items",
+          "environment": "development",
+          "error_source": "server_error",
+          "frappe_cmd": "hrms.api.store.get_orderable_items",
+          "handled": "yes",
+          "http_method": "GET",
+          "level": "error",
+          "mechanism": "generic",
+          "module": "ordering",
+          "mutation_type": "load",
+          "phase": "backend_exception",
+          "release": "bei-hrms@16.0.0-dev",
+          "route": "/api/method/hrms.api.store.get_orderable_items",
+          "route_action": "get_orderable_items",
+          "runtime": "CPython 3.11.6",
+          "runtime.name": "CPython",
+          "server_name": "b9437f18b59a",
+          "surface": "frappe_request",
+          "user": "id:sam@bebang.ph"
+        },
+        "user": null,
+        "exceptions": [
+          {
+            "type": "OperationalError",
+            "value": "(1054, \"Unknown column 'i.custom_store_ordering_uom' in 'SELECT'\")",
+            "frames_tail": [
+              {
+                "file": "frappe/api/v1.py",
+                "func": "handle_rpc_call",
+                "line": 40,
+                "context": [
+                  [
+                    43,
+                    "def create_doc(doctype: str):"
+                  ],
+                  [
+                    44,
+                    "\tdata = get_request_form_data()"
+                  ],
+                  [
+                    45,
+                    "\tdata.pop(\"doctype\", None)"
+                  ]
+                ]
+              },
+              {
+                "file": "frappe/handler.py",
+                "func": "handle",
+                "line": 53,
+                "context": [
+                  [
+                    56,
+                    "\tif data is not None:"
+                  ],
+                  [
+                    57,
+                    "\t\tif isinstance(data, Response):"
+                  ],
+                  [
+                    58,
+                    "\t\t\t# method returns a response object, pass it on"
+                  ]
+                ]
+              },
+              {
+                "file": "frappe/handler.py",
+                "func": "execute_cmd",
+                "line": 86,
+                "context": [
+                  [
+                    89,
+                    "def run_server_script(server_script):"
+                  ],
+                  [
+                    90,
+                    "\tresponse = frappe.get_doc(\"Server Script\", server_script).execute_method()"
+                  ],
+                  [
+                    91,
+                    ""
+                  ]
+                ]
+              },
+              {
+                "file": "__init__.py",
+                "func": "call",
+                "line": 1764,
+                "context": [
+                  [
+                    1767,
+                    "_cached_inspect_signature = functools.lru_cache(inspect.signature)"
+                  ],
+                  [
+                    1768,
+                    ""
+                  ],
+                  [
+                    1769,
+                    ""
+                  ]
+                ]
+              },
+              {
+                "file": "frappe/utils/typing_validations.py",
+                "func": "wrapper",
+                "line": 32,
+                "context": [
+                  [
+                    35,
+                    ""
+                  ],
+                  [
+                    36,
+                    ""
+                  ],
+                  [
+                    37,
+                    "def qualified_name(obj) -> str:"
+                  ]
+                ]
+              },
+              {
+                "file": "hrms/api/store.py",
+                "func": "get_orderable_items",
+                "line": 2235,
+                "context": [
+                  [
+                    2238,
+                    "            i.name, i.item_name, i.item_group, i.stock_uom, i.image,"
+                  ],
+                  [
+                    2239,
+                    "            i.valuation_rate, i.standard_rate, i.last_purchase_rate,"
+                  ],
+                  [
+                    2240,
+                    "            i.variant_of,"
+                  ]
+                ]
+              },
+              {
+                "file": "frappe/database/database.py",
+                "func": "sql",
+                "line": 230,
+                "context": [
+                  [
+                    233,
+                    "\t\t\t\tfrappe.log(f\"Syntax error in query:\\n{query} {values or ''}\")"
+                  ],
+                  [
+                    234,
+                    ""
+                  ],
+                  [
+                    235,
+                    "\t\t\telif self.is_deadlocked(e):"
+                  ]
+                ]
+              },
+              {
+                "file": "pymysql/cursors.py",
+                "func": "execute",
+                "line": 153,
+                "context": [
+                  [
+                    156,
+                    ""
+                  ],
+                  [
+                    157,
+                    "    def executemany(self, query, args):"
+                  ],
+                  [
+                    158,
+                    "        \"\"\"Run several data against one query."
+                  ]
+                ]
+              },
+              {
+                "file": "pymysql/cursors.py",
+                "func": "_query",
+                "line": 322,
+                "context": [
+                  [
+                    325,
+                    ""
+                  ],
+                  [
+                    326,
+                    "    def _clear_result(self):"
+                  ],
+                  [
+                    327,
+                    "        self.rownumber = 0"
+                  ]
+                ]
+              },
+              {
+                "file": "pymysql/connections.py",
+                "func": "query",
+                "line": 563,
+                "context": [
+                  [
+                    566,
+                    "    def next_result(self, unbuffered=False):"
+                  ],
+                  [
+                    567,
+                    "        self._affected_rows = self._read_query_result(unbuffered=unbuffered)"
+                  ],
+                  [
+                    568,
+                    "        return self._affected_rows"
+                  ]
+                ]
+              },
+              {
+                "file": "pymysql/connections.py",
+                "func": "_read_query_result",
+                "line": 825,
+                "context": [
+                  [
+                    828,
+                    "            self.server_status = result.server_status"
+                  ],
+                  [
+                    829,
+                    "        return result.affected_rows"
+                  ],
+                  [
+                    830,
+                    ""
+                  ]
+                ]
+              },
+              {
+                "file": "pymysql/connections.py",
+                "func": "read",
+                "line": 1199,
+                "context": [
+                  [
+                    1202,
+                    "                self._read_ok_packet(first_packet)"
+                  ],
+                  [
+                    1203,
+                    "            elif first_packet.is_load_local_packet():"
+                  ],
+                  [
+                    1204,
+                    "                self._read_load_local_packet(first_packet)"
+                  ]
+                ]
+              },
+              {
+                "file": "pymysql/connections.py",
+                "func": "_read_packet",
+                "line": 775,
+                "context": [
+                  [
+                    778,
+                    "    def _read_bytes(self, num_bytes):"
+                  ],
+                  [
+                    779,
+                    "        self._sock.settimeout(self._read_timeout)"
+                  ],
+                  [
+                    780,
+                    "        while True:"
+                  ]
+                ]
+              },
+              {
+                "file": "pymysql/protocol.py",
+                "func": "raise_for_error",
+                "line": 219,
+                "context": [
+                  [
+                    222,
+                    "        dump_packet(self._data)"
+                  ],
+                  [
+                    223,
+                    ""
+                  ],
+                  [
+                    224,
+                    ""
+                  ]
+                ]
+              },
+              {
+                "file": "pymysql/err.py",
+                "func": "raise_mysql_exception",
+                "line": 150,
+                "context": [
+                  [
+                    148,
+                    "    if errorclass is None:"
+                  ],
+                  [
+                    149,
+                    "        errorclass = InternalError if errno < 1000 else OperationalError"
+                  ],
+                  [
+                    150,
+                    "    raise errorclass(errno, errval)"
+                  ]
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "7255376571",
+      "title": "New Exception collected in error log",
+      "lastSeen": "2026-04-26T07:15:22.498077Z",
+      "count": "2961",
+      "permalink": "https://bebang-enterprise-inc.sentry.io/issues/7255376571/",
+      "event": {
+        "eventID": "e0e31af874884c7f917cf416fa3fdd18",
+        "dateCreated": "2026-04-26T07:15:24.085000Z",
+        "tags": {
+          "action": "handle_exception",
+          "endpoint_or_job": "hrms.api.procurement.get_invoices",
+          "environment": "development",
+          "error_source": "server_error",
+          "frappe_cmd": "hrms.api.procurement.get_invoices",
+          "frappe_user": "sam@bebang.ph",
+          "http_method": "POST",
+          "level": "error",
+          "logger": "None-hq.bebang.ph",
+          "mutation_type": "mutation",
+          "phase": "backend_exception",
+          "release": "bei-hrms@16.0.0-dev",
+          "route": "/api/method/hrms.api.procurement.get_invoices",
+          "route_action": "get_invoices",
+          "runtime": "CPython 3.11.6",
+          "runtime.name": "CPython",
+          "server_name": "83707892ee80",
+          "surface": "frappe_request",
+          "transaction": "/api/method/hrms.api.procurement.get_invoices",
+          "url": "http://hq.bebang.ph/api/method/hrms.api.procurement.get_invoices",
+          "user": "id:hq.bebang.ph"
+        },
+        "user": null,
+        "exceptions": []
+      }
+    },
+    {
+      "id": "7381435249",
+      "title": "ValidationError: Could not find Store: Araneta Gateway - Bebang Enterprise Inc.",
+      "lastSeen": "2026-04-02T00:34:04.575037Z",
+      "count": "2",
+      "permalink": "https://bebang-enterprise-inc.sentry.io/issues/7381435249/",
+      "event": {
+        "eventID": "befe9641957244cb8d3cd66f12207eae",
+        "dateCreated": "2026-04-02T00:34:04.575000Z",
+        "tags": {
+          "action": "handle_exception",
+          "endpoint_or_job": "hrms.api.store.get_orderable_items",
+          "environment": "development",
+          "error_source": "api_validation",
+          "frappe_cmd": "hrms.api.store.get_orderable_items",
+          "handled": "yes",
+          "http_method": "GET",
+          "level": "warning",
+          "mechanism": "generic",
+          "module": "ordering",
+          "mutation_type": "load",
+          "phase": "backend_exception",
+          "release": "bei-hrms@16.0.0-dev",
+          "route": "/api/method/hrms.api.store.get_orderable_items",
+          "route_action": "get_orderable_items",
+          "runtime": "CPython 3.11.6",
+          "runtime.name": "CPython",
+          "server_name": "fcffa848795e",
+          "surface": "frappe_request",
+          "user": "id:sam@bebang.ph"
+        },
+        "user": null,
+        "exceptions": [
+          {
+            "type": "ValidationError",
+            "value": "Could not find Store: Araneta Gateway - Bebang Enterprise Inc.",
+            "frames_tail": [
+              {
+                "file": "frappe/app.py",
+                "func": "application",
+                "line": 120,
+                "context": [
+                  [
+                    123,
+                    "\t\t\tresponse = frappe.utils.response.download_backup(request.path)"
+                  ],
+                  [
+                    124,
+                    ""
+                  ],
+                  [
+                    125,
+                    "\t\telif request.path.startswith(\"/private/files/\"):"
+                  ]
+                ]
+              },
+              {
+                "file": "frappe/api/__init__.py",
+                "func": "handle",
+                "line": 52,
+                "context": [
+                  [
+                    55,
+                    ""
+                  ],
+                  [
+                    56,
+                    "\tif data is not None:"
+                  ],
+                  [
+                    57,
+                    "\t\tfrappe.response[\"data\"] = data"
+                  ]
+                ]
+              },
+              {
+                "file": "frappe/api/v1.py",
+                "func": "handle_rpc_call",
+                "line": 40,
+                "context": [
+                  [
+                    43,
+                    "def create_doc(doctype: str):"
+                  ],
+                  [
+                    44,
+                    "\tdata = get_request_form_data()"
+                  ],
+                  [
+                    45,
+                    "\tdata.pop(\"doctype\", None)"
+                  ]
+                ]
+              },
+              {
+                "file": "frappe/handler.py",
+                "func": "handle",
+                "line": 53,
+                "context": [
+                  [
+                    56,
+                    "\tif data is not None:"
+                  ],
+                  [
+                    57,
+                    "\t\tif isinstance(data, Response):"
+                  ],
+                  [
+                    58,
+                    "\t\t\t# method returns a response object, pass it on"
+                  ]
+                ]
+              },
+              {
+                "file": "frappe/handler.py",
+                "func": "execute_cmd",
+                "line": 86,
+                "context": [
+                  [
+                    89,
+                    "def run_server_script(server_script):"
+                  ],
+                  [
+                    90,
+                    "\tresponse = frappe.get_doc(\"Server Script\", server_script).execute_method()"
+                  ],
+                  [
+                    91,
+                    ""
+                  ]
+                ]
+              },
+              {
+                "file": "__init__.py",
+                "func": "call",
+                "line": 1764,
+                "context": [
+                  [
+                    1767,
+                    "_cached_inspect_signature = functools.lru_cache(inspect.signature)"
+                  ],
+                  [
+                    1768,
+                    ""
+                  ],
+                  [
+                    1769,
+                    ""
+                  ]
+                ]
+              },
+              {
+                "file": "frappe/utils/typing_validations.py",
+                "func": "wrapper",
+                "line": 32,
+                "context": [
+                  [
+                    35,
+                    ""
+                  ],
+                  [
+                    36,
+                    ""
+                  ],
+                  [
+                    37,
+                    "def qualified_name(obj) -> str:"
+                  ]
+                ]
+              },
+              {
+                "file": "hrms/api/store.py",
+                "func": "get_orderable_items",
+                "line": 2062,
+                "context": [
+                  [
+                    2065,
+                    "\titems = frappe.db.sql("
+                  ],
+                  [
+                    2066,
+                    "\t\t\"\"\""
+                  ],
+                  [
+                    2067,
+                    "        SELECT"
+                  ]
+                ]
+              },
+              {
+                "file": "hrms/api/store.py",
+                "func": "resolve_warehouse",
+                "line": 272,
+                "context": [
+                  [
+                    275,
+                    "def resolve_employee_store_context(employee):"
+                  ],
+                  [
+                    276,
+                    "\t\"\"\"Resolve a warehouse for an employee, falling back to the reporting chain."
+                  ],
+                  [
+                    277,
+                    ""
+                  ]
+                ]
+              },
+              {
+                "file": "__init__.py",
+                "func": "throw",
+                "line": 619,
+                "context": [
+                  [
+                    622,
+                    "\t\ttitle=title,"
+                  ],
+                  [
+                    623,
+                    "\t\tindicator=\"red\","
+                  ],
+                  [
+                    624,
+                    "\t\tis_minimizable=is_minimizable,"
+                  ]
+                ]
+              },
+              {
+                "file": "__init__.py",
+                "func": "msgprint",
+                "line": 584,
+                "context": [
+                  [
+                    587,
+                    "def clear_messages():"
+                  ],
+                  [
+                    588,
+                    "\tlocal.message_log = []"
+                  ],
+                  [
+                    589,
+                    ""
+                  ]
+                ]
+              },
+              {
+                "file": "__init__.py",
+                "func": "_raise_exception",
+                "line": 535,
+                "context": [
+                  [
+                    538,
+                    "\t\t_raise_exception()"
+                  ],
+                  [
+                    539,
+                    "\t\treturn"
+                  ],
+                  [
+                    540,
+                    ""
+                  ]
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}
