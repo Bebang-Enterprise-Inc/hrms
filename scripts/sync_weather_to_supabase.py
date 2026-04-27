@@ -32,14 +32,30 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def _load_lookup_sales_location():
-	spec = importlib.util.spec_from_file_location(
-		"sales_location_mapping_sync",
-		ROOT / "hrms" / "utils" / "sales_location_mapping.py",
-	)
-	module = importlib.util.module_from_spec(spec)
-	assert spec and spec.loader
-	spec.loader.exec_module(module)
-	return module.lookup_sales_location
+	"""Try to load lookup_sales_location from hrms/utils. Falls back to a no-op
+	if the module can't be imported (e.g., running outside Frappe in GitHub
+	Actions, where `import frappe` at the top of sales_location_mapping.py
+	fails with ModuleNotFoundError).
+
+	Since S191/S200 (2026-04-16), sales_location_mapping.py imports `frappe`
+	at module top-level for the live ORM-backed Company/Warehouse query. The
+	weather sync embeds all live `location_id` values inline in
+	`_STORE_COORDINATES` below — the fallback is only used for stores with
+	`location_id == 0`, which are skipped anyway. So a no-op fallback is safe.
+	"""
+	try:
+		spec = importlib.util.spec_from_file_location(
+			"sales_location_mapping_sync",
+			ROOT / "hrms" / "utils" / "sales_location_mapping.py",
+		)
+		module = importlib.util.module_from_spec(spec)
+		assert spec and spec.loader
+		spec.loader.exec_module(module)
+		return module.lookup_sales_location
+	except ModuleNotFoundError as exc:
+		# `import frappe` failed — running outside Frappe (GitHub Actions, etc.)
+		print(f"[INFO] Frappe-backed lookup unavailable ({exc}); using embedded mapping only.")
+		return lambda warehouse_name=None, warehouse_record_name=None: None
 
 
 lookup_sales_location = _load_lookup_sales_location()
