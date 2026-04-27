@@ -56,3 +56,53 @@ class BEIStoreOrder(Document):
 		self.submitted_by = frappe.session.user
 		if self.status == "Draft":
 			self.status = "Pending Approval"
+
+	def on_cancel(self):
+		# S226: when an order is cancelled, mark every still-Pending BEI Approval
+		# Queue row that references it as Cancelled. Otherwise orphan Pending rows
+		# accumulate and break get_order_review_queue's visibility filter, which
+		# uses the oldest Pending row's assignee to gate visibility.
+		_close_pending_approval_queue_rows(self.name, "Order cancelled")
+
+	def on_trash(self):
+		# S226: drafts are deleted (not cancelled) by S209 cleanup, so on_cancel
+		# never fires. Cover that path here too.
+		_close_pending_approval_queue_rows(self.name, "Order deleted")
+
+
+def _close_pending_approval_queue_rows(order_name: str, reason: str) -> None:
+	"""Mark all still-Pending BEI Approval Queue rows referencing this order as Rejected.
+
+	Uses Rejected (existing valid status) rather than introducing a new option, matching
+	the convention in store.reject_order. Idempotent. Logs failure but never raises --
+	cleanup must not block the cancel/trash.
+	"""
+	try:
+		pending_rows = frappe.get_all(
+			"BEI Approval Queue",
+			filters={
+				"reference_doctype": "BEI Store Order",
+				"reference_name": order_name,
+				"status": "Pending",
+			},
+			fields=["name"],
+		)
+		for row in pending_rows:
+			try:
+				queue_doc = frappe.get_doc("BEI Approval Queue", row.name)
+				queue_doc.status = "Rejected"
+				if frappe.get_meta("BEI Approval Queue").has_field("rejection_reason"):
+					queue_doc.rejection_reason = reason
+				queue_doc.flags.ignore_permissions = True
+				queue_doc.save(ignore_permissions=True)
+			except Exception:
+				frappe.log_error(
+					f"S226 cascade-cancel failed for queue row {row.name} on order {order_name}: "
+					+ frappe.get_traceback(),
+					"S226 Queue Cleanup Error",
+				)
+	except Exception:
+		frappe.log_error(
+			f"S226 cascade-cancel lookup failed for order {order_name}: " + frappe.get_traceback(),
+			"S226 Queue Cleanup Error",
+		)

@@ -290,8 +290,17 @@ def get_order_review_queue(date: str | None = None, status: str | None = None) -
 		LEFT JOIN (
 			SELECT
 				q.reference_name,
-				SUBSTRING_INDEX(GROUP_CONCAT(q.name ORDER BY q.creation ASC), ',', 1) AS queue_name,
-				SUBSTRING_INDEX(GROUP_CONCAT(q.assigned_approver ORDER BY q.creation ASC), ',', 1) AS assigned_approver,
+				-- S226: prefer the row assigned to the *current* user when picking
+				-- the display approver. Falls back to creation order otherwise so
+				-- behaviour matches the pre-fix UI for non-affected orders.
+				SUBSTRING_INDEX(
+					GROUP_CONCAT(q.name ORDER BY (q.assigned_approver = %(current_user)s) DESC, q.creation ASC),
+					',', 1
+				) AS queue_name,
+				SUBSTRING_INDEX(
+					GROUP_CONCAT(q.assigned_approver ORDER BY (q.assigned_approver = %(current_user)s) DESC, q.creation ASC),
+					',', 1
+				) AS assigned_approver,
 				MIN(q.submitted_at) AS pending_since
 			FROM `tabBEI Approval Queue` q
 			WHERE q.reference_doctype = 'BEI Store Order'
@@ -307,7 +316,19 @@ def get_order_review_queue(date: str | None = None, status: str | None = None) -
 		  AND (
 			%(is_admin_viewer)s = 1
 			OR so.status != 'Pending Approval'
-			OR pending_queue.assigned_approver = %(current_user)s
+			-- S226: visibility must check ANY Pending row's assignee, not just
+			-- the one picked by GROUP_CONCAT. Orphan Pending rows accumulated by
+			-- prior runs (where order cancel did not cascade-cancel queue rows)
+			-- caused the picked assignee to be a stale stage-2 user, hiding the
+			-- order from its actual current approver. EXISTS check sidesteps the
+			-- aggregation entirely.
+			OR EXISTS (
+				SELECT 1 FROM `tabBEI Approval Queue` qx
+				WHERE qx.reference_doctype = 'BEI Store Order'
+				  AND qx.reference_name = so.name
+				  AND qx.status = 'Pending'
+				  AND qx.assigned_approver = %(current_user)s
+			)
 		  )
 		GROUP BY so.name
 		ORDER BY
