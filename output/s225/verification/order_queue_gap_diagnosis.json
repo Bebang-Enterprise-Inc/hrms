@@ -1,0 +1,463 @@
+{
+  "checked_at_local": "2026-04-27T08:44:09+0800",
+  "ssm_command_id": "f881bd00-1785-41a8-89a2-a568ddf55fe4",
+  "ssm_status": "Success",
+  "verdict": [
+    {
+      "order_name": "BEI-ORD-2026-00403",
+      "exists": false,
+      "store": null,
+      "status": null,
+      "approved_at": null,
+      "scm_approved_at": null,
+      "approval_stage": null,
+      "approval_queue_pending_count": 5,
+      "approval_queue_pending_assignees": [
+        "ian@bebang.ph",
+        "test.area@bebang.ph",
+        "ian@bebang.ph",
+        "test.area@bebang.ph",
+        "test.area@bebang.ph"
+      ],
+      "approval_queue_all_statuses": [
+        "Approved",
+        "Approved",
+        "Approved",
+        "Approved",
+        "Approved",
+        "Approved",
+        "Approved",
+        "Approved",
+        "Approved",
+        "Pending",
+        "Pending",
+        "Pending",
+        "Pending",
+        "Pending"
+      ],
+      "visible_to_test_area_no_filter": false,
+      "visible_to_test_area_pending_filter": false,
+      "visible_to_test_scm_no_filter": false,
+      "visible_to_test_scm_pending_filter": false
+    },
+    {
+      "order_name": "BEI-ORD-2026-00404",
+      "exists": false,
+      "store": null,
+      "status": null,
+      "approved_at": null,
+      "scm_approved_at": null,
+      "approval_stage": null,
+      "approval_queue_pending_count": 0,
+      "approval_queue_pending_assignees": [],
+      "approval_queue_all_statuses": [
+        "Approved",
+        "Approved",
+        "Approved",
+        "Approved",
+        "Approved",
+        "Approved",
+        "Approved",
+        "Approved",
+        "Approved",
+        "Approved",
+        "Approved",
+        "Approved",
+        "Approved",
+        "Approved",
+        "Approved"
+      ],
+      "visible_to_test_area_no_filter": false,
+      "visible_to_test_area_pending_filter": false,
+      "visible_to_test_scm_no_filter": false,
+      "visible_to_test_scm_pending_filter": false
+    },
+    {
+      "order_name": "BEI-ORD-2026-00405",
+      "exists": false,
+      "store": null,
+      "status": null,
+      "approved_at": null,
+      "scm_approved_at": null,
+      "approval_stage": null,
+      "approval_queue_pending_count": 0,
+      "approval_queue_pending_assignees": [],
+      "approval_queue_all_statuses": [
+        "Approved",
+        "Approved",
+        "Approved",
+        "Approved",
+        "Approved",
+        "Approved",
+        "Approved",
+        "Approved",
+        "Approved",
+        "Approved",
+        "Approved",
+        "Approved",
+        "Approved",
+        "Approved",
+        "Approved"
+      ],
+      "visible_to_test_area_no_filter": false,
+      "visible_to_test_area_pending_filter": false,
+      "visible_to_test_scm_no_filter": false,
+      "visible_to_test_scm_pending_filter": false
+    },
+    {
+      "order_name": "BEI-ORD-2026-00406",
+      "exists": false,
+      "store": null,
+      "status": null,
+      "approved_at": null,
+      "scm_approved_at": null,
+      "approval_stage": null,
+      "approval_queue_pending_count": 0,
+      "approval_queue_pending_assignees": [],
+      "approval_queue_all_statuses": [
+        "Approved",
+        "Approved",
+        "Approved",
+        "Approved",
+        "Approved",
+        "Approved",
+        "Approved",
+        "Approved",
+        "Approved",
+        "Approved",
+        "Approved",
+        "Approved",
+        "Approved",
+        "Approved"
+      ],
+      "visible_to_test_area_no_filter": false,
+      "visible_to_test_area_pending_filter": false,
+      "visible_to_test_scm_no_filter": false,
+      "visible_to_test_scm_pending_filter": false
+    },
+    {
+      "order_name": "BEI-ORD-2026-00407",
+      "exists": false,
+      "store": null,
+      "status": null,
+      "approved_at": null,
+      "scm_approved_at": null,
+      "approval_stage": null,
+      "approval_queue_pending_count": 1,
+      "approval_queue_pending_assignees": [
+        "test.area@bebang.ph"
+      ],
+      "approval_queue_all_statuses": [
+        "Approved",
+        "Approved",
+        "Approved",
+        "Approved",
+        "Approved",
+        "Approved",
+        "Approved",
+        "Approved",
+        "Approved",
+        "Approved",
+        "Approved",
+        "Approved",
+        "Approved",
+        "Pending"
+      ],
+      "visible_to_test_area_no_filter": false,
+      "visible_to_test_area_pending_filter": false,
+      "visible_to_test_scm_no_filter": false,
+      "visible_to_test_scm_pending_filter": false
+    },
+    {
+      "order_name": "BEI-ORD-2026-00408",
+      "exists": false,
+      "store": null,
+      "status": null,
+      "approved_at": null,
+      "scm_approved_at": null,
+      "approval_stage": null,
+      "approval_queue_pending_count": 6,
+      "approval_queue_pending_assignees": [
+        "ian@bebang.ph",
+        "test.area@bebang.ph",
+        "ian@bebang.ph",
+        "test.area@bebang.ph",
+        "ian@bebang.ph",
+        "test.area@bebang.ph"
+      ],
+      "approval_queue_all_statuses": [
+        "Approved",
+        "Approved",
+        "Approved",
+        "Approved",
+        "Approved",
+        "Approved",
+        "Approved",
+        "Pending",
+        "Pending",
+        "Pending",
+        "Pending",
+        "Pending",
+        "Pending"
+      ],
+      "visible_to_test_area_no_filter": false,
+      "visible_to_test_area_pending_filter": false,
+      "visible_to_test_scm_no_filter": false,
+      "visible_to_test_scm_pending_filter": false
+    },
+    {
+      "order_name": "BEI-ORD-2026-00409",
+      "exists": false,
+      "store": null,
+      "status": null,
+      "approved_at": null,
+      "scm_approved_at": null,
+      "approval_stage": null,
+      "approval_queue_pending_count": 1,
+      "approval_queue_pending_assignees": [
+        "test.area@bebang.ph"
+      ],
+      "approval_queue_all_statuses": [
+        "Approved",
+        "Approved",
+        "Approved",
+        "Approved",
+        "Approved",
+        "Approved",
+        "Approved",
+        "Approved",
+        "Approved",
+        "Approved",
+        "Approved",
+        "Approved",
+        "Approved",
+        "Pending"
+      ],
+      "visible_to_test_area_no_filter": false,
+      "visible_to_test_area_pending_filter": false,
+      "visible_to_test_scm_no_filter": false,
+      "visible_to_test_scm_pending_filter": false
+    },
+    {
+      "order_name": "BEI-ORD-2026-00410",
+      "exists": false,
+      "store": null,
+      "status": null,
+      "approved_at": null,
+      "scm_approved_at": null,
+      "approval_stage": null,
+      "approval_queue_pending_count": 6,
+      "approval_queue_pending_assignees": [
+        "ian@bebang.ph",
+        "test.area@bebang.ph",
+        "ian@bebang.ph",
+        "test.area@bebang.ph",
+        "ian@bebang.ph",
+        "test.area@bebang.ph"
+      ],
+      "approval_queue_all_statuses": [
+        "Approved",
+        "Approved",
+        "Approved",
+        "Approved",
+        "Approved",
+        "Approved",
+        "Approved",
+        "Pending",
+        "Pending",
+        "Pending",
+        "Pending",
+        "Pending",
+        "Pending"
+      ],
+      "visible_to_test_area_no_filter": false,
+      "visible_to_test_area_pending_filter": false,
+      "visible_to_test_scm_no_filter": false,
+      "visible_to_test_scm_pending_filter": false
+    },
+    {
+      "order_name": "BEI-ORD-2026-00411",
+      "exists": false,
+      "store": null,
+      "status": null,
+      "approved_at": null,
+      "scm_approved_at": null,
+      "approval_stage": null,
+      "approval_queue_pending_count": 1,
+      "approval_queue_pending_assignees": [
+        "test.area@bebang.ph"
+      ],
+      "approval_queue_all_statuses": [
+        "Approved",
+        "Approved",
+        "Approved",
+        "Approved",
+        "Approved",
+        "Approved",
+        "Approved",
+        "Approved",
+        "Approved",
+        "Approved",
+        "Approved",
+        "Approved",
+        "Approved",
+        "Pending"
+      ],
+      "visible_to_test_area_no_filter": false,
+      "visible_to_test_area_pending_filter": false,
+      "visible_to_test_scm_no_filter": false,
+      "visible_to_test_scm_pending_filter": false
+    },
+    {
+      "order_name": "BEI-ORD-2026-00412",
+      "exists": false,
+      "store": null,
+      "status": null,
+      "approved_at": null,
+      "scm_approved_at": null,
+      "approval_stage": null,
+      "approval_queue_pending_count": 6,
+      "approval_queue_pending_assignees": [
+        "ian@bebang.ph",
+        "test.area@bebang.ph",
+        "ian@bebang.ph",
+        "test.area@bebang.ph",
+        "ian@bebang.ph",
+        "test.area@bebang.ph"
+      ],
+      "approval_queue_all_statuses": [
+        "Approved",
+        "Approved",
+        "Approved",
+        "Approved",
+        "Approved",
+        "Approved",
+        "Approved",
+        "Pending",
+        "Pending",
+        "Pending",
+        "Pending",
+        "Pending",
+        "Pending"
+      ],
+      "visible_to_test_area_no_filter": false,
+      "visible_to_test_area_pending_filter": false,
+      "visible_to_test_scm_no_filter": false,
+      "visible_to_test_scm_pending_filter": false
+    },
+    {
+      "order_name": "BEI-ORD-2026-00413",
+      "exists": false,
+      "store": null,
+      "status": null,
+      "approved_at": null,
+      "scm_approved_at": null,
+      "approval_stage": null,
+      "approval_queue_pending_count": 6,
+      "approval_queue_pending_assignees": [
+        "ian@bebang.ph",
+        "test.area@bebang.ph",
+        "ian@bebang.ph",
+        "test.area@bebang.ph",
+        "ian@bebang.ph",
+        "test.area@bebang.ph"
+      ],
+      "approval_queue_all_statuses": [
+        "Approved",
+        "Approved",
+        "Approved",
+        "Approved",
+        "Approved",
+        "Approved",
+        "Approved",
+        "Pending",
+        "Pending",
+        "Pending",
+        "Pending",
+        "Pending",
+        "Pending"
+      ],
+      "visible_to_test_area_no_filter": false,
+      "visible_to_test_area_pending_filter": false,
+      "visible_to_test_scm_no_filter": false,
+      "visible_to_test_scm_pending_filter": false
+    },
+    {
+      "order_name": "BEI-ORD-2026-00414",
+      "exists": false,
+      "store": null,
+      "status": null,
+      "approved_at": null,
+      "scm_approved_at": null,
+      "approval_stage": null,
+      "approval_queue_pending_count": 6,
+      "approval_queue_pending_assignees": [
+        "ian@bebang.ph",
+        "test.area@bebang.ph",
+        "ian@bebang.ph",
+        "test.area@bebang.ph",
+        "ian@bebang.ph",
+        "test.area@bebang.ph"
+      ],
+      "approval_queue_all_statuses": [
+        "Approved",
+        "Approved",
+        "Approved",
+        "Approved",
+        "Pending",
+        "Pending",
+        "Pending",
+        "Pending",
+        "Pending",
+        "Pending"
+      ],
+      "visible_to_test_area_no_filter": false,
+      "visible_to_test_area_pending_filter": false,
+      "visible_to_test_scm_no_filter": false,
+      "visible_to_test_scm_pending_filter": false
+    }
+  ],
+  "user_roles": {
+    "test.area@bebang.ph": [
+      "Area Manager",
+      "Area Supervisor",
+      "Employee",
+      "HR User",
+      "All",
+      "Guest",
+      "Desk User"
+    ],
+    "test.scm@bebang.ph": [
+      "Warehouse Manager",
+      "Regional Manager",
+      "Supply Chain Manager",
+      "All",
+      "Guest",
+      "Desk User"
+    ]
+  },
+  "queue_summary": {
+    "no_filter": {
+      "test.area@bebang.ph": {
+        "total": 74,
+        "names_in_suspect_list": []
+      },
+      "test.scm@bebang.ph": {
+        "total": 82,
+        "names_in_suspect_list": []
+      }
+    },
+    "pending_filter": {
+      "test.area@bebang.ph": {
+        "total": 15,
+        "names_in_suspect_list": []
+      },
+      "test.scm@bebang.ph": {
+        "total": 23,
+        "names_in_suspect_list": []
+      }
+    }
+  },
+  "full_data": null,
+  "raw_stderr": ""
+}

@@ -1,0 +1,45 @@
+{
+  "phase": "4",
+  "status": "complete",
+  "next_phase": "4.5 (waiting on Sam merge + deploy of PR #689)",
+  "blocker": "awaiting_sam_merge_and_deploy_pr_689",
+  "timestamp": "2026-04-27T02:30:00+08:00",
+  "evidence_paths": [
+    "output/s225/verification/canonical_preflight.txt",
+    "output/s225/verification/baseline.json",
+    "output/s225/verification/s224_deploy_sha_check.json",
+    "output/s225/verification/s224_pattern_b_validation.json",
+    "output/s225/verification/s224_pattern_c_validation.json",
+    "output/s225/verification/s226_deploy_check.json",
+    "output/s225/verification/phase_1_decision.md",
+    "output/s225/verification/phase_1_decision_v2.md",
+    "output/s225/verification/duplicate_warehouse_audit.json",
+    "output/s225/verification/duplicate_warehouse_audit.md",
+    "output/s225/verification/sam_consolidation_pr.txt",
+    "output/s225/verification/sam_consolidation_approval.md",
+    "output/s225/verification/dup_consolidation_applied.json",
+    "output/s225/verification/canonical_postcheck_phase3.txt",
+    "output/s225/verification/batch_tracking_probe.json",
+    "output/s225/verification/pattern_a_lock_test.json"
+  ],
+  "branch_head_sha": "f9a834137",
+  "phase_3_summary": {
+    "clusters_applied": 2,
+    "stock_entries": ["MAT-STE-2026-01038"],
+    "warehouses_disabled": [
+      "3MD LOGISTICS – CAMANGYANAN - BKI",
+      "ROYAL COLD STORAGE – TAYTAY (RCS) - BKI"
+    ],
+    "total_units_migrated": 32627.0,
+    "total_skus_migrated": 79,
+    "canonical_postcheck_violations": 0
+  },
+  "phase_4_summary": {
+    "diff_files": ["hrms/api/warehouse.py"],
+    "for_update_in_create_stock_transfer": true,
+    "tabBatch_lock_for_audit_w1": true,
+    "sentry_context_preserved": true,
+    "batch_tracked_items_in_scope": 17,
+    "smoke_probe_status": "DEFERRED_PRE_DEPLOY"
+  }
+}

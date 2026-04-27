@@ -1,0 +1,11 @@
+{
+  "hrms_origin_production": "b6355e35c10edef2828afb3a283386874a7e728e",
+  "bei_tasks_origin_main": "31fa4707498c4110f9e5a9b8fc740137d9e38b85",
+  "captured_at": "2026-04-27T00:00:31+08:00",
+  "expected_s224_pr": 687,
+  "s224_pr_state": "MERGED",
+  "s224_merge_sha": "b6355e35c10edef2828afb3a283386874a7e728e",
+  "s224_merged_at": "2026-04-26T12:42:54Z",
+  "preflight_violations": 0,
+  "stores_checked": 49
+}

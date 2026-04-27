@@ -1,0 +1,9 @@
+CommandId: b0d6af8f-ba36-443f-8821-92e335b4edab
+======================================================================
+CANONICAL STRUCTURE VERIFICATION
+Stores checked: 49
+Violations: 0
+======================================================================
+
+[RESULT] ALL CANONICAL — no action required
+

@@ -1,0 +1,1937 @@
+{
+  "generated_at_local": "2026-04-27T09:55:35+0800",
+  "total_warehouses_scanned": 331,
+  "total_clusters_with_duplicates": 2,
+  "intercompany_clusters": 0,
+  "manual_review_required": 0,
+  "auto_apply_eligible": 2,
+  "total_stranded_skus": 79,
+  "total_stranded_stock_units": 32627.0,
+  "clusters": [
+    {
+      "cluster_id": "cluster-3md-logistics-camangyanan-bki",
+      "normalized_key": "3md logistics - camangyanan - bki",
+      "winner": {
+        "name": "3MD LOGISTICS - CAMANGYANAN - BKI",
+        "warehouse_name": "3MD LOGISTICS - CAMANGYANAN",
+        "company": "BEBANG KITCHEN INC.",
+        "disabled": 0,
+        "is_group": 0,
+        "total_stock": 797874.0,
+        "sku_nonzero": 83,
+        "is_strict_canonical_form": true
+      },
+      "losers": [
+        {
+          "name": "3MD LOGISTICS \u2013 CAMANGYANAN - BKI",
+          "warehouse_name": "3MD LOGISTICS \u2013 CAMANGYANAN",
+          "company": "BEBANG KITCHEN INC.",
+          "disabled": 0,
+          "is_group": 0,
+          "total_stock": 32627.0,
+          "sku_nonzero": 79,
+          "items": [
+            {
+              "item_code": "A058",
+              "actual_qty": 434.0,
+              "stock_uom": "PACK"
+            },
+            {
+              "item_code": "A059",
+              "actual_qty": 550.0,
+              "stock_uom": "PACK"
+            },
+            {
+              "item_code": "A060",
+              "actual_qty": 354.0,
+              "stock_uom": "PACK"
+            },
+            {
+              "item_code": "BEB-CCF",
+              "actual_qty": 40.0,
+              "stock_uom": "PACK"
+            },
+            {
+              "item_code": "CM30",
+              "actual_qty": 54.0,
+              "stock_uom": "BUNDLE"
+            },
+            {
+              "item_code": "CM31",
+              "actual_qty": 53.0,
+              "stock_uom": "BUNDLE"
+            },
+            {
+              "item_code": "CM32",
+              "actual_qty": 47.0,
+              "stock_uom": "BUNDLE"
+            },
+            {
+              "item_code": "CM33",
+              "actual_qty": 75.0,
+              "stock_uom": "BUNDLE"
+            },
+            {
+              "item_code": "CM34",
+              "actual_qty": 24.0,
+              "stock_uom": "BUNDLE"
+            },
+            {
+              "item_code": "CM37",
+              "actual_qty": 57.0,
+              "stock_uom": "BUNDLE"
+            },
+            {
+              "item_code": "CM38",
+              "actual_qty": 573.0,
+              "stock_uom": "BUN"
+            },
+            {
+              "item_code": "CM39",
+              "actual_qty": 419.0,
+              "stock_uom": "BUN"
+            },
+            {
+              "item_code": "CS007",
+              "actual_qty": 7.0,
+              "stock_uom": "PIECE"
+            },
+            {
+              "item_code": "CS008",
+              "actual_qty": 4.0,
+              "stock_uom": "PIECE"
+            },
+            {
+              "item_code": "CS012",
+              "actual_qty": 48.0,
+              "stock_uom": "BUNDLE"
+            },
+            {
+              "item_code": "CS012-A",
+              "actual_qty": 5.0,
+              "stock_uom": "BUNDLE"
+            },
+            {
+              "item_code": "CS013",
+              "actual_qty": 3000.0,
+              "stock_uom": "PIECE"
+            },
+            {
+              "item_code": "CS014",
+              "actual_qty": 124.0,
+              "stock_uom": "PIECE"
+            },
+            {
+              "item_code": "CS016",
+              "actual_qty": 228.0,
+              "stock_uom": "PIECE"
+            },
+            {
+              "item_code": "FG001",
+              "actual_qty": 12194.0,
+              "stock_uom": "PIECE"
+            },
+            {
+              "item_code": "FG002-A",
+              "actual_qty": 1244.0,
+              "stock_uom": "KG"
+            },
+            {
+              "item_code": "FG003",
+              "actual_qty": 387.0,
+              "stock_uom": "KG"
+            },
+            {
+              "item_code": "FG004",
+              "actual_qty": 648.0,
+              "stock_uom": "KG"
+            },
+            {
+              "item_code": "FG005",
+              "actual_qty": 131.0,
+              "stock_uom": "KG"
+            },
+            {
+              "item_code": "FG006",
+              "actual_qty": 100.0,
+              "stock_uom": "KG"
+            },
+            {
+              "item_code": "FG007",
+              "actual_qty": 92.0,
+              "stock_uom": "KG"
+            },
+            {
+              "item_code": "FG009",
+              "actual_qty": 1043.0,
+              "stock_uom": "KG"
+            },
+            {
+              "item_code": "FG012",
+              "actual_qty": 568.0,
+              "stock_uom": "KG"
+            },
+            {
+              "item_code": "FG013",
+              "actual_qty": 892.0,
+              "stock_uom": "KG"
+            },
+            {
+              "item_code": "FG014",
+              "actual_qty": 17.0,
+              "stock_uom": "KG"
+            },
+            {
+              "item_code": "FG015",
+              "actual_qty": 9.0,
+              "stock_uom": "KG"
+            },
+            {
+              "item_code": "FG015D",
+              "actual_qty": 166.0,
+              "stock_uom": "PACK"
+            },
+            {
+              "item_code": "KL001",
+              "actual_qty": 35.0,
+              "stock_uom": "GAL"
+            },
+            {
+              "item_code": "KL002",
+              "actual_qty": 22.0,
+              "stock_uom": "GAL"
+            },
+            {
+              "item_code": "KL003",
+              "actual_qty": 63.0,
+              "stock_uom": "GAL"
+            },
+            {
+              "item_code": "KL004",
+              "actual_qty": 11.0,
+              "stock_uom": "GAL"
+            },
+            {
+              "item_code": "M003",
+              "actual_qty": 45.0,
+              "stock_uom": "PACKS"
+            },
+            {
+              "item_code": "M006",
+              "actual_qty": 5.0,
+              "stock_uom": "PACKS"
+            },
+            {
+              "item_code": "OS001",
+              "actual_qty": 36.0,
+              "stock_uom": "PIECE"
+            },
+            {
+              "item_code": "OS002",
+              "actual_qty": 25.0,
+              "stock_uom": "PIECE"
+            },
+            {
+              "item_code": "OS006",
+              "actual_qty": 169.0,
+              "stock_uom": "PIECE"
+            },
+            {
+              "item_code": "OS008",
+              "actual_qty": 19.0,
+              "stock_uom": "PIECE"
+            },
+            {
+              "item_code": "OS009",
+              "actual_qty": 9.0,
+              "stock_uom": "PIECE"
+            },
+            {
+              "item_code": "OS026",
+              "actual_qty": 83.0,
+              "stock_uom": "BOX"
+            },
+            {
+              "item_code": "PM001",
+              "actual_qty": 64.0,
+              "stock_uom": "PIECE"
+            },
+            {
+              "item_code": "PM002",
+              "actual_qty": 65.0,
+              "stock_uom": "PIECE"
+            },
+            {
+              "item_code": "PM003",
+              "actual_qty": 50.0,
+              "stock_uom": "PIECE"
+            },
+            {
+              "item_code": "PM004",
+              "actual_qty": 87.0,
+              "stock_uom": "PIECE"
+            },
+            {
+              "item_code": "PM005",
+              "actual_qty": 70.0,
+              "stock_uom": "PIECE"
+            },
+            {
+              "item_code": "PM006-1",
+              "actual_qty": 47.0,
+              "stock_uom": "BOX"
+            },
+            {
+              "item_code": "PM007",
+              "actual_qty": 1072.0,
+              "stock_uom": "BUNDLE"
+            },
+            {
+              "item_code": "PM008",
+              "actual_qty": 339.0,
+              "stock_uom": "BUNDLE"
+            },
+            {
+              "item_code": "PM009",
+              "actual_qty": 223.0,
+              "stock_uom": "BUNDLE"
+            },
+            {
+              "item_code": "PM010",
+              "actual_qty": 32.0,
+              "stock_uom": "BUNDLE"
+            },
+            {
+              "item_code": "PM010-A",
+              "actual_qty": 16.0,
+              "stock_uom": "BUNDLE"
+            },
+            {
+              "item_code": "PM012",
+              "actual_qty": 19.0,
+              "stock_uom": "BUNDLE"
+            },
+            {
+              "item_code": "PM013",
+              "actual_qty": 20.0,
+              "stock_uom": "BUNDLE"
+            },
+            {
+              "item_code": "PM014",
+              "actual_qty": 305.0,
+              "stock_uom": "BOX"
+            },
+            {
+              "item_code": "PM016",
+              "actual_qty": 552.0,
+              "stock_uom": "BOX"
+            },
+            {
+              "item_code": "PM017",
+              "actual_qty": 384.0,
+              "stock_uom": "ROLL"
+            },
+            {
+              "item_code": "PM018",
+              "actual_qty": 233.0,
+              "stock_uom": "BUNDLE"
+            },
+            {
+              "item_code": "RM0003",
+              "actual_qty": 74.0,
+              "stock_uom": "BOX"
+            },
+            {
+              "item_code": "RM001",
+              "actual_qty": 57.0,
+              "stock_uom": "PACK"
+            },
+            {
+              "item_code": "RM002",
+              "actual_qty": 45.0,
+              "stock_uom": "PACK"
+            },
+            {
+              "item_code": "RM004-1",
+              "actual_qty": 27.0,
+              "stock_uom": "CAN"
+            },
+            {
+              "item_code": "RM005-1",
+              "actual_qty": 90.0,
+              "stock_uom": "BOX"
+            },
+            {
+              "item_code": "RM006-C",
+              "actual_qty": 270.0,
+              "stock_uom": "CAN"
+            },
+            {
+              "item_code": "RM007",
+              "actual_qty": 11.0,
+              "stock_uom": "JAR"
+            },
+            {
+              "item_code": "RM008-A",
+              "actual_qty": 28.0,
+              "stock_uom": "CAN"
+            },
+            {
+              "item_code": "RM011",
+              "actual_qty": 155.0,
+              "stock_uom": "Grams"
+            },
+            {
+              "item_code": "RM012-C",
+              "actual_qty": 64.0,
+              "stock_uom": "BOX"
+            },
+            {
+              "item_code": "RM013",
+              "actual_qty": 2002.0,
+              "stock_uom": "PACK"
+            },
+            {
+              "item_code": "RM014",
+              "actual_qty": 479.0,
+              "stock_uom": "PACK"
+            },
+            {
+              "item_code": "RM015",
+              "actual_qty": 93.0,
+              "stock_uom": "BOTTLE"
+            },
+            {
+              "item_code": "RM016",
+              "actual_qty": 11.0,
+              "stock_uom": "BOTTLE"
+            },
+            {
+              "item_code": "RM017",
+              "actual_qty": 1084.0,
+              "stock_uom": "KG"
+            },
+            {
+              "item_code": "RM018",
+              "actual_qty": 333.0,
+              "stock_uom": "KG"
+            },
+            {
+              "item_code": "RM020",
+              "actual_qty": 33.0,
+              "stock_uom": "PACK"
+            },
+            {
+              "item_code": "RM021",
+              "actual_qty": 84.0,
+              "stock_uom": "PACK"
+            }
+          ],
+          "open_mrs_count": 0,
+          "draft_ses_count": 0,
+          "open_mrs_sample": [],
+          "draft_ses_sample": [],
+          "is_strict_canonical_form": false
+        }
+      ],
+      "intercompany": false,
+      "manual_review": false,
+      "manual_review_reason": [],
+      "members_count": 2
+    },
+    {
+      "cluster_id": "cluster-royal-cold-storage-taytay-rcs-bki",
+      "normalized_key": "royal cold storage - taytay (rcs) - bki",
+      "winner": {
+        "name": "ROYAL COLD STORAGE - TAYTAY (RCS) - BKI",
+        "warehouse_name": "ROYAL COLD STORAGE - TAYTAY (RCS)",
+        "company": "BEBANG KITCHEN INC.",
+        "disabled": 0,
+        "is_group": 0,
+        "total_stock": 1873.0,
+        "sku_nonzero": 1,
+        "is_strict_canonical_form": true
+      },
+      "losers": [
+        {
+          "name": "ROYAL COLD STORAGE \u2013 TAYTAY (RCS) - BKI",
+          "warehouse_name": "ROYAL COLD STORAGE \u2013 TAYTAY (RCS)",
+          "company": "BEBANG KITCHEN INC.",
+          "disabled": 0,
+          "is_group": 0,
+          "total_stock": 0.0,
+          "sku_nonzero": 0,
+          "items": [],
+          "open_mrs_count": 0,
+          "draft_ses_count": 0,
+          "open_mrs_sample": [],
+          "draft_ses_sample": [],
+          "is_strict_canonical_form": false
+        }
+      ],
+      "intercompany": false,
+      "manual_review": false,
+      "manual_review_reason": [],
+      "members_count": 2
+    }
+  ],
+  "warehouse_name_field_collisions_extra": [
+    {
+      "field": "warehouse_name",
+      "normalized_key": "all warehouses",
+      "members": [
+        {
+          "name": "ALL WAREHOUSES - AFT",
+          "warehouse_name": "ALL WAREHOUSES",
+          "company": "AYALA FAIRVIEW TERRACES - BEBANG FT INC."
+        },
+        {
+          "name": "ALL WAREHOUSES - AMM",
+          "warehouse_name": "ALL WAREHOUSES",
+          "company": "AYALA MARKET MARKET - BEBANG MARKET MARKET INC."
+        },
+        {
+          "name": "ALL WAREHOUSES - ARGW",
+          "warehouse_name": "ALL WAREHOUSES",
+          "company": "ARANETA GATEWAY - TUNGSTEN CAPITAL HOLDINGS OPC"
+        },
+        {
+          "name": "ALL WAREHOUSES - AYEVO",
+          "warehouse_name": "ALL WAREHOUSES",
+          "company": "AYALA EVO CITY - BEBANG MEGA INC."
+        },
+        {
+          "name": "ALL WAREHOUSES - AYSOL",
+          "warehouse_name": "ALL WAREHOUSES",
+          "company": "AYALA SOLENAD - HFFM SOLENAD FOOD SERVICES INC."
+        },
+        {
+          "name": "ALL WAREHOUSES - AYVER",
+          "warehouse_name": "ALL WAREHOUSES",
+          "company": "AYALA VERMOSA - BEBANG MEGA INC."
+        },
+        {
+          "name": "ALL WAREHOUSES - BAG",
+          "warehouse_name": "ALL WAREHOUSES",
+          "company": "TUNGSTEN CAPITAL HOLDINGS OPC"
+        },
+        {
+          "name": "ALL WAREHOUSES - BDV",
+          "warehouse_name": "ALL WAREHOUSES",
+          "company": "TAJ FOOD CORP."
+        },
+        {
+          "name": "ALL WAREHOUSES - BFC",
+          "warehouse_name": "ALL WAREHOUSES",
+          "company": "BEBANG FRANCHISE CORP."
+        },
+        {
+          "name": "ALL WAREHOUSES - BFH",
+          "warehouse_name": "ALL WAREHOUSES",
+          "company": "BF HOMES - BEBANG BF HOMES INC."
+        },
+        {
+          "name": "ALL WAREHOUSES - BMI2",
+          "warehouse_name": "ALL WAREHOUSES",
+          "company": "BEBANG MEGA INC."
+        },
+        {
+          "name": "ALL WAREHOUSES - CTTM",
+          "warehouse_name": "ALL WAREHOUSES",
+          "company": "CTTM TOMAS MORATO - B CUBED VENTURES CORP."
+        },
+        {
+          "name": "ALL WAREHOUSES - DVCAL",
+          "warehouse_name": "ALL WAREHOUSES",
+          "company": "D'VERDE CALAMBA - TAJ FOOD CORP."
+        },
+        {
+          "name": "ALL WAREHOUSES - EGC",
+          "warehouse_name": "ALL WAREHOUSES",
+          "company": "EVER COMMONWEALTH - DLS DESSERT CRAFT INC."
+        },
+        {
+          "name": "ALL WAREHOUSES - ESM",
+          "warehouse_name": "ALL WAREHOUSES",
+          "company": "ORTIGAS ESTANCIA - BB ESTANCIA FOOD CORP."
+        },
+        {
+          "name": "ALL WAREHOUSES - FMA",
+          "warehouse_name": "ALL WAREHOUSES",
+          "company": "FESTIVAL MALL ALABANG - BEBANG FESTIVAL INC."
+        },
+        {
+          "name": "ALL WAREHOUSES - GHO",
+          "warehouse_name": "ALL WAREHOUSES",
+          "company": "ORTIGAS GREENHILLS - BEIFRANCHISE FOOD OPC"
+        },
+        {
+          "name": "ALL WAREHOUSES - L77",
+          "warehouse_name": "ALL WAREHOUSES",
+          "company": "LEGACY77 FOOD CORP."
+        },
+        {
+          "name": "ALL WAREHOUSES - LCT",
+          "warehouse_name": "ALL WAREHOUSES",
+          "company": "LUCKY CHINATOWN - BEBANG LCT INC."
+        },
+        {
+          "name": "ALL WAREHOUSES - MPD",
+          "warehouse_name": "ALL WAREHOUSES",
+          "company": "MEGAWORLD PASEO CENTER - BEBANG PASEO INC."
+        },
+        {
+          "name": "ALL WAREHOUSES - NAIA",
+          "warehouse_name": "ALL WAREHOUSES",
+          "company": "NAIA T3 - HALO-HALO TERMINAL FOOD CORP."
+        },
+        {
+          "name": "ALL WAREHOUSES - PTX",
+          "warehouse_name": "ALL WAREHOUSES",
+          "company": "MEGAWIDE PITX - BEBANG PITX INC."
+        },
+        {
+          "name": "ALL WAREHOUSES - ROBDA",
+          "warehouse_name": "ALL WAREHOUSES",
+          "company": "ROBINSONS PLACE DASMARINAS - FREEZE DELIGHT INC."
+        },
+        {
+          "name": "ALL WAREHOUSES - ROBGS",
+          "warehouse_name": "ALL WAREHOUSES",
+          "company": "ROBINSONS GALLERIA SOUTH - TUNGSTEN CAPITAL HOLDINGS OPC"
+        },
+        {
+          "name": "ALL WAREHOUSES - ROBGT",
+          "warehouse_name": "ALL WAREHOUSES",
+          "company": "ROBINSONS GENERAL TRIAS - BEBANG MEGA INC."
+        },
+        {
+          "name": "ALL WAREHOUSES - ROBIM",
+          "warehouse_name": "ALL WAREHOUSES",
+          "company": "ROBINSONS IMUS - BEBANG MEGA INC."
+        },
+        {
+          "name": "ALL WAREHOUSES - SJDM",
+          "warehouse_name": "ALL WAREHOUSES",
+          "company": "SM SAN JOSE DEL MONTE - JL TRADE OPC"
+        },
+        {
+          "name": "ALL WAREHOUSES - SLGM",
+          "warehouse_name": "ALL WAREHOUSES",
+          "company": "STA. LUCIA EAST GRAND MALL - BEBANG SM MARIKINA INC."
+        },
+        {
+          "name": "ALL WAREHOUSES - SMBIC",
+          "warehouse_name": "ALL WAREHOUSES",
+          "company": "SM BICUTAN - BEBANG SM BICUTAN INC."
+        },
+        {
+          "name": "ALL WAREHOUSES - SMCAL",
+          "warehouse_name": "ALL WAREHOUSES",
+          "company": "SM CALOOCAN - TAJ FOOD CORP."
+        },
+        {
+          "name": "ALL WAREHOUSES - SMCLK",
+          "warehouse_name": "ALL WAREHOUSES",
+          "company": "SM CLARK - RED TALDAWA FOODS OPC"
+        },
+        {
+          "name": "ALL WAREHOUSES - SMEO",
+          "warehouse_name": "ALL WAREHOUSES",
+          "company": "SM EAST ORTIGAS - BEBANG SMEO INC."
+        },
+        {
+          "name": "ALL WAREHOUSES - SMGC",
+          "warehouse_name": "ALL WAREHOUSES",
+          "company": "SM GRAND CENTRAL - BEBANG GRAND CENTRAL INC."
+        },
+        {
+          "name": "ALL WAREHOUSES - SMK",
+          "warehouse_name": "ALL WAREHOUSES",
+          "company": "SM MARIKINA - BEBANG SM MARIKINA INC."
+        },
+        {
+          "name": "ALL WAREHOUSES - SMMAR",
+          "warehouse_name": "ALL WAREHOUSES",
+          "company": "SM MARILAO - BEBANG MARILAO INC."
+        },
+        {
+          "name": "ALL WAREHOUSES - SMMOA",
+          "warehouse_name": "ALL WAREHOUSES",
+          "company": "SM MALL OF ASIA - BEBANG SMOA INC."
+        },
+        {
+          "name": "ALL WAREHOUSES - SMNE",
+          "warehouse_name": "ALL WAREHOUSES",
+          "company": "SM NORTH EDSA - BEBANG NORTH EDSA INC."
+        },
+        {
+          "name": "ALL WAREHOUSES - SMPUL",
+          "warehouse_name": "ALL WAREHOUSES",
+          "company": "SM PULILAN - BEBANG SMM INC."
+        },
+        {
+          "name": "ALL WAREHOUSES - SMSDN",
+          "warehouse_name": "ALL WAREHOUSES",
+          "company": "SM SANGANDAAN - TUNGSTEN CAPITAL HOLDINGS OPC"
+        },
+        {
+          "name": "ALL WAREHOUSES - SMSTR",
+          "warehouse_name": "ALL WAREHOUSES",
+          "company": "SM STA. ROSA - SWEET HARMONY FOOD CORP."
+        },
+        {
+          "name": "ALL WAREHOUSES - SMTAY",
+          "warehouse_name": "ALL WAREHOUSES",
+          "company": "SM TAYTAY - DAY ONES FOOD AND DRINK ESTABLISHMENTS CORP."
+        },
+        {
+          "name": "ALL WAREHOUSES - SMTZ",
+          "warehouse_name": "ALL WAREHOUSES",
+          "company": "SM TANZA - BEBANG MEGA INC."
+        },
+        {
+          "name": "ALL WAREHOUSES - SMV",
+          "warehouse_name": "ALL WAREHOUSES",
+          "company": "SM VALENZUELA - BEBANG SMV INC."
+        },
+        {
+          "name": "ALL WAREHOUSES - TGR",
+          "warehouse_name": "ALL WAREHOUSES",
+          "company": "THE GRID ROCKWELL - TASTECARTEL CORP."
+        },
+        {
+          "name": "ALL WAREHOUSES - TTA",
+          "warehouse_name": "ALL WAREHOUSES",
+          "company": "THE TERMINAL - BEBANG STARMALL ALABANG INC."
+        },
+        {
+          "name": "ALL WAREHOUSES - UMBGC",
+          "warehouse_name": "ALL WAREHOUSES",
+          "company": "UP TOWN MALL BGC - DMD HOLDINGS INC."
+        },
+        {
+          "name": "ALL WAREHOUSES - UPTC",
+          "warehouse_name": "ALL WAREHOUSES",
+          "company": "AYALA UP TOWN CENTER - BEBANG UP TOWN CENTER INC."
+        },
+        {
+          "name": "ALL WAREHOUSES - VGC",
+          "warehouse_name": "ALL WAREHOUSES",
+          "company": "MEGAWORLD VENICE GRAND CANAL - BEBANG VENICE GRAND CANAL INC."
+        },
+        {
+          "name": "ALL WAREHOUSES - VMTAG",
+          "warehouse_name": "ALL WAREHOUSES",
+          "company": "VISTA MALL TAGUIG - TRICERN FOOD CORP."
+        },
+        {
+          "name": "ALL WAREHOUSES - XMM",
+          "warehouse_name": "ALL WAREHOUSES",
+          "company": "XENTROMALL MONTALBAN - PERPETUAL FOOD CORP."
+        }
+      ]
+    },
+    {
+      "field": "warehouse_name",
+      "normalized_key": "finished goods",
+      "members": [
+        {
+          "name": "FINISHED GOODS - AFT",
+          "warehouse_name": "FINISHED GOODS",
+          "company": "AYALA FAIRVIEW TERRACES - BEBANG FT INC."
+        },
+        {
+          "name": "FINISHED GOODS - AMM",
+          "warehouse_name": "FINISHED GOODS",
+          "company": "AYALA MARKET MARKET - BEBANG MARKET MARKET INC."
+        },
+        {
+          "name": "FINISHED GOODS - ARGW",
+          "warehouse_name": "FINISHED GOODS",
+          "company": "ARANETA GATEWAY - TUNGSTEN CAPITAL HOLDINGS OPC"
+        },
+        {
+          "name": "FINISHED GOODS - AYEVO",
+          "warehouse_name": "FINISHED GOODS",
+          "company": "AYALA EVO CITY - BEBANG MEGA INC."
+        },
+        {
+          "name": "FINISHED GOODS - AYSOL",
+          "warehouse_name": "FINISHED GOODS",
+          "company": "AYALA SOLENAD - HFFM SOLENAD FOOD SERVICES INC."
+        },
+        {
+          "name": "FINISHED GOODS - AYVER",
+          "warehouse_name": "FINISHED GOODS",
+          "company": "AYALA VERMOSA - BEBANG MEGA INC."
+        },
+        {
+          "name": "FINISHED GOODS - BAG",
+          "warehouse_name": "FINISHED GOODS",
+          "company": "TUNGSTEN CAPITAL HOLDINGS OPC"
+        },
+        {
+          "name": "FINISHED GOODS - BDV",
+          "warehouse_name": "FINISHED GOODS",
+          "company": "TAJ FOOD CORP."
+        },
+        {
+          "name": "FINISHED GOODS - BFC",
+          "warehouse_name": "FINISHED GOODS",
+          "company": "BEBANG FRANCHISE CORP."
+        },
+        {
+          "name": "FINISHED GOODS - BFH",
+          "warehouse_name": "FINISHED GOODS",
+          "company": "BF HOMES - BEBANG BF HOMES INC."
+        },
+        {
+          "name": "FINISHED GOODS - BMI2",
+          "warehouse_name": "FINISHED GOODS",
+          "company": "BEBANG MEGA INC."
+        },
+        {
+          "name": "FINISHED GOODS - CTTM",
+          "warehouse_name": "FINISHED GOODS",
+          "company": "CTTM TOMAS MORATO - B CUBED VENTURES CORP."
+        },
+        {
+          "name": "FINISHED GOODS - DVCAL",
+          "warehouse_name": "FINISHED GOODS",
+          "company": "D'VERDE CALAMBA - TAJ FOOD CORP."
+        },
+        {
+          "name": "FINISHED GOODS - EGC",
+          "warehouse_name": "FINISHED GOODS",
+          "company": "EVER COMMONWEALTH - DLS DESSERT CRAFT INC."
+        },
+        {
+          "name": "FINISHED GOODS - ESM",
+          "warehouse_name": "FINISHED GOODS",
+          "company": "ORTIGAS ESTANCIA - BB ESTANCIA FOOD CORP."
+        },
+        {
+          "name": "FINISHED GOODS - FMA",
+          "warehouse_name": "FINISHED GOODS",
+          "company": "FESTIVAL MALL ALABANG - BEBANG FESTIVAL INC."
+        },
+        {
+          "name": "FINISHED GOODS - GHO",
+          "warehouse_name": "FINISHED GOODS",
+          "company": "ORTIGAS GREENHILLS - BEIFRANCHISE FOOD OPC"
+        },
+        {
+          "name": "FINISHED GOODS - L77",
+          "warehouse_name": "FINISHED GOODS",
+          "company": "LEGACY77 FOOD CORP."
+        },
+        {
+          "name": "FINISHED GOODS - LCT",
+          "warehouse_name": "FINISHED GOODS",
+          "company": "LUCKY CHINATOWN - BEBANG LCT INC."
+        },
+        {
+          "name": "FINISHED GOODS - MPD",
+          "warehouse_name": "FINISHED GOODS",
+          "company": "MEGAWORLD PASEO CENTER - BEBANG PASEO INC."
+        },
+        {
+          "name": "FINISHED GOODS - NAIA",
+          "warehouse_name": "FINISHED GOODS",
+          "company": "NAIA T3 - HALO-HALO TERMINAL FOOD CORP."
+        },
+        {
+          "name": "FINISHED GOODS - PTX",
+          "warehouse_name": "FINISHED GOODS",
+          "company": "MEGAWIDE PITX - BEBANG PITX INC."
+        },
+        {
+          "name": "FINISHED GOODS - ROBDA",
+          "warehouse_name": "FINISHED GOODS",
+          "company": "ROBINSONS PLACE DASMARINAS - FREEZE DELIGHT INC."
+        },
+        {
+          "name": "FINISHED GOODS - ROBGS",
+          "warehouse_name": "FINISHED GOODS",
+          "company": "ROBINSONS GALLERIA SOUTH - TUNGSTEN CAPITAL HOLDINGS OPC"
+        },
+        {
+          "name": "FINISHED GOODS - ROBGT",
+          "warehouse_name": "FINISHED GOODS",
+          "company": "ROBINSONS GENERAL TRIAS - BEBANG MEGA INC."
+        },
+        {
+          "name": "FINISHED GOODS - ROBIM",
+          "warehouse_name": "FINISHED GOODS",
+          "company": "ROBINSONS IMUS - BEBANG MEGA INC."
+        },
+        {
+          "name": "FINISHED GOODS - SJDM",
+          "warehouse_name": "FINISHED GOODS",
+          "company": "SM SAN JOSE DEL MONTE - JL TRADE OPC"
+        },
+        {
+          "name": "FINISHED GOODS - SLGM",
+          "warehouse_name": "FINISHED GOODS",
+          "company": "STA. LUCIA EAST GRAND MALL - BEBANG SM MARIKINA INC."
+        },
+        {
+          "name": "FINISHED GOODS - SMBIC",
+          "warehouse_name": "FINISHED GOODS",
+          "company": "SM BICUTAN - BEBANG SM BICUTAN INC."
+        },
+        {
+          "name": "FINISHED GOODS - SMCAL",
+          "warehouse_name": "FINISHED GOODS",
+          "company": "SM CALOOCAN - TAJ FOOD CORP."
+        },
+        {
+          "name": "FINISHED GOODS - SMCLK",
+          "warehouse_name": "FINISHED GOODS",
+          "company": "SM CLARK - RED TALDAWA FOODS OPC"
+        },
+        {
+          "name": "FINISHED GOODS - SMEO",
+          "warehouse_name": "FINISHED GOODS",
+          "company": "SM EAST ORTIGAS - BEBANG SMEO INC."
+        },
+        {
+          "name": "FINISHED GOODS - SMGC",
+          "warehouse_name": "FINISHED GOODS",
+          "company": "SM GRAND CENTRAL - BEBANG GRAND CENTRAL INC."
+        },
+        {
+          "name": "FINISHED GOODS - SMK",
+          "warehouse_name": "FINISHED GOODS",
+          "company": "SM MARIKINA - BEBANG SM MARIKINA INC."
+        },
+        {
+          "name": "FINISHED GOODS - SMMAR",
+          "warehouse_name": "FINISHED GOODS",
+          "company": "SM MARILAO - BEBANG MARILAO INC."
+        },
+        {
+          "name": "FINISHED GOODS - SMMOA",
+          "warehouse_name": "FINISHED GOODS",
+          "company": "SM MALL OF ASIA - BEBANG SMOA INC."
+        },
+        {
+          "name": "FINISHED GOODS - SMNE",
+          "warehouse_name": "FINISHED GOODS",
+          "company": "SM NORTH EDSA - BEBANG NORTH EDSA INC."
+        },
+        {
+          "name": "FINISHED GOODS - SMPUL",
+          "warehouse_name": "FINISHED GOODS",
+          "company": "SM PULILAN - BEBANG SMM INC."
+        },
+        {
+          "name": "FINISHED GOODS - SMSDN",
+          "warehouse_name": "FINISHED GOODS",
+          "company": "SM SANGANDAAN - TUNGSTEN CAPITAL HOLDINGS OPC"
+        },
+        {
+          "name": "FINISHED GOODS - SMSTR",
+          "warehouse_name": "FINISHED GOODS",
+          "company": "SM STA. ROSA - SWEET HARMONY FOOD CORP."
+        },
+        {
+          "name": "FINISHED GOODS - SMTAY",
+          "warehouse_name": "FINISHED GOODS",
+          "company": "SM TAYTAY - DAY ONES FOOD AND DRINK ESTABLISHMENTS CORP."
+        },
+        {
+          "name": "FINISHED GOODS - SMTZ",
+          "warehouse_name": "FINISHED GOODS",
+          "company": "SM TANZA - BEBANG MEGA INC."
+        },
+        {
+          "name": "FINISHED GOODS - SMV",
+          "warehouse_name": "FINISHED GOODS",
+          "company": "SM VALENZUELA - BEBANG SMV INC."
+        },
+        {
+          "name": "FINISHED GOODS - TGR",
+          "warehouse_name": "FINISHED GOODS",
+          "company": "THE GRID ROCKWELL - TASTECARTEL CORP."
+        },
+        {
+          "name": "FINISHED GOODS - TTA",
+          "warehouse_name": "FINISHED GOODS",
+          "company": "THE TERMINAL - BEBANG STARMALL ALABANG INC."
+        },
+        {
+          "name": "FINISHED GOODS - UMBGC",
+          "warehouse_name": "FINISHED GOODS",
+          "company": "UP TOWN MALL BGC - DMD HOLDINGS INC."
+        },
+        {
+          "name": "FINISHED GOODS - UPTC",
+          "warehouse_name": "FINISHED GOODS",
+          "company": "AYALA UP TOWN CENTER - BEBANG UP TOWN CENTER INC."
+        },
+        {
+          "name": "FINISHED GOODS - VGC",
+          "warehouse_name": "FINISHED GOODS",
+          "company": "MEGAWORLD VENICE GRAND CANAL - BEBANG VENICE GRAND CANAL INC."
+        },
+        {
+          "name": "FINISHED GOODS - VMTAG",
+          "warehouse_name": "FINISHED GOODS",
+          "company": "VISTA MALL TAGUIG - TRICERN FOOD CORP."
+        },
+        {
+          "name": "FINISHED GOODS - XMM",
+          "warehouse_name": "FINISHED GOODS",
+          "company": "XENTROMALL MONTALBAN - PERPETUAL FOOD CORP."
+        }
+      ]
+    },
+    {
+      "field": "warehouse_name",
+      "normalized_key": "goods in transit",
+      "members": [
+        {
+          "name": "GOODS IN TRANSIT - AFT",
+          "warehouse_name": "GOODS IN TRANSIT",
+          "company": "AYALA FAIRVIEW TERRACES - BEBANG FT INC."
+        },
+        {
+          "name": "GOODS IN TRANSIT - AMM",
+          "warehouse_name": "GOODS IN TRANSIT",
+          "company": "AYALA MARKET MARKET - BEBANG MARKET MARKET INC."
+        },
+        {
+          "name": "GOODS IN TRANSIT - ARGW",
+          "warehouse_name": "GOODS IN TRANSIT",
+          "company": "ARANETA GATEWAY - TUNGSTEN CAPITAL HOLDINGS OPC"
+        },
+        {
+          "name": "GOODS IN TRANSIT - AYEVO",
+          "warehouse_name": "GOODS IN TRANSIT",
+          "company": "AYALA EVO CITY - BEBANG MEGA INC."
+        },
+        {
+          "name": "GOODS IN TRANSIT - AYSOL",
+          "warehouse_name": "GOODS IN TRANSIT",
+          "company": "AYALA SOLENAD - HFFM SOLENAD FOOD SERVICES INC."
+        },
+        {
+          "name": "GOODS IN TRANSIT - AYVER",
+          "warehouse_name": "GOODS IN TRANSIT",
+          "company": "AYALA VERMOSA - BEBANG MEGA INC."
+        },
+        {
+          "name": "GOODS IN TRANSIT - BAG",
+          "warehouse_name": "GOODS IN TRANSIT",
+          "company": "TUNGSTEN CAPITAL HOLDINGS OPC"
+        },
+        {
+          "name": "GOODS IN TRANSIT - BDV",
+          "warehouse_name": "GOODS IN TRANSIT",
+          "company": "TAJ FOOD CORP."
+        },
+        {
+          "name": "GOODS IN TRANSIT - BFC",
+          "warehouse_name": "GOODS IN TRANSIT",
+          "company": "BEBANG FRANCHISE CORP."
+        },
+        {
+          "name": "GOODS IN TRANSIT - BFH",
+          "warehouse_name": "GOODS IN TRANSIT",
+          "company": "BF HOMES - BEBANG BF HOMES INC."
+        },
+        {
+          "name": "GOODS IN TRANSIT - BMI2",
+          "warehouse_name": "GOODS IN TRANSIT",
+          "company": "BEBANG MEGA INC."
+        },
+        {
+          "name": "GOODS IN TRANSIT - CTTM",
+          "warehouse_name": "GOODS IN TRANSIT",
+          "company": "CTTM TOMAS MORATO - B CUBED VENTURES CORP."
+        },
+        {
+          "name": "GOODS IN TRANSIT - DVCAL",
+          "warehouse_name": "GOODS IN TRANSIT",
+          "company": "D'VERDE CALAMBA - TAJ FOOD CORP."
+        },
+        {
+          "name": "GOODS IN TRANSIT - EGC",
+          "warehouse_name": "GOODS IN TRANSIT",
+          "company": "EVER COMMONWEALTH - DLS DESSERT CRAFT INC."
+        },
+        {
+          "name": "GOODS IN TRANSIT - ESM",
+          "warehouse_name": "GOODS IN TRANSIT",
+          "company": "ORTIGAS ESTANCIA - BB ESTANCIA FOOD CORP."
+        },
+        {
+          "name": "GOODS IN TRANSIT - FMA",
+          "warehouse_name": "GOODS IN TRANSIT",
+          "company": "FESTIVAL MALL ALABANG - BEBANG FESTIVAL INC."
+        },
+        {
+          "name": "GOODS IN TRANSIT - GHO",
+          "warehouse_name": "GOODS IN TRANSIT",
+          "company": "ORTIGAS GREENHILLS - BEIFRANCHISE FOOD OPC"
+        },
+        {
+          "name": "GOODS IN TRANSIT - L77",
+          "warehouse_name": "GOODS IN TRANSIT",
+          "company": "LEGACY77 FOOD CORP."
+        },
+        {
+          "name": "GOODS IN TRANSIT - LCT",
+          "warehouse_name": "GOODS IN TRANSIT",
+          "company": "LUCKY CHINATOWN - BEBANG LCT INC."
+        },
+        {
+          "name": "GOODS IN TRANSIT - MPD",
+          "warehouse_name": "GOODS IN TRANSIT",
+          "company": "MEGAWORLD PASEO CENTER - BEBANG PASEO INC."
+        },
+        {
+          "name": "GOODS IN TRANSIT - NAIA",
+          "warehouse_name": "GOODS IN TRANSIT",
+          "company": "NAIA T3 - HALO-HALO TERMINAL FOOD CORP."
+        },
+        {
+          "name": "GOODS IN TRANSIT - PTX",
+          "warehouse_name": "GOODS IN TRANSIT",
+          "company": "MEGAWIDE PITX - BEBANG PITX INC."
+        },
+        {
+          "name": "GOODS IN TRANSIT - ROBDA",
+          "warehouse_name": "GOODS IN TRANSIT",
+          "company": "ROBINSONS PLACE DASMARINAS - FREEZE DELIGHT INC."
+        },
+        {
+          "name": "GOODS IN TRANSIT - ROBGS",
+          "warehouse_name": "GOODS IN TRANSIT",
+          "company": "ROBINSONS GALLERIA SOUTH - TUNGSTEN CAPITAL HOLDINGS OPC"
+        },
+        {
+          "name": "GOODS IN TRANSIT - ROBGT",
+          "warehouse_name": "GOODS IN TRANSIT",
+          "company": "ROBINSONS GENERAL TRIAS - BEBANG MEGA INC."
+        },
+        {
+          "name": "GOODS IN TRANSIT - ROBIM",
+          "warehouse_name": "GOODS IN TRANSIT",
+          "company": "ROBINSONS IMUS - BEBANG MEGA INC."
+        },
+        {
+          "name": "GOODS IN TRANSIT - SJDM",
+          "warehouse_name": "GOODS IN TRANSIT",
+          "company": "SM SAN JOSE DEL MONTE - JL TRADE OPC"
+        },
+        {
+          "name": "GOODS IN TRANSIT - SLGM",
+          "warehouse_name": "GOODS IN TRANSIT",
+          "company": "STA. LUCIA EAST GRAND MALL - BEBANG SM MARIKINA INC."
+        },
+        {
+          "name": "GOODS IN TRANSIT - SMBIC",
+          "warehouse_name": "GOODS IN TRANSIT",
+          "company": "SM BICUTAN - BEBANG SM BICUTAN INC."
+        },
+        {
+          "name": "GOODS IN TRANSIT - SMCAL",
+          "warehouse_name": "GOODS IN TRANSIT",
+          "company": "SM CALOOCAN - TAJ FOOD CORP."
+        },
+        {
+          "name": "GOODS IN TRANSIT - SMCLK",
+          "warehouse_name": "GOODS IN TRANSIT",
+          "company": "SM CLARK - RED TALDAWA FOODS OPC"
+        },
+        {
+          "name": "GOODS IN TRANSIT - SMEO",
+          "warehouse_name": "GOODS IN TRANSIT",
+          "company": "SM EAST ORTIGAS - BEBANG SMEO INC."
+        },
+        {
+          "name": "GOODS IN TRANSIT - SMGC",
+          "warehouse_name": "GOODS IN TRANSIT",
+          "company": "SM GRAND CENTRAL - BEBANG GRAND CENTRAL INC."
+        },
+        {
+          "name": "GOODS IN TRANSIT - SMK",
+          "warehouse_name": "GOODS IN TRANSIT",
+          "company": "SM MARIKINA - BEBANG SM MARIKINA INC."
+        },
+        {
+          "name": "GOODS IN TRANSIT - SMMAR",
+          "warehouse_name": "GOODS IN TRANSIT",
+          "company": "SM MARILAO - BEBANG MARILAO INC."
+        },
+        {
+          "name": "GOODS IN TRANSIT - SMMOA",
+          "warehouse_name": "GOODS IN TRANSIT",
+          "company": "SM MALL OF ASIA - BEBANG SMOA INC."
+        },
+        {
+          "name": "GOODS IN TRANSIT - SMNE",
+          "warehouse_name": "GOODS IN TRANSIT",
+          "company": "SM NORTH EDSA - BEBANG NORTH EDSA INC."
+        },
+        {
+          "name": "GOODS IN TRANSIT - SMPUL",
+          "warehouse_name": "GOODS IN TRANSIT",
+          "company": "SM PULILAN - BEBANG SMM INC."
+        },
+        {
+          "name": "GOODS IN TRANSIT - SMSDN",
+          "warehouse_name": "GOODS IN TRANSIT",
+          "company": "SM SANGANDAAN - TUNGSTEN CAPITAL HOLDINGS OPC"
+        },
+        {
+          "name": "GOODS IN TRANSIT - SMSTR",
+          "warehouse_name": "GOODS IN TRANSIT",
+          "company": "SM STA. ROSA - SWEET HARMONY FOOD CORP."
+        },
+        {
+          "name": "GOODS IN TRANSIT - SMTAY",
+          "warehouse_name": "GOODS IN TRANSIT",
+          "company": "SM TAYTAY - DAY ONES FOOD AND DRINK ESTABLISHMENTS CORP."
+        },
+        {
+          "name": "GOODS IN TRANSIT - SMTZ",
+          "warehouse_name": "GOODS IN TRANSIT",
+          "company": "SM TANZA - BEBANG MEGA INC."
+        },
+        {
+          "name": "GOODS IN TRANSIT - SMV",
+          "warehouse_name": "GOODS IN TRANSIT",
+          "company": "SM VALENZUELA - BEBANG SMV INC."
+        },
+        {
+          "name": "GOODS IN TRANSIT - TGR",
+          "warehouse_name": "GOODS IN TRANSIT",
+          "company": "THE GRID ROCKWELL - TASTECARTEL CORP."
+        },
+        {
+          "name": "GOODS IN TRANSIT - TTA",
+          "warehouse_name": "GOODS IN TRANSIT",
+          "company": "THE TERMINAL - BEBANG STARMALL ALABANG INC."
+        },
+        {
+          "name": "GOODS IN TRANSIT - UMBGC",
+          "warehouse_name": "GOODS IN TRANSIT",
+          "company": "UP TOWN MALL BGC - DMD HOLDINGS INC."
+        },
+        {
+          "name": "GOODS IN TRANSIT - UPTC",
+          "warehouse_name": "GOODS IN TRANSIT",
+          "company": "AYALA UP TOWN CENTER - BEBANG UP TOWN CENTER INC."
+        },
+        {
+          "name": "GOODS IN TRANSIT - VGC",
+          "warehouse_name": "GOODS IN TRANSIT",
+          "company": "MEGAWORLD VENICE GRAND CANAL - BEBANG VENICE GRAND CANAL INC."
+        },
+        {
+          "name": "GOODS IN TRANSIT - VMTAG",
+          "warehouse_name": "GOODS IN TRANSIT",
+          "company": "VISTA MALL TAGUIG - TRICERN FOOD CORP."
+        },
+        {
+          "name": "GOODS IN TRANSIT - XMM",
+          "warehouse_name": "GOODS IN TRANSIT",
+          "company": "XENTROMALL MONTALBAN - PERPETUAL FOOD CORP."
+        }
+      ]
+    },
+    {
+      "field": "warehouse_name",
+      "normalized_key": "megaworld paseo center",
+      "members": [
+        {
+          "name": "MEGAWORLD PASEO CENTER - BEBANG PASEO INC.",
+          "warehouse_name": "MEGAWORLD PASEO CENTER",
+          "company": "MEGAWORLD PASEO CENTER - BEBANG PASEO INC."
+        },
+        {
+          "name": "Megaworld Paseo Center - BFC",
+          "warehouse_name": "Megaworld Paseo Center",
+          "company": "BEBANG FRANCHISE CORP."
+        }
+      ]
+    },
+    {
+      "field": "warehouse_name",
+      "normalized_key": "robinsons antipolo",
+      "members": [
+        {
+          "name": "ROBINSONS ANTIPOLO - BEBANG ENTERPRISE INC.",
+          "warehouse_name": "ROBINSONS ANTIPOLO",
+          "company": "ROBINSONS ANTIPOLO - BEBANG ENTERPRISE INC."
+        },
+        {
+          "name": "Robinsons Antipolo - BFC",
+          "warehouse_name": "Robinsons Antipolo",
+          "company": "BEBANG FRANCHISE CORP."
+        }
+      ]
+    },
+    {
+      "field": "warehouse_name",
+      "normalized_key": "sm manila",
+      "members": [
+        {
+          "name": "SM  Manila - BFC",
+          "warehouse_name": "SM  Manila",
+          "company": "BEBANG FRANCHISE CORP."
+        },
+        {
+          "name": "SM MANILA - BEBANG ENTERPRISE INC.",
+          "warehouse_name": "SM MANILA",
+          "company": "SM MANILA - BEBANG ENTERPRISE INC."
+        }
+      ]
+    },
+    {
+      "field": "warehouse_name",
+      "normalized_key": "sm megamall",
+      "members": [
+        {
+          "name": "SM MEGAMALL - BEBANG ENTERPRISE INC.",
+          "warehouse_name": "SM MEGAMALL",
+          "company": "SM MEGAMALL - BEBANG ENTERPRISE INC."
+        },
+        {
+          "name": "SM Megamall - BFC",
+          "warehouse_name": "SM Megamall",
+          "company": "BEBANG FRANCHISE CORP."
+        }
+      ]
+    },
+    {
+      "field": "warehouse_name",
+      "normalized_key": "sm southmall",
+      "members": [
+        {
+          "name": "SM SOUTHMALL - BEBANG ENTERPRISE INC.",
+          "warehouse_name": "SM SOUTHMALL",
+          "company": "SM SOUTHMALL - BEBANG ENTERPRISE INC."
+        },
+        {
+          "name": "SM Southmall - BFC",
+          "warehouse_name": "SM Southmall",
+          "company": "BEBANG FRANCHISE CORP."
+        }
+      ]
+    },
+    {
+      "field": "warehouse_name",
+      "normalized_key": "sta. lucia east grand mall",
+      "members": [
+        {
+          "name": "STA. LUCIA EAST GRAND MALL - BEBANG SM MARIKINA INC.",
+          "warehouse_name": "STA. LUCIA EAST GRAND MALL",
+          "company": "STA. LUCIA EAST GRAND MALL - BEBANG SM MARIKINA INC."
+        },
+        {
+          "name": "Sta. Lucia East Grand Mall - BFC",
+          "warehouse_name": "Sta. Lucia East Grand Mall",
+          "company": "BEBANG FRANCHISE CORP."
+        }
+      ]
+    },
+    {
+      "field": "warehouse_name",
+      "normalized_key": "stores",
+      "members": [
+        {
+          "name": "STORES - AFT",
+          "warehouse_name": "STORES",
+          "company": "AYALA FAIRVIEW TERRACES - BEBANG FT INC."
+        },
+        {
+          "name": "STORES - AMM",
+          "warehouse_name": "STORES",
+          "company": "AYALA MARKET MARKET - BEBANG MARKET MARKET INC."
+        },
+        {
+          "name": "STORES - ARGW",
+          "warehouse_name": "STORES",
+          "company": "ARANETA GATEWAY - TUNGSTEN CAPITAL HOLDINGS OPC"
+        },
+        {
+          "name": "STORES - AYEVO",
+          "warehouse_name": "STORES",
+          "company": "AYALA EVO CITY - BEBANG MEGA INC."
+        },
+        {
+          "name": "STORES - AYSOL",
+          "warehouse_name": "STORES",
+          "company": "AYALA SOLENAD - HFFM SOLENAD FOOD SERVICES INC."
+        },
+        {
+          "name": "STORES - AYVER",
+          "warehouse_name": "STORES",
+          "company": "AYALA VERMOSA - BEBANG MEGA INC."
+        },
+        {
+          "name": "STORES - BAG",
+          "warehouse_name": "STORES",
+          "company": "TUNGSTEN CAPITAL HOLDINGS OPC"
+        },
+        {
+          "name": "STORES - BDV",
+          "warehouse_name": "STORES",
+          "company": "TAJ FOOD CORP."
+        },
+        {
+          "name": "STORES - BEI",
+          "warehouse_name": "STORES",
+          "company": "BEBANG ENTERPRISE INC."
+        },
+        {
+          "name": "STORES - BFC",
+          "warehouse_name": "STORES",
+          "company": "BEBANG FRANCHISE CORP."
+        },
+        {
+          "name": "STORES - BFH",
+          "warehouse_name": "STORES",
+          "company": "BF HOMES - BEBANG BF HOMES INC."
+        },
+        {
+          "name": "STORES - BMI2",
+          "warehouse_name": "STORES",
+          "company": "BEBANG MEGA INC."
+        },
+        {
+          "name": "STORES - CTTM",
+          "warehouse_name": "STORES",
+          "company": "CTTM TOMAS MORATO - B CUBED VENTURES CORP."
+        },
+        {
+          "name": "STORES - DVCAL",
+          "warehouse_name": "STORES",
+          "company": "D'VERDE CALAMBA - TAJ FOOD CORP."
+        },
+        {
+          "name": "STORES - EGC",
+          "warehouse_name": "STORES",
+          "company": "EVER COMMONWEALTH - DLS DESSERT CRAFT INC."
+        },
+        {
+          "name": "STORES - ESM",
+          "warehouse_name": "STORES",
+          "company": "ORTIGAS ESTANCIA - BB ESTANCIA FOOD CORP."
+        },
+        {
+          "name": "STORES - FMA",
+          "warehouse_name": "STORES",
+          "company": "FESTIVAL MALL ALABANG - BEBANG FESTIVAL INC."
+        },
+        {
+          "name": "STORES - GHO",
+          "warehouse_name": "STORES",
+          "company": "ORTIGAS GREENHILLS - BEIFRANCHISE FOOD OPC"
+        },
+        {
+          "name": "STORES - L77",
+          "warehouse_name": "STORES",
+          "company": "LEGACY77 FOOD CORP."
+        },
+        {
+          "name": "STORES - LCT",
+          "warehouse_name": "STORES",
+          "company": "LUCKY CHINATOWN - BEBANG LCT INC."
+        },
+        {
+          "name": "STORES - MPD",
+          "warehouse_name": "STORES",
+          "company": "MEGAWORLD PASEO CENTER - BEBANG PASEO INC."
+        },
+        {
+          "name": "STORES - NAIA",
+          "warehouse_name": "STORES",
+          "company": "NAIA T3 - HALO-HALO TERMINAL FOOD CORP."
+        },
+        {
+          "name": "STORES - PTX",
+          "warehouse_name": "STORES",
+          "company": "MEGAWIDE PITX - BEBANG PITX INC."
+        },
+        {
+          "name": "STORES - ROBDA",
+          "warehouse_name": "STORES",
+          "company": "ROBINSONS PLACE DASMARINAS - FREEZE DELIGHT INC."
+        },
+        {
+          "name": "STORES - ROBGS",
+          "warehouse_name": "STORES",
+          "company": "ROBINSONS GALLERIA SOUTH - TUNGSTEN CAPITAL HOLDINGS OPC"
+        },
+        {
+          "name": "STORES - ROBGT",
+          "warehouse_name": "STORES",
+          "company": "ROBINSONS GENERAL TRIAS - BEBANG MEGA INC."
+        },
+        {
+          "name": "STORES - ROBIM",
+          "warehouse_name": "STORES",
+          "company": "ROBINSONS IMUS - BEBANG MEGA INC."
+        },
+        {
+          "name": "STORES - SJDM",
+          "warehouse_name": "STORES",
+          "company": "SM SAN JOSE DEL MONTE - JL TRADE OPC"
+        },
+        {
+          "name": "STORES - SLGM",
+          "warehouse_name": "STORES",
+          "company": "STA. LUCIA EAST GRAND MALL - BEBANG SM MARIKINA INC."
+        },
+        {
+          "name": "STORES - SMBIC",
+          "warehouse_name": "STORES",
+          "company": "SM BICUTAN - BEBANG SM BICUTAN INC."
+        },
+        {
+          "name": "STORES - SMCAL",
+          "warehouse_name": "STORES",
+          "company": "SM CALOOCAN - TAJ FOOD CORP."
+        },
+        {
+          "name": "STORES - SMCLK",
+          "warehouse_name": "STORES",
+          "company": "SM CLARK - RED TALDAWA FOODS OPC"
+        },
+        {
+          "name": "STORES - SMEO",
+          "warehouse_name": "STORES",
+          "company": "SM EAST ORTIGAS - BEBANG SMEO INC."
+        },
+        {
+          "name": "STORES - SMGC",
+          "warehouse_name": "STORES",
+          "company": "SM GRAND CENTRAL - BEBANG GRAND CENTRAL INC."
+        },
+        {
+          "name": "STORES - SMK",
+          "warehouse_name": "STORES",
+          "company": "SM MARIKINA - BEBANG SM MARIKINA INC."
+        },
+        {
+          "name": "STORES - SMMAR",
+          "warehouse_name": "STORES",
+          "company": "SM MARILAO - BEBANG MARILAO INC."
+        },
+        {
+          "name": "STORES - SMMOA",
+          "warehouse_name": "STORES",
+          "company": "SM MALL OF ASIA - BEBANG SMOA INC."
+        },
+        {
+          "name": "STORES - SMNE",
+          "warehouse_name": "STORES",
+          "company": "SM NORTH EDSA - BEBANG NORTH EDSA INC."
+        },
+        {
+          "name": "STORES - SMPUL",
+          "warehouse_name": "STORES",
+          "company": "SM PULILAN - BEBANG SMM INC."
+        },
+        {
+          "name": "STORES - SMSDN",
+          "warehouse_name": "STORES",
+          "company": "SM SANGANDAAN - TUNGSTEN CAPITAL HOLDINGS OPC"
+        },
+        {
+          "name": "STORES - SMSTR",
+          "warehouse_name": "STORES",
+          "company": "SM STA. ROSA - SWEET HARMONY FOOD CORP."
+        },
+        {
+          "name": "STORES - SMTAY",
+          "warehouse_name": "STORES",
+          "company": "SM TAYTAY - DAY ONES FOOD AND DRINK ESTABLISHMENTS CORP."
+        },
+        {
+          "name": "STORES - SMTZ",
+          "warehouse_name": "STORES",
+          "company": "SM TANZA - BEBANG MEGA INC."
+        },
+        {
+          "name": "STORES - SMV",
+          "warehouse_name": "STORES",
+          "company": "SM VALENZUELA - BEBANG SMV INC."
+        },
+        {
+          "name": "STORES - TGR",
+          "warehouse_name": "STORES",
+          "company": "THE GRID ROCKWELL - TASTECARTEL CORP."
+        },
+        {
+          "name": "STORES - TTA",
+          "warehouse_name": "STORES",
+          "company": "THE TERMINAL - BEBANG STARMALL ALABANG INC."
+        },
+        {
+          "name": "STORES - UMBGC",
+          "warehouse_name": "STORES",
+          "company": "UP TOWN MALL BGC - DMD HOLDINGS INC."
+        },
+        {
+          "name": "STORES - UPTC",
+          "warehouse_name": "STORES",
+          "company": "AYALA UP TOWN CENTER - BEBANG UP TOWN CENTER INC."
+        },
+        {
+          "name": "STORES - VGC",
+          "warehouse_name": "STORES",
+          "company": "MEGAWORLD VENICE GRAND CANAL - BEBANG VENICE GRAND CANAL INC."
+        },
+        {
+          "name": "STORES - VMTAG",
+          "warehouse_name": "STORES",
+          "company": "VISTA MALL TAGUIG - TRICERN FOOD CORP."
+        },
+        {
+          "name": "STORES - XMM",
+          "warehouse_name": "STORES",
+          "company": "XENTROMALL MONTALBAN - PERPETUAL FOOD CORP."
+        }
+      ]
+    },
+    {
+      "field": "warehouse_name",
+      "normalized_key": "work in progress",
+      "members": [
+        {
+          "name": "WORK IN PROGRESS - AFT",
+          "warehouse_name": "WORK IN PROGRESS",
+          "company": "AYALA FAIRVIEW TERRACES - BEBANG FT INC."
+        },
+        {
+          "name": "WORK IN PROGRESS - AMM",
+          "warehouse_name": "WORK IN PROGRESS",
+          "company": "AYALA MARKET MARKET - BEBANG MARKET MARKET INC."
+        },
+        {
+          "name": "WORK IN PROGRESS - ARGW",
+          "warehouse_name": "WORK IN PROGRESS",
+          "company": "ARANETA GATEWAY - TUNGSTEN CAPITAL HOLDINGS OPC"
+        },
+        {
+          "name": "WORK IN PROGRESS - AYEVO",
+          "warehouse_name": "WORK IN PROGRESS",
+          "company": "AYALA EVO CITY - BEBANG MEGA INC."
+        },
+        {
+          "name": "WORK IN PROGRESS - AYSOL",
+          "warehouse_name": "WORK IN PROGRESS",
+          "company": "AYALA SOLENAD - HFFM SOLENAD FOOD SERVICES INC."
+        },
+        {
+          "name": "WORK IN PROGRESS - AYVER",
+          "warehouse_name": "WORK IN PROGRESS",
+          "company": "AYALA VERMOSA - BEBANG MEGA INC."
+        },
+        {
+          "name": "WORK IN PROGRESS - BAG",
+          "warehouse_name": "WORK IN PROGRESS",
+          "company": "TUNGSTEN CAPITAL HOLDINGS OPC"
+        },
+        {
+          "name": "WORK IN PROGRESS - BDV",
+          "warehouse_name": "WORK IN PROGRESS",
+          "company": "TAJ FOOD CORP."
+        },
+        {
+          "name": "WORK IN PROGRESS - BFC",
+          "warehouse_name": "WORK IN PROGRESS",
+          "company": "BEBANG FRANCHISE CORP."
+        },
+        {
+          "name": "WORK IN PROGRESS - BFH",
+          "warehouse_name": "WORK IN PROGRESS",
+          "company": "BF HOMES - BEBANG BF HOMES INC."
+        },
+        {
+          "name": "WORK IN PROGRESS - BMI2",
+          "warehouse_name": "WORK IN PROGRESS",
+          "company": "BEBANG MEGA INC."
+        },
+        {
+          "name": "WORK IN PROGRESS - CTTM",
+          "warehouse_name": "WORK IN PROGRESS",
+          "company": "CTTM TOMAS MORATO - B CUBED VENTURES CORP."
+        },
+        {
+          "name": "WORK IN PROGRESS - DVCAL",
+          "warehouse_name": "WORK IN PROGRESS",
+          "company": "D'VERDE CALAMBA - TAJ FOOD CORP."
+        },
+        {
+          "name": "WORK IN PROGRESS - EGC",
+          "warehouse_name": "WORK IN PROGRESS",
+          "company": "EVER COMMONWEALTH - DLS DESSERT CRAFT INC."
+        },
+        {
+          "name": "WORK IN PROGRESS - ESM",
+          "warehouse_name": "WORK IN PROGRESS",
+          "company": "ORTIGAS ESTANCIA - BB ESTANCIA FOOD CORP."
+        },
+        {
+          "name": "WORK IN PROGRESS - FMA",
+          "warehouse_name": "WORK IN PROGRESS",
+          "company": "FESTIVAL MALL ALABANG - BEBANG FESTIVAL INC."
+        },
+        {
+          "name": "WORK IN PROGRESS - GHO",
+          "warehouse_name": "WORK IN PROGRESS",
+          "company": "ORTIGAS GREENHILLS - BEIFRANCHISE FOOD OPC"
+        },
+        {
+          "name": "WORK IN PROGRESS - L77",
+          "warehouse_name": "WORK IN PROGRESS",
+          "company": "LEGACY77 FOOD CORP."
+        },
+        {
+          "name": "WORK IN PROGRESS - LCT",
+          "warehouse_name": "WORK IN PROGRESS",
+          "company": "LUCKY CHINATOWN - BEBANG LCT INC."
+        },
+        {
+          "name": "WORK IN PROGRESS - MPD",
+          "warehouse_name": "WORK IN PROGRESS",
+          "company": "MEGAWORLD PASEO CENTER - BEBANG PASEO INC."
+        },
+        {
+          "name": "WORK IN PROGRESS - NAIA",
+          "warehouse_name": "WORK IN PROGRESS",
+          "company": "NAIA T3 - HALO-HALO TERMINAL FOOD CORP."
+        },
+        {
+          "name": "WORK IN PROGRESS - PTX",
+          "warehouse_name": "WORK IN PROGRESS",
+          "company": "MEGAWIDE PITX - BEBANG PITX INC."
+        },
+        {
+          "name": "WORK IN PROGRESS - ROBDA",
+          "warehouse_name": "WORK IN PROGRESS",
+          "company": "ROBINSONS PLACE DASMARINAS - FREEZE DELIGHT INC."
+        },
+        {
+          "name": "WORK IN PROGRESS - ROBGS",
+          "warehouse_name": "WORK IN PROGRESS",
+          "company": "ROBINSONS GALLERIA SOUTH - TUNGSTEN CAPITAL HOLDINGS OPC"
+        },
+        {
+          "name": "WORK IN PROGRESS - ROBGT",
+          "warehouse_name": "WORK IN PROGRESS",
+          "company": "ROBINSONS GENERAL TRIAS - BEBANG MEGA INC."
+        },
+        {
+          "name": "WORK IN PROGRESS - ROBIM",
+          "warehouse_name": "WORK IN PROGRESS",
+          "company": "ROBINSONS IMUS - BEBANG MEGA INC."
+        },
+        {
+          "name": "WORK IN PROGRESS - SJDM",
+          "warehouse_name": "WORK IN PROGRESS",
+          "company": "SM SAN JOSE DEL MONTE - JL TRADE OPC"
+        },
+        {
+          "name": "WORK IN PROGRESS - SLGM",
+          "warehouse_name": "WORK IN PROGRESS",
+          "company": "STA. LUCIA EAST GRAND MALL - BEBANG SM MARIKINA INC."
+        },
+        {
+          "name": "WORK IN PROGRESS - SMBIC",
+          "warehouse_name": "WORK IN PROGRESS",
+          "company": "SM BICUTAN - BEBANG SM BICUTAN INC."
+        },
+        {
+          "name": "WORK IN PROGRESS - SMCAL",
+          "warehouse_name": "WORK IN PROGRESS",
+          "company": "SM CALOOCAN - TAJ FOOD CORP."
+        },
+        {
+          "name": "WORK IN PROGRESS - SMCLK",
+          "warehouse_name": "WORK IN PROGRESS",
+          "company": "SM CLARK - RED TALDAWA FOODS OPC"
+        },
+        {
+          "name": "WORK IN PROGRESS - SMEO",
+          "warehouse_name": "WORK IN PROGRESS",
+          "company": "SM EAST ORTIGAS - BEBANG SMEO INC."
+        },
+        {
+          "name": "WORK IN PROGRESS - SMGC",
+          "warehouse_name": "WORK IN PROGRESS",
+          "company": "SM GRAND CENTRAL - BEBANG GRAND CENTRAL INC."
+        },
+        {
+          "name": "WORK IN PROGRESS - SMK",
+          "warehouse_name": "WORK IN PROGRESS",
+          "company": "SM MARIKINA - BEBANG SM MARIKINA INC."
+        },
+        {
+          "name": "WORK IN PROGRESS - SMMAR",
+          "warehouse_name": "WORK IN PROGRESS",
+          "company": "SM MARILAO - BEBANG MARILAO INC."
+        },
+        {
+          "name": "WORK IN PROGRESS - SMMOA",
+          "warehouse_name": "WORK IN PROGRESS",
+          "company": "SM MALL OF ASIA - BEBANG SMOA INC."
+        },
+        {
+          "name": "WORK IN PROGRESS - SMNE",
+          "warehouse_name": "WORK IN PROGRESS",
+          "company": "SM NORTH EDSA - BEBANG NORTH EDSA INC."
+        },
+        {
+          "name": "WORK IN PROGRESS - SMPUL",
+          "warehouse_name": "WORK IN PROGRESS",
+          "company": "SM PULILAN - BEBANG SMM INC."
+        },
+        {
+          "name": "WORK IN PROGRESS - SMSDN",
+          "warehouse_name": "WORK IN PROGRESS",
+          "company": "SM SANGANDAAN - TUNGSTEN CAPITAL HOLDINGS OPC"
+        },
+        {
+          "name": "WORK IN PROGRESS - SMSTR",
+          "warehouse_name": "WORK IN PROGRESS",
+          "company": "SM STA. ROSA - SWEET HARMONY FOOD CORP."
+        },
+        {
+          "name": "WORK IN PROGRESS - SMTAY",
+          "warehouse_name": "WORK IN PROGRESS",
+          "company": "SM TAYTAY - DAY ONES FOOD AND DRINK ESTABLISHMENTS CORP."
+        },
+        {
+          "name": "WORK IN PROGRESS - SMTZ",
+          "warehouse_name": "WORK IN PROGRESS",
+          "company": "SM TANZA - BEBANG MEGA INC."
+        },
+        {
+          "name": "WORK IN PROGRESS - SMV",
+          "warehouse_name": "WORK IN PROGRESS",
+          "company": "SM VALENZUELA - BEBANG SMV INC."
+        },
+        {
+          "name": "WORK IN PROGRESS - TGR",
+          "warehouse_name": "WORK IN PROGRESS",
+          "company": "THE GRID ROCKWELL - TASTECARTEL CORP."
+        },
+        {
+          "name": "WORK IN PROGRESS - TTA",
+          "warehouse_name": "WORK IN PROGRESS",
+          "company": "THE TERMINAL - BEBANG STARMALL ALABANG INC."
+        },
+        {
+          "name": "WORK IN PROGRESS - UMBGC",
+          "warehouse_name": "WORK IN PROGRESS",
+          "company": "UP TOWN MALL BGC - DMD HOLDINGS INC."
+        },
+        {
+          "name": "WORK IN PROGRESS - UPTC",
+          "warehouse_name": "WORK IN PROGRESS",
+          "company": "AYALA UP TOWN CENTER - BEBANG UP TOWN CENTER INC."
+        },
+        {
+          "name": "WORK IN PROGRESS - VGC",
+          "warehouse_name": "WORK IN PROGRESS",
+          "company": "MEGAWORLD VENICE GRAND CANAL - BEBANG VENICE GRAND CANAL INC."
+        },
+        {
+          "name": "WORK IN PROGRESS - VMTAG",
+          "warehouse_name": "WORK IN PROGRESS",
+          "company": "VISTA MALL TAGUIG - TRICERN FOOD CORP."
+        },
+        {
+          "name": "WORK IN PROGRESS - XMM",
+          "warehouse_name": "WORK IN PROGRESS",
+          "company": "XENTROMALL MONTALBAN - PERPETUAL FOOD CORP."
+        }
+      ]
+    }
+  ],
+  "sentry_errors_per_loser": {
+    "3MD LOGISTICS \u2013 CAMANGYANAN - BKI": [
+      {
+        "id": "bc564971effb4ea081a739c424c57e04",
+        "title": "Sales Dashboard: unmapped warehouse dropped",
+        "dateCreated": "2026-04-27T01:44:22.094000Z",
+        "level": null,
+        "culprit": "/api/method/hrms.api.sales_dashboard.get_sales_dashboard_access_context"
+      },
+      {
+        "id": "91c5a663e0d04e389b6566e7191fd3d0",
+        "title": "Sales Dashboard: unmapped warehouse dropped",
+        "dateCreated": "2026-04-27T01:44:22.083000Z",
+        "level": null,
+        "culprit": "/api/method/hrms.api.sales_dashboard.get_sales_dashboard_access_context"
+      },
+      {
+        "id": "83a34c9805a64305a28b9d0a9520e747",
+        "title": "Sales Dashboard: unmapped warehouse dropped",
+        "dateCreated": "2026-04-27T01:44:21.856000Z",
+        "level": null,
+        "culprit": "/api/method/hrms.api.sales_dashboard.get_sales_dashboard_overview"
+      },
+      {
+        "id": "29df8453234b43d1b28b13e362f5cbe5",
+        "title": "Sales Dashboard: unmapped warehouse dropped",
+        "dateCreated": "2026-04-27T01:44:21.864000Z",
+        "level": null,
+        "culprit": "/api/method/hrms.api.sales_dashboard.get_sales_dashboard_overview"
+      },
+      {
+        "id": "b9d1f17b02354e048a3b1b3ec6b9af7f",
+        "title": "Sales Dashboard: unmapped warehouse dropped",
+        "dateCreated": "2026-04-27T00:57:03.686000Z",
+        "level": null,
+        "culprit": "/api/method/hrms.api.sales_dashboard.get_product_mix_analytics"
+      }
+    ],
+    "ROYAL COLD STORAGE \u2013 TAYTAY (RCS) - BKI": [
+      {
+        "id": "e5fb96340db645e5bb020679c0ed3aa8",
+        "title": "Sales Dashboard: unmapped warehouse dropped",
+        "dateCreated": "2026-04-27T01:44:27.219000Z",
+        "level": null,
+        "culprit": "/api/method/hrms.api.sales_dashboard.get_sales_dashboard_overview"
+      },
+      {
+        "id": "631678bfa1034f3d8118a5b01bced541",
+        "title": "Sales Dashboard: unmapped warehouse dropped",
+        "dateCreated": "2026-04-27T01:44:27.923000Z",
+        "level": null,
+        "culprit": "/api/method/hrms.api.sales_dashboard.get_sales_dashboard_access_context"
+      },
+      {
+        "id": "3f7b8010a8eb439f9f399ecc24211b8e",
+        "title": "Sales Dashboard: unmapped warehouse dropped",
+        "dateCreated": "2026-04-27T01:44:27.886000Z",
+        "level": null,
+        "culprit": "/api/method/hrms.api.sales_dashboard.get_sales_dashboard_access_context"
+      },
+      {
+        "id": "27b518628124422c9ab47e08c6ca41df",
+        "title": "Sales Dashboard: unmapped warehouse dropped",
+        "dateCreated": "2026-04-27T01:44:27.188000Z",
+        "level": null,
+        "culprit": "/api/method/hrms.api.sales_dashboard.get_sales_dashboard_overview"
+      },
+      {
+        "id": "4b68fc0185fe411989e60cbd9e0a68c6",
+        "title": "Sales Dashboard: unmapped warehouse dropped",
+        "dateCreated": "2026-04-27T00:57:06.302000Z",
+        "level": null,
+        "culprit": "/api/method/hrms.api.sales_dashboard.get_sales_dashboard_overview"
+      }
+    ]
+  }
+}

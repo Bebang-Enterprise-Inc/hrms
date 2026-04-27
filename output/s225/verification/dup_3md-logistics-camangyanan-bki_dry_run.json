@@ -1,0 +1,1354 @@
+{
+  "ssm_command_id": "23d5f228-a386-4fa3-af07-a21ec6f69d7f",
+  "ssm_status": "Success",
+  "args": {
+    "duplicate": "3MD LOGISTICS \u2013 CAMANGYANAN - BKI",
+    "canonical": "3MD LOGISTICS - CAMANGYANAN - BKI",
+    "cluster_id": "cluster-3md-logistics-camangyanan-bki",
+    "sam_token": "S225 Phase 3 APPROVED ALL",
+    "commit": false
+  },
+  "result": {
+    "duplicate": "3MD LOGISTICS \u2013 CAMANGYANAN - BKI",
+    "canonical": "3MD LOGISTICS - CAMANGYANAN - BKI",
+    "sam_token": "S225 Phase 3 APPROVED ALL",
+    "committed": false,
+    "step": "se_built",
+    "before": {
+      "duplicate_doc": {
+        "name": "3MD LOGISTICS \u2013 CAMANGYANAN - BKI",
+        "warehouse_name": "3MD LOGISTICS \u2013 CAMANGYANAN",
+        "company": "BEBANG KITCHEN INC.",
+        "disabled": 0,
+        "is_group": 0,
+        "parent_warehouse": null
+      },
+      "canonical_doc": {
+        "name": "3MD LOGISTICS - CAMANGYANAN - BKI",
+        "warehouse_name": "3MD LOGISTICS - CAMANGYANAN",
+        "company": "BEBANG KITCHEN INC.",
+        "disabled": 0,
+        "is_group": 0,
+        "parent_warehouse": null
+      },
+      "duplicate_bins": [
+        {
+          "item_code": "A057",
+          "actual_qty": 0.0,
+          "stock_uom": "PACK"
+        },
+        {
+          "item_code": "A058",
+          "actual_qty": 434.0,
+          "stock_uom": "PACK"
+        },
+        {
+          "item_code": "A059",
+          "actual_qty": 550.0,
+          "stock_uom": "PACK"
+        },
+        {
+          "item_code": "A060",
+          "actual_qty": 354.0,
+          "stock_uom": "PACK"
+        },
+        {
+          "item_code": "BEB-CCF",
+          "actual_qty": 40.0,
+          "stock_uom": "PACK"
+        },
+        {
+          "item_code": "CM30",
+          "actual_qty": 54.0,
+          "stock_uom": "BUNDLE"
+        },
+        {
+          "item_code": "CM31",
+          "actual_qty": 53.0,
+          "stock_uom": "BUNDLE"
+        },
+        {
+          "item_code": "CM32",
+          "actual_qty": 47.0,
+          "stock_uom": "BUNDLE"
+        },
+        {
+          "item_code": "CM33",
+          "actual_qty": 75.0,
+          "stock_uom": "BUNDLE"
+        },
+        {
+          "item_code": "CM34",
+          "actual_qty": 24.0,
+          "stock_uom": "BUNDLE"
+        },
+        {
+          "item_code": "CM37",
+          "actual_qty": 57.0,
+          "stock_uom": "BUNDLE"
+        },
+        {
+          "item_code": "CM38",
+          "actual_qty": 573.0,
+          "stock_uom": "BUN"
+        },
+        {
+          "item_code": "CM39",
+          "actual_qty": 419.0,
+          "stock_uom": "BUN"
+        },
+        {
+          "item_code": "CS007",
+          "actual_qty": 7.0,
+          "stock_uom": "PIECE"
+        },
+        {
+          "item_code": "CS008",
+          "actual_qty": 4.0,
+          "stock_uom": "PIECE"
+        },
+        {
+          "item_code": "CS009",
+          "actual_qty": 0.0,
+          "stock_uom": "PIECE"
+        },
+        {
+          "item_code": "CS012",
+          "actual_qty": 48.0,
+          "stock_uom": "BUNDLE"
+        },
+        {
+          "item_code": "CS012-A",
+          "actual_qty": 5.0,
+          "stock_uom": "BUNDLE"
+        },
+        {
+          "item_code": "CS013",
+          "actual_qty": 3000.0,
+          "stock_uom": "PIECE"
+        },
+        {
+          "item_code": "CS014",
+          "actual_qty": 124.0,
+          "stock_uom": "PIECE"
+        },
+        {
+          "item_code": "CS016",
+          "actual_qty": 228.0,
+          "stock_uom": "PIECE"
+        },
+        {
+          "item_code": "FG001",
+          "actual_qty": 12194.0,
+          "stock_uom": "PIECE"
+        },
+        {
+          "item_code": "FG002-A",
+          "actual_qty": 1244.0,
+          "stock_uom": "KG"
+        },
+        {
+          "item_code": "FG003",
+          "actual_qty": 387.0,
+          "stock_uom": "KG"
+        },
+        {
+          "item_code": "FG004",
+          "actual_qty": 648.0,
+          "stock_uom": "KG"
+        },
+        {
+          "item_code": "FG005",
+          "actual_qty": 131.0,
+          "stock_uom": "KG"
+        },
+        {
+          "item_code": "FG006",
+          "actual_qty": 100.0,
+          "stock_uom": "KG"
+        },
+        {
+          "item_code": "FG007",
+          "actual_qty": 92.0,
+          "stock_uom": "KG"
+        },
+        {
+          "item_code": "FG009",
+          "actual_qty": 1043.0,
+          "stock_uom": "KG"
+        },
+        {
+          "item_code": "FG012",
+          "actual_qty": 568.0,
+          "stock_uom": "KG"
+        },
+        {
+          "item_code": "FG013",
+          "actual_qty": 892.0,
+          "stock_uom": "KG"
+        },
+        {
+          "item_code": "FG014",
+          "actual_qty": 17.0,
+          "stock_uom": "KG"
+        },
+        {
+          "item_code": "FG015",
+          "actual_qty": 9.0,
+          "stock_uom": "KG"
+        },
+        {
+          "item_code": "FG015D",
+          "actual_qty": 166.0,
+          "stock_uom": "PACK"
+        },
+        {
+          "item_code": "FG020",
+          "actual_qty": 0.0,
+          "stock_uom": "BARREL"
+        },
+        {
+          "item_code": "KL001",
+          "actual_qty": 35.0,
+          "stock_uom": "GAL"
+        },
+        {
+          "item_code": "KL002",
+          "actual_qty": 22.0,
+          "stock_uom": "GAL"
+        },
+        {
+          "item_code": "KL003",
+          "actual_qty": 63.0,
+          "stock_uom": "GAL"
+        },
+        {
+          "item_code": "KL004",
+          "actual_qty": 11.0,
+          "stock_uom": "GAL"
+        },
+        {
+          "item_code": "M003",
+          "actual_qty": 45.0,
+          "stock_uom": "PACKS"
+        },
+        {
+          "item_code": "M006",
+          "actual_qty": 5.0,
+          "stock_uom": "PACKS"
+        },
+        {
+          "item_code": "OS001",
+          "actual_qty": 36.0,
+          "stock_uom": "PIECE"
+        },
+        {
+          "item_code": "OS002",
+          "actual_qty": 25.0,
+          "stock_uom": "PIECE"
+        },
+        {
+          "item_code": "OS006",
+          "actual_qty": 169.0,
+          "stock_uom": "PIECE"
+        },
+        {
+          "item_code": "OS008",
+          "actual_qty": 19.0,
+          "stock_uom": "PIECE"
+        },
+        {
+          "item_code": "OS009",
+          "actual_qty": 9.0,
+          "stock_uom": "PIECE"
+        },
+        {
+          "item_code": "OS026",
+          "actual_qty": 83.0,
+          "stock_uom": "BOX"
+        },
+        {
+          "item_code": "PM001",
+          "actual_qty": 64.0,
+          "stock_uom": "PIECE"
+        },
+        {
+          "item_code": "PM002",
+          "actual_qty": 65.0,
+          "stock_uom": "PIECE"
+        },
+        {
+          "item_code": "PM003",
+          "actual_qty": 50.0,
+          "stock_uom": "PIECE"
+        },
+        {
+          "item_code": "PM004",
+          "actual_qty": 87.0,
+          "stock_uom": "PIECE"
+        },
+        {
+          "item_code": "PM005",
+          "actual_qty": 70.0,
+          "stock_uom": "PIECE"
+        },
+        {
+          "item_code": "PM006-1",
+          "actual_qty": 47.0,
+          "stock_uom": "BOX"
+        },
+        {
+          "item_code": "PM007",
+          "actual_qty": 1072.0,
+          "stock_uom": "BUNDLE"
+        },
+        {
+          "item_code": "PM008",
+          "actual_qty": 339.0,
+          "stock_uom": "BUNDLE"
+        },
+        {
+          "item_code": "PM009",
+          "actual_qty": 223.0,
+          "stock_uom": "BUNDLE"
+        },
+        {
+          "item_code": "PM010",
+          "actual_qty": 32.0,
+          "stock_uom": "BUNDLE"
+        },
+        {
+          "item_code": "PM010-A",
+          "actual_qty": 16.0,
+          "stock_uom": "BUNDLE"
+        },
+        {
+          "item_code": "PM012",
+          "actual_qty": 19.0,
+          "stock_uom": "BUNDLE"
+        },
+        {
+          "item_code": "PM013",
+          "actual_qty": 20.0,
+          "stock_uom": "BUNDLE"
+        },
+        {
+          "item_code": "PM014",
+          "actual_qty": 305.0,
+          "stock_uom": "BOX"
+        },
+        {
+          "item_code": "PM016",
+          "actual_qty": 552.0,
+          "stock_uom": "BOX"
+        },
+        {
+          "item_code": "PM017",
+          "actual_qty": 384.0,
+          "stock_uom": "ROLL"
+        },
+        {
+          "item_code": "PM018",
+          "actual_qty": 233.0,
+          "stock_uom": "BUNDLE"
+        },
+        {
+          "item_code": "RM0003",
+          "actual_qty": 74.0,
+          "stock_uom": "BOX"
+        },
+        {
+          "item_code": "RM001",
+          "actual_qty": 57.0,
+          "stock_uom": "PACK"
+        },
+        {
+          "item_code": "RM002",
+          "actual_qty": 45.0,
+          "stock_uom": "PACK"
+        },
+        {
+          "item_code": "RM004-1",
+          "actual_qty": 27.0,
+          "stock_uom": "CAN"
+        },
+        {
+          "item_code": "RM005-1",
+          "actual_qty": 90.0,
+          "stock_uom": "BOX"
+        },
+        {
+          "item_code": "RM006-C",
+          "actual_qty": 270.0,
+          "stock_uom": "CAN"
+        },
+        {
+          "item_code": "RM007",
+          "actual_qty": 11.0,
+          "stock_uom": "JAR"
+        },
+        {
+          "item_code": "RM008-A",
+          "actual_qty": 28.0,
+          "stock_uom": "CAN"
+        },
+        {
+          "item_code": "RM011",
+          "actual_qty": 155.0,
+          "stock_uom": "Grams"
+        },
+        {
+          "item_code": "RM012-C",
+          "actual_qty": 64.0,
+          "stock_uom": "BOX"
+        },
+        {
+          "item_code": "RM013",
+          "actual_qty": 2002.0,
+          "stock_uom": "PACK"
+        },
+        {
+          "item_code": "RM014",
+          "actual_qty": 479.0,
+          "stock_uom": "PACK"
+        },
+        {
+          "item_code": "RM015",
+          "actual_qty": 93.0,
+          "stock_uom": "BOTTLE"
+        },
+        {
+          "item_code": "RM016",
+          "actual_qty": 11.0,
+          "stock_uom": "BOTTLE"
+        },
+        {
+          "item_code": "RM017",
+          "actual_qty": 1084.0,
+          "stock_uom": "KG"
+        },
+        {
+          "item_code": "RM018",
+          "actual_qty": 333.0,
+          "stock_uom": "KG"
+        },
+        {
+          "item_code": "RM020",
+          "actual_qty": 33.0,
+          "stock_uom": "PACK"
+        },
+        {
+          "item_code": "RM021",
+          "actual_qty": 84.0,
+          "stock_uom": "PACK"
+        }
+      ],
+      "canonical_bins": [
+        {
+          "item_code": "A057",
+          "actual_qty": 656.0,
+          "stock_uom": "PACK"
+        },
+        {
+          "item_code": "A058",
+          "actual_qty": 394.0,
+          "stock_uom": "PACK"
+        },
+        {
+          "item_code": "A059",
+          "actual_qty": 592.0,
+          "stock_uom": "PACK"
+        },
+        {
+          "item_code": "A060",
+          "actual_qty": 361.0,
+          "stock_uom": "PACK"
+        },
+        {
+          "item_code": "CM30",
+          "actual_qty": 54.0,
+          "stock_uom": "BUNDLE"
+        },
+        {
+          "item_code": "CM31",
+          "actual_qty": 53.0,
+          "stock_uom": "BUNDLE"
+        },
+        {
+          "item_code": "CM32",
+          "actual_qty": 52.0,
+          "stock_uom": "BUNDLE"
+        },
+        {
+          "item_code": "CM33",
+          "actual_qty": 76.0,
+          "stock_uom": "BUNDLE"
+        },
+        {
+          "item_code": "CM34",
+          "actual_qty": 24.0,
+          "stock_uom": "BUNDLE"
+        },
+        {
+          "item_code": "CM37",
+          "actual_qty": 70.0,
+          "stock_uom": "BUNDLE"
+        },
+        {
+          "item_code": "CM38",
+          "actual_qty": 620.0,
+          "stock_uom": "BUN"
+        },
+        {
+          "item_code": "CM39",
+          "actual_qty": 457.0,
+          "stock_uom": "BUN"
+        },
+        {
+          "item_code": "CS007",
+          "actual_qty": 7.0,
+          "stock_uom": "PIECE"
+        },
+        {
+          "item_code": "CS008",
+          "actual_qty": 4.0,
+          "stock_uom": "PIECE"
+        },
+        {
+          "item_code": "CS009",
+          "actual_qty": 19.0,
+          "stock_uom": "PIECE"
+        },
+        {
+          "item_code": "CS012",
+          "actual_qty": 48.0,
+          "stock_uom": "BUNDLE"
+        },
+        {
+          "item_code": "CS012-A",
+          "actual_qty": 6.0,
+          "stock_uom": "BUNDLE"
+        },
+        {
+          "item_code": "CS014",
+          "actual_qty": 124.0,
+          "stock_uom": "PIECE"
+        },
+        {
+          "item_code": "CS016",
+          "actual_qty": 228.0,
+          "stock_uom": "PIECE"
+        },
+        {
+          "item_code": "FG001",
+          "actual_qty": 61161.0,
+          "stock_uom": "PIECE"
+        },
+        {
+          "item_code": "FG002",
+          "actual_qty": 84247.0,
+          "stock_uom": "KG"
+        },
+        {
+          "item_code": "FG002-A",
+          "actual_qty": 1714.0,
+          "stock_uom": "KG"
+        },
+        {
+          "item_code": "FG003",
+          "actual_qty": 539.0,
+          "stock_uom": "KG"
+        },
+        {
+          "item_code": "FG004",
+          "actual_qty": 1095.0,
+          "stock_uom": "KG"
+        },
+        {
+          "item_code": "FG005",
+          "actual_qty": 175.0,
+          "stock_uom": "KG"
+        },
+        {
+          "item_code": "FG006",
+          "actual_qty": 51.0,
+          "stock_uom": "KG"
+        },
+        {
+          "item_code": "FG007",
+          "actual_qty": 76.0,
+          "stock_uom": "KG"
+        },
+        {
+          "item_code": "FG009",
+          "actual_qty": 1448.0,
+          "stock_uom": "KG"
+        },
+        {
+          "item_code": "FG010",
+          "actual_qty": 100000.0,
+          "stock_uom": "KG"
+        },
+        {
+          "item_code": "FG012",
+          "actual_qty": 661.0,
+          "stock_uom": "KG"
+        },
+        {
+          "item_code": "FG013",
+          "actual_qty": 576.0,
+          "stock_uom": "KG"
+        },
+        {
+          "item_code": "FG014",
+          "actual_qty": 14.0,
+          "stock_uom": "KG"
+        },
+        {
+          "item_code": "FG015",
+          "actual_qty": 18.0,
+          "stock_uom": "KG"
+        },
+        {
+          "item_code": "FG015D",
+          "actual_qty": 166.0,
+          "stock_uom": "PACK"
+        },
+        {
+          "item_code": "FG020",
+          "actual_qty": 9599.0,
+          "stock_uom": "BARREL"
+        },
+        {
+          "item_code": "FG023",
+          "actual_qty": 100000.0,
+          "stock_uom": "KG"
+        },
+        {
+          "item_code": "KL001",
+          "actual_qty": 26.0,
+          "stock_uom": "GAL"
+        },
+        {
+          "item_code": "KL003",
+          "actual_qty": 67.0,
+          "stock_uom": "GAL"
+        },
+        {
+          "item_code": "KL004",
+          "actual_qty": 85374.0,
+          "stock_uom": "GAL"
+        },
+        {
+          "item_code": "M006",
+          "actual_qty": 7.0,
+          "stock_uom": "PACKS"
+        },
+        {
+          "item_code": "OS001",
+          "actual_qty": 53.0,
+          "stock_uom": "PIECE"
+        },
+        {
+          "item_code": "OS002",
+          "actual_qty": 25.0,
+          "stock_uom": "PIECE"
+        },
+        {
+          "item_code": "OS006",
+          "actual_qty": 172.0,
+          "stock_uom": "PIECE"
+        },
+        {
+          "item_code": "OS008",
+          "actual_qty": 20.0,
+          "stock_uom": "PIECE"
+        },
+        {
+          "item_code": "OS009",
+          "actual_qty": 14.0,
+          "stock_uom": "PIECE"
+        },
+        {
+          "item_code": "OS026",
+          "actual_qty": 87.0,
+          "stock_uom": "BOX"
+        },
+        {
+          "item_code": "PM001",
+          "actual_qty": 75092.0,
+          "stock_uom": "PIECE"
+        },
+        {
+          "item_code": "PM002",
+          "actual_qty": 88538.0,
+          "stock_uom": "PIECE"
+        },
+        {
+          "item_code": "PM003",
+          "actual_qty": 99160.0,
+          "stock_uom": "PIECE"
+        },
+        {
+          "item_code": "PM004",
+          "actual_qty": 92.0,
+          "stock_uom": "PIECE"
+        },
+        {
+          "item_code": "PM005",
+          "actual_qty": 74.0,
+          "stock_uom": "PIECE"
+        },
+        {
+          "item_code": "PM006-1",
+          "actual_qty": 49.0,
+          "stock_uom": "BOX"
+        },
+        {
+          "item_code": "PM007",
+          "actual_qty": 75439.0,
+          "stock_uom": "BUNDLE"
+        },
+        {
+          "item_code": "PM008",
+          "actual_qty": 340.0,
+          "stock_uom": "BUNDLE"
+        },
+        {
+          "item_code": "PM009",
+          "actual_qty": 224.0,
+          "stock_uom": "BUNDLE"
+        },
+        {
+          "item_code": "PM010",
+          "actual_qty": 39.0,
+          "stock_uom": "BUNDLE"
+        },
+        {
+          "item_code": "PM010-A",
+          "actual_qty": 16.0,
+          "stock_uom": "BUNDLE"
+        },
+        {
+          "item_code": "PM012",
+          "actual_qty": 19.0,
+          "stock_uom": "BUNDLE"
+        },
+        {
+          "item_code": "PM013",
+          "actual_qty": 20.0,
+          "stock_uom": "BUNDLE"
+        },
+        {
+          "item_code": "PM014",
+          "actual_qty": 316.0,
+          "stock_uom": "BOX"
+        },
+        {
+          "item_code": "PM016",
+          "actual_qty": 80.0,
+          "stock_uom": "BOX"
+        },
+        {
+          "item_code": "PM017",
+          "actual_qty": 393.0,
+          "stock_uom": "ROLL"
+        },
+        {
+          "item_code": "PM018",
+          "actual_qty": 248.0,
+          "stock_uom": "BUNDLE"
+        },
+        {
+          "item_code": "RM0003",
+          "actual_qty": 74.0,
+          "stock_uom": "BOX"
+        },
+        {
+          "item_code": "RM001",
+          "actual_qty": 61.0,
+          "stock_uom": "PACK"
+        },
+        {
+          "item_code": "RM002",
+          "actual_qty": 45.0,
+          "stock_uom": "PACK"
+        },
+        {
+          "item_code": "RM004-1",
+          "actual_qty": 30.0,
+          "stock_uom": "CAN"
+        },
+        {
+          "item_code": "RM005-1",
+          "actual_qty": 93.0,
+          "stock_uom": "BOX"
+        },
+        {
+          "item_code": "RM006-C",
+          "actual_qty": 3.0,
+          "stock_uom": "CAN"
+        },
+        {
+          "item_code": "RM007",
+          "actual_qty": 54.0,
+          "stock_uom": "JAR"
+        },
+        {
+          "item_code": "RM008-A",
+          "actual_qty": 30.0,
+          "stock_uom": "CAN"
+        },
+        {
+          "item_code": "RM010-A",
+          "actual_qty": 500.0,
+          "stock_uom": null
+        },
+        {
+          "item_code": "RM011",
+          "actual_qty": 190.0,
+          "stock_uom": "Grams"
+        },
+        {
+          "item_code": "RM012-C",
+          "actual_qty": 67.0,
+          "stock_uom": "BOX"
+        },
+        {
+          "item_code": "RM013",
+          "actual_qty": 2078.0,
+          "stock_uom": "PACK"
+        },
+        {
+          "item_code": "RM014",
+          "actual_qty": 516.0,
+          "stock_uom": "PACK"
+        },
+        {
+          "item_code": "RM015",
+          "actual_qty": 107.0,
+          "stock_uom": "BOTTLE"
+        },
+        {
+          "item_code": "RM016",
+          "actual_qty": 25.0,
+          "stock_uom": "BOTTLE"
+        },
+        {
+          "item_code": "RM017",
+          "actual_qty": 1394.0,
+          "stock_uom": "KG"
+        },
+        {
+          "item_code": "RM018",
+          "actual_qty": 715.0,
+          "stock_uom": "KG"
+        },
+        {
+          "item_code": "RM020",
+          "actual_qty": 108.0,
+          "stock_uom": "PACK"
+        },
+        {
+          "item_code": "RM021",
+          "actual_qty": 215.0,
+          "stock_uom": "PACK"
+        },
+        {
+          "item_code": "RM030",
+          "actual_qty": 200.0,
+          "stock_uom": null
+        }
+      ],
+      "open_mrs_on_duplicate": [],
+      "draft_ses_on_duplicate": []
+    },
+    "items_planned": [
+      {
+        "item_code": "A058",
+        "qty": 434.0,
+        "uom": "PACK",
+        "has_batch_no": 0
+      },
+      {
+        "item_code": "A059",
+        "qty": 550.0,
+        "uom": "PACK",
+        "has_batch_no": 0
+      },
+      {
+        "item_code": "A060",
+        "qty": 354.0,
+        "uom": "PACK",
+        "has_batch_no": 0
+      },
+      {
+        "item_code": "BEB-CCF",
+        "qty": 40.0,
+        "uom": "PACK",
+        "has_batch_no": 0
+      },
+      {
+        "item_code": "CM30",
+        "qty": 54.0,
+        "uom": "BUNDLE",
+        "has_batch_no": 0
+      },
+      {
+        "item_code": "CM31",
+        "qty": 53.0,
+        "uom": "BUNDLE",
+        "has_batch_no": 0
+      },
+      {
+        "item_code": "CM32",
+        "qty": 47.0,
+        "uom": "BUNDLE",
+        "has_batch_no": 0
+      },
+      {
+        "item_code": "CM33",
+        "qty": 75.0,
+        "uom": "BUNDLE",
+        "has_batch_no": 0
+      },
+      {
+        "item_code": "CM34",
+        "qty": 24.0,
+        "uom": "BUNDLE",
+        "has_batch_no": 0
+      },
+      {
+        "item_code": "CM37",
+        "qty": 57.0,
+        "uom": "BUNDLE",
+        "has_batch_no": 0
+      },
+      {
+        "item_code": "CM38",
+        "qty": 573.0,
+        "uom": "BUN",
+        "has_batch_no": 0
+      },
+      {
+        "item_code": "CM39",
+        "qty": 419.0,
+        "uom": "BUN",
+        "has_batch_no": 0
+      },
+      {
+        "item_code": "CS007",
+        "qty": 7.0,
+        "uom": "PIECE",
+        "has_batch_no": 0
+      },
+      {
+        "item_code": "CS008",
+        "qty": 4.0,
+        "uom": "PIECE",
+        "has_batch_no": 0
+      },
+      {
+        "item_code": "CS012",
+        "qty": 48.0,
+        "uom": "BUNDLE",
+        "has_batch_no": 0
+      },
+      {
+        "item_code": "CS012-A",
+        "qty": 5.0,
+        "uom": "BUNDLE",
+        "has_batch_no": 0
+      },
+      {
+        "item_code": "CS013",
+        "qty": 3000.0,
+        "uom": "PIECE",
+        "has_batch_no": 0
+      },
+      {
+        "item_code": "CS014",
+        "qty": 124.0,
+        "uom": "PIECE",
+        "has_batch_no": 0
+      },
+      {
+        "item_code": "CS016",
+        "qty": 228.0,
+        "uom": "PIECE",
+        "has_batch_no": 0
+      },
+      {
+        "item_code": "FG001",
+        "qty": 12194.0,
+        "uom": "PIECE",
+        "has_batch_no": 0
+      },
+      {
+        "item_code": "FG002-A",
+        "qty": 1244.0,
+        "uom": "KG",
+        "has_batch_no": 1
+      },
+      {
+        "item_code": "FG003",
+        "qty": 387.0,
+        "uom": "KG",
+        "has_batch_no": 1
+      },
+      {
+        "item_code": "FG004",
+        "qty": 648.0,
+        "uom": "KG",
+        "has_batch_no": 1
+      },
+      {
+        "item_code": "FG005",
+        "qty": 131.0,
+        "uom": "KG",
+        "has_batch_no": 1
+      },
+      {
+        "item_code": "FG006",
+        "qty": 100.0,
+        "uom": "KG",
+        "has_batch_no": 1
+      },
+      {
+        "item_code": "FG007",
+        "qty": 92.0,
+        "uom": "KG",
+        "has_batch_no": 1
+      },
+      {
+        "item_code": "FG009",
+        "qty": 1043.0,
+        "uom": "KG",
+        "has_batch_no": 1
+      },
+      {
+        "item_code": "FG012",
+        "qty": 568.0,
+        "uom": "KG",
+        "has_batch_no": 1
+      },
+      {
+        "item_code": "FG013",
+        "qty": 892.0,
+        "uom": "KG",
+        "has_batch_no": 1
+      },
+      {
+        "item_code": "FG014",
+        "qty": 17.0,
+        "uom": "KG",
+        "has_batch_no": 1
+      },
+      {
+        "item_code": "FG015",
+        "qty": 9.0,
+        "uom": "KG",
+        "has_batch_no": 1
+      },
+      {
+        "item_code": "FG015D",
+        "qty": 166.0,
+        "uom": "PACK",
+        "has_batch_no": 0
+      },
+      {
+        "item_code": "KL001",
+        "qty": 35.0,
+        "uom": "GAL",
+        "has_batch_no": 0
+      },
+      {
+        "item_code": "KL002",
+        "qty": 22.0,
+        "uom": "GAL",
+        "has_batch_no": 0
+      },
+      {
+        "item_code": "KL003",
+        "qty": 63.0,
+        "uom": "GAL",
+        "has_batch_no": 0
+      },
+      {
+        "item_code": "KL004",
+        "qty": 11.0,
+        "uom": "GAL",
+        "has_batch_no": 0
+      },
+      {
+        "item_code": "M003",
+        "qty": 45.0,
+        "uom": "PACKS",
+        "has_batch_no": 0
+      },
+      {
+        "item_code": "M006",
+        "qty": 5.0,
+        "uom": "PACKS",
+        "has_batch_no": 0
+      },
+      {
+        "item_code": "OS001",
+        "qty": 36.0,
+        "uom": "PIECE",
+        "has_batch_no": 0
+      },
+      {
+        "item_code": "OS002",
+        "qty": 25.0,
+        "uom": "PIECE",
+        "has_batch_no": 0
+      },
+      {
+        "item_code": "OS006",
+        "qty": 169.0,
+        "uom": "PIECE",
+        "has_batch_no": 0
+      },
+      {
+        "item_code": "OS008",
+        "qty": 19.0,
+        "uom": "PIECE",
+        "has_batch_no": 0
+      },
+      {
+        "item_code": "OS009",
+        "qty": 9.0,
+        "uom": "PIECE",
+        "has_batch_no": 0
+      },
+      {
+        "item_code": "OS026",
+        "qty": 83.0,
+        "uom": "BOX",
+        "has_batch_no": 0
+      },
+      {
+        "item_code": "PM001",
+        "qty": 64.0,
+        "uom": "PIECE",
+        "has_batch_no": 0
+      },
+      {
+        "item_code": "PM002",
+        "qty": 65.0,
+        "uom": "PIECE",
+        "has_batch_no": 0
+      },
+      {
+        "item_code": "PM003",
+        "qty": 50.0,
+        "uom": "PIECE",
+        "has_batch_no": 0
+      },
+      {
+        "item_code": "PM004",
+        "qty": 87.0,
+        "uom": "PIECE",
+        "has_batch_no": 0
+      },
+      {
+        "item_code": "PM005",
+        "qty": 70.0,
+        "uom": "PIECE",
+        "has_batch_no": 0
+      },
+      {
+        "item_code": "PM006-1",
+        "qty": 47.0,
+        "uom": "BOX",
+        "has_batch_no": 0
+      },
+      {
+        "item_code": "PM007",
+        "qty": 1072.0,
+        "uom": "BUNDLE",
+        "has_batch_no": 0
+      },
+      {
+        "item_code": "PM008",
+        "qty": 339.0,
+        "uom": "BUNDLE",
+        "has_batch_no": 0
+      },
+      {
+        "item_code": "PM009",
+        "qty": 223.0,
+        "uom": "BUNDLE",
+        "has_batch_no": 0
+      },
+      {
+        "item_code": "PM010",
+        "qty": 32.0,
+        "uom": "BUNDLE",
+        "has_batch_no": 0
+      },
+      {
+        "item_code": "PM010-A",
+        "qty": 16.0,
+        "uom": "BUNDLE",
+        "has_batch_no": 0
+      },
+      {
+        "item_code": "PM012",
+        "qty": 19.0,
+        "uom": "BUNDLE",
+        "has_batch_no": 0
+      },
+      {
+        "item_code": "PM013",
+        "qty": 20.0,
+        "uom": "BUNDLE",
+        "has_batch_no": 0
+      },
+      {
+        "item_code": "PM014",
+        "qty": 305.0,
+        "uom": "BOX",
+        "has_batch_no": 0
+      },
+      {
+        "item_code": "PM016",
+        "qty": 552.0,
+        "uom": "BOX",
+        "has_batch_no": 0
+      },
+      {
+        "item_code": "PM017",
+        "qty": 384.0,
+        "uom": "ROLL",
+        "has_batch_no": 0
+      },
+      {
+        "item_code": "PM018",
+        "qty": 233.0,
+        "uom": "BUNDLE",
+        "has_batch_no": 0
+      },
+      {
+        "item_code": "RM0003",
+        "qty": 74.0,
+        "uom": "BOX",
+        "has_batch_no": 0
+      },
+      {
+        "item_code": "RM001",
+        "qty": 57.0,
+        "uom": "PACK",
+        "has_batch_no": 0
+      },
+      {
+        "item_code": "RM002",
+        "qty": 45.0,
+        "uom": "PACK",
+        "has_batch_no": 0
+      },
+      {
+        "item_code": "RM004-1",
+        "qty": 27.0,
+        "uom": "CAN",
+        "has_batch_no": 0
+      },
+      {
+        "item_code": "RM005-1",
+        "qty": 90.0,
+        "uom": "BOX",
+        "has_batch_no": 0
+      },
+      {
+        "item_code": "RM006-C",
+        "qty": 270.0,
+        "uom": "CAN",
+        "has_batch_no": 0
+      },
+      {
+        "item_code": "RM007",
+        "qty": 11.0,
+        "uom": "JAR",
+        "has_batch_no": 0
+      },
+      {
+        "item_code": "RM008-A",
+        "qty": 28.0,
+        "uom": "CAN",
+        "has_batch_no": 0
+      },
+      {
+        "item_code": "RM011",
+        "qty": 155.0,
+        "uom": "Grams",
+        "has_batch_no": 0
+      },
+      {
+        "item_code": "RM012-C",
+        "qty": 64.0,
+        "uom": "BOX",
+        "has_batch_no": 0
+      },
+      {
+        "item_code": "RM013",
+        "qty": 2002.0,
+        "uom": "PACK",
+        "has_batch_no": 0
+      },
+      {
+        "item_code": "RM014",
+        "qty": 479.0,
+        "uom": "PACK",
+        "has_batch_no": 0
+      },
+      {
+        "item_code": "RM015",
+        "qty": 93.0,
+        "uom": "BOTTLE",
+        "has_batch_no": 0
+      },
+      {
+        "item_code": "RM016",
+        "qty": 11.0,
+        "uom": "BOTTLE",
+        "has_batch_no": 0
+      },
+      {
+        "item_code": "RM017",
+        "qty": 1084.0,
+        "uom": "KG",
+        "has_batch_no": 0
+      },
+      {
+        "item_code": "RM018",
+        "qty": 333.0,
+        "uom": "KG",
+        "has_batch_no": 0
+      },
+      {
+        "item_code": "RM020",
+        "qty": 33.0,
+        "uom": "PACK",
+        "has_batch_no": 0
+      },
+      {
+        "item_code": "RM021",
+        "qty": 84.0,
+        "uom": "PACK",
+        "has_batch_no": 0
+      }
+    ],
+    "status": "DRY_RUN",
+    "dry_run_se_summary": {
+      "stock_entry_type": "Material Transfer",
+      "company": "BEBANG KITCHEN INC.",
+      "from_warehouse": "3MD LOGISTICS \u2013 CAMANGYANAN - BKI",
+      "to_warehouse": "3MD LOGISTICS - CAMANGYANAN - BKI",
+      "item_count": 79,
+      "total_qty": 32627.0
+    }
+  },
+  "raw_stdout": "tem_code\": \"FG012\", \"qty\": 568.0, \"uom\": \"KG\", \"has_batch_no\": 1}, {\"item_code\": \"FG013\", \"qty\": 892.0, \"uom\": \"KG\", \"has_batch_no\": 1}, {\"item_code\": \"FG014\", \"qty\": 17.0, \"uom\": \"KG\", \"has_batch_no\": 1}, {\"item_code\": \"FG015\", \"qty\": 9.0, \"uom\": \"KG\", \"has_batch_no\": 1}, {\"item_code\": \"FG015D\", \"qty\": 166.0, \"uom\": \"PACK\", \"has_batch_no\": 0}, {\"item_code\": \"KL001\", \"qty\": 35.0, \"uom\": \"GAL\", \"has_batch_no\": 0}, {\"item_code\": \"KL002\", \"qty\": 22.0, \"uom\": \"GAL\", \"has_batch_no\": 0}, {\"item_code\": \"KL003\", \"qty\": 63.0, \"uom\": \"GAL\", \"has_batch_no\": 0}, {\"item_code\": \"KL004\", \"qty\": 11.0, \"uom\": \"GAL\", \"has_batch_no\": 0}, {\"item_code\": \"M003\", \"qty\": 45.0, \"uom\": \"PACKS\", \"has_batch_no\": 0}, {\"item_code\": \"M006\", \"qty\": 5.0, \"uom\": \"PACKS\", \"has_batch_no\": 0}, {\"item_code\": \"OS001\", \"qty\": 36.0, \"uom\": \"PIECE\", \"has_batch_no\": 0}, {\"item_code\": \"OS002\", \"qty\": 25.0, \"uom\": \"PIECE\", \"has_batch_no\": 0}, {\"item_code\": \"OS006\", \"qty\": 169.0, \"uom\": \"PIECE\", \"has_batch_no\": 0}, {\"item_code\": \"OS008\", \"qty\": 19.0, \"uom\": \"PIECE\", \"has_batch_no\": 0}, {\"item_code\": \"OS009\", \"qty\": 9.0, \"uom\": \"PIECE\", \"has_batch_no\": 0}, {\"item_code\": \"OS026\", \"qty\": 83.0, \"uom\": \"BOX\", \"has_batch_no\": 0}, {\"item_code\": \"PM001\", \"qty\": 64.0, \"uom\": \"PIECE\", \"has_batch_no\": 0}, {\"item_code\": \"PM002\", \"qty\": 65.0, \"uom\": \"PIECE\", \"has_batch_no\": 0}, {\"item_code\": \"PM003\", \"qty\": 50.0, \"uom\": \"PIECE\", \"has_batch_no\": 0}, {\"item_code\": \"PM004\", \"qty\": 87.0, \"uom\": \"PIECE\", \"has_batch_no\": 0}, {\"item_code\": \"PM005\", \"qty\": 70.0, \"uom\": \"PIECE\", \"has_batch_no\": 0}, {\"item_code\": \"PM006-1\", \"qty\": 47.0, \"uom\": \"BOX\", \"has_batch_no\": 0}, {\"item_code\": \"PM007\", \"qty\": 1072.0, \"uom\": \"BUNDLE\", \"has_batch_no\": 0}, {\"item_code\": \"PM008\", \"qty\": 339.0, \"uom\": \"BUNDLE\", \"has_batch_no\": 0}, {\"item_code\": \"PM009\", \"qty\": 223.0, \"uom\": \"BUNDLE\", \"has_batch_no\": 0}, {\"item_code\": \"PM010\", \"qty\": 32.0, \"uom\": \"BUNDLE\", \"has_batch_no\": 0}, {\"item_code\": \"PM010-A\", \"qty\": 16.0, \"uom\": \"BUNDLE\", \"has_batch_no\": 0}, {\"item_code\": \"PM012\", \"qty\": 19.0, \"uom\": \"BUNDLE\", \"has_batch_no\": 0}, {\"item_code\": \"PM013\", \"qty\": 20.0, \"uom\": \"BUNDLE\", \"has_batch_no\": 0}, {\"item_code\": \"PM014\", \"qty\": 305.0, \"uom\": \"BOX\", \"has_batch_no\": 0}, {\"item_code\": \"PM016\", \"qty\": 552.0, \"uom\": \"BOX\", \"has_batch_no\": 0}, {\"item_code\": \"PM017\", \"qty\": 384.0, \"uom\": \"ROLL\", \"has_batch_no\": 0}, {\"item_code\": \"PM018\", \"qty\": 233.0, \"uom\": \"BUNDLE\", \"has_batch_no\": 0}, {\"item_code\": \"RM0003\", \"qty\": 74.0, \"uom\": \"BOX\", \"has_batch_no\": 0}, {\"item_code\": \"RM001\", \"qty\": 57.0, \"uom\": \"PACK\", \"has_batch_no\": 0}, {\"item_code\": \"RM002\", \"qty\": 45.0, \"uom\": \"PACK\", \"has_batch_no\": 0}, {\"item_code\": \"RM004-1\", \"qty\": 27.0, \"uom\": \"CAN\", \"has_batch_no\": 0}, {\"item_code\": \"RM005-1\", \"qty\": 90.0, \"uom\": \"BOX\", \"has_batch_no\": 0}, {\"item_code\": \"RM006-C\", \"qty\": 270.0, \"uom\": \"CAN\", \"has_batch_no\": 0}, {\"item_code\": \"RM007\", \"qty\": 11.0, \"uom\": \"JAR\", \"has_batch_no\": 0}, {\"item_code\": \"RM008-A\", \"qty\": 28.0, \"uom\": \"CAN\", \"has_batch_no\": 0}, {\"item_code\": \"RM011\", \"qty\": 155.0, \"uom\": \"Grams\", \"has_batch_no\": 0}, {\"item_code\": \"RM012-C\", \"qty\": 64.0, \"uom\": \"BOX\", \"has_batch_no\": 0}, {\"item_code\": \"RM013\", \"qty\": 2002.0, \"uom\": \"PACK\", \"has_batch_no\": 0}, {\"item_code\": \"RM014\", \"qty\": 479.0, \"uom\": \"PACK\", \"has_batch_no\": 0}, {\"item_code\": \"RM015\", \"qty\": 93.0, \"uom\": \"BOTTLE\", \"has_batch_no\": 0}, {\"item_code\": \"RM016\", \"qty\": 11.0, \"uom\": \"BOTTLE\", \"has_batch_no\": 0}, {\"item_code\": \"RM017\", \"qty\": 1084.0, \"uom\": \"KG\", \"has_batch_no\": 0}, {\"item_code\": \"RM018\", \"qty\": 333.0, \"uom\": \"KG\", \"has_batch_no\": 0}, {\"item_code\": \"RM020\", \"qty\": 33.0, \"uom\": \"PACK\", \"has_batch_no\": 0}, {\"item_code\": \"RM021\", \"qty\": 84.0, \"uom\": \"PACK\", \"has_batch_no\": 0}], \"status\": \"DRY_RUN\", \"dry_run_se_summary\": {\"stock_entry_type\": \"Material Transfer\", \"company\": \"BEBANG KITCHEN INC.\", \"from_warehouse\": \"3MD LOGISTICS \\u2013 CAMANGYANAN - BKI\", \"to_warehouse\": \"3MD LOGISTICS - CAMANGYANAN - BKI\", \"item_count\": 79, \"total_qty\": 32627.0}}\n",
+  "raw_stderr": ""
+}
