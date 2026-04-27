@@ -67,5 +67,7 @@ Phase 5 requires:
 
 ## PRs
 
-- `hrms`: PR# (filled in below after `gh pr create`)
-- `BEI-Tasks`: PR# (filled in below after `gh pr create`)
+- `hrms`: **#690** — https://github.com/Bebang-Enterprise-Inc/hrms/pull/690
+- `BEI-Tasks`: **#454** — https://github.com/Bebang-Enterprise-Inc/BEI-Tasks/pull/454
+
+Both PRs await Sam's review + rebase + merge + deploy. Phase 5 L3 runs after deploy in a fresh agent session per v3 mandate.
