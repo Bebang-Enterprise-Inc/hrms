@@ -38,6 +38,58 @@
 | 2.7 | DONE | `test_sales_dashboard_partner.py` Phase 2 tests verified via standalone Python (helpers extracted, all 12 assertions pass) | NO | — |
 
 **Phase 2 gate:** 5/5 verifier assertions PASSED. AST parse OK. Pure-function unit tests PASSED.
+
+## Phase 3 — Frontend role + RBAC
+
+| Task | Status | Evidence | Skipped? | If skipped, why? |
+|------|--------|----------|----------|------------------|
+| 3.1 | DONE | `lib/roles.ts` — `STORE_PARTNER: "Store Partner"` added to ROLES | NO | — |
+| 3.2 | DONE | `lib/roles.ts` — `[ROLES.STORE_PARTNER]: "Store Partner"` added to ROLE_LABELS | NO | — |
+| 3.3 | DONE | `lib/roles.ts` — fuchsia color added to ROLE_COLORS | NO | — |
+| 3.4 | DONE | `lib/roles.ts` — STORE_PARTNER added to MODULES.ANALYTICS, ANALYTICS_ROADMAP (v3 reversal), SALES_DASHBOARD allowlists. Exclusion-by-omission from every other module remains the privacy guarantee. | NO | — |
+| 3.5 | DONE | `lib/navigation-personas.ts` — STORE_PARTNER persona block (primary: Dashboard/Analytics/SalesDashboard, secondary: Profile, hidden: 80+ modules); inline `[ROLES.STORE_PARTNER, "STORE_PARTNER"]` mapping added AFTER STORE_STAFF, BEFORE EMPLOYEE; NO new ROLE_PERSONA_MAP export | NO | — |
+| 3.6 | DONE | `npx tsc --noEmit` baseline = 78 errors (pre-existing, unrelated test files); after S227 changes = 78 errors. NET ZERO new TS errors. `npm run build` ✓ Compiled successfully in 12.9s. | NO | — |
+| 3.7 | DONE | `tests/unit/navigation/navigation-personas.test.ts` — 4 tests PASSED (admin priority, HQ_SCM_OVERSIGHT, STORE_PARTNER routing, partner+AS precedence) | NO | — |
+
+**Phase 3 gate:** 6/6 verifier assertions PASSED. Build OK. 4/4 nav tests pass.
+
+## Phase 4a — Frontend conditional rendering (parent pages)
+
+| Task | Status | Evidence | Skipped? | If skipped, why? |
+|------|--------|----------|----------|------------------|
+| 4.1 | DONE | `sales/page.tsx`: leaderboard Card has `data-testid="analytics-sales-leaderboard"` and S227 comment marking server pre-filter (defense-in-depth) | NO | — |
+| 4.2 | DONE | `sales/page.tsx`: Open Full Leaderboard CTA gated on `!access?.is_partner_view` with `data-testid="analytics-sales-open-full-leaderboard-cta"` | NO | — |
+| 4.3 | DONE | `product/page.tsx`: Fleet Rank header gated on `sortedProducts.some(p => p.fleet_rank != null)`; Fleet Rank cell gated on `product.fleet_rank != null`. Both have data-testids. | NO | — |
+| 4.4 | DONE | `product/page.tsx`: Assortment Gap KPI structural rewrite — independent guard `data.meta.assortment_gap_count != null`; inner cell uses raw value (no `?? 0` fallback — verified absent via grep) | NO | — |
+| 4.5 | DONE | `product/page.tsx`: drilldown row uses `drilldownEnabled = isSingleStore && per_store_breakdown?.length > 0` for BOTH onClick AND cursor-pointer styling | NO | — |
+| 4.6 | DONE | `product/page.tsx`: Assortment Gap Table gated on `assortment_gap_products?.length && length > 0` | NO | — |
+| 4.7 | DONE | 5 testids added (analytics-sales-leaderboard, analytics-sales-open-full-leaderboard-cta, analytics-product-fleet-rank-header, analytics-product-fleet-rank-cell, analytics-product-assortment-gap-card). Phase 4b adds discount card + CSV testids. | PARTIAL | 4.7 split across 4a + 4b |
+| 4.8 | DONE | `npm run build` ✓ Compiled successfully in 13.2s | NO | — |
+
+**Phase 4a gate:** 4/4 P4 verifier assertions PASSED. Build OK.
+
+## Phase 4b — Frontend rendering (CSV + child routes + dialog)
+
+| Task | Status | Evidence | Skipped? | If skipped, why? |
+|------|--------|----------|----------|------------------|
+| 4.9 | DONE | `product/page.tsx`: `downloadCsv` accepts new `isPartnerView` arg; strips `fleet_rank`/`fleet_stores` headers AND row values when partner. `isPartnerView` plumbed via `setIsPartnerView` in access-context fetch. | NO | — |
+| 4.10 | DONE | `sales/stores/page.tsx` + `sales/stores/[locationId]/page.tsx`: comment-block audits attached. Both routes are safe-by-default — no fleet-shape fields rendered (rank/position_change shown are within-scope, server-side filtered). | NO | — |
+| 4.11 | DONE | `sales/page.tsx`: Highest Discount Stores Card outer guard `(ranking_state.visible || discount_rankings?.length > 0)`. Card hidden entirely when partner (server strips array). Includes `data-testid="analytics-sales-discount-rankings-card"`. | NO | — |
+| 4.12 | DONE | `store-detail-dialog.tsx`: comment block classifies all overview field accesses (KEEP/FILTER/STRIPPED). New explicit `(discount_rankings?.length ?? 0) > 0` guard added on the discount callout for defense-in-depth. | NO | — |
+| 4.13 | DONE | `npm run build` ✓ Compiled successfully in 12.3s after Phase 4b changes. | NO | — |
+
+**Phase 4b gate:** Build OK after CSV + dialog + child route + discount card changes.
+
+### Phase 4 totals
+- 5 sales/page.tsx changes (leaderboard testid, CTA hide, discount card guard, S227 comments)
+- 7 product/page.tsx changes (Gap card structural rewrite, Fleet Rank header+cell guards, drilldown enable, downloadCsv, partner-view state)
+- 1 store-detail-dialog.tsx field audit + new guard
+- 2 child-route audit comment blocks
+- 6 data-testids added
+
+
+- `lib/sales-dashboard.ts` extended with optional `is_partner_view?: boolean` on `SalesDashboardAccessContextResponse` so frontend pages can key conditional renders.
+
 - `_should_strip_fleet_context` count: 13
 - `_strip_fleet_context_from_*` count: 6 (2 helpers + 4 endpoint call sites)
 - `copy.deepcopy` count: 6 (overview/summary/rankings/product_mix endpoints + 2 helpers)
