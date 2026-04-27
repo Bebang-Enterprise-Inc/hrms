@@ -473,8 +473,12 @@ def _upsert_completed_order(order: dict) -> None:
     }
 
     order_row = _map_order_row(order)
+    # S225 follow-up (Phase 6 Sentry): PostgREST returns 409 when
+    # `Prefer: resolution=merge-duplicates` doesn't know which unique
+    # constraint to use. Add explicit `on_conflict` query params so
+    # merge-duplicates resolves on the intended constraint.
     r_order = requests.post(
-        f"{SUPABASE_URL}/rest/v1/pos_orders",
+        f"{SUPABASE_URL}/rest/v1/pos_orders?on_conflict=id",
         headers=headers,
         json=[order_row],
         timeout=15,
@@ -484,7 +488,7 @@ def _upsert_completed_order(order: dict) -> None:
     item_rows = _map_order_items(order)
     if item_rows:
         r_items = requests.post(
-            f"{SUPABASE_URL}/rest/v1/pos_order_items",
+            f"{SUPABASE_URL}/rest/v1/pos_order_items?on_conflict=order_id,product_id,line_number",
             headers=headers,
             json=item_rows,
             timeout=15,

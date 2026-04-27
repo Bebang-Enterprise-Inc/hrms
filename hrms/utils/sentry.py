@@ -285,10 +285,41 @@ def init_sentry():
 
 			_patch_log_error()
 			_patch_handle_exception()
+			_patch_frappe_set_scope_for_non_request_contexts()
 			_sentry_initialized = True
 
 		except Exception:
 			pass
+
+
+def _patch_frappe_set_scope_for_non_request_contexts():
+	"""S225 follow-up — gracefully handle non-request contexts in frappe.utils.sentry.set_scope.
+
+	Frappe's built-in set_scope accesses `frappe.request.path` directly, which raises
+	`RuntimeError: object is not bound` when called from a worker thread or
+	scheduled job. This causes spurious Sentry errors during non-request log_error
+	calls (e.g., the S225 lock-wait telemetry from concurrent dispatches).
+
+	Wrap it to skip silently when no request is bound. The error reporting still
+	flows through Frappe's other paths.
+	"""
+	try:
+		import frappe.utils.sentry as _frappe_sentry
+		if getattr(_frappe_sentry, "_bei_set_scope_patched", False):
+			return
+		_orig_set_scope = _frappe_sentry.set_scope
+
+		def _safe_set_scope(*args, **kwargs):
+			try:
+				return _orig_set_scope(*args, **kwargs)
+			except RuntimeError:
+				# "object is not bound" — no Werkzeug request context. Skip.
+				return None
+
+		_frappe_sentry.set_scope = _safe_set_scope
+		_frappe_sentry._bei_set_scope_patched = True
+	except Exception:
+		pass
 
 
 def _patch_log_error():

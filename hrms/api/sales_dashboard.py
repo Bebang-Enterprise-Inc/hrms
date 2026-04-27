@@ -514,11 +514,32 @@ def _filter_sales_warehouses(rows: list[dict[str, Any]]) -> list[dict[str, Any]]
 	for row in rows:
 		match = lookup_sales_location(row.get("warehouse_name"), row.get("name"))
 		if not match:
-			wh_name = row.get("name") or row.get("warehouse_name") or "(unknown)"
-			frappe.log_error(
-				title="Sales Dashboard: unmapped warehouse dropped",
-				message=f"Warehouse {wh_name!r} (company={row.get('company')!r}) has no mosaic_location_id on its Company — excluded from Analytics scope.",
-			)
+			# S225 follow-up: stop spamming Sentry on every dashboard load for
+			# warehouses that are intentionally non-POS (commissary, cold storage,
+			# logistics hubs). They never need mosaic_location_id by design — see
+			# memory/feedback_bki_no_pos.md. Log once at info-level instead of as
+			# a Sentry error event. The drop behaviour is unchanged.
+			wh_name = (row.get("name") or row.get("warehouse_name") or "").lower()
+			# Heuristic: BKI suffix, cold-storage / logistics keywords, internal sub-warehouses
+			_non_pos_markers = ("- bki", "cold storage", "logistics", "commissary", "stores -",
+				"finished goods -", "goods in transit -", "work in progress -")
+			is_known_non_pos = any(m in wh_name for m in _non_pos_markers)
+			full_name = row.get("name") or row.get("warehouse_name") or "(unknown)"
+			if is_known_non_pos:
+				frappe.logger("sales_dashboard").info(
+					f"sales_dashboard: skipping non-POS warehouse {full_name!r} "
+					f"(company={row.get('company')!r}) — expected, no mosaic_location_id required"
+				)
+			else:
+				# Unexpected unmapped store warehouse — keep as Sentry error so it surfaces
+				frappe.log_error(
+					title="Sales Dashboard: unmapped warehouse dropped",
+					message=(
+						f"Warehouse {full_name!r} (company={row.get('company')!r}) has no "
+						f"mosaic_location_id on its Company — excluded from Analytics scope. "
+						f"If this is a real POS store, set mosaic_location_id on the Company."
+					),
+				)
 			continue
 		# S200: Use warehouse_name from mapping (derived from Company store prefix)
 		# instead of the raw Warehouse.warehouse_name field which may be stale.
