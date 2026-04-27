@@ -1094,10 +1094,18 @@ def get_pending_material_requests():
 		action="get_pending_material_requests",
 		mutation_type="read",
 	)
+	# S225 follow-up (Phase 6 Sentry): "Ordered" MRs (auto-promoted at creation
+	# by the BEI on_submit hook for store-orders) were dropping out of this
+	# warehouse-approval queue, leaving SCM with no way to confirm/dispatch via
+	# the UI. Same root pattern as S226's order-approval queue fix. Include
+	# "Ordered" so already-promoted MRs remain visible until they are dispatched
+	# (i.e., until a Stock Entry consumes them and the status moves to
+	# "Transferred"). The S224 Pattern B idempotency fix in approve_material_request
+	# means a re-click on an Ordered MR is a no-op and won't throw.
 	mrs = frappe.get_all(
 		"Material Request",
 		filters={
-			"status": ["in", ["Pending", "Partially Ordered"]],
+			"status": ["in", ["Pending", "Partially Ordered", "Ordered"]],
 			"docstatus": 1,
 			"material_request_type": ["in", ["Material Transfer", "Material Issue"]],
 		},
@@ -1636,10 +1644,17 @@ def create_stock_transfer(
 		# functional logic.
 		_lock_wait_ms = int((_time.time() - _lock_t0) * 1000)
 		if _lock_wait_ms > 2000:
-			frappe.log_error(
-				f"S225 lock wait {_lock_wait_ms}ms for {source_warehouse}/{_lock_item_codes}",
-				"S225 Lock Contention",
-			)
+			try:
+				frappe.log_error(
+					f"S225 lock wait {_lock_wait_ms}ms for {source_warehouse}/{_lock_item_codes}",
+					"S225 Lock Contention",
+				)
+			except (RuntimeError, Exception):
+				# frappe.log_error can throw "object is not bound" when called from a
+				# non-request context (e.g., worker thread, scheduled job). The
+				# lock-wait info is best-effort — drop silently rather than break the
+				# dispatch.
+				pass
 
 	for item_data in normalized_items:
 		# Get item details

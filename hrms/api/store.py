@@ -3454,6 +3454,23 @@ def approve_order(order_name: str, approved_quantities: list | str | None = None
 	user = frappe.session.user
 	order = frappe.get_doc("BEI Store Order", order_name)
 
+	# S225 follow-up (Phase 6 Sentry): mirror the S224 Pattern B idempotency fix
+	# from approve_material_request. If the order is already fully approved
+	# (single-approval auto-promote at submit time, or dual-approval already
+	# completed), return success-noop instead of throwing. This stops the
+	# "Order is not pending approval" and "currently assigned to <other user>"
+	# errors that surface when a follow-up approval call lands on an order
+	# that already passed the relevant stage.
+	if order.status == "Approved":
+		return {
+			"success": True,
+			"name": order.name,
+			"status": order.status,
+			"approval_stage": getattr(order, "approval_stage", None) or "Single Approval",
+			"message": f"Order {order.name} already approved (status=Approved) — no-op",
+			"already_approved": True,
+		}
+
 	if order.status != "Pending Approval":
 		frappe.throw(_("Order is not pending approval"))
 
@@ -3908,9 +3925,31 @@ def _create_mr_for_store_order(order):
 		if not store_warehouse:
 			frappe.throw(_("No store warehouse found on order {0}").format(order.name))
 		cargo_category = getattr(order, "cargo_category", None) or "DRY"
-		source_warehouse = _resolve_store_order_source_warehouse(store_warehouse, cargo_category)
+		# S225 follow-up (Phase 6 Sentry findings): when no commissary route is configured
+		# for this store+lane, _resolve_store_order_source_warehouse returns None.
+		# Previously source_company then fell to get_company() (BEI parent), causing
+		# InvalidWarehouseCompany on validate_warehouse_company because the doc's
+		# company didn't match any of its row warehouses' per-store companies.
+		# Match the pattern used by _build_orderable_source_stock_context: default
+		# the unresolved source to the store's own warehouse so the MR becomes a
+		# legitimate same-company Material Transfer instead of a malformed cross-
+		# company doc. Log a warning so we still see the route gap.
+		_resolved_source = _resolve_store_order_source_warehouse(store_warehouse, cargo_category)
+		if not _resolved_source:
+			frappe.log_error(
+				f"S225 follow-up: no commissary route for {store_warehouse}+{cargo_category}; "
+				f"defaulting source to store warehouse. Add a BEI Route or _CENTRAL_WAREHOUSE_ROUTE_MAP entry.",
+				"S225 Source Route Missing",
+			)
+		source_warehouse = _resolved_source or store_warehouse
 		buyer_entity_row = resolve_store_buyer_entity(warehouse_docname=store_warehouse)
-		source_company = resolve_warehouse_company(source_warehouse) or get_company()
+		# Belt and suspenders: even if source_warehouse is set, prefer the per-store
+		# Company resolution over the global default to keep canonical alignment.
+		source_company = (
+			resolve_warehouse_company(source_warehouse)
+			or resolve_warehouse_company(store_warehouse)
+			or get_company()
+		)
 		# S190: Read company from order (set at submit time) instead of guessing
 		operational_target_company = (
 			getattr(order, "company", None) or resolve_warehouse_company(store_warehouse) or get_company()
