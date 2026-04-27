@@ -1,23 +1,39 @@
 [
   {
     "kind": "order-create",
-    "recordedAt": "2026-04-27T01:37:45.243Z",
+    "recordedAt": "2026-04-27T08:49:06.681Z",
     "payload": {
       "name": "BEI-ORD-2026-00403",
-      "store": "AYALA FAIRVIEW TERRACES - BEBANG FT INC."
+      "store": "ARANETA GATEWAY - TUNGSTEN CAPITAL HOLDINGS OPC"
     }
   },
   {
     "kind": "mr-create",
-    "recordedAt": "2026-04-27T01:38:05.374Z",
+    "recordedAt": "2026-04-27T08:49:50.276Z",
     "payload": {
-      "name": "MAT-MR-2026-00500",
-      "store": "AYALA FAIRVIEW TERRACES - BEBANG FT INC."
+      "name": "MAT-MR-2026-00504",
+      "store": "ARANETA GATEWAY - TUNGSTEN CAPITAL HOLDINGS OPC"
+    }
+  },
+  {
+    "kind": "wr-create",
+    "recordedAt": "2026-04-27T08:50:11.879Z",
+    "payload": {
+      "name": "BEI-WHR-2026-00113",
+      "store": "ARANETA GATEWAY - TUNGSTEN CAPITAL HOLDINGS OPC"
+    }
+  },
+  {
+    "kind": "si-create",
+    "recordedAt": "2026-04-27T08:50:28.300Z",
+    "payload": {
+      "name": "ACC-SINV-2026-00308",
+      "store": "ARANETA GATEWAY - TUNGSTEN CAPITAL HOLDINGS OPC"
     }
   },
   {
     "kind": "order-create",
-    "recordedAt": "2026-04-27T01:38:49.291Z",
+    "recordedAt": "2026-04-27T08:50:55.101Z",
     "payload": {
       "name": "BEI-ORD-2026-00404",
       "store": "AYALA FAIRVIEW TERRACES - BEBANG FT INC."
@@ -25,130 +41,1018 @@
   },
   {
     "kind": "mr-create",
-    "recordedAt": "2026-04-27T01:39:05.717Z",
+    "recordedAt": "2026-04-27T08:51:27.861Z",
     "payload": {
-      "name": "MAT-MR-2026-00501",
+      "name": "MAT-MR-2026-00505",
       "store": "AYALA FAIRVIEW TERRACES - BEBANG FT INC."
     }
   },
   {
     "kind": "wr-create",
-    "recordedAt": "2026-04-27T01:39:22.631Z",
+    "recordedAt": "2026-04-27T08:51:44.866Z",
     "payload": {
-      "name": "BEI-WHR-2026-00103",
+      "name": "BEI-WHR-2026-00114",
+      "store": "AYALA FAIRVIEW TERRACES - BEBANG FT INC."
+    }
+  },
+  {
+    "kind": "si-create",
+    "recordedAt": "2026-04-27T08:51:52.874Z",
+    "payload": {
+      "name": "ACC-SINV-2026-00309",
       "store": "AYALA FAIRVIEW TERRACES - BEBANG FT INC."
     }
   },
   {
     "kind": "order-create",
-    "recordedAt": "2026-04-27T01:39:59.163Z",
+    "recordedAt": "2026-04-27T08:52:09.344Z",
     "payload": {
       "name": "BEI-ORD-2026-00405",
-      "store": "AYALA UP TOWN CENTER - BEBANG UP TOWN CENTER INC."
+      "store": "AYALA MARKET MARKET - BEBANG MARKET MARKET INC."
     }
   },
   {
     "kind": "mr-create",
-    "recordedAt": "2026-04-27T01:40:15.740Z",
+    "recordedAt": "2026-04-27T08:53:11.515Z",
     "payload": {
-      "name": "MAT-MR-2026-00502",
-      "store": "AYALA UP TOWN CENTER - BEBANG UP TOWN CENTER INC."
-    }
-  },
-  {
-    "kind": "wr-create",
-    "recordedAt": "2026-04-27T01:40:32.409Z",
-    "payload": {
-      "name": "BEI-WHR-2026-00104",
-      "store": "AYALA UP TOWN CENTER - BEBANG UP TOWN CENTER INC."
-    }
-  },
-  {
-    "kind": "si-create",
-    "recordedAt": "2026-04-27T01:40:40.444Z",
-    "payload": {
-      "name": "ACC-SINV-2026-00297",
-      "store": "AYALA UP TOWN CENTER - BEBANG UP TOWN CENTER INC."
+      "name": "MAT-MR-2026-00262",
+      "store": "AYALA MARKET MARKET - BEBANG MARKET MARKET INC."
     }
   },
   {
     "kind": "order-create",
-    "recordedAt": "2026-04-27T01:40:57.095Z",
+    "recordedAt": "2026-04-27T08:53:45.272Z",
     "payload": {
       "name": "BEI-ORD-2026-00406",
-      "store": "NAIA T3 - HALO-HALO TERMINAL FOOD CORP."
+      "store": "AYALA SOLENAD - HFFM SOLENAD FOOD SERVICES INC."
+    }
+  },
+  {
+    "kind": "mr-create",
+    "recordedAt": "2026-04-27T08:54:47.685Z",
+    "payload": {
+      "name": "MAT-MR-2026-00270",
+      "store": "AYALA SOLENAD - HFFM SOLENAD FOOD SERVICES INC."
     }
   },
   {
     "kind": "order-create",
-    "recordedAt": "2026-04-27T01:42:06.828Z",
+    "recordedAt": "2026-04-27T08:55:20.735Z",
     "payload": {
       "name": "BEI-ORD-2026-00407",
+      "store": "AYALA UP TOWN CENTER - BEBANG UP TOWN CENTER INC."
+    }
+  },
+  {
+    "kind": "mr-create",
+    "recordedAt": "2026-04-27T08:55:52.855Z",
+    "payload": {
+      "name": "MAT-MR-2026-00506",
+      "store": "AYALA UP TOWN CENTER - BEBANG UP TOWN CENTER INC."
+    }
+  },
+  {
+    "kind": "wr-create",
+    "recordedAt": "2026-04-27T08:56:09.032Z",
+    "payload": {
+      "name": "BEI-WHR-2026-00115",
+      "store": "AYALA UP TOWN CENTER - BEBANG UP TOWN CENTER INC."
+    }
+  },
+  {
+    "kind": "si-create",
+    "recordedAt": "2026-04-27T08:56:16.655Z",
+    "payload": {
+      "name": "ACC-SINV-2026-00310",
+      "store": "AYALA UP TOWN CENTER - BEBANG UP TOWN CENTER INC."
+    }
+  },
+  {
+    "kind": "order-create",
+    "recordedAt": "2026-04-27T08:56:32.580Z",
+    "payload": {
+      "name": "BEI-ORD-2026-00408",
+      "store": "AYALA VERMOSA - BEBANG MEGA INC."
+    }
+  },
+  {
+    "kind": "mr-create",
+    "recordedAt": "2026-04-27T08:57:04.476Z",
+    "payload": {
+      "name": "MAT-MR-2026-00507",
+      "store": "AYALA VERMOSA - BEBANG MEGA INC."
+    }
+  },
+  {
+    "kind": "wr-create",
+    "recordedAt": "2026-04-27T08:57:20.735Z",
+    "payload": {
+      "name": "BEI-WHR-2026-00116",
+      "store": "AYALA VERMOSA - BEBANG MEGA INC."
+    }
+  },
+  {
+    "kind": "si-create",
+    "recordedAt": "2026-04-27T08:57:28.304Z",
+    "payload": {
+      "name": "ACC-SINV-2026-00311",
+      "store": "AYALA VERMOSA - BEBANG MEGA INC."
+    }
+  },
+  {
+    "kind": "order-create",
+    "recordedAt": "2026-04-27T08:57:44.588Z",
+    "payload": {
+      "name": "BEI-ORD-2026-00409",
+      "store": "BF HOMES - BEBANG BF HOMES INC."
+    }
+  },
+  {
+    "kind": "mr-create",
+    "recordedAt": "2026-04-27T08:58:16.721Z",
+    "payload": {
+      "name": "MAT-MR-2026-00508",
+      "store": "BF HOMES - BEBANG BF HOMES INC."
+    }
+  },
+  {
+    "kind": "wr-create",
+    "recordedAt": "2026-04-27T08:58:33.011Z",
+    "payload": {
+      "name": "BEI-WHR-2026-00117",
+      "store": "BF HOMES - BEBANG BF HOMES INC."
+    }
+  },
+  {
+    "kind": "si-create",
+    "recordedAt": "2026-04-27T08:58:40.497Z",
+    "payload": {
+      "name": "ACC-SINV-2026-00312",
+      "store": "BF HOMES - BEBANG BF HOMES INC."
+    }
+  },
+  {
+    "kind": "order-create",
+    "recordedAt": "2026-04-27T08:58:56.684Z",
+    "payload": {
+      "name": "BEI-ORD-2026-00410",
+      "store": "CTTM TOMAS MORATO - B CUBED VENTURES CORP."
+    }
+  },
+  {
+    "kind": "mr-create",
+    "recordedAt": "2026-04-27T08:59:28.623Z",
+    "payload": {
+      "name": "MAT-MR-2026-00509",
+      "store": "CTTM TOMAS MORATO - B CUBED VENTURES CORP."
+    }
+  },
+  {
+    "kind": "wr-create",
+    "recordedAt": "2026-04-27T08:59:44.828Z",
+    "payload": {
+      "name": "BEI-WHR-2026-00118",
+      "store": "CTTM TOMAS MORATO - B CUBED VENTURES CORP."
+    }
+  },
+  {
+    "kind": "si-create",
+    "recordedAt": "2026-04-27T08:59:52.356Z",
+    "payload": {
+      "name": "ACC-SINV-2026-00313",
+      "store": "CTTM TOMAS MORATO - B CUBED VENTURES CORP."
+    }
+  },
+  {
+    "kind": "order-create",
+    "recordedAt": "2026-04-27T09:00:08.845Z",
+    "payload": {
+      "name": "BEI-ORD-2026-00411",
+      "store": "D'VERDE CALAMBA - TAJ FOOD CORP."
+    }
+  },
+  {
+    "kind": "mr-create",
+    "recordedAt": "2026-04-27T09:00:41.087Z",
+    "payload": {
+      "name": "MAT-MR-2026-00510",
+      "store": "D'VERDE CALAMBA - TAJ FOOD CORP."
+    }
+  },
+  {
+    "kind": "wr-create",
+    "recordedAt": "2026-04-27T09:00:57.597Z",
+    "payload": {
+      "name": "BEI-WHR-2026-00119",
+      "store": "D'VERDE CALAMBA - TAJ FOOD CORP."
+    }
+  },
+  {
+    "kind": "si-create",
+    "recordedAt": "2026-04-27T09:01:05.167Z",
+    "payload": {
+      "name": "ACC-SINV-2026-00314",
+      "store": "D'VERDE CALAMBA - TAJ FOOD CORP."
+    }
+  },
+  {
+    "kind": "order-create",
+    "recordedAt": "2026-04-27T09:01:21.955Z",
+    "payload": {
+      "name": "BEI-ORD-2026-00412",
+      "store": "EVER COMMONWEALTH - DLS DESSERT CRAFT INC."
+    }
+  },
+  {
+    "kind": "mr-create",
+    "recordedAt": "2026-04-27T09:01:53.922Z",
+    "payload": {
+      "name": "MAT-MR-2026-00511",
+      "store": "EVER COMMONWEALTH - DLS DESSERT CRAFT INC."
+    }
+  },
+  {
+    "kind": "wr-create",
+    "recordedAt": "2026-04-27T09:02:10.157Z",
+    "payload": {
+      "name": "BEI-WHR-2026-00120",
+      "store": "EVER COMMONWEALTH - DLS DESSERT CRAFT INC."
+    }
+  },
+  {
+    "kind": "si-create",
+    "recordedAt": "2026-04-27T09:02:17.609Z",
+    "payload": {
+      "name": "ACC-SINV-2026-00315",
+      "store": "EVER COMMONWEALTH - DLS DESSERT CRAFT INC."
+    }
+  },
+  {
+    "kind": "order-create",
+    "recordedAt": "2026-04-27T09:02:33.771Z",
+    "payload": {
+      "name": "BEI-ORD-2026-00413",
+      "store": "FESTIVAL MALL ALABANG - BEBANG FESTIVAL INC."
+    }
+  },
+  {
+    "kind": "mr-create",
+    "recordedAt": "2026-04-27T09:03:06.313Z",
+    "payload": {
+      "name": "MAT-MR-2026-00512",
+      "store": "FESTIVAL MALL ALABANG - BEBANG FESTIVAL INC."
+    }
+  },
+  {
+    "kind": "wr-create",
+    "recordedAt": "2026-04-27T09:03:22.915Z",
+    "payload": {
+      "name": "BEI-WHR-2026-00121",
+      "store": "FESTIVAL MALL ALABANG - BEBANG FESTIVAL INC."
+    }
+  },
+  {
+    "kind": "si-create",
+    "recordedAt": "2026-04-27T09:03:30.425Z",
+    "payload": {
+      "name": "ACC-SINV-2026-00316",
+      "store": "FESTIVAL MALL ALABANG - BEBANG FESTIVAL INC."
+    }
+  },
+  {
+    "kind": "order-create",
+    "recordedAt": "2026-04-27T09:03:46.944Z",
+    "payload": {
+      "name": "BEI-ORD-2026-00414",
+      "store": "LUCKY CHINATOWN - BEBANG LCT INC."
+    }
+  },
+  {
+    "kind": "mr-create",
+    "recordedAt": "2026-04-27T09:04:18.793Z",
+    "payload": {
+      "name": "MAT-MR-2026-00513",
+      "store": "LUCKY CHINATOWN - BEBANG LCT INC."
+    }
+  },
+  {
+    "kind": "wr-create",
+    "recordedAt": "2026-04-27T09:04:35.004Z",
+    "payload": {
+      "name": "BEI-WHR-2026-00122",
+      "store": "LUCKY CHINATOWN - BEBANG LCT INC."
+    }
+  },
+  {
+    "kind": "si-create",
+    "recordedAt": "2026-04-27T09:04:42.535Z",
+    "payload": {
+      "name": "ACC-SINV-2026-00317",
+      "store": "LUCKY CHINATOWN - BEBANG LCT INC."
+    }
+  },
+  {
+    "kind": "order-create",
+    "recordedAt": "2026-04-27T09:04:58.509Z",
+    "payload": {
+      "name": "BEI-ORD-2026-00415",
+      "store": "MEGAWIDE PITX - BEBANG PITX INC."
+    }
+  },
+  {
+    "kind": "mr-create",
+    "recordedAt": "2026-04-27T09:05:30.005Z",
+    "payload": {
+      "name": "MAT-MR-2026-00514",
+      "store": "MEGAWIDE PITX - BEBANG PITX INC."
+    }
+  },
+  {
+    "kind": "wr-create",
+    "recordedAt": "2026-04-27T09:05:45.621Z",
+    "payload": {
+      "name": "BEI-WHR-2026-00123",
+      "store": "MEGAWIDE PITX - BEBANG PITX INC."
+    }
+  },
+  {
+    "kind": "si-create",
+    "recordedAt": "2026-04-27T09:05:52.858Z",
+    "payload": {
+      "name": "ACC-SINV-2026-00318",
+      "store": "MEGAWIDE PITX - BEBANG PITX INC."
+    }
+  },
+  {
+    "kind": "order-create",
+    "recordedAt": "2026-04-27T09:06:09.377Z",
+    "payload": {
+      "name": "BEI-ORD-2026-00416",
+      "store": "MEGAWORLD PASEO CENTER - BEBANG PASEO INC."
+    }
+  },
+  {
+    "kind": "mr-create",
+    "recordedAt": "2026-04-27T09:06:41.147Z",
+    "payload": {
+      "name": "MAT-MR-2026-00515",
+      "store": "MEGAWORLD PASEO CENTER - BEBANG PASEO INC."
+    }
+  },
+  {
+    "kind": "wr-create",
+    "recordedAt": "2026-04-27T09:06:56.765Z",
+    "payload": {
+      "name": "BEI-WHR-2026-00124",
+      "store": "MEGAWORLD PASEO CENTER - BEBANG PASEO INC."
+    }
+  },
+  {
+    "kind": "si-create",
+    "recordedAt": "2026-04-27T09:07:06.149Z",
+    "payload": {
+      "name": "ACC-SINV-2026-00319",
+      "store": "MEGAWORLD PASEO CENTER - BEBANG PASEO INC."
+    }
+  },
+  {
+    "kind": "order-create",
+    "recordedAt": "2026-04-27T09:07:22.266Z",
+    "payload": {
+      "name": "BEI-ORD-2026-00417",
+      "store": "MEGAWORLD VENICE GRAND CANAL - BEBANG VENICE GRAND CANAL INC."
+    }
+  },
+  {
+    "kind": "mr-create",
+    "recordedAt": "2026-04-27T09:07:53.762Z",
+    "payload": {
+      "name": "MAT-MR-2026-00516",
+      "store": "MEGAWORLD VENICE GRAND CANAL - BEBANG VENICE GRAND CANAL INC."
+    }
+  },
+  {
+    "kind": "wr-create",
+    "recordedAt": "2026-04-27T09:08:09.637Z",
+    "payload": {
+      "name": "BEI-WHR-2026-00125",
+      "store": "MEGAWORLD VENICE GRAND CANAL - BEBANG VENICE GRAND CANAL INC."
+    }
+  },
+  {
+    "kind": "si-create",
+    "recordedAt": "2026-04-27T09:08:16.976Z",
+    "payload": {
+      "name": "ACC-SINV-2026-00320",
+      "store": "MEGAWORLD VENICE GRAND CANAL - BEBANG VENICE GRAND CANAL INC."
+    }
+  },
+  {
+    "kind": "order-create",
+    "recordedAt": "2026-04-27T09:08:33.164Z",
+    "payload": {
+      "name": "BEI-ORD-2026-00418",
+      "store": "NAIA T3 - HALO-HALO TERMINAL FOOD CORP."
+    }
+  },
+  {
+    "kind": "mr-create",
+    "recordedAt": "2026-04-27T09:09:34.685Z",
+    "payload": {
+      "name": "MAT-MR-2026-00298",
       "store": "NAIA T3 - HALO-HALO TERMINAL FOOD CORP."
     }
   },
   {
     "kind": "order-create",
-    "recordedAt": "2026-04-27T01:43:16.642Z",
+    "recordedAt": "2026-04-27T09:10:07.411Z",
     "payload": {
-      "name": "BEI-ORD-2026-00408",
+      "name": "BEI-ORD-2026-00419",
+      "store": "ORTIGAS ESTANCIA - BB ESTANCIA FOOD CORP."
+    }
+  },
+  {
+    "kind": "mr-create",
+    "recordedAt": "2026-04-27T09:11:08.833Z",
+    "payload": {
+      "name": "MAT-MR-2026-00299",
       "store": "ORTIGAS ESTANCIA - BB ESTANCIA FOOD CORP."
     }
   },
   {
     "kind": "order-create",
-    "recordedAt": "2026-04-27T01:44:29.260Z",
+    "recordedAt": "2026-04-27T09:11:40.736Z",
     "payload": {
-      "name": "BEI-ORD-2026-00409",
-      "store": "ORTIGAS ESTANCIA - BB ESTANCIA FOOD CORP."
+      "name": "BEI-ORD-2026-00420",
+      "store": "ORTIGAS GREENHILLS - BEIFRANCHISE FOOD OPC"
+    }
+  },
+  {
+    "kind": "mr-create",
+    "recordedAt": "2026-04-27T09:12:42.447Z",
+    "payload": {
+      "name": "MAT-MR-2026-00300",
+      "store": "ORTIGAS GREENHILLS - BEIFRANCHISE FOOD OPC"
     }
   },
   {
     "kind": "order-create",
-    "recordedAt": "2026-04-27T01:45:36.674Z",
+    "recordedAt": "2026-04-27T09:13:14.050Z",
     "payload": {
-      "name": "BEI-ORD-2026-00410",
+      "name": "BEI-ORD-2026-00421",
+      "store": "ROBINSONS ANTIPOLO - BEBANG ENTERPRISE INC."
+    }
+  },
+  {
+    "kind": "mr-create",
+    "recordedAt": "2026-04-27T09:14:15.773Z",
+    "payload": {
+      "name": "MAT-MR-2026-00301",
       "store": "ROBINSONS ANTIPOLO - BEBANG ENTERPRISE INC."
     }
   },
   {
     "kind": "order-create",
-    "recordedAt": "2026-04-27T01:46:45.866Z",
+    "recordedAt": "2026-04-27T09:14:48.147Z",
     "payload": {
-      "name": "BEI-ORD-2026-00411",
-      "store": "ROBINSONS ANTIPOLO - BEBANG ENTERPRISE INC."
+      "name": "BEI-ORD-2026-00422",
+      "store": "ROBINSONS GALLERIA SOUTH - TUNGSTEN CAPITAL HOLDINGS OPC"
+    }
+  },
+  {
+    "kind": "mr-create",
+    "recordedAt": "2026-04-27T09:15:19.727Z",
+    "payload": {
+      "name": "MAT-MR-2026-00517",
+      "store": "ROBINSONS GALLERIA SOUTH - TUNGSTEN CAPITAL HOLDINGS OPC"
+    }
+  },
+  {
+    "kind": "wr-create",
+    "recordedAt": "2026-04-27T09:15:35.834Z",
+    "payload": {
+      "name": "BEI-WHR-2026-00126",
+      "store": "ROBINSONS GALLERIA SOUTH - TUNGSTEN CAPITAL HOLDINGS OPC"
+    }
+  },
+  {
+    "kind": "si-create",
+    "recordedAt": "2026-04-27T09:15:43.859Z",
+    "payload": {
+      "name": "ACC-SINV-2026-00321",
+      "store": "ROBINSONS GALLERIA SOUTH - TUNGSTEN CAPITAL HOLDINGS OPC"
     }
   },
   {
     "kind": "order-create",
-    "recordedAt": "2026-04-27T01:47:55.696Z",
+    "recordedAt": "2026-04-27T09:16:00.165Z",
     "payload": {
-      "name": "BEI-ORD-2026-00412",
+      "name": "BEI-ORD-2026-00423",
+      "store": "ROBINSONS GENERAL TRIAS - BEBANG MEGA INC."
+    }
+  },
+  {
+    "kind": "mr-create",
+    "recordedAt": "2026-04-27T09:16:31.796Z",
+    "payload": {
+      "name": "MAT-MR-2026-00518",
+      "store": "ROBINSONS GENERAL TRIAS - BEBANG MEGA INC."
+    }
+  },
+  {
+    "kind": "wr-create",
+    "recordedAt": "2026-04-27T09:16:47.471Z",
+    "payload": {
+      "name": "BEI-WHR-2026-00127",
+      "store": "ROBINSONS GENERAL TRIAS - BEBANG MEGA INC."
+    }
+  },
+  {
+    "kind": "si-create",
+    "recordedAt": "2026-04-27T09:16:55.255Z",
+    "payload": {
+      "name": "ACC-SINV-2026-00322",
+      "store": "ROBINSONS GENERAL TRIAS - BEBANG MEGA INC."
+    }
+  },
+  {
+    "kind": "order-create",
+    "recordedAt": "2026-04-27T09:17:11.092Z",
+    "payload": {
+      "name": "BEI-ORD-2026-00424",
       "store": "ROBINSONS IMUS - BEBANG MEGA INC."
     }
   },
   {
     "kind": "mr-create",
-    "recordedAt": "2026-04-27T01:48:11.713Z",
+    "recordedAt": "2026-04-27T09:17:42.597Z",
     "payload": {
-      "name": "MAT-MR-2026-00503",
+      "name": "MAT-MR-2026-00519",
       "store": "ROBINSONS IMUS - BEBANG MEGA INC."
     }
   },
   {
     "kind": "wr-create",
-    "recordedAt": "2026-04-27T01:48:28.532Z",
+    "recordedAt": "2026-04-27T09:17:58.432Z",
     "payload": {
-      "name": "BEI-WHR-2026-00105",
+      "name": "BEI-WHR-2026-00128",
       "store": "ROBINSONS IMUS - BEBANG MEGA INC."
     }
   },
   {
     "kind": "si-create",
-    "recordedAt": "2026-04-27T01:48:35.868Z",
+    "recordedAt": "2026-04-27T09:18:06.370Z",
     "payload": {
-      "name": "ACC-SINV-2026-00298",
+      "name": "ACC-SINV-2026-00323",
       "store": "ROBINSONS IMUS - BEBANG MEGA INC."
+    }
+  },
+  {
+    "kind": "order-create",
+    "recordedAt": "2026-04-27T09:18:31.858Z",
+    "payload": {
+      "name": "BEI-ORD-2026-00425",
+      "store": "SM BICUTAN - BEBANG SM BICUTAN INC."
+    }
+  },
+  {
+    "kind": "mr-create",
+    "recordedAt": "2026-04-27T09:19:03.317Z",
+    "payload": {
+      "name": "MAT-MR-2026-00520",
+      "store": "SM BICUTAN - BEBANG SM BICUTAN INC."
+    }
+  },
+  {
+    "kind": "order-create",
+    "recordedAt": "2026-04-27T09:20:26.258Z",
+    "payload": {
+      "name": "BEI-ORD-2026-00426",
+      "store": "SM CALOOCAN - TAJ FOOD CORP."
+    }
+  },
+  {
+    "kind": "mr-create",
+    "recordedAt": "2026-04-27T09:20:58.326Z",
+    "payload": {
+      "name": "MAT-MR-2026-00521",
+      "store": "SM CALOOCAN - TAJ FOOD CORP."
+    }
+  },
+  {
+    "kind": "wr-create",
+    "recordedAt": "2026-04-27T09:21:14.415Z",
+    "payload": {
+      "name": "BEI-WHR-2026-00129",
+      "store": "SM CALOOCAN - TAJ FOOD CORP."
+    }
+  },
+  {
+    "kind": "si-create",
+    "recordedAt": "2026-04-27T09:21:21.807Z",
+    "payload": {
+      "name": "ACC-SINV-2026-00324",
+      "store": "SM CALOOCAN - TAJ FOOD CORP."
+    }
+  },
+  {
+    "kind": "order-create",
+    "recordedAt": "2026-04-27T09:21:38.161Z",
+    "payload": {
+      "name": "BEI-ORD-2026-00427",
+      "store": "SM CLARK - RED TALDAWA FOODS OPC"
+    }
+  },
+  {
+    "kind": "mr-create",
+    "recordedAt": "2026-04-27T09:22:10.268Z",
+    "payload": {
+      "name": "MAT-MR-2026-00522",
+      "store": "SM CLARK - RED TALDAWA FOODS OPC"
+    }
+  },
+  {
+    "kind": "wr-create",
+    "recordedAt": "2026-04-27T09:22:26.407Z",
+    "payload": {
+      "name": "BEI-WHR-2026-00130",
+      "store": "SM CLARK - RED TALDAWA FOODS OPC"
+    }
+  },
+  {
+    "kind": "si-create",
+    "recordedAt": "2026-04-27T09:22:33.892Z",
+    "payload": {
+      "name": "ACC-SINV-2026-00325",
+      "store": "SM CLARK - RED TALDAWA FOODS OPC"
+    }
+  },
+  {
+    "kind": "order-create",
+    "recordedAt": "2026-04-27T09:22:49.813Z",
+    "payload": {
+      "name": "BEI-ORD-2026-00428",
+      "store": "SM EAST ORTIGAS - BEBANG SMEO INC."
+    }
+  },
+  {
+    "kind": "mr-create",
+    "recordedAt": "2026-04-27T09:23:21.870Z",
+    "payload": {
+      "name": "MAT-MR-2026-00523",
+      "store": "SM EAST ORTIGAS - BEBANG SMEO INC."
+    }
+  },
+  {
+    "kind": "wr-create",
+    "recordedAt": "2026-04-27T09:23:38.038Z",
+    "payload": {
+      "name": "BEI-WHR-2026-00131",
+      "store": "SM EAST ORTIGAS - BEBANG SMEO INC."
+    }
+  },
+  {
+    "kind": "si-create",
+    "recordedAt": "2026-04-27T09:23:45.464Z",
+    "payload": {
+      "name": "ACC-SINV-2026-00326",
+      "store": "SM EAST ORTIGAS - BEBANG SMEO INC."
+    }
+  },
+  {
+    "kind": "order-create",
+    "recordedAt": "2026-04-27T09:24:00.976Z",
+    "payload": {
+      "name": "BEI-ORD-2026-00429",
+      "store": "SM GRAND CENTRAL - BEBANG GRAND CENTRAL INC."
+    }
+  },
+  {
+    "kind": "mr-create",
+    "recordedAt": "2026-04-27T09:24:32.874Z",
+    "payload": {
+      "name": "MAT-MR-2026-00524",
+      "store": "SM GRAND CENTRAL - BEBANG GRAND CENTRAL INC."
+    }
+  },
+  {
+    "kind": "wr-create",
+    "recordedAt": "2026-04-27T09:24:52.124Z",
+    "payload": {
+      "name": "BEI-WHR-2026-00132",
+      "store": "SM GRAND CENTRAL - BEBANG GRAND CENTRAL INC."
+    }
+  },
+  {
+    "kind": "si-create",
+    "recordedAt": "2026-04-27T09:24:59.624Z",
+    "payload": {
+      "name": "ACC-SINV-2026-00327",
+      "store": "SM GRAND CENTRAL - BEBANG GRAND CENTRAL INC."
+    }
+  },
+  {
+    "kind": "order-create",
+    "recordedAt": "2026-04-27T09:25:16.151Z",
+    "payload": {
+      "name": "BEI-ORD-2026-00430",
+      "store": "SM MALL OF ASIA - BEBANG SMOA INC."
+    }
+  },
+  {
+    "kind": "mr-create",
+    "recordedAt": "2026-04-27T09:25:48.130Z",
+    "payload": {
+      "name": "MAT-MR-2026-00525",
+      "store": "SM MALL OF ASIA - BEBANG SMOA INC."
+    }
+  },
+  {
+    "kind": "wr-create",
+    "recordedAt": "2026-04-27T09:26:04.419Z",
+    "payload": {
+      "name": "BEI-WHR-2026-00133",
+      "store": "SM MALL OF ASIA - BEBANG SMOA INC."
+    }
+  },
+  {
+    "kind": "si-create",
+    "recordedAt": "2026-04-27T09:26:11.894Z",
+    "payload": {
+      "name": "ACC-SINV-2026-00328",
+      "store": "SM MALL OF ASIA - BEBANG SMOA INC."
+    }
+  },
+  {
+    "kind": "order-create",
+    "recordedAt": "2026-04-27T09:26:28.759Z",
+    "payload": {
+      "name": "BEI-ORD-2026-00431",
+      "store": "SM MANILA - BEBANG ENTERPRISE INC."
+    }
+  },
+  {
+    "kind": "mr-create",
+    "recordedAt": "2026-04-27T09:27:00.720Z",
+    "payload": {
+      "name": "MAT-MR-2026-00526",
+      "store": "SM MANILA - BEBANG ENTERPRISE INC."
+    }
+  },
+  {
+    "kind": "wr-create",
+    "recordedAt": "2026-04-27T09:27:16.902Z",
+    "payload": {
+      "name": "BEI-WHR-2026-00134",
+      "store": "SM MANILA - BEBANG ENTERPRISE INC."
+    }
+  },
+  {
+    "kind": "si-create",
+    "recordedAt": "2026-04-27T09:27:24.344Z",
+    "payload": {
+      "name": "ACC-SINV-2026-00329",
+      "store": "SM MANILA - BEBANG ENTERPRISE INC."
+    }
+  },
+  {
+    "kind": "order-create",
+    "recordedAt": "2026-04-27T09:27:40.484Z",
+    "payload": {
+      "name": "BEI-ORD-2026-00432",
+      "store": "SM MARIKINA - BEBANG SM MARIKINA INC."
+    }
+  },
+  {
+    "kind": "mr-create",
+    "recordedAt": "2026-04-27T09:28:12.639Z",
+    "payload": {
+      "name": "MAT-MR-2026-00527",
+      "store": "SM MARIKINA - BEBANG SM MARIKINA INC."
+    }
+  },
+  {
+    "kind": "order-create",
+    "recordedAt": "2026-04-27T09:29:24.578Z",
+    "payload": {
+      "name": "BEI-ORD-2026-00433",
+      "store": "SM MARILAO - BEBANG MARILAO INC."
+    }
+  },
+  {
+    "kind": "mr-create",
+    "recordedAt": "2026-04-27T09:29:56.813Z",
+    "payload": {
+      "name": "MAT-MR-2026-00528",
+      "store": "SM MARILAO - BEBANG MARILAO INC."
+    }
+  },
+  {
+    "kind": "wr-create",
+    "recordedAt": "2026-04-27T09:30:13.215Z",
+    "payload": {
+      "name": "BEI-WHR-2026-00135",
+      "store": "SM MARILAO - BEBANG MARILAO INC."
+    }
+  },
+  {
+    "kind": "si-create",
+    "recordedAt": "2026-04-27T09:30:20.789Z",
+    "payload": {
+      "name": "ACC-SINV-2026-00331",
+      "store": "SM MARILAO - BEBANG MARILAO INC."
+    }
+  },
+  {
+    "kind": "order-create",
+    "recordedAt": "2026-04-27T09:30:37.265Z",
+    "payload": {
+      "name": "BEI-ORD-2026-00434",
+      "store": "SM MEGAMALL - BEBANG ENTERPRISE INC."
+    }
+  },
+  {
+    "kind": "mr-create",
+    "recordedAt": "2026-04-27T09:31:09.225Z",
+    "payload": {
+      "name": "MAT-MR-2026-00529",
+      "store": "SM MEGAMALL - BEBANG ENTERPRISE INC."
+    }
+  },
+  {
+    "kind": "wr-create",
+    "recordedAt": "2026-04-27T09:31:25.463Z",
+    "payload": {
+      "name": "BEI-WHR-2026-00136",
+      "store": "SM MEGAMALL - BEBANG ENTERPRISE INC."
+    }
+  },
+  {
+    "kind": "si-create",
+    "recordedAt": "2026-04-27T09:31:33.022Z",
+    "payload": {
+      "name": "ACC-SINV-2026-00332",
+      "store": "SM MEGAMALL - BEBANG ENTERPRISE INC."
+    }
+  },
+  {
+    "kind": "order-create",
+    "recordedAt": "2026-04-27T09:31:48.886Z",
+    "payload": {
+      "name": "BEI-ORD-2026-00435",
+      "store": "SM NORTH EDSA - BEBANG NORTH EDSA INC."
+    }
+  },
+  {
+    "kind": "mr-create",
+    "recordedAt": "2026-04-27T09:32:21.061Z",
+    "payload": {
+      "name": "MAT-MR-2026-00530",
+      "store": "SM NORTH EDSA - BEBANG NORTH EDSA INC."
+    }
+  },
+  {
+    "kind": "wr-create",
+    "recordedAt": "2026-04-27T09:32:37.594Z",
+    "payload": {
+      "name": "BEI-WHR-2026-00137",
+      "store": "SM NORTH EDSA - BEBANG NORTH EDSA INC."
+    }
+  },
+  {
+    "kind": "si-create",
+    "recordedAt": "2026-04-27T09:32:45.148Z",
+    "payload": {
+      "name": "ACC-SINV-2026-00333",
+      "store": "SM NORTH EDSA - BEBANG NORTH EDSA INC."
+    }
+  },
+  {
+    "kind": "order-create",
+    "recordedAt": "2026-04-27T09:33:01.696Z",
+    "payload": {
+      "name": "BEI-ORD-2026-00436",
+      "store": "SM PULILAN - BEBANG SMM INC."
+    }
+  },
+  {
+    "kind": "mr-create",
+    "recordedAt": "2026-04-27T09:33:33.794Z",
+    "payload": {
+      "name": "MAT-MR-2026-00531",
+      "store": "SM PULILAN - BEBANG SMM INC."
+    }
+  },
+  {
+    "kind": "wr-create",
+    "recordedAt": "2026-04-27T09:33:50.068Z",
+    "payload": {
+      "name": "BEI-WHR-2026-00138",
+      "store": "SM PULILAN - BEBANG SMM INC."
+    }
+  },
+  {
+    "kind": "si-create",
+    "recordedAt": "2026-04-27T09:33:57.586Z",
+    "payload": {
+      "name": "ACC-SINV-2026-00334",
+      "store": "SM PULILAN - BEBANG SMM INC."
+    }
+  },
+  {
+    "kind": "order-create",
+    "recordedAt": "2026-04-27T09:34:13.602Z",
+    "payload": {
+      "name": "BEI-ORD-2026-00437",
+      "store": "SM SAN JOSE DEL MONTE - JL TRADE OPC"
+    }
+  },
+  {
+    "kind": "mr-create",
+    "recordedAt": "2026-04-27T09:34:45.599Z",
+    "payload": {
+      "name": "MAT-MR-2026-00532",
+      "store": "SM SAN JOSE DEL MONTE - JL TRADE OPC"
+    }
+  },
+  {
+    "kind": "wr-create",
+    "recordedAt": "2026-04-27T09:35:05.835Z",
+    "payload": {
+      "name": "BEI-WHR-2026-00139",
+      "store": "SM SAN JOSE DEL MONTE - JL TRADE OPC"
+    }
+  },
+  {
+    "kind": "si-create",
+    "recordedAt": "2026-04-27T09:35:13.478Z",
+    "payload": {
+      "name": "ACC-SINV-2026-00335",
+      "store": "SM SAN JOSE DEL MONTE - JL TRADE OPC"
+    }
+  },
+  {
+    "kind": "order-create",
+    "recordedAt": "2026-04-27T09:35:29.427Z",
+    "payload": {
+      "name": "BEI-ORD-2026-00438",
+      "store": "SM SANGANDAAN - TUNGSTEN CAPITAL HOLDINGS OPC"
+    }
+  },
+  {
+    "kind": "mr-create",
+    "recordedAt": "2026-04-27T09:36:01.475Z",
+    "payload": {
+      "name": "MAT-MR-2026-00533",
+      "store": "SM SANGANDAAN - TUNGSTEN CAPITAL HOLDINGS OPC"
+    }
+  },
+  {
+    "kind": "wr-create",
+    "recordedAt": "2026-04-27T09:36:17.830Z",
+    "payload": {
+      "name": "BEI-WHR-2026-00140",
+      "store": "SM SANGANDAAN - TUNGSTEN CAPITAL HOLDINGS OPC"
+    }
+  },
+  {
+    "kind": "si-create",
+    "recordedAt": "2026-04-27T09:36:25.318Z",
+    "payload": {
+      "name": "ACC-SINV-2026-00336",
+      "store": "SM SANGANDAAN - TUNGSTEN CAPITAL HOLDINGS OPC"
+    }
+  },
+  {
+    "kind": "order-create",
+    "recordedAt": "2026-04-27T09:36:41.451Z",
+    "payload": {
+      "name": "BEI-ORD-2026-00439",
+      "store": "SM SOUTHMALL - BEBANG ENTERPRISE INC."
+    }
+  },
+  {
+    "kind": "mr-create",
+    "recordedAt": "2026-04-27T09:37:44.004Z",
+    "payload": {
+      "name": "MAT-MR-2026-00318",
+      "store": "SM SOUTHMALL - BEBANG ENTERPRISE INC."
+    }
+  },
+  {
+    "kind": "order-create",
+    "recordedAt": "2026-04-27T09:38:16.912Z",
+    "payload": {
+      "name": "BEI-ORD-2026-00440",
+      "store": "SM STA. ROSA - SWEET HARMONY FOOD CORP."
+    }
+  },
+  {
+    "kind": "mr-create",
+    "recordedAt": "2026-04-27T09:39:18.875Z",
+    "payload": {
+      "name": "MAT-MR-2026-00319",
+      "store": "SM STA. ROSA - SWEET HARMONY FOOD CORP."
     }
   }
 ]

@@ -1,0 +1,128 @@
+{
+  "source_warehouse": "PINNACLE COLD STORAGE SOLUTIONS - BKI",
+  "test_item": "PM007",
+  "per_call_qty": 1.0,
+  "mr_used": "MAT-MR-2026-00135",
+  "n_parallel": 10,
+  "calls": [
+    {
+      "idx": 0,
+      "ok": true,
+      "se": "MAT-STE-2026-01045",
+      "elapsed_ms": 20572
+    },
+    {
+      "idx": 1,
+      "ok": true,
+      "se": "MAT-STE-2026-01043",
+      "elapsed_ms": 16211
+    },
+    {
+      "idx": 2,
+      "ok": true,
+      "se": "MAT-STE-2026-01044",
+      "elapsed_ms": 18512
+    },
+    {
+      "idx": 3,
+      "ok": true,
+      "se": "MAT-STE-2026-01039",
+      "elapsed_ms": 7499
+    },
+    {
+      "idx": 4,
+      "ok": true,
+      "se": "MAT-STE-2026-01047",
+      "elapsed_ms": 25192
+    },
+    {
+      "idx": 5,
+      "ok": true,
+      "se": "MAT-STE-2026-01042",
+      "elapsed_ms": 14135
+    },
+    {
+      "idx": 6,
+      "ok": true,
+      "se": "MAT-STE-2026-01041",
+      "elapsed_ms": 11825
+    },
+    {
+      "idx": 7,
+      "ok": true,
+      "se": "MAT-STE-2026-01048",
+      "elapsed_ms": 27528
+    },
+    {
+      "idx": 8,
+      "ok": true,
+      "se": "MAT-STE-2026-01046",
+      "elapsed_ms": 22577
+    },
+    {
+      "idx": 9,
+      "ok": true,
+      "se": "MAT-STE-2026-01040",
+      "elapsed_ms": 9847
+    }
+  ],
+  "ok_count": 10,
+  "negative_stock_count": 0,
+  "deadlock_count": 0,
+  "mr_exhausted_count": 0,
+  "other_fail_count": 0,
+  "max_elapsed_ms": 27528,
+  "cleanup_results": [
+    {
+      "se": "MAT-STE-2026-01045",
+      "action": "failed",
+      "error": "Stock Entry MAT-STE-2026-01045 not found"
+    },
+    {
+      "se": "MAT-STE-2026-01043",
+      "action": "failed",
+      "error": "Stock Entry MAT-STE-2026-01043 not found"
+    },
+    {
+      "se": "MAT-STE-2026-01044",
+      "action": "failed",
+      "error": "Stock Entry MAT-STE-2026-01044 not found"
+    },
+    {
+      "se": "MAT-STE-2026-01039",
+      "action": "failed",
+      "error": "Stock Entry MAT-STE-2026-01039 not found"
+    },
+    {
+      "se": "MAT-STE-2026-01047",
+      "action": "failed",
+      "error": "Stock Entry MAT-STE-2026-01047 not found"
+    },
+    {
+      "se": "MAT-STE-2026-01042",
+      "action": "failed",
+      "error": "Stock Entry MAT-STE-2026-01042 not found"
+    },
+    {
+      "se": "MAT-STE-2026-01041",
+      "action": "failed",
+      "error": "Stock Entry MAT-STE-2026-01041 not found"
+    },
+    {
+      "se": "MAT-STE-2026-01048",
+      "action": "failed",
+      "error": "Stock Entry MAT-STE-2026-01048 not found"
+    },
+    {
+      "se": "MAT-STE-2026-01046",
+      "action": "failed",
+      "error": "Stock Entry MAT-STE-2026-01046 not found"
+    },
+    {
+      "se": "MAT-STE-2026-01040",
+      "action": "failed",
+      "error": "Stock Entry MAT-STE-2026-01040 not found"
+    }
+  ],
+  "status": "PASS"
+}

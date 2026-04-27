@@ -1,16 +1,11 @@
 {
-  "checked_at_local": "2026-04-27T00:04:15+0800",
-  "ssm_command_id": "6326f108-926d-4311-b7d1-d52a1f3b87be",
+  "ssm_command_id": "71ca1d80-192e-4927-909c-bb54c92a9f83",
   "ssm_status": "Success",
-  "instance_id": "i-026b7477d27bd46d6",
-  "expected_s224_merge_sha": "b6355e35c10edef2828afb3a283386874a7e728e",
-  "container_code_sha": "",
-  "container_sha_matches_expected": false,
-  "container_apps_hrms_mtime": "1777207450 /home/frappe/frappe-bench/apps/hrms/hrms/api/warehouse.py",
+  "for_update_present": true,
+  "container_code_has_s225_marker": true,
   "container_code_has_idempotency": true,
-  "container_code_has_idempotency_status_check": true,
-  "container_code_has_fuzzy_resolver_throw": true,
-  "container_code_has_s224_comment_marker": true,
-  "container_code_has_for_update": false,
-  "raw_output": "=== CONTAINER GIT HEAD ===\nfatal: not a git repository (or any of the parent directories): .git\nGIT_UNAVAILABLE\n=== APPS_HRMS MTIME (sanity check) ===\n1777207450 /home/frappe/frappe-bench/apps/hrms/hrms/api/warehouse.py\n=== PATTERN B (already_approved in approve_material_request) ===\n1254:\t\t\t\"already_approved\": True,\n=== PATTERN B (current_status == Ordered idempotency block) ===\n1250:\tif current_status == \"Ordered\":\n=== PATTERN C (Ambiguous store identifier in resolve_warehouse) ===\n301:\t\t\t_(\"Ambiguous store identifier {0!r} \u2014 matches multiple warehouses: {1}. Use the full canonical name.\").format(\n=== PATTERN C (case-insensitive substring fallback marker) ===\n273:\t# S224: case-insensitive substring fallback so legacy callers passing partial\n"
+  "container_code_has_s224_marker": true,
+  "container_apps_hrms_mtime": "1777277228 /home/frappe/frappe-bench/apps/hrms/hrms/api/warehouse.py",
+  "raw_output": "=== APPS_HRMS MTIME ===\n1777277228 /home/frappe/frappe-bench/apps/hrms/hrms/api/warehouse.py\n=== FOR UPDATE in create_stock_transfer ===\n1248:\t\t\"SELECT status FROM `tabMaterial Request` WHERE name = %s FOR UPDATE\", mr_name\n1594:\t# FOR UPDATE locks the rows for the duration of this transaction; released\n1605:\t\t\t   FOR UPDATE\"\"\",\n1629:\t\t\t\t   FOR UPDATE\"\"\",\n=== S225 marker in create_stock_transfer ===\n1590:\t# S225: serialize concurrent batch decrements per item+warehouse pair.\n=== Pattern B (already_approved still present) ===\n1254:\t\t\t\"already_approved\": True,\n=== Pattern C (S224 marker still present) ===\n273:\t# S224: case-insensitive substring fallback so legacy callers passing partial\n",
+  "checked_at_local": "2026-04-27T16:37:27+0800"
 }

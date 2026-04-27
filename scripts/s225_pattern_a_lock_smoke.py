@@ -29,9 +29,13 @@ INSTANCE_ID = "i-026b7477d27bd46d6"
 INNER = r'''
 import os, json, traceback
 for d in ["/home/frappe/logs", "/home/frappe/frappe-bench/logs",
+          "/home/frappe/frappe-bench/hq.bebang.ph/logs",
           "/home/frappe/frappe-bench/sites/hq.bebang.ph/logs",
           "/home/frappe/frappe-bench/sites/hq.bebang.ph/private/files"]:
-    os.makedirs(d, exist_ok=True)
+    try:
+        os.makedirs(d, exist_ok=True)
+    except Exception:
+        pass
 import frappe
 frappe.init(site="hq.bebang.ph", sites_path="/home/frappe/frappe-bench/sites")
 frappe.connect()
@@ -205,7 +209,7 @@ def main() -> int:
         "BACKEND=$(docker ps --filter name=frappe_backend --format '{{.ID}}' | head -1)",
         f"echo '{enc}' | base64 -d > /tmp/s225_smoke.py",
         "docker cp /tmp/s225_smoke.py $BACKEND:/tmp/s225_smoke.py",
-        "docker exec $BACKEND /home/frappe/frappe-bench/env/bin/python /tmp/s225_smoke.py",
+        "docker exec $BACKEND /home/frappe/frappe-bench/env/bin/python /tmp/s225_smoke.py 2>&1",
     ]
     ssm = boto3.client("ssm", region_name="ap-southeast-1")
     r = ssm.send_command(InstanceIds=[INSTANCE_ID], DocumentName="AWS-RunShellScript",
