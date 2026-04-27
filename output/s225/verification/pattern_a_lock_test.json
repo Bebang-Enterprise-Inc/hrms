@@ -1,6 +1,7 @@
 {
-  "checked_at_local": "2026-04-27T10:37:36+0800",
-  "status": "DEFERRED_PRE_DEPLOY",
-  "single_thread_dispatch": "deferred",
-  "note": "Lock change is in worktree but not yet in deployed container. Smoke probe is non-destructive (cancels its own SE) but skipped until Sam merges + deploys. Re-run with --execute after deploy verification (Phase 4.5)."
+  "container_has_for_update": true,
+  "container_has_s225_marker": true,
+  "mr_name": null,
+  "status": "SKIPPED_NO_MR",
+  "single_thread_dispatch": "deferred"
 }
