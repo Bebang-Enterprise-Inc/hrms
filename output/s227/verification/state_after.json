@@ -1,0 +1,56 @@
+{
+  "sprint_id": "S227",
+  "sprint_name": "Store Partner Analytics",
+  "plan_path": "docs/plans/2026-04-27-sprint-227-store-partner-analytics.md",
+  "branch": "s227-store-partner-analytics",
+  "execution_phases_completed": ["P0", "P1", "P2", "P3", "P4a", "P4b", "P6 (closeout)"],
+  "phase_pending": "P5 (L3 testing — fresh agent session required per v3 mandate)",
+  "phase_completion_verifier_result": "27/27 PASS for P0-P4",
+  "build_results": {
+    "ast_parse_sales_dashboard_py": "OK (4087 lines)",
+    "npm_run_build_phase_4a": "Compiled successfully in 13.2s",
+    "npm_run_build_phase_4b": "Compiled successfully in 12.3s",
+    "tsc_no_emit_baseline_errors": 78,
+    "tsc_no_emit_after_s227_errors": 78,
+    "tsc_no_emit_net_new_errors": 0
+  },
+  "test_results": {
+    "frappe_helper_extract_exec_assertions": "12/12 PASS (standalone)",
+    "vitest_navigation_personas": "4/4 PASS"
+  },
+  "endpoints_modified": [
+    "get_sales_dashboard_access_context",
+    "get_sales_dashboard_overview",
+    "get_sales_dashboard_summary",
+    "get_sales_dashboard_daily_series",
+    "get_sales_dashboard_channel_mix",
+    "get_sales_dashboard_store_rankings",
+    "get_sales_dashboard_weather_context",
+    "export_sales_dashboard_detail",
+    "get_product_mix_analytics"
+  ],
+  "frontend_files_modified": [
+    "lib/roles.ts",
+    "lib/navigation-personas.ts",
+    "lib/sales-dashboard.ts",
+    "tests/unit/navigation/navigation-personas.test.ts",
+    "app/dashboard/analytics/sales/page.tsx",
+    "app/dashboard/analytics/product/page.tsx",
+    "app/dashboard/analytics/sales/store-detail-dialog.tsx",
+    "app/dashboard/analytics/sales/stores/page.tsx",
+    "app/dashboard/analytics/sales/stores/[locationId]/page.tsx"
+  ],
+  "data_testids_added": [
+    "analytics-sales-leaderboard",
+    "analytics-sales-open-full-leaderboard-cta",
+    "analytics-sales-discount-rankings-card",
+    "analytics-product-fleet-rank-header",
+    "analytics-product-fleet-rank-cell",
+    "analytics-product-assortment-gap-card"
+  ],
+  "remote_truth_baseline": {
+    "hrms_origin_production_at_start": "7eea6f7dcef6d77bbda311daae6f15aac66442f0",
+    "bei_tasks_origin_main_at_start": "31fa4707498c4110f9e5a9b8fc740137d9e38b85"
+  },
+  "phase5_handoff_prompt_emitted_to_pr_description": true
+}
