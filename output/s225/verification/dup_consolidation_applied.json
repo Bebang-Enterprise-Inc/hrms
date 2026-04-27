@@ -1,0 +1,685 @@
+{
+  "generated_at_local": "2026-04-27T10:33:53+0800",
+  "applied_clusters": [
+    {
+      "cluster_id": "cluster-3md-logistics-camangyanan-bki",
+      "duplicate": "3MD LOGISTICS \u2013 CAMANGYANAN - BKI",
+      "canonical": "3MD LOGISTICS - CAMANGYANAN - BKI",
+      "duplicate_disabled_after": 1,
+      "duplicate_total_stock_after": 0.0,
+      "stock_entry_docnames": [
+        "MAT-STE-2026-01038"
+      ],
+      "per_item_results": [
+        {
+          "item_code": "A058",
+          "duplicate_before_qty": 434.0,
+          "duplicate_after_qty": 0.0,
+          "canonical_after_qty": 828.0,
+          "canonical_before_qty_inferred": 394.0,
+          "canonical_gain_inferred": 434.0
+        },
+        {
+          "item_code": "A059",
+          "duplicate_before_qty": 550.0,
+          "duplicate_after_qty": 0.0,
+          "canonical_after_qty": 1142.0,
+          "canonical_before_qty_inferred": 592.0,
+          "canonical_gain_inferred": 550.0
+        },
+        {
+          "item_code": "A060",
+          "duplicate_before_qty": 354.0,
+          "duplicate_after_qty": 0.0,
+          "canonical_after_qty": 715.0,
+          "canonical_before_qty_inferred": 361.0,
+          "canonical_gain_inferred": 354.0
+        },
+        {
+          "item_code": "BEB-CCF",
+          "duplicate_before_qty": 40.0,
+          "duplicate_after_qty": 0.0,
+          "canonical_after_qty": 40.0,
+          "canonical_before_qty_inferred": 0.0,
+          "canonical_gain_inferred": 40.0
+        },
+        {
+          "item_code": "CM30",
+          "duplicate_before_qty": 54.0,
+          "duplicate_after_qty": 0.0,
+          "canonical_after_qty": 108.0,
+          "canonical_before_qty_inferred": 54.0,
+          "canonical_gain_inferred": 54.0
+        },
+        {
+          "item_code": "CM31",
+          "duplicate_before_qty": 53.0,
+          "duplicate_after_qty": 0.0,
+          "canonical_after_qty": 106.0,
+          "canonical_before_qty_inferred": 53.0,
+          "canonical_gain_inferred": 53.0
+        },
+        {
+          "item_code": "CM32",
+          "duplicate_before_qty": 47.0,
+          "duplicate_after_qty": 0.0,
+          "canonical_after_qty": 99.0,
+          "canonical_before_qty_inferred": 52.0,
+          "canonical_gain_inferred": 47.0
+        },
+        {
+          "item_code": "CM33",
+          "duplicate_before_qty": 75.0,
+          "duplicate_after_qty": 0.0,
+          "canonical_after_qty": 151.0,
+          "canonical_before_qty_inferred": 76.0,
+          "canonical_gain_inferred": 75.0
+        },
+        {
+          "item_code": "CM34",
+          "duplicate_before_qty": 24.0,
+          "duplicate_after_qty": 0.0,
+          "canonical_after_qty": 48.0,
+          "canonical_before_qty_inferred": 24.0,
+          "canonical_gain_inferred": 24.0
+        },
+        {
+          "item_code": "CM37",
+          "duplicate_before_qty": 57.0,
+          "duplicate_after_qty": 0.0,
+          "canonical_after_qty": 127.0,
+          "canonical_before_qty_inferred": 70.0,
+          "canonical_gain_inferred": 57.0
+        },
+        {
+          "item_code": "CM38",
+          "duplicate_before_qty": 573.0,
+          "duplicate_after_qty": 0.0,
+          "canonical_after_qty": 1193.0,
+          "canonical_before_qty_inferred": 620.0,
+          "canonical_gain_inferred": 573.0
+        },
+        {
+          "item_code": "CM39",
+          "duplicate_before_qty": 419.0,
+          "duplicate_after_qty": 0.0,
+          "canonical_after_qty": 876.0,
+          "canonical_before_qty_inferred": 457.0,
+          "canonical_gain_inferred": 419.0
+        },
+        {
+          "item_code": "CS007",
+          "duplicate_before_qty": 7.0,
+          "duplicate_after_qty": 0.0,
+          "canonical_after_qty": 14.0,
+          "canonical_before_qty_inferred": 7.0,
+          "canonical_gain_inferred": 7.0
+        },
+        {
+          "item_code": "CS008",
+          "duplicate_before_qty": 4.0,
+          "duplicate_after_qty": 0.0,
+          "canonical_after_qty": 8.0,
+          "canonical_before_qty_inferred": 4.0,
+          "canonical_gain_inferred": 4.0
+        },
+        {
+          "item_code": "CS012",
+          "duplicate_before_qty": 48.0,
+          "duplicate_after_qty": 0.0,
+          "canonical_after_qty": 96.0,
+          "canonical_before_qty_inferred": 48.0,
+          "canonical_gain_inferred": 48.0
+        },
+        {
+          "item_code": "CS012-A",
+          "duplicate_before_qty": 5.0,
+          "duplicate_after_qty": 0.0,
+          "canonical_after_qty": 11.0,
+          "canonical_before_qty_inferred": 6.0,
+          "canonical_gain_inferred": 5.0
+        },
+        {
+          "item_code": "CS013",
+          "duplicate_before_qty": 3000.0,
+          "duplicate_after_qty": 0.0,
+          "canonical_after_qty": 3000.0,
+          "canonical_before_qty_inferred": 0.0,
+          "canonical_gain_inferred": 3000.0
+        },
+        {
+          "item_code": "CS014",
+          "duplicate_before_qty": 124.0,
+          "duplicate_after_qty": 0.0,
+          "canonical_after_qty": 248.0,
+          "canonical_before_qty_inferred": 124.0,
+          "canonical_gain_inferred": 124.0
+        },
+        {
+          "item_code": "CS016",
+          "duplicate_before_qty": 228.0,
+          "duplicate_after_qty": 0.0,
+          "canonical_after_qty": 456.0,
+          "canonical_before_qty_inferred": 228.0,
+          "canonical_gain_inferred": 228.0
+        },
+        {
+          "item_code": "FG001",
+          "duplicate_before_qty": 12194.0,
+          "duplicate_after_qty": 0.0,
+          "canonical_after_qty": 73355.0,
+          "canonical_before_qty_inferred": 61161.0,
+          "canonical_gain_inferred": 12194.0
+        },
+        {
+          "item_code": "FG002-A",
+          "duplicate_before_qty": 1244.0,
+          "duplicate_after_qty": 0.0,
+          "canonical_after_qty": 2958.0,
+          "canonical_before_qty_inferred": 1714.0,
+          "canonical_gain_inferred": 1244.0
+        },
+        {
+          "item_code": "FG003",
+          "duplicate_before_qty": 387.0,
+          "duplicate_after_qty": 0.0,
+          "canonical_after_qty": 926.0,
+          "canonical_before_qty_inferred": 539.0,
+          "canonical_gain_inferred": 387.0
+        },
+        {
+          "item_code": "FG004",
+          "duplicate_before_qty": 648.0,
+          "duplicate_after_qty": 0.0,
+          "canonical_after_qty": 1743.0,
+          "canonical_before_qty_inferred": 1095.0,
+          "canonical_gain_inferred": 648.0
+        },
+        {
+          "item_code": "FG005",
+          "duplicate_before_qty": 131.0,
+          "duplicate_after_qty": 0.0,
+          "canonical_after_qty": 306.0,
+          "canonical_before_qty_inferred": 175.0,
+          "canonical_gain_inferred": 131.0
+        },
+        {
+          "item_code": "FG006",
+          "duplicate_before_qty": 100.0,
+          "duplicate_after_qty": 0.0,
+          "canonical_after_qty": 151.0,
+          "canonical_before_qty_inferred": 51.0,
+          "canonical_gain_inferred": 100.0
+        },
+        {
+          "item_code": "FG007",
+          "duplicate_before_qty": 92.0,
+          "duplicate_after_qty": 0.0,
+          "canonical_after_qty": 168.0,
+          "canonical_before_qty_inferred": 76.0,
+          "canonical_gain_inferred": 92.0
+        },
+        {
+          "item_code": "FG009",
+          "duplicate_before_qty": 1043.0,
+          "duplicate_after_qty": 0.0,
+          "canonical_after_qty": 2491.0,
+          "canonical_before_qty_inferred": 1448.0,
+          "canonical_gain_inferred": 1043.0
+        },
+        {
+          "item_code": "FG012",
+          "duplicate_before_qty": 568.0,
+          "duplicate_after_qty": 0.0,
+          "canonical_after_qty": 1229.0,
+          "canonical_before_qty_inferred": 661.0,
+          "canonical_gain_inferred": 568.0
+        },
+        {
+          "item_code": "FG013",
+          "duplicate_before_qty": 892.0,
+          "duplicate_after_qty": 0.0,
+          "canonical_after_qty": 1468.0,
+          "canonical_before_qty_inferred": 576.0,
+          "canonical_gain_inferred": 892.0
+        },
+        {
+          "item_code": "FG014",
+          "duplicate_before_qty": 17.0,
+          "duplicate_after_qty": 0.0,
+          "canonical_after_qty": 31.0,
+          "canonical_before_qty_inferred": 14.0,
+          "canonical_gain_inferred": 17.0
+        },
+        {
+          "item_code": "FG015",
+          "duplicate_before_qty": 9.0,
+          "duplicate_after_qty": 0.0,
+          "canonical_after_qty": 27.0,
+          "canonical_before_qty_inferred": 18.0,
+          "canonical_gain_inferred": 9.0
+        },
+        {
+          "item_code": "FG015D",
+          "duplicate_before_qty": 166.0,
+          "duplicate_after_qty": 0.0,
+          "canonical_after_qty": 332.0,
+          "canonical_before_qty_inferred": 166.0,
+          "canonical_gain_inferred": 166.0
+        },
+        {
+          "item_code": "KL001",
+          "duplicate_before_qty": 35.0,
+          "duplicate_after_qty": 0.0,
+          "canonical_after_qty": 61.0,
+          "canonical_before_qty_inferred": 26.0,
+          "canonical_gain_inferred": 35.0
+        },
+        {
+          "item_code": "KL002",
+          "duplicate_before_qty": 22.0,
+          "duplicate_after_qty": 0.0,
+          "canonical_after_qty": 22.0,
+          "canonical_before_qty_inferred": 0.0,
+          "canonical_gain_inferred": 22.0
+        },
+        {
+          "item_code": "KL003",
+          "duplicate_before_qty": 63.0,
+          "duplicate_after_qty": 0.0,
+          "canonical_after_qty": 130.0,
+          "canonical_before_qty_inferred": 67.0,
+          "canonical_gain_inferred": 63.0
+        },
+        {
+          "item_code": "KL004",
+          "duplicate_before_qty": 11.0,
+          "duplicate_after_qty": 0.0,
+          "canonical_after_qty": 85385.0,
+          "canonical_before_qty_inferred": 85374.0,
+          "canonical_gain_inferred": 11.0
+        },
+        {
+          "item_code": "M003",
+          "duplicate_before_qty": 45.0,
+          "duplicate_after_qty": 0.0,
+          "canonical_after_qty": 45.0,
+          "canonical_before_qty_inferred": 0.0,
+          "canonical_gain_inferred": 45.0
+        },
+        {
+          "item_code": "M006",
+          "duplicate_before_qty": 5.0,
+          "duplicate_after_qty": 0.0,
+          "canonical_after_qty": 12.0,
+          "canonical_before_qty_inferred": 7.0,
+          "canonical_gain_inferred": 5.0
+        },
+        {
+          "item_code": "OS001",
+          "duplicate_before_qty": 36.0,
+          "duplicate_after_qty": 0.0,
+          "canonical_after_qty": 89.0,
+          "canonical_before_qty_inferred": 53.0,
+          "canonical_gain_inferred": 36.0
+        },
+        {
+          "item_code": "OS002",
+          "duplicate_before_qty": 25.0,
+          "duplicate_after_qty": 0.0,
+          "canonical_after_qty": 50.0,
+          "canonical_before_qty_inferred": 25.0,
+          "canonical_gain_inferred": 25.0
+        },
+        {
+          "item_code": "OS006",
+          "duplicate_before_qty": 169.0,
+          "duplicate_after_qty": 0.0,
+          "canonical_after_qty": 341.0,
+          "canonical_before_qty_inferred": 172.0,
+          "canonical_gain_inferred": 169.0
+        },
+        {
+          "item_code": "OS008",
+          "duplicate_before_qty": 19.0,
+          "duplicate_after_qty": 0.0,
+          "canonical_after_qty": 39.0,
+          "canonical_before_qty_inferred": 20.0,
+          "canonical_gain_inferred": 19.0
+        },
+        {
+          "item_code": "OS009",
+          "duplicate_before_qty": 9.0,
+          "duplicate_after_qty": 0.0,
+          "canonical_after_qty": 23.0,
+          "canonical_before_qty_inferred": 14.0,
+          "canonical_gain_inferred": 9.0
+        },
+        {
+          "item_code": "OS026",
+          "duplicate_before_qty": 83.0,
+          "duplicate_after_qty": 0.0,
+          "canonical_after_qty": 170.0,
+          "canonical_before_qty_inferred": 87.0,
+          "canonical_gain_inferred": 83.0
+        },
+        {
+          "item_code": "PM001",
+          "duplicate_before_qty": 64.0,
+          "duplicate_after_qty": 0.0,
+          "canonical_after_qty": 75156.0,
+          "canonical_before_qty_inferred": 75092.0,
+          "canonical_gain_inferred": 64.0
+        },
+        {
+          "item_code": "PM002",
+          "duplicate_before_qty": 65.0,
+          "duplicate_after_qty": 0.0,
+          "canonical_after_qty": 88603.0,
+          "canonical_before_qty_inferred": 88538.0,
+          "canonical_gain_inferred": 65.0
+        },
+        {
+          "item_code": "PM003",
+          "duplicate_before_qty": 50.0,
+          "duplicate_after_qty": 0.0,
+          "canonical_after_qty": 99210.0,
+          "canonical_before_qty_inferred": 99160.0,
+          "canonical_gain_inferred": 50.0
+        },
+        {
+          "item_code": "PM004",
+          "duplicate_before_qty": 87.0,
+          "duplicate_after_qty": 0.0,
+          "canonical_after_qty": 179.0,
+          "canonical_before_qty_inferred": 92.0,
+          "canonical_gain_inferred": 87.0
+        },
+        {
+          "item_code": "PM005",
+          "duplicate_before_qty": 70.0,
+          "duplicate_after_qty": 0.0,
+          "canonical_after_qty": 144.0,
+          "canonical_before_qty_inferred": 74.0,
+          "canonical_gain_inferred": 70.0
+        },
+        {
+          "item_code": "PM006-1",
+          "duplicate_before_qty": 47.0,
+          "duplicate_after_qty": 0.0,
+          "canonical_after_qty": 96.0,
+          "canonical_before_qty_inferred": 49.0,
+          "canonical_gain_inferred": 47.0
+        },
+        {
+          "item_code": "PM007",
+          "duplicate_before_qty": 1072.0,
+          "duplicate_after_qty": 0.0,
+          "canonical_after_qty": 76511.0,
+          "canonical_before_qty_inferred": 75439.0,
+          "canonical_gain_inferred": 1072.0
+        },
+        {
+          "item_code": "PM008",
+          "duplicate_before_qty": 339.0,
+          "duplicate_after_qty": 0.0,
+          "canonical_after_qty": 679.0,
+          "canonical_before_qty_inferred": 340.0,
+          "canonical_gain_inferred": 339.0
+        },
+        {
+          "item_code": "PM009",
+          "duplicate_before_qty": 223.0,
+          "duplicate_after_qty": 0.0,
+          "canonical_after_qty": 447.0,
+          "canonical_before_qty_inferred": 224.0,
+          "canonical_gain_inferred": 223.0
+        },
+        {
+          "item_code": "PM010",
+          "duplicate_before_qty": 32.0,
+          "duplicate_after_qty": 0.0,
+          "canonical_after_qty": 71.0,
+          "canonical_before_qty_inferred": 39.0,
+          "canonical_gain_inferred": 32.0
+        },
+        {
+          "item_code": "PM010-A",
+          "duplicate_before_qty": 16.0,
+          "duplicate_after_qty": 0.0,
+          "canonical_after_qty": 32.0,
+          "canonical_before_qty_inferred": 16.0,
+          "canonical_gain_inferred": 16.0
+        },
+        {
+          "item_code": "PM012",
+          "duplicate_before_qty": 19.0,
+          "duplicate_after_qty": 0.0,
+          "canonical_after_qty": 38.0,
+          "canonical_before_qty_inferred": 19.0,
+          "canonical_gain_inferred": 19.0
+        },
+        {
+          "item_code": "PM013",
+          "duplicate_before_qty": 20.0,
+          "duplicate_after_qty": 0.0,
+          "canonical_after_qty": 40.0,
+          "canonical_before_qty_inferred": 20.0,
+          "canonical_gain_inferred": 20.0
+        },
+        {
+          "item_code": "PM014",
+          "duplicate_before_qty": 305.0,
+          "duplicate_after_qty": 0.0,
+          "canonical_after_qty": 621.0,
+          "canonical_before_qty_inferred": 316.0,
+          "canonical_gain_inferred": 305.0
+        },
+        {
+          "item_code": "PM016",
+          "duplicate_before_qty": 552.0,
+          "duplicate_after_qty": 0.0,
+          "canonical_after_qty": 632.0,
+          "canonical_before_qty_inferred": 80.0,
+          "canonical_gain_inferred": 552.0
+        },
+        {
+          "item_code": "PM017",
+          "duplicate_before_qty": 384.0,
+          "duplicate_after_qty": 0.0,
+          "canonical_after_qty": 777.0,
+          "canonical_before_qty_inferred": 393.0,
+          "canonical_gain_inferred": 384.0
+        },
+        {
+          "item_code": "PM018",
+          "duplicate_before_qty": 233.0,
+          "duplicate_after_qty": 0.0,
+          "canonical_after_qty": 481.0,
+          "canonical_before_qty_inferred": 248.0,
+          "canonical_gain_inferred": 233.0
+        },
+        {
+          "item_code": "RM0003",
+          "duplicate_before_qty": 74.0,
+          "duplicate_after_qty": 0.0,
+          "canonical_after_qty": 148.0,
+          "canonical_before_qty_inferred": 74.0,
+          "canonical_gain_inferred": 74.0
+        },
+        {
+          "item_code": "RM001",
+          "duplicate_before_qty": 57.0,
+          "duplicate_after_qty": 0.0,
+          "canonical_after_qty": 118.0,
+          "canonical_before_qty_inferred": 61.0,
+          "canonical_gain_inferred": 57.0
+        },
+        {
+          "item_code": "RM002",
+          "duplicate_before_qty": 45.0,
+          "duplicate_after_qty": 0.0,
+          "canonical_after_qty": 90.0,
+          "canonical_before_qty_inferred": 45.0,
+          "canonical_gain_inferred": 45.0
+        },
+        {
+          "item_code": "RM004-1",
+          "duplicate_before_qty": 27.0,
+          "duplicate_after_qty": 0.0,
+          "canonical_after_qty": 57.0,
+          "canonical_before_qty_inferred": 30.0,
+          "canonical_gain_inferred": 27.0
+        },
+        {
+          "item_code": "RM005-1",
+          "duplicate_before_qty": 90.0,
+          "duplicate_after_qty": 0.0,
+          "canonical_after_qty": 183.0,
+          "canonical_before_qty_inferred": 93.0,
+          "canonical_gain_inferred": 90.0
+        },
+        {
+          "item_code": "RM006-C",
+          "duplicate_before_qty": 270.0,
+          "duplicate_after_qty": 0.0,
+          "canonical_after_qty": 273.0,
+          "canonical_before_qty_inferred": 3.0,
+          "canonical_gain_inferred": 270.0
+        },
+        {
+          "item_code": "RM007",
+          "duplicate_before_qty": 11.0,
+          "duplicate_after_qty": 0.0,
+          "canonical_after_qty": 65.0,
+          "canonical_before_qty_inferred": 54.0,
+          "canonical_gain_inferred": 11.0
+        },
+        {
+          "item_code": "RM008-A",
+          "duplicate_before_qty": 28.0,
+          "duplicate_after_qty": 0.0,
+          "canonical_after_qty": 58.0,
+          "canonical_before_qty_inferred": 30.0,
+          "canonical_gain_inferred": 28.0
+        },
+        {
+          "item_code": "RM011",
+          "duplicate_before_qty": 155.0,
+          "duplicate_after_qty": 0.0,
+          "canonical_after_qty": 345.0,
+          "canonical_before_qty_inferred": 190.0,
+          "canonical_gain_inferred": 155.0
+        },
+        {
+          "item_code": "RM012-C",
+          "duplicate_before_qty": 64.0,
+          "duplicate_after_qty": 0.0,
+          "canonical_after_qty": 131.0,
+          "canonical_before_qty_inferred": 67.0,
+          "canonical_gain_inferred": 64.0
+        },
+        {
+          "item_code": "RM013",
+          "duplicate_before_qty": 2002.0,
+          "duplicate_after_qty": 0.0,
+          "canonical_after_qty": 4080.0,
+          "canonical_before_qty_inferred": 2078.0,
+          "canonical_gain_inferred": 2002.0
+        },
+        {
+          "item_code": "RM014",
+          "duplicate_before_qty": 479.0,
+          "duplicate_after_qty": 0.0,
+          "canonical_after_qty": 995.0,
+          "canonical_before_qty_inferred": 516.0,
+          "canonical_gain_inferred": 479.0
+        },
+        {
+          "item_code": "RM015",
+          "duplicate_before_qty": 93.0,
+          "duplicate_after_qty": 0.0,
+          "canonical_after_qty": 200.0,
+          "canonical_before_qty_inferred": 107.0,
+          "canonical_gain_inferred": 93.0
+        },
+        {
+          "item_code": "RM016",
+          "duplicate_before_qty": 11.0,
+          "duplicate_after_qty": 0.0,
+          "canonical_after_qty": 36.0,
+          "canonical_before_qty_inferred": 25.0,
+          "canonical_gain_inferred": 11.0
+        },
+        {
+          "item_code": "RM017",
+          "duplicate_before_qty": 1084.0,
+          "duplicate_after_qty": 0.0,
+          "canonical_after_qty": 2478.0,
+          "canonical_before_qty_inferred": 1394.0,
+          "canonical_gain_inferred": 1084.0
+        },
+        {
+          "item_code": "RM018",
+          "duplicate_before_qty": 333.0,
+          "duplicate_after_qty": 0.0,
+          "canonical_after_qty": 1048.0,
+          "canonical_before_qty_inferred": 715.0,
+          "canonical_gain_inferred": 333.0
+        },
+        {
+          "item_code": "RM020",
+          "duplicate_before_qty": 33.0,
+          "duplicate_after_qty": 0.0,
+          "canonical_after_qty": 141.0,
+          "canonical_before_qty_inferred": 108.0,
+          "canonical_gain_inferred": 33.0
+        },
+        {
+          "item_code": "RM021",
+          "duplicate_before_qty": 84.0,
+          "duplicate_after_qty": 0.0,
+          "canonical_after_qty": 299.0,
+          "canonical_before_qty_inferred": 215.0,
+          "canonical_gain_inferred": 84.0
+        }
+      ],
+      "loser_total_before_audit": 32627.0,
+      "loser_sku_count_before_audit": 79
+    },
+    {
+      "cluster_id": "cluster-royal-cold-storage-taytay-rcs-bki",
+      "duplicate": "ROYAL COLD STORAGE \u2013 TAYTAY (RCS) - BKI",
+      "canonical": "ROYAL COLD STORAGE - TAYTAY (RCS) - BKI",
+      "duplicate_disabled_after": 1,
+      "duplicate_total_stock_after": 0.0,
+      "stock_entry_docnames": [],
+      "per_item_results": [],
+      "loser_total_before_audit": 0.0,
+      "loser_sku_count_before_audit": 0
+    }
+  ],
+  "skipped_clusters_with_reason": [],
+  "total_stock_units_migrated": 32627.0,
+  "total_skus_migrated": 79,
+  "stock_entry_docnames": [
+    "MAT-STE-2026-01038"
+  ],
+  "disabled_warehouse_docnames": [
+    "3MD LOGISTICS \u2013 CAMANGYANAN - BKI",
+    "ROYAL COLD STORAGE \u2013 TAYTAY (RCS) - BKI"
+  ],
+  "system_wide_conservation": [
+    {
+      "cluster_id": "cluster-3md-logistics-camangyanan-bki",
+      "loser_after_total_stock": 0.0,
+      "loser_disabled": 1
+    },
+    {
+      "cluster_id": "cluster-royal-cold-storage-taytay-rcs-bki",
+      "loser_after_total_stock": 0.0,
+      "loser_disabled": 1
+    }
+  ],
+  "sam_token": "S225 Phase 3 APPROVED ALL"
+}

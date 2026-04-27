@@ -1,0 +1,56 @@
+{
+  "ssm_command_id": "37cbd31b-5295-4403-94f4-fa0cae62bdc4",
+  "ssm_status": "Success",
+  "args": {
+    "duplicate": "ROYAL COLD STORAGE \u2013 TAYTAY (RCS) - BKI",
+    "canonical": "ROYAL COLD STORAGE - TAYTAY (RCS) - BKI",
+    "cluster_id": "cluster-royal-cold-storage-taytay-rcs-bki",
+    "sam_token": "S225 Phase 3 APPROVED ALL",
+    "commit": false
+  },
+  "result": {
+    "duplicate": "ROYAL COLD STORAGE \u2013 TAYTAY (RCS) - BKI",
+    "canonical": "ROYAL COLD STORAGE - TAYTAY (RCS) - BKI",
+    "sam_token": "S225 Phase 3 APPROVED ALL",
+    "committed": false,
+    "step": "snapshot_before",
+    "before": {
+      "duplicate_doc": {
+        "name": "ROYAL COLD STORAGE \u2013 TAYTAY (RCS) - BKI",
+        "warehouse_name": "ROYAL COLD STORAGE \u2013 TAYTAY (RCS)",
+        "company": "BEBANG KITCHEN INC.",
+        "disabled": 0,
+        "is_group": 0,
+        "parent_warehouse": null
+      },
+      "canonical_doc": {
+        "name": "ROYAL COLD STORAGE - TAYTAY (RCS) - BKI",
+        "warehouse_name": "ROYAL COLD STORAGE - TAYTAY (RCS)",
+        "company": "BEBANG KITCHEN INC.",
+        "disabled": 0,
+        "is_group": 0,
+        "parent_warehouse": null
+      },
+      "duplicate_bins": [
+        {
+          "item_code": "FG020",
+          "actual_qty": 0.0,
+          "stock_uom": "BARREL"
+        }
+      ],
+      "canonical_bins": [
+        {
+          "item_code": "FG020",
+          "actual_qty": 1873.0,
+          "stock_uom": "BARREL"
+        }
+      ],
+      "open_mrs_on_duplicate": [],
+      "draft_ses_on_duplicate": []
+    },
+    "status": "DRY_RUN_NO_SE_NEEDED",
+    "note": "Duplicate has no positive stock \u2014 disable directly without SE"
+  },
+  "raw_stdout": "{\"duplicate\": \"ROYAL COLD STORAGE \\u2013 TAYTAY (RCS) - BKI\", \"canonical\": \"ROYAL COLD STORAGE - TAYTAY (RCS) - BKI\", \"sam_token\": \"S225 Phase 3 APPROVED ALL\", \"committed\": false, \"step\": \"snapshot_before\", \"before\": {\"duplicate_doc\": {\"name\": \"ROYAL COLD STORAGE \\u2013 TAYTAY (RCS) - BKI\", \"warehouse_name\": \"ROYAL COLD STORAGE \\u2013 TAYTAY (RCS)\", \"company\": \"BEBANG KITCHEN INC.\", \"disabled\": 0, \"is_group\": 0, \"parent_warehouse\": null}, \"canonical_doc\": {\"name\": \"ROYAL COLD STORAGE - TAYTAY (RCS) - BKI\", \"warehouse_name\": \"ROYAL COLD STORAGE - TAYTAY (RCS)\", \"company\": \"BEBANG KITCHEN INC.\", \"disabled\": 0, \"is_group\": 0, \"parent_warehouse\": null}, \"duplicate_bins\": [{\"item_code\": \"FG020\", \"actual_qty\": 0.0, \"stock_uom\": \"BARREL\"}], \"canonical_bins\": [{\"item_code\": \"FG020\", \"actual_qty\": 1873.0, \"stock_uom\": \"BARREL\"}], \"open_mrs_on_duplicate\": [], \"draft_ses_on_duplicate\": []}, \"status\": \"DRY_RUN_NO_SE_NEEDED\", \"note\": \"Duplicate has no positive stock \\u2014 disable directly without SE\"}\n",
+  "raw_stderr": ""
+}
