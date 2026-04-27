@@ -1,0 +1,762 @@
+{
+  "direct_pattern_a_items": [
+    "FG004"
+  ],
+  "backfill_items_resolved": [
+    "FG004"
+  ],
+  "items_in_active_warehouses_count": 124,
+  "total_unique_items_probed": 124,
+  "batch_info": {
+    "A011": {
+      "item_name": "JOLLYCOW CONDENSED",
+      "has_batch_no": 0,
+      "has_serial_no": 0
+    },
+    "A013": {
+      "item_name": "NESTLE CREAM",
+      "has_batch_no": 0,
+      "has_serial_no": 0
+    },
+    "A016": {
+      "item_name": "ALASKA EVAP 1L",
+      "has_batch_no": 0,
+      "has_serial_no": 0
+    },
+    "A033": {
+      "item_name": "COCONUT MILK (JOLLY COW)",
+      "has_batch_no": 0,
+      "has_serial_no": 0
+    },
+    "A057": {
+      "item_name": "MELON SAUCE",
+      "has_batch_no": 0,
+      "has_serial_no": 0
+    },
+    "A058": {
+      "item_name": "UBE SAUCE",
+      "has_batch_no": 0,
+      "has_serial_no": 0
+    },
+    "A059": {
+      "item_name": "CHOCOLATE SYRUP",
+      "has_batch_no": 0,
+      "has_serial_no": 0
+    },
+    "A060": {
+      "item_name": "MATCHA SAUCE",
+      "has_batch_no": 0,
+      "has_serial_no": 0
+    },
+    "BEB-CCF": {
+      "item_name": "CREAM CHEESE FROSTING",
+      "has_batch_no": 0,
+      "has_serial_no": 0
+    },
+    "C015": {
+      "item_name": "VACUUM PLASTIC 9X12",
+      "has_batch_no": 0,
+      "has_serial_no": 0
+    },
+    "CM30": {
+      "item_name": "BIODEGRADABLE PLASTIC MEDIUM",
+      "has_batch_no": 0,
+      "has_serial_no": 0
+    },
+    "CM31": {
+      "item_name": "BIODEGRADBLE PLASTIC LARGE",
+      "has_batch_no": 0,
+      "has_serial_no": 0
+    },
+    "CM32": {
+      "item_name": "SANDO ECO BAG SMALL",
+      "has_batch_no": 0,
+      "has_serial_no": 0
+    },
+    "CM33": {
+      "item_name": "SANDO ECO BAG MEDIUM",
+      "has_batch_no": 0,
+      "has_serial_no": 0
+    },
+    "CM34": {
+      "item_name": "SANDO ECO BAG LARGE",
+      "has_batch_no": 0,
+      "has_serial_no": 0
+    },
+    "CM35": {
+      "item_name": "SANDO ECO BAG EXTRA SMALL",
+      "has_batch_no": 0,
+      "has_serial_no": 0
+    },
+    "CM36": {
+      "item_name": "SANDO BAG MEDIUM BEBANG LOGO",
+      "has_batch_no": 0,
+      "has_serial_no": 0
+    },
+    "CM37": {
+      "item_name": "SANDO BAG LARGE BEBANG LOGO",
+      "has_batch_no": 0,
+      "has_serial_no": 0
+    },
+    "CM38": {
+      "item_name": "MINI PLASTIC WITH BEBANG LOGO",
+      "has_batch_no": 0,
+      "has_serial_no": 0
+    },
+    "CM39": {
+      "item_name": "TINY PLASTIC WITH BEBANG LOGO",
+      "has_batch_no": 0,
+      "has_serial_no": 0
+    },
+    "CS006": {
+      "item_name": "MOP REFILL",
+      "has_batch_no": 0,
+      "has_serial_no": 0
+    },
+    "CS007": {
+      "item_name": "MOP HANDLE",
+      "has_batch_no": 0,
+      "has_serial_no": 0
+    },
+    "CS008": {
+      "item_name": "BROOM DUSTPAN SET",
+      "has_batch_no": 0,
+      "has_serial_no": 0
+    },
+    "CS009": {
+      "item_name": "SPONGE W/ SCOTCHBRIGHT",
+      "has_batch_no": 0,
+      "has_serial_no": 0
+    },
+    "CS010": {
+      "item_name": "SCOTCH BRIGHT",
+      "has_batch_no": 0,
+      "has_serial_no": 0
+    },
+    "CS011": {
+      "item_name": "TRASH BAG GREEN",
+      "has_batch_no": 0,
+      "has_serial_no": 0
+    },
+    "CS012": {
+      "item_name": "TRASH BAG BLACK",
+      "has_batch_no": 0,
+      "has_serial_no": 0
+    },
+    "CS012-A": {
+      "item_name": "TRASH BAG WHITE",
+      "has_batch_no": 0,
+      "has_serial_no": 0
+    },
+    "CS013": {
+      "item_name": "RAG (WHITE)",
+      "has_batch_no": 0,
+      "has_serial_no": 0
+    },
+    "CS014": {
+      "item_name": "RAG (BLUE)",
+      "has_batch_no": 0,
+      "has_serial_no": 0
+    },
+    "CS015": {
+      "item_name": "RAG (RED)",
+      "has_batch_no": 0,
+      "has_serial_no": 0
+    },
+    "CS016": {
+      "item_name": "RAG (GREEN)",
+      "has_batch_no": 0,
+      "has_serial_no": 0
+    },
+    "CS017": {
+      "item_name": "RAG (PINK)",
+      "has_batch_no": 0,
+      "has_serial_no": 0
+    },
+    "CS018": {
+      "item_name": "RAG (YELLOW)",
+      "has_batch_no": 0,
+      "has_serial_no": 0
+    },
+    "CS019": {
+      "item_name": "RAG (CYAN)",
+      "has_batch_no": 0,
+      "has_serial_no": 0
+    },
+    "FG001": {
+      "item_name": "LECHE FLAN",
+      "has_batch_no": 0,
+      "has_serial_no": 0
+    },
+    "FG001-A": {
+      "item_name": "LECHE FLAN x 12",
+      "has_batch_no": 1,
+      "has_serial_no": 0
+    },
+    "FG001-B": {
+      "item_name": "LECHE FLAN x 16",
+      "has_batch_no": 1,
+      "has_serial_no": 0
+    },
+    "FG002": {
+      "item_name": "BANANA CINNAMON",
+      "has_batch_no": 0,
+      "has_serial_no": 0
+    },
+    "FG002-A": {
+      "item_name": "BANANA CINNAMON",
+      "has_batch_no": 1,
+      "has_serial_no": 0
+    },
+    "FG003": {
+      "item_name": "RICE CRISPIES",
+      "has_batch_no": 1,
+      "has_serial_no": 0
+    },
+    "FG004": {
+      "item_name": "BUKO PANDAN JELLY",
+      "has_batch_no": 1,
+      "has_serial_no": 0
+    },
+    "FG005": {
+      "item_name": "VANILLA WHITE JELLY",
+      "has_batch_no": 1,
+      "has_serial_no": 0
+    },
+    "FG006": {
+      "item_name": "COCONUT JELLY",
+      "has_batch_no": 1,
+      "has_serial_no": 0
+    },
+    "FG007": {
+      "item_name": "COCONUT SYRUP",
+      "has_batch_no": 1,
+      "has_serial_no": 0
+    },
+    "FG009": {
+      "item_name": "SAGO",
+      "has_batch_no": 1,
+      "has_serial_no": 0
+    },
+    "FG010": {
+      "item_name": "TAPIOCA",
+      "has_batch_no": 0,
+      "has_serial_no": 0
+    },
+    "FG012": {
+      "item_name": "MELTED UBE / SPREAD",
+      "has_batch_no": 1,
+      "has_serial_no": 0
+    },
+    "FG013": {
+      "item_name": "LANGKA",
+      "has_batch_no": 1,
+      "has_serial_no": 0
+    },
+    "FG014": {
+      "item_name": "PISTACHIO / CASHEW MIX",
+      "has_batch_no": 1,
+      "has_serial_no": 0
+    },
+    "FG015": {
+      "item_name": "BUKO PANDAN FLAVORED SAUCE",
+      "has_batch_no": 1,
+      "has_serial_no": 0
+    },
+    "FG015D": {
+      "item_name": "BUKO PANDAN FLAVOURED SAUCE (DRY",
+      "has_batch_no": 0,
+      "has_serial_no": 0
+    },
+    "FG016": {
+      "item_name": "UBE FLAVORED SAUCE",
+      "has_batch_no": 1,
+      "has_serial_no": 0
+    },
+    "FG017": {
+      "item_name": "MATCHA FLAVORED SAUCE",
+      "has_batch_no": 1,
+      "has_serial_no": 0
+    },
+    "FG018": {
+      "item_name": "MELON FLAVORED SAUCE",
+      "has_batch_no": 1,
+      "has_serial_no": 0
+    },
+    "FG019": {
+      "item_name": "CHOCOLATE FLAVORED SAUCE",
+      "has_batch_no": 1,
+      "has_serial_no": 0
+    },
+    "FG020": {
+      "item_name": "FROZEN ICE MILK",
+      "has_batch_no": 0,
+      "has_serial_no": 0
+    },
+    "FG021": {
+      "item_name": "CREAM CHEESE FROSTING",
+      "has_batch_no": 0,
+      "has_serial_no": 0
+    },
+    "FG022": {
+      "item_name": "TOFFEE CRUMBS",
+      "has_batch_no": 0,
+      "has_serial_no": 0
+    },
+    "FG023": {
+      "item_name": "BROWN SUGAR TAPIOCA BALLS (PLACEHOLDER - pending Arnold)",
+      "has_batch_no": 0,
+      "has_serial_no": 0
+    },
+    "KL001": {
+      "item_name": "KLIN 365 4109 1 gallon x 4/ case",
+      "has_batch_no": 0,
+      "has_serial_no": 0
+    },
+    "KL002": {
+      "item_name": "SANIQUAT MQ4 2618 1 gallonx4/ case",
+      "has_batch_no": 0,
+      "has_serial_no": 0
+    },
+    "KL003": {
+      "item_name": "SPAN SOLO 5113 1 gallon x 4/ case",
+      "has_batch_no": 0,
+      "has_serial_no": 0
+    },
+    "KL004": {
+      "item_name": "365 Clean P 1303 1 gallon x 4/ case",
+      "has_batch_no": 0,
+      "has_serial_no": 0
+    },
+    "M003": {
+      "item_name": "HANTIEN",
+      "has_batch_no": 0,
+      "has_serial_no": 0
+    },
+    "M006": {
+      "item_name": "MINI MARSHMALLOW",
+      "has_batch_no": 0,
+      "has_serial_no": 0
+    },
+    "OS001": {
+      "item_name": "BALLPEN BLACK 0.7 (Flextok)",
+      "has_batch_no": 0,
+      "has_serial_no": 0
+    },
+    "OS002": {
+      "item_name": "PENTLE PEN BLACK",
+      "has_batch_no": 0,
+      "has_serial_no": 0
+    },
+    "OS006": {
+      "item_name": "MASKING TAPE",
+      "has_batch_no": 0,
+      "has_serial_no": 0
+    },
+    "OS007": {
+      "item_name": "SCOTCH TAPE",
+      "has_batch_no": 0,
+      "has_serial_no": 0
+    },
+    "OS008": {
+      "item_name": "PACKAGING TAPE",
+      "has_batch_no": 0,
+      "has_serial_no": 0
+    },
+    "OS009": {
+      "item_name": "CORRECTION TAPE",
+      "has_batch_no": 0,
+      "has_serial_no": 0
+    },
+    "OS026": {
+      "item_name": "THERMAL PAPER",
+      "has_batch_no": 0,
+      "has_serial_no": 0
+    },
+    "PM001": {
+      "item_name": "16OZ CUP WITH LOGO",
+      "has_batch_no": 0,
+      "has_serial_no": 0
+    },
+    "PM002": {
+      "item_name": "DOME LID 90MM",
+      "has_batch_no": 0,
+      "has_serial_no": 0
+    },
+    "PM003": {
+      "item_name": "LONG SPOON GREEN W/ POUCH",
+      "has_batch_no": 0,
+      "has_serial_no": 0
+    },
+    "PM004": {
+      "item_name": "CUP HOLDER x4",
+      "has_batch_no": 0,
+      "has_serial_no": 0
+    },
+    "PM005": {
+      "item_name": "CUP HOLDER x6",
+      "has_batch_no": 0,
+      "has_serial_no": 0
+    },
+    "PM006": {
+      "item_name": "THERMAL BAG",
+      "has_batch_no": 0,
+      "has_serial_no": 0
+    },
+    "PM006-1": {
+      "item_name": "THERMAL BAG (120)",
+      "has_batch_no": 0,
+      "has_serial_no": 0
+    },
+    "PM007": {
+      "item_name": "PLASTIC 8x11 CALYPSO",
+      "has_batch_no": 0,
+      "has_serial_no": 0
+    },
+    "PM008": {
+      "item_name": "ICE PLASTIC 4x12 SHURE",
+      "has_batch_no": 0,
+      "has_serial_no": 0
+    },
+    "PM009": {
+      "item_name": "SANDO BAG MINI JUMPER",
+      "has_batch_no": 0,
+      "has_serial_no": 0
+    },
+    "PM010": {
+      "item_name": "SANDO BAG TINY JUMPER",
+      "has_batch_no": 0,
+      "has_serial_no": 0
+    },
+    "PM010-A": {
+      "item_name": "SANDO BAG MEDIUM JUMPER",
+      "has_batch_no": 0,
+      "has_serial_no": 0
+    },
+    "PM011": {
+      "item_name": "Snowbird Medium",
+      "has_batch_no": 0,
+      "has_serial_no": 0
+    },
+    "PM012": {
+      "item_name": "Snowbird Large",
+      "has_batch_no": 0,
+      "has_serial_no": 0
+    },
+    "PM013": {
+      "item_name": "Snowbird XL",
+      "has_batch_no": 0,
+      "has_serial_no": 0
+    },
+    "PM014": {
+      "item_name": "PLASTIC GLOVES",
+      "has_batch_no": 0,
+      "has_serial_no": 0
+    },
+    "PM016": {
+      "item_name": "VINYL GLOVES LARGE",
+      "has_batch_no": 0,
+      "has_serial_no": 0
+    },
+    "PM017": {
+      "item_name": "HRT TISSUE",
+      "has_batch_no": 0,
+      "has_serial_no": 0
+    },
+    "PM018": {
+      "item_name": "TISSUE PRE CUT",
+      "has_batch_no": 0,
+      "has_serial_no": 0
+    },
+    "PM019": {
+      "item_name": "CLING WRAP",
+      "has_batch_no": 0,
+      "has_serial_no": 0
+    },
+    "PM020": {
+      "item_name": "RETORT POUCH",
+      "has_batch_no": 0,
+      "has_serial_no": 0
+    },
+    "PM021": {
+      "item_name": "CATERPLAN",
+      "has_batch_no": 0,
+      "has_serial_no": 0
+    },
+    "PM022": {
+      "item_name": "COFFEE TRAY",
+      "has_batch_no": 0,
+      "has_serial_no": 0
+    },
+    "RM0003": {
+      "item_name": "WHOLE OREO (CHOCOLATE FLAVOR)",
+      "has_batch_no": 0,
+      "has_serial_no": 0
+    },
+    "RM001": {
+      "item_name": "CRUSHED GRAHAM",
+      "has_batch_no": 0,
+      "has_serial_no": 0
+    },
+    "RM002": {
+      "item_name": "CRUSHED OREO",
+      "has_batch_no": 0,
+      "has_serial_no": 0
+    },
+    "RM003": {
+      "item_name": "WHOLE OREO",
+      "has_batch_no": 0,
+      "has_serial_no": 0
+    },
+    "RM004-1": {
+      "item_name": "BLUEBERRY COMSTOCK LAFRUTA",
+      "has_batch_no": 0,
+      "has_serial_no": 0
+    },
+    "RM005": {
+      "item_name": "STRAWBERRY COMSTOCK",
+      "has_batch_no": 0,
+      "has_serial_no": 0
+    },
+    "RM005-1": {
+      "item_name": "STRAWBERRY COMSTOCK LA FRUTA",
+      "has_batch_no": 0,
+      "has_serial_no": 0
+    },
+    "RM006-B": {
+      "item_name": "SUNBEST WHOLE KETTLE CORN",
+      "has_batch_no": 0,
+      "has_serial_no": 0
+    },
+    "RM006-C": {
+      "item_name": "GOLDEN VALLEY WHOLE CORN",
+      "has_batch_no": 0,
+      "has_serial_no": 0
+    },
+    "RM007": {
+      "item_name": "NATA DE COCO MILIN",
+      "has_batch_no": 0,
+      "has_serial_no": 0
+    },
+    "RM008-A": {
+      "item_name": "GOLDEN VALLEY CREAM CORN",
+      "has_batch_no": 0,
+      "has_serial_no": 0
+    },
+    "RM010": {
+      "item_name": "FRESH RIPE MANGO",
+      "has_batch_no": 0,
+      "has_serial_no": 0
+    },
+    "RM010-A": {
+      "item_name": "Frozen Mango",
+      "has_batch_no": 0,
+      "has_serial_no": 0
+    },
+    "RM011": {
+      "item_name": "EDEN CHEESE",
+      "has_batch_no": 0,
+      "has_serial_no": 0
+    },
+    "RM012": {
+      "item_name": "JOLLY FRUIT COCKTAIL",
+      "has_batch_no": 0,
+      "has_serial_no": 0
+    },
+    "RM012-C": {
+      "item_name": "MAYON FRUITCOCKTAIL",
+      "has_batch_no": 0,
+      "has_serial_no": 0
+    },
+    "RM013": {
+      "item_name": "CARAMEL SYRUP",
+      "has_batch_no": 0,
+      "has_serial_no": 0
+    },
+    "RM014": {
+      "item_name": "MANGO SYRUP",
+      "has_batch_no": 0,
+      "has_serial_no": 0
+    },
+    "RM015": {
+      "item_name": "BLUEBERRY SYRUP",
+      "has_batch_no": 0,
+      "has_serial_no": 0
+    },
+    "RM016": {
+      "item_name": "STRAWBERRY SYRUP",
+      "has_batch_no": 0,
+      "has_serial_no": 0
+    },
+    "RM017": {
+      "item_name": "MACAPUNO",
+      "has_batch_no": 0,
+      "has_serial_no": 0
+    },
+    "RM018": {
+      "item_name": "UBE HALAYA",
+      "has_batch_no": 0,
+      "has_serial_no": 0
+    },
+    "RM020": {
+      "item_name": "FROZEN BROWNIES",
+      "has_batch_no": 0,
+      "has_serial_no": 0
+    },
+    "RM021": {
+      "item_name": "LANGKA",
+      "has_batch_no": 0,
+      "has_serial_no": 0
+    },
+    "RM022": {
+      "item_name": "PASTURIZED EGGYOLK",
+      "has_batch_no": 0,
+      "has_serial_no": 0
+    },
+    "RM023": {
+      "item_name": "CREAM FLAVOURED BASE POWDER",
+      "has_batch_no": 0,
+      "has_serial_no": 0
+    },
+    "RM030": {
+      "item_name": "FROZEN MANGO",
+      "has_batch_no": 0,
+      "has_serial_no": 0
+    },
+    "RM100": {
+      "item_name": "MAYON FRUIT COCKTAIL",
+      "has_batch_no": 0,
+      "has_serial_no": 0
+    }
+  },
+  "batch_tracked_items": [
+    "FG001-A",
+    "FG001-B",
+    "FG002-A",
+    "FG003",
+    "FG004",
+    "FG005",
+    "FG006",
+    "FG007",
+    "FG009",
+    "FG012",
+    "FG013",
+    "FG014",
+    "FG015",
+    "FG016",
+    "FG017",
+    "FG018",
+    "FG019"
+  ],
+  "non_batch_items": [
+    "A011",
+    "A013",
+    "A016",
+    "A033",
+    "A057",
+    "A058",
+    "A059",
+    "A060",
+    "BEB-CCF",
+    "C015",
+    "CM30",
+    "CM31",
+    "CM32",
+    "CM33",
+    "CM34",
+    "CM35",
+    "CM36",
+    "CM37",
+    "CM38",
+    "CM39",
+    "CS006",
+    "CS007",
+    "CS008",
+    "CS009",
+    "CS010",
+    "CS011",
+    "CS012",
+    "CS012-A",
+    "CS013",
+    "CS014",
+    "CS015",
+    "CS016",
+    "CS017",
+    "CS018",
+    "CS019",
+    "FG001",
+    "FG002",
+    "FG010",
+    "FG015D",
+    "FG020",
+    "FG021",
+    "FG022",
+    "FG023",
+    "KL001",
+    "KL002",
+    "KL003",
+    "KL004",
+    "M003",
+    "M006",
+    "OS001",
+    "OS002",
+    "OS006",
+    "OS007",
+    "OS008",
+    "OS009",
+    "OS026",
+    "PM001",
+    "PM002",
+    "PM003",
+    "PM004",
+    "PM005",
+    "PM006",
+    "PM006-1",
+    "PM007",
+    "PM008",
+    "PM009",
+    "PM010",
+    "PM010-A",
+    "PM011",
+    "PM012",
+    "PM013",
+    "PM014",
+    "PM016",
+    "PM017",
+    "PM018",
+    "PM019",
+    "PM020",
+    "PM021",
+    "PM022",
+    "RM0003",
+    "RM001",
+    "RM002",
+    "RM003",
+    "RM004-1",
+    "RM005",
+    "RM005-1",
+    "RM006-B",
+    "RM006-C",
+    "RM007",
+    "RM008-A",
+    "RM010",
+    "RM010-A",
+    "RM011",
+    "RM012",
+    "RM012-C",
+    "RM013",
+    "RM014",
+    "RM015",
+    "RM016",
+    "RM017",
+    "RM018",
+    "RM020",
+    "RM021",
+    "RM022",
+    "RM023",
+    "RM030",
+    "RM100"
+  ],
+  "must_lock_tabBatch": true,
+  "checked_at_local": "2026-04-27T10:35:23+0800"
+}

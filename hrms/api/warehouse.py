@@ -1587,6 +1587,60 @@ def create_stock_transfer(
 		item_data["qty"] = flt(qty_value)
 		normalized_items.append(item_data)
 
+	# S225: serialize concurrent batch decrements per item+warehouse pair.
+	# Sentry confirmed Pattern A is a race condition where parallel
+	# create_stock_transfer calls read Bin.actual_qty, both decide there's stock,
+	# and both submit -- pushing the batch briefly negative.
+	# FOR UPDATE locks the rows for the duration of this transaction; released
+	# on COMMIT/ROLLBACK by Frappe's auto-transactional handler. Sorted item_codes
+	# ensure deterministic lock acquisition order across concurrent transactions
+	# (prevents deadlocks where T1 locks ItemA->ItemB and T2 locks ItemB->ItemA).
+	_lock_item_codes = sorted({i.get("item_code") for i in normalized_items if i.get("item_code")})
+	if _lock_item_codes:
+		import time as _time
+		_lock_t0 = _time.time()
+		frappe.db.sql(
+			"""SELECT name FROM `tabBin`
+			   WHERE warehouse = %s AND item_code IN %s
+			   FOR UPDATE""",
+			(source_warehouse, tuple(_lock_item_codes)),
+		)
+
+		# AUDIT W-1: for batch-tracked items, also lock the Batch rows.
+		# The Bin lock alone doesn't cover the Serial and Batch Bundle (SABB)
+		# allocation path that runs inside se.submit(). Two parallel dispatches
+		# could pass the Bin check (Bin lock works) but still race on batch-level
+		# allocation.
+		_batch_tracked_items = [
+			ic for ic in _lock_item_codes
+			if frappe.db.get_value("Item", ic, "has_batch_no") == 1
+		]
+		if _batch_tracked_items:
+			# Lock all batches that have non-zero stock at this warehouse for these
+			# items. Held until COMMIT, serializing batch allocation across concurrent
+			# create_stock_transfer calls.
+			frappe.db.sql(
+				"""SELECT b.name FROM `tabBatch` b
+				   JOIN `tabStock Ledger Entry` sle ON sle.batch_no = b.name
+				   WHERE sle.warehouse = %s
+				     AND sle.item_code IN %s
+				     AND sle.is_cancelled = 0
+				   GROUP BY b.name
+				   FOR UPDATE""",
+				(source_warehouse, tuple(_batch_tracked_items)),
+			)
+
+		# Lock-wait telemetry: surface contention into Sentry breadcrumbs when the
+		# acquisition takes >2s. frappe.log_error feeds Sentry via the BEI
+		# monkey-patch (DM-7). This is best-effort instrumentation, not
+		# functional logic.
+		_lock_wait_ms = int((_time.time() - _lock_t0) * 1000)
+		if _lock_wait_ms > 2000:
+			frappe.log_error(
+				f"S225 lock wait {_lock_wait_ms}ms for {source_warehouse}/{_lock_item_codes}",
+				"S225 Lock Contention",
+			)
+
 	for item_data in normalized_items:
 		# Get item details
 		item = frappe.get_doc("Item", item_data["item_code"])
