@@ -113,12 +113,17 @@ for row in all_wh:
     """, (name, name), as_dict=True)
     in_flight[name] = {"open_mrs": open_mrs, "draft_ses": open_ses}
 
-print(json.dumps({
+import gzip as _gz
+payload = {
     "all_wh": all_wh,
     "warehouse_items": warehouse_items,
     "in_flight": in_flight,
     "total": len(all_wh),
-}, default=str))
+}
+data = json.dumps(payload, default=str).encode("utf-8")
+with _gz.open("/tmp/s225_audit_payload.json.gz", "wb") as fh:
+    fh.write(data)
+print(f"WROTE /tmp/s225_audit_payload.json.gz size={os.path.getsize('/tmp/s225_audit_payload.json.gz')} (raw={len(data)})")
 '''
 
 
@@ -148,7 +153,7 @@ def is_strict_canonical_form(name: str) -> bool:
 
 
 def fetch_warehouses_via_ssm() -> dict:
-    """Run the inner Frappe SQL via SSM and return the parsed JSON."""
+    """Run the inner Frappe SQL via SSM, then chunk-retrieve the result file."""
     import boto3
     enc = base64.b64encode(INNER_SCRIPT.encode()).decode()
     cmds = [
@@ -156,6 +161,9 @@ def fetch_warehouses_via_ssm() -> dict:
         f"echo '{enc}' | base64 -d > /tmp/s225_audit_wh.py",
         "docker cp /tmp/s225_audit_wh.py $BACKEND:/tmp/s225_audit_wh.py",
         "docker exec $BACKEND /home/frappe/frappe-bench/env/bin/python /tmp/s225_audit_wh.py",
+        # Move the (gzipped) payload from inside container to host so SSM can chunk-read it
+        "docker cp $BACKEND:/tmp/s225_audit_payload.json.gz /tmp/s225_audit_payload.json.gz",
+        "stat -c '%s' /tmp/s225_audit_payload.json.gz",
     ]
     ssm = boto3.client("ssm", region_name="ap-southeast-1")
     r = ssm.send_command(
@@ -173,16 +181,58 @@ def fetch_warehouses_via_ssm() -> dict:
         if inv["Status"] in ("Success", "Failed", "TimedOut"):
             break
 
-    if inv is None or inv["Status"] not in ("Success", "Failed"):
-        raise RuntimeError(f"audit-fetch SSM did not complete: {inv['Status'] if inv else 'no-inv'}")
+    if inv is None or inv["Status"] != "Success":
+        raise RuntimeError(
+            f"audit-fetch SSM did not complete: {inv['Status'] if inv else 'no-inv'}.\n"
+            f"stderr: {inv.get('StandardErrorContent', '')[:1500] if inv else ''}"
+        )
 
-    stdout = inv.get("StandardOutputContent", "")
-    # The last big JSON line is our payload
-    for line in stdout.splitlines()[::-1]:
-        s = line.strip()
-        if s.startswith("{") and s.endswith("}"):
-            return json.loads(s)
-    raise RuntimeError(f"audit-fetch SSM returned no JSON. stderr: {inv.get('StandardErrorContent','')[:1000]}")
+    # Get the chunk count via a tiny SSM call
+    def _send(cmds_list, timeout_s=60):
+        rr = ssm.send_command(
+            InstanceIds=[INSTANCE_ID],
+            DocumentName="AWS-RunShellScript",
+            Parameters={"commands": cmds_list, "executionTimeout": [str(timeout_s)]},
+        )
+        cidx = rr["Command"]["CommandId"]
+        for _ in range(int(timeout_s / 2) + 5):
+            time.sleep(2)
+            invx = ssm.get_command_invocation(CommandId=cidx, InstanceId=INSTANCE_ID)
+            if invx["Status"] in ("Success", "Failed", "TimedOut"):
+                break
+        if invx["Status"] != "Success":
+            raise RuntimeError(f"SSM {cidx} status={invx['Status']}: {invx.get('StandardErrorContent','')[:600]}")
+        return invx["StandardOutputContent"]
+
+    # 1) get NCHUNKS (gzip is much smaller -> use 12000-byte chunks for safety)
+    out_count = _send([
+        "FSIZE=$(stat -c '%s' /tmp/s225_audit_payload.json.gz)",
+        "echo 'CHUNKS:'$(( (FSIZE + 12000 - 1) / 12000 ))",
+    ], 30)
+    m = re.search(r"CHUNKS:(\d+)", out_count)
+    if not m:
+        raise RuntimeError(f"chunk count not parseable: {out_count[:500]}")
+    n = int(m.group(1))
+    print(f"audit-fetch: retrieving {n} gzip chunks...", flush=True)
+
+    pieces = []
+    for i in range(n):
+        out_chunk = _send([
+            f"dd if=/tmp/s225_audit_payload.json.gz bs=12000 count=1 skip={i} 2>/dev/null | base64 -w0",
+        ], 30)
+        b64 = "".join(out_chunk.split())
+        if not b64:
+            raise RuntimeError(f"chunk {i} empty (raw: {out_chunk[:200]!r})")
+        try:
+            pieces.append(base64.b64decode(b64, validate=True))
+        except Exception:
+            pieces.append(base64.b64decode(b64 + "=" * (-len(b64) % 4)))
+        if (i + 1) % 5 == 0 or i == n - 1:
+            print(f"  fetched chunk {i+1}/{n}", flush=True)
+    import gzip as _gz_local
+    raw_compressed = b"".join(pieces)
+    raw = _gz_local.decompress(raw_compressed).decode("utf-8")
+    return json.loads(raw)
 
 
 def fetch_sentry_errors_for_loser(loser_name: str, token: str) -> list[dict]:
