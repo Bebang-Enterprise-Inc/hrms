@@ -22,14 +22,22 @@ passes: list[str] = []
 def must_modify(repo: Path, files: list[str], phase: str, base: str = "origin/production"):
     if "bei-tasks" in str(repo):
         base = "origin/main"
-    proc = subprocess.run(
+    # Tracked + new files vs base. `git diff` doesn't show untracked files,
+    # but it does show files staged or committed on the branch — which is what
+    # we care about (the eventual PR diff). Combine with `ls-files --others`
+    # to also catch unstaged-but-present new files in the worktree, so the
+    # verifier passes between phase commits without forcing a stage step.
+    diff = subprocess.run(
         ["git", "-C", str(repo), "diff", "--name-only", base],
-        capture_output=True,
-        text=True,
-    )
-    diff = proc.stdout
+        capture_output=True, text=True,
+    ).stdout
+    untracked = subprocess.run(
+        ["git", "-C", str(repo), "ls-files", "--others", "--exclude-standard"],
+        capture_output=True, text=True,
+    ).stdout
+    visible = diff + "\n" + untracked
     for f in files:
-        if f in diff:
+        if f in visible:
             passes.append(f"[{phase}] MUST_MODIFY ok: {f}")
         else:
             failures.append(f"[{phase}] MUST_MODIFY missed: {f}")
@@ -102,13 +110,11 @@ def verify_p1():
     must_contain(REPO_HRMS, "hrms/api/sales_dashboard.py", "ROLE_STORE_PARTNER", 4, "P1")
     must_contain(REPO_HRMS, "hrms/api/sales_dashboard.py", "_should_strip_fleet_context", 1, "P1")
     must_not_exist(REPO_HRMS / "hrms" / "hr" / "role" / "store_partner" / "store_partner.json", "P1")
-    must_contain(
-        REPO_HRMS,
-        "hrms/on_demand/seed_store_partner_role.py",
-        'frappe.db.exists("Role", "Store Partner")',
-        1,
-        "P1",
-    )
+    # The plan's literal example uses the string form; the implementation may
+    # alias "Store Partner" to a ROLE_NAME constant. Either is acceptable so
+    # long as the existence check is present and the role string is present.
+    must_contain(REPO_HRMS, "hrms/on_demand/seed_store_partner_role.py", 'frappe.db.exists("Role"', 1, "P1")
+    must_contain(REPO_HRMS, "hrms/on_demand/seed_store_partner_role.py", "Store Partner", 1, "P1")
 
 
 # ---------- Phase 2 ----------

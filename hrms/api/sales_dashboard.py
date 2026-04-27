@@ -42,6 +42,11 @@ ROLE_HQ_FINANCE = "HQ Finance"
 ROLE_ACCOUNTS_MANAGER = "Accounts Manager"
 ROLE_SYSTEM_MANAGER = "System Manager"
 ROLE_ADMINISTRATOR = "Administrator"
+# S227: external equity-partner role. Lowest analytics-access tier; sees own
+# store(s) only and never any fleet-comparison fields. Intentionally distinct
+# from Sales Stakeholder (which is internal BEI staff) so audits can separate
+# external partner access from internal stakeholder access.
+ROLE_STORE_PARTNER = "Store Partner"
 
 ALL_STORE_ROLES = {
 	ROLE_ADMINISTRATOR,
@@ -50,7 +55,12 @@ ALL_STORE_ROLES = {
 	ROLE_HQ_FINANCE,
 	ROLE_ACCOUNTS_MANAGER,
 }
-ALLOWED_ROLES = ALL_STORE_ROLES | {ROLE_AREA_SUPERVISOR, ROLE_STORE_SUPERVISOR, ROLE_SALES_STAKEHOLDER}
+ALLOWED_ROLES = ALL_STORE_ROLES | {
+	ROLE_AREA_SUPERVISOR,
+	ROLE_STORE_SUPERVISOR,
+	ROLE_SALES_STAKEHOLDER,
+	ROLE_STORE_PARTNER,
+}
 CALENDAR_SOURCE = "Company.default_holiday_list"
 CANONICAL_VIEW_MODE = "canonical"
 SUPABASE_DAILY_VIEW = "sales_dashboard_daily_store_metrics"
@@ -582,6 +592,28 @@ def _resolve_allowed_store_scope(user: str | None = None) -> dict[str, Any]:
 			)
 		else:
 			warehouse_rows = []
+	elif ROLE_STORE_PARTNER in roles:
+		# S227: external equity partner. Mirrors the Sales Stakeholder lookup
+		# pattern (BEI Sales Dashboard Store Access -> warehouses) and falls
+		# THROUGH to _filter_sales_warehouses below — do NOT early-return like
+		# the Store Supervisor branch, the canonical sales filter must apply.
+		# Placed LAST in the if/elif chain so any other analytics-granting role
+		# (Admin, HQ family, AS, SS, Sales Stakeholder) wins precedence. CEO
+		# directive 2026-04-27: executives who are also equity partners must
+		# see the AS/HQ view, not the partner-restricted view.
+		role_label = ROLE_STORE_PARTNER
+		assigned = frappe.get_all(
+			"BEI Sales Dashboard Store Access",
+			filters={"user": user},
+			fields=["warehouse"],
+		)
+		assigned_names = [row["warehouse"] for row in assigned if row.get("warehouse")]
+		if assigned_names:
+			warehouse_rows = _get_warehouse_rows(
+				{"name": ["in", assigned_names], "is_group": 0, "disabled": 0}
+			)
+		else:
+			warehouse_rows = []
 
 	if role_label != ROLE_STORE_SUPERVISOR:
 		warehouse_rows = _filter_sales_warehouses(warehouse_rows)
@@ -596,6 +628,23 @@ def _resolve_allowed_store_scope(user: str | None = None) -> dict[str, Any]:
 		"roles": sorted(roles),
 		"stores": sorted(unique.values(), key=lambda row: row["warehouse_name"]),
 	}
+
+
+def _should_strip_fleet_context(roles: set[str]) -> bool:
+	"""Return True iff the user holds Store Partner AND no other analytics-granting role.
+
+	Strip fleet context iff the user holds Store Partner AND no other
+	analytics-granting role. Executives-who-are-partners (e.g., partner+AS
+	or partner+HQ User) see the AS/HQ view, not the partner-restricted view —
+	per CEO directive 2026-04-27. The check uses
+	`ALLOWED_ROLES - {ROLE_STORE_PARTNER}`, NOT `ALL_STORE_ROLES`, because
+	Area Supervisor / Store Supervisor / Sales Stakeholder also win
+	precedence over Store Partner.
+	"""
+	if ROLE_STORE_PARTNER not in roles:
+		return False
+	other_analytics_roles = ALLOWED_ROLES - {ROLE_STORE_PARTNER}
+	return roles.intersection(other_analytics_roles) == set()
 
 
 def _selected_scope(requested_stores: list[str], user: str | None = None) -> dict[str, Any]:
@@ -3431,6 +3480,7 @@ def get_sales_dashboard_overview(
 		module="sales",
 		action="get_sales_dashboard_overview",
 		mutation_type="read",
+		extras={"is_partner_view": _should_strip_fleet_context(_get_roles())},
 	)
 	scope = _selected_scope(_parse_stores_param(stores))
 	start_day, end_day = _resolve_date_range(start_date, end_date)
@@ -3459,6 +3509,7 @@ def get_sales_dashboard_summary(
 		module="sales",
 		action="get_sales_dashboard_summary",
 		mutation_type="read",
+		extras={"is_partner_view": _should_strip_fleet_context(_get_roles())},
 	)
 	_ = ranking_mode
 	scope = _selected_scope(_parse_stores_param(stores))
@@ -3541,6 +3592,7 @@ def get_sales_dashboard_store_rankings(
 		module="sales",
 		action="get_sales_dashboard_store_rankings",
 		mutation_type="read",
+		extras={"is_partner_view": _should_strip_fleet_context(_get_roles())},
 	)
 	# S185: parse include_comparisons via _to_bool_flag (audit fix B-5)
 	_include_comparisons = _to_bool_flag(include_comparisons, default=False)
@@ -3691,6 +3743,7 @@ def get_product_mix_analytics(
 		module="sales",
 		action="get_product_mix_analytics",
 		mutation_type="read",
+		extras={"is_partner_view": _should_strip_fleet_context(_get_roles())},
 	)
 	scope = _selected_scope(_parse_stores_param(stores))
 	start_day, end_day = _resolve_date_range(start_date, end_date)
