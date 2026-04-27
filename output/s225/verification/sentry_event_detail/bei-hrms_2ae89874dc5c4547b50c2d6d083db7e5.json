@@ -1,0 +1,798 @@
+{
+  "id": "2ae89874dc5c4547b50c2d6d083db7e5",
+  "groupID": "7439230518",
+  "eventID": "2ae89874dc5c4547b50c2d6d083db7e5",
+  "projectID": "4510861213302784",
+  "size": 12449,
+  "entries": [
+    {
+      "data": {
+        "formatted": "Sales Dashboard: unmapped warehouse dropped\nWarehouse 'ROBINSONS PLACE DASMARINAS - FREEZE DELIGHT INC.' (company='ROBINSONS PLACE DASMARINAS - FREEZE DELIGHT INC.') has no mosaic_location_id on its Company \u2014 excluded from Analytics scope."
+      },
+      "type": "message"
+    },
+    {
+      "data": {
+        "values": [
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T08:53:01.480833Z",
+            "level": "info",
+            "message": "GET b'_3ca82e0039adc3d1|installed_app_modules'",
+            "category": "redis",
+            "data": {
+              "db.operation": "GET",
+              "redis.command": "GET",
+              "redis.is_cluster": false,
+              "redis.key": "_3ca82e0039adc3d1|installed_app_modules"
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T08:53:01.481833Z",
+            "level": "info",
+            "message": "HGET b'_3ca82e0039adc3d1|session' [Filtered]",
+            "category": "redis",
+            "data": {
+              "db.operation": "HGET",
+              "redis.command": "HGET",
+              "redis.is_cluster": false
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T08:53:01.482198Z",
+            "level": "info",
+            "message": "GET b'_3ca82e0039adc3d1|document_cache::System Settings::System Settings'",
+            "category": "redis",
+            "data": {
+              "db.operation": "GET",
+              "redis.command": "GET",
+              "redis.is_cluster": false,
+              "redis.key": "_3ca82e0039adc3d1|document_cache::System Settings::System Settings"
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T08:53:01.482701Z",
+            "level": "info",
+            "message": "GET b'_3ca82e0039adc3d1|document_cache::User::test.area@bebang.ph'",
+            "category": "redis",
+            "data": {
+              "db.operation": "GET",
+              "redis.command": "GET",
+              "redis.is_cluster": false,
+              "redis.key": "_3ca82e0039adc3d1|document_cache::User::test.area@bebang.ph"
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T08:53:01.483194Z",
+            "level": "info",
+            "message": "HGET b'_3ca82e0039adc3d1|defaults' [Filtered]",
+            "category": "redis",
+            "data": {
+              "db.operation": "HGET",
+              "redis.command": "HGET",
+              "redis.is_cluster": false
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T08:53:01.483558Z",
+            "level": "info",
+            "message": "HGET b'_3ca82e0039adc3d1|defaults' [Filtered]",
+            "category": "redis",
+            "data": {
+              "db.operation": "HGET",
+              "redis.command": "HGET",
+              "redis.is_cluster": false
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T08:53:01.483852Z",
+            "level": "info",
+            "message": "HGET b'_3ca82e0039adc3d1|user_permissions' [Filtered]",
+            "category": "redis",
+            "data": {
+              "db.operation": "HGET",
+              "redis.command": "HGET",
+              "redis.is_cluster": false
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T08:53:01.484273Z",
+            "level": "info",
+            "message": "HGET b'_3ca82e0039adc3d1|defaults' [Filtered]",
+            "category": "redis",
+            "data": {
+              "db.operation": "HGET",
+              "redis.command": "HGET",
+              "redis.is_cluster": false
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T08:53:01.484527Z",
+            "level": "info",
+            "message": "GET b'_3ca82e0039adc3d1|all_apps'",
+            "category": "redis",
+            "data": {
+              "db.operation": "GET",
+              "redis.command": "GET",
+              "redis.is_cluster": false,
+              "redis.key": "_3ca82e0039adc3d1|all_apps"
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T08:53:01.485804Z",
+            "level": "info",
+            "message": "GET b'_3ca82e0039adc3d1|recorder-intercept'",
+            "category": "redis",
+            "data": {
+              "db.operation": "GET",
+              "redis.command": "GET",
+              "redis.is_cluster": false,
+              "redis.key": "_3ca82e0039adc3d1|recorder-intercept"
+            },
+            "event_id": null
+          },
+          {
+            "type": "default",
+            "timestamp": "2026-04-27T08:53:01.485909Z",
+            "level": "info",
+            "message": "Request to /api/method/hrms.api.sales_dashboard.get_sales_dashboard_overview",
+            "category": "frappe.request",
+            "data": {
+              "doctype": "",
+              "method": ""
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T08:53:01.486288Z",
+            "level": "info",
+            "message": "GET b'_3ca82e0039adc3d1|server_script_map'",
+            "category": "redis",
+            "data": {
+              "db.operation": "GET",
+              "redis.command": "GET",
+              "redis.is_cluster": false,
+              "redis.key": "_3ca82e0039adc3d1|server_script_map"
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T08:53:01.486988Z",
+            "level": "info",
+            "message": "HGET b'_3ca82e0039adc3d1|roles' [Filtered]",
+            "category": "redis",
+            "data": {
+              "db.operation": "HGET",
+              "redis.command": "HGET",
+              "redis.is_cluster": false
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T08:53:01.487415Z",
+            "level": "info",
+            "message": "HGET b'_3ca82e0039adc3d1|table_columns' [Filtered]",
+            "category": "redis",
+            "data": {
+              "db.operation": "HGET",
+              "redis.command": "HGET",
+              "redis.is_cluster": false
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T08:53:01.488050Z",
+            "level": "info",
+            "message": "HGET b'_3ca82e0039adc3d1|doctype_meta' [Filtered]",
+            "category": "redis",
+            "data": {
+              "db.operation": "HGET",
+              "redis.command": "HGET",
+              "redis.is_cluster": false
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T08:53:01.494407Z",
+            "level": "info",
+            "message": "HGET b'_3ca82e0039adc3d1|doctype_meta' [Filtered]",
+            "category": "redis",
+            "data": {
+              "db.operation": "HGET",
+              "redis.command": "HGET",
+              "redis.is_cluster": false
+            },
+            "event_id": null
+          }
+        ]
+      },
+      "type": "breadcrumbs"
+    },
+    {
+      "data": {
+        "apiTarget": null,
+        "method": "POST",
+        "url": "http://hq.bebang.ph/api/method/hrms.api.sales_dashboard.get_sales_dashboard_overview",
+        "query": [],
+        "fragment": null,
+        "data": null,
+        "headers": [
+          [
+            "Accept",
+            "application/json"
+          ],
+          [
+            "Accept-Encoding",
+            "gzip, br"
+          ],
+          [
+            "Accept-Language",
+            "*"
+          ],
+          [
+            "Baggage",
+            "sentry-environment=production,sentry-release=e50b4f7fd0c028ac5c76e6f9163ad83451ebb9ee,sentry-public_key=ea029ce9c61b8661c3cff2beb9b8ca5e,sentry-trace_id=70468f48e48144deb1f109a2397f706a,sentry-org_id=[Filtered],sentry-sampled=true,sentry-sample_rand=0.04952500010936245,sentry-sample_rate=0.2"
+          ],
+          [
+            "Cdn-Loop",
+            "cloudflare; loops=1"
+          ],
+          [
+            "Cf-Connecting-Ip",
+            "34.231.70.64"
+          ],
+          [
+            "Cf-Ipcountry",
+            "US"
+          ],
+          [
+            "Cf-Ray",
+            "9f2c982b7a0fd6a1-IAD"
+          ],
+          [
+            "Cf-Visitor",
+            "{\"scheme\":\"https\"}"
+          ],
+          [
+            "Connection",
+            "close"
+          ],
+          [
+            "Content-Length",
+            "126"
+          ],
+          [
+            "Content-Type",
+            "application/json"
+          ],
+          [
+            "Cookie",
+            "[Filtered]"
+          ],
+          [
+            "Host",
+            "hq.bebang.ph"
+          ],
+          [
+            "Sec-Fetch-Mode",
+            "cors"
+          ],
+          [
+            "Sentry-Trace",
+            "70468f48e48144deb1f109a2397f706a-582bfa3021172052-1"
+          ],
+          [
+            "User-Agent",
+            "node"
+          ],
+          [
+            "X-Forwarded-For",
+            ""
+          ],
+          [
+            "X-Forwarded-Proto",
+            "https"
+          ],
+          [
+            "X-Frappe-Site-Name",
+            "hq.bebang.ph"
+          ],
+          [
+            "X-Invocation-Id",
+            "sin1::7qk6d-1777279981199-720b318f2832"
+          ],
+          [
+            "X-Use-X-Accel-Redirect",
+            "True"
+          ],
+          [
+            "X-Vercel-Id",
+            "sin1::7qk6d-1777279981199-720b318f2832"
+          ]
+        ],
+        "cookies": [],
+        "env": {
+          "SERVER_NAME": "0.0.0.0",
+          "SERVER_PORT": "8000"
+        },
+        "inferredContentType": "application/json"
+      },
+      "type": "request"
+    }
+  ],
+  "dist": null,
+  "message": "Sales Dashboard: unmapped warehouse dropped\nWarehouse 'ROBINSONS PLACE DASMARINAS - FREEZE DELIGHT INC.' (company='ROBINSONS PLACE DASMARINAS - FREEZE DELIGHT INC.') has no mosaic_location_id on its Company \u2014 excluded from Analytics scope.",
+  "title": "Sales Dashboard: unmapped warehouse dropped",
+  "location": null,
+  "user": {
+    "id": "hq.bebang.ph",
+    "email": null,
+    "username": null,
+    "ip_address": null,
+    "name": null,
+    "geo": {
+      "country_code": "SG",
+      "city": "Singapore",
+      "region": "Singapore"
+    },
+    "data": null
+  },
+  "contexts": {
+    "JSON Body": {
+      "channel": "all",
+      "end_date": "2026-04-26",
+      "include_comparisons": "true",
+      "ranking_mode": "discount_pct",
+      "start_date": "2026-04-13",
+      "type": "default"
+    },
+    "runtime": {
+      "runtime": "CPython 3.11.6",
+      "name": "CPython",
+      "version": "3.11.6",
+      "build": "3.11.6 (main, Nov 29 2023, 04:30:13) [GCC 12.2.0]",
+      "type": "runtime"
+    },
+    "trace": {
+      "trace_id": "03ecfc4f0c1c4ed2b070a985170dae2a",
+      "span_id": "9273c2fbb2a82e97",
+      "status": "unknown",
+      "client_sample_rate": 0.1,
+      "type": "trace"
+    }
+  },
+  "sdk": {
+    "name": "sentry.python",
+    "version": "2.56.0"
+  },
+  "context": {
+    "sys.argv": [
+      "/home/frappe/frappe-bench/env/bin/gunicorn",
+      "--chdir=/home/frappe/frappe-bench/sites",
+      "--bind=0.0.0.0:8000",
+      "--threads=4",
+      "--workers=2",
+      "--worker-class=gthread",
+      "--worker-tmp-dir=/dev/shm",
+      "--timeout=120",
+      "--preload",
+      "frappe.app:application"
+    ]
+  },
+  "packages": {
+    "annotated-types": "0.7.0",
+    "anyio": "4.12.1",
+    "asttokens": "3.0.1",
+    "babel": "2.13.1",
+    "backcall": "0.2.0",
+    "backoff": "2.2.1",
+    "barcodenumber": "0.5.0",
+    "beautifulsoup4": "4.12.3",
+    "bleach": "6.3.0",
+    "bleach-allowlist": "1.0.3",
+    "boto3": "1.42.74",
+    "botocore": "1.42.74",
+    "braintree": "4.20.0",
+    "brotli": "1.2.0",
+    "cachetools": "7.0.5",
+    "cairocffi": "1.5.1",
+    "certifi": "2026.2.25",
+    "cffi": "2.0.0",
+    "chardet": "5.2.0",
+    "charset-normalizer": "3.4.6",
+    "click": "8.2.1",
+    "croniter": "6.0.0",
+    "cryptography": "46.0.5",
+    "cssselect": "1.4.0",
+    "cssselect2": "0.9.0",
+    "cssutils": "2.11.1",
+    "dataclasses-json": "0.5.14",
+    "decorator": "5.2.1",
+    "distro": "1.9.0",
+    "docopt": "0.6.2",
+    "dropbox": "12.0.2",
+    "email-reply-parser": "0.5.12",
+    "erpnext": "15.102.0",
+    "et_xmlfile": "2.0.0",
+    "executing": "2.2.1",
+    "filelock": "3.20.4",
+    "filetype": "1.2.0",
+    "fonttools": "4.62.1",
+    "frappe": "15.103.0",
+    "gitdb": "4.0.12",
+    "gitpython": "3.1.46",
+    "gocardless_pro": "1.22.0",
+    "google-ai-generativelanguage": "0.6.15",
+    "google-api-core": "2.30.0",
+    "google-api-python-client": "2.193.0",
+    "google-auth": "2.49.1",
+    "google-auth-httplib2": "0.3.0",
+    "google-auth-oauthlib": "1.2.4",
+    "google-generativeai": "0.8.6",
+    "googleapis-common-protos": "1.73.0",
+    "googlemaps": "4.10.0",
+    "grpcio": "1.78.0",
+    "grpcio-status": "1.71.2",
+    "gunicorn": "23.0.0",
+    "h11": "0.16.0",
+    "hiredis": "2.2.3",
+    "holidays": "0.93",
+    "hrms": "16.0.0.dev0",
+    "html5lib": "1.1",
+    "httpcore": "1.0.9",
+    "httplib2": "0.31.2",
+    "httpx": "0.28.1",
+    "idna": "3.11",
+    "ipython": "8.15.0",
+    "isodate": "0.6.1",
+    "jedi": "0.19.2",
+    "jinja2": "3.1.6",
+    "jiter": "0.13.0",
+    "jmespath": "1.1.0",
+    "joblib": "1.5.3",
+    "ldap3": "2.9.1",
+    "lxml": "6.0.2",
+    "markdown2": "2.5.5",
+    "markdownify": "0.14.1",
+    "markupsafe": "3.0.3",
+    "marshmallow": "3.26.2",
+    "matplotlib-inline": "0.2.1",
+    "maxminddb": "3.1.1",
+    "maxminddb-geolite2": "2018.703",
+    "monotonic": "1.6",
+    "more-itertools": "10.8.0",
+    "mypy_extensions": "1.1.0",
+    "num2words": "0.5.14",
+    "numpy": "2.4.3",
+    "oauthlib": "3.3.1",
+    "openai": "2.29.0",
+    "openpyxl": "3.1.5",
+    "packaging": "26.0",
+    "pandas": "3.0.1",
+    "parso": "0.8.6",
+    "passlib": "1.7.4",
+    "payments": "0.0.1",
+    "paytmchecksum": "1.7.0",
+    "pdfkit": "1.0.0",
+    "pexpect": "4.9.0",
+    "phonenumbers": "8.13.55",
+    "pickleshare": "0.7.5",
+    "pillow": "12.1.1",
+    "pip": "26.0.1",
+    "plaid-python": "7.2.1",
+    "ply": "3.11",
+    "posthog": "3.21.0",
+    "premailer": "3.10.0",
+    "prompt_toolkit": "3.0.52",
+    "proto-plus": "1.27.1",
+    "protobuf": "5.29.6",
+    "psutil": "5.9.8",
+    "psycopg2-binary": "2.9.11",
+    "ptyprocess": "0.7.0",
+    "pure_eval": "0.2.3",
+    "pyasn1": "0.6.3",
+    "pyasn1_modules": "0.4.2",
+    "pycountry": "22.3.5",
+    "pycparser": "3.0",
+    "pycryptodome": "3.23.0",
+    "pydantic": "2.12.5",
+    "pydantic_core": "2.41.5",
+    "pydyf": "0.12.1",
+    "pygments": "2.19.2",
+    "pyjwt": "2.8.0",
+    "pymysql": "1.1.1",
+    "pyopenssl": "25.3.0",
+    "pyotp": "2.9.0",
+    "pyparsing": "3.3.2",
+    "pypdf": "6.8.0",
+    "pyphen": "0.17.2",
+    "pypika": "0.48.9",
+    "pypng": "0.20220715.0",
+    "pyqrcode": "1.2.1",
+    "python-dateutil": "2.9.0.post0",
+    "python-stdnum": "2.2",
+    "python-youtube": "0.8.3",
+    "pytz": "2025.2",
+    "pyyaml": "6.0.3",
+    "rapidfuzz": "3.12.2",
+    "rauth": "0.7.3",
+    "razorpay": "2.0.1",
+    "redis": "4.5.5",
+    "requests": "2.32.5",
+    "requests-oauthlib": "1.3.1",
+    "restrictedpython": "8.1",
+    "rq": "1.15.1",
+    "rsa": "4.9.1",
+    "s3transfer": "0.16.0",
+    "scikit-learn": "1.8.0",
+    "scipy": "1.17.1",
+    "semantic-version": "2.10.0",
+    "sentry-sdk": "2.56.0",
+    "setuptools": "70.3.0",
+    "six": "1.17.0",
+    "smmap": "5.0.3",
+    "sniffio": "1.3.1",
+    "soupsieve": "2.8.3",
+    "sql_metadata": "2.11.0",
+    "sqlparse": "0.5.5",
+    "stack-data": "0.6.3",
+    "stone": "3.3.1",
+    "stripe": "10.12.0",
+    "tenacity": "8.2.3",
+    "terminaltables": "3.1.10",
+    "threadpoolctl": "3.6.0",
+    "tinycss2": "1.5.1",
+    "tinyhtml5": "2.1.0",
+    "tomli": "2.0.2",
+    "tqdm": "4.67.3",
+    "traceback-with-variables": "2.0.4",
+    "traitlets": "5.14.3",
+    "typing-inspect": "0.9.0",
+    "typing-inspection": "0.4.2",
+    "typing_extensions": "4.15.0",
+    "unidecode": "1.3.8",
+    "uritemplate": "4.2.0",
+    "urllib3": "2.6.3",
+    "vobject": "0.9.9",
+    "wcwidth": "0.6.0",
+    "weasyprint": "68.0",
+    "webencodings": "0.5.1",
+    "werkzeug": "3.1.6",
+    "wheel": "0.46.3",
+    "whoosh": "2.7.4",
+    "xlrd": "2.0.2",
+    "zopfli": "0.4.1",
+    "zxcvbn": "4.4.28"
+  },
+  "type": "default",
+  "metadata": {
+    "title": "Sales Dashboard: unmapped warehouse dropped"
+  },
+  "tags": [
+    {
+      "key": "environment",
+      "value": "development"
+    },
+    {
+      "key": "frappe_user",
+      "value": "test.area@bebang.ph"
+    },
+    {
+      "key": "level",
+      "value": "error"
+    },
+    {
+      "key": "release",
+      "value": "bei-hrms@16.0.0-dev"
+    },
+    {
+      "key": "runtime",
+      "value": "CPython 3.11.6"
+    },
+    {
+      "key": "runtime.name",
+      "value": "CPython"
+    },
+    {
+      "key": "server_name",
+      "value": "a486d1dac125"
+    },
+    {
+      "key": "transaction",
+      "value": "/api/method/hrms.api.sales_dashboard.get_sales_dashboard_overview"
+    },
+    {
+      "key": "url",
+      "value": "http://hq.bebang.ph/api/method/hrms.api.sales_dashboard.get_sales_dashboard_overview"
+    },
+    {
+      "key": "user",
+      "value": "id:hq.bebang.ph",
+      "query": "user.id:\"hq.bebang.ph\""
+    }
+  ],
+  "platform": "python",
+  "dateReceived": "2026-04-27T08:53:01.503463Z",
+  "errors": [],
+  "occurrence": null,
+  "_meta": {
+    "entries": {
+      "2": {
+        "data": {
+          "": null,
+          "apiTarget": null,
+          "method": null,
+          "url": null,
+          "query": null,
+          "data": null,
+          "headers": {
+            "12": {
+              "1": {
+                "": {
+                  "rem": [
+                    [
+                      "!config",
+                      "s"
+                    ]
+                  ],
+                  "chunks": [
+                    {
+                      "type": "text",
+                      "text": "[Filtered]"
+                    }
+                  ]
+                }
+              }
+            },
+            "17": {
+              "1": {
+                "": {
+                  "rem": [
+                    [
+                      "!config",
+                      "x"
+                    ]
+                  ],
+                  "chunks": []
+                }
+              }
+            },
+            "3": {
+              "1": {
+                "": {
+                  "rem": [
+                    [
+                      "@creditcard:filter",
+                      "s",
+                      200,
+                      210
+                    ]
+                  ],
+                  "len": 298,
+                  "chunks": [
+                    {
+                      "type": "text",
+                      "text": "sentry-environment=production,sentry-release=e50b4f7fd0c028ac5c76e6f9163ad83451ebb9ee,sentry-public_key=ea029ce9c61b8661c3cff2beb9b8ca5e,sentry-trace_id=70468f48e48144deb1f109a2397f706a,sentry-org_id="
+                    },
+                    {
+                      "type": "redaction",
+                      "text": "[Filtered]",
+                      "rule_id": "@creditcard:filter",
+                      "remark": "s"
+                    },
+                    {
+                      "type": "text",
+                      "text": ",sentry-sampled=true,sentry-sample_rand=0.04952500010936245,sentry-sample_rate=0.2"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "cookies": null,
+          "env": null
+        }
+      }
+    },
+    "message": null,
+    "user": null,
+    "contexts": null,
+    "sdk": null,
+    "context": null,
+    "packages": null,
+    "tags": {}
+  },
+  "crashFile": null,
+  "culprit": "/api/method/hrms.api.sales_dashboard.get_sales_dashboard_overview",
+  "dateCreated": "2026-04-27T08:53:01.495000Z",
+  "fingerprints": [
+    "f16d9cff8e9ab6f62647eab85ecd06ea"
+  ],
+  "groupingConfig": {
+    "enhancements": "KLUv_SAd6QAAkwORuGFsbC1wbGF0Zm9ybXM6MjAyNi0wMS0yMJA#KLUv_SAd6QAAkwORuGFsbC1wbGF0Zm9ybXM6MjAyNi0wMS0yMJA#KLUv_SAd6QAAkwORuGFsbC1wbGF0Zm9ybXM6MjAyNi0wMS0yMJA",
+    "id": "newstyle:2026-01-20"
+  },
+  "release": {
+    "id": 1670333880,
+    "version": "bei-hrms@16.0.0-dev",
+    "status": "open",
+    "shortVersion": "bei-hrms@16.0.0-dev",
+    "versionInfo": {
+      "package": "bei-hrms",
+      "version": {
+        "raw": "16.0.0-dev",
+        "major": 16,
+        "minor": 0,
+        "patch": 0,
+        "pre": "dev",
+        "buildCode": null,
+        "components": 3
+      },
+      "description": "16.0.0-dev",
+      "buildHash": null
+    },
+    "ref": null,
+    "url": null,
+    "dateReleased": null,
+    "dateCreated": "2026-02-10T11:57:53.986333Z",
+    "data": {},
+    "newGroups": 548,
+    "owner": null,
+    "commitCount": 0,
+    "lastCommit": null,
+    "deployCount": 0,
+    "lastDeploy": null,
+    "authors": [],
+    "projects": [
+      {
+        "id": 4510861213302784,
+        "slug": "bei-hrms",
+        "name": "bei-hrms",
+        "newGroups": 548,
+        "platform": "python",
+        "platforms": [],
+        "hasHealthData": false
+      }
+    ],
+    "firstEvent": "2026-02-10T11:57:53Z",
+    "lastEvent": "2026-04-27T11:19:10Z",
+    "currentProjectMeta": {},
+    "userAgent": null
+  },
+  "userReport": null,
+  "sdkUpdates": [
+    {
+      "type": "updateSdk",
+      "sdkName": "sentry.python",
+      "newSdkVersion": "2.58.0",
+      "sdkUrl": "https://docs.sentry.io/platforms/python",
+      "enables": []
+    }
+  ],
+  "resolvedWith": [],
+  "nextEventID": "4358525bc4bb497faf7522e75d7d27eb",
+  "previousEventID": "67642b8f2bc04b438ce849506bbd5141"
+}

@@ -1,0 +1,3230 @@
+{
+  "id": "e2e6ca99d73a4cc7a81f00bd162f6f06",
+  "groupID": "7438736785",
+  "eventID": "e2e6ca99d73a4cc7a81f00bd162f6f06",
+  "projectID": "4510861213302784",
+  "size": 53983,
+  "entries": [
+    {
+      "data": {
+        "values": [
+          {
+            "type": "InvalidWarehouseCompany",
+            "value": "Warehouse SM STA. ROSA - SWEET HARMONY FOOD CORP. does not belong to company BEBANG ENTERPRISE INC.",
+            "mechanism": {
+              "type": "generic",
+              "handled": true
+            },
+            "threadId": null,
+            "module": "erpnext.stock.utils",
+            "stacktrace": {
+              "frames": [
+                {
+                  "filename": "hrms/api/store.py",
+                  "absPath": "/home/frappe/frappe-bench/apps/hrms/hrms/api/store.py",
+                  "module": "hrms.api.store",
+                  "package": null,
+                  "platform": null,
+                  "instructionAddr": null,
+                  "symbolAddr": null,
+                  "function": "_create_mr_for_store_order",
+                  "rawFunction": null,
+                  "symbol": null,
+                  "context": [
+                    [
+                      3997,
+                      ""
+                    ],
+                    [
+                      3998,
+                      "\t\tif not mr.items:"
+                    ],
+                    [
+                      3999,
+                      "\t\t\tfrappe.db.rollback(save_point=\"create_mr_for_store_order\")"
+                    ],
+                    [
+                      4000,
+                      "\t\t\treturn None"
+                    ],
+                    [
+                      4001,
+                      ""
+                    ],
+                    [
+                      4002,
+                      "\t\tmr.insert(ignore_permissions=True)"
+                    ],
+                    [
+                      4003,
+                      "\t\tmr.submit()"
+                    ],
+                    [
+                      4004,
+                      "\t\tfrappe.db.release_savepoint(\"create_mr_for_store_order\")"
+                    ],
+                    [
+                      4005,
+                      "\t\t# S212 DEFECT-1: force commit visibility before the whitelist returns"
+                    ],
+                    [
+                      4006,
+                      "\t\t# so REST readers (tests + frontend) do not race the MR insert on a"
+                    ],
+                    [
+                      4007,
+                      "\t\t# separate DB connection."
+                    ]
+                  ],
+                  "lineNo": 4002,
+                  "colNo": null,
+                  "parentIndex": null,
+                  "sampleCount": null,
+                  "inApp": false,
+                  "trust": null,
+                  "errors": null,
+                  "lock": null,
+                  "sourceLink": null,
+                  "vars": {
+                    "buyer_entity_row": {
+                      "billing_policy": "'BKI_TO_STORE_INTERCOMPANY'",
+                      "billing_post_policy": "'standard'",
+                      "buyer_entity_name": "'SM STA. ROSA - SWEET HARMONY FOOD CORP.'",
+                      "buyer_entity_source": "'company_master'",
+                      "buyer_entity_status": "'confirmed_legal_entity'",
+                      "markup_rule_mode": "'standard'",
+                      "store_allocation_required": "'no'",
+                      "store_name": "'SM STA. ROSA - SWEET HARMONY FOOD CORP.'",
+                      "store_type": "'Managed Franchise'",
+                      "store_type_status": "'active'"
+                    },
+                    "cargo_category": "'DRY'",
+                    "mr": "<MaterialRequest: MAT-MR-2026-00534>",
+                    "order": "<BEIStoreOrder: BEI-ORD-2026-00440>",
+                    "pending_seqs": [],
+                    "required_by": "'2026-04-28'",
+                    "set_backend_observability_context": "<function set_backend_observability_context at 0x7b3914246a20>",
+                    "source_company": "'Bebang Enterprise Inc.'",
+                    "source_warehouse": "None",
+                    "store_warehouse": "'SM STA. ROSA - SWEET HARMONY FOOD CORP.'"
+                  }
+                },
+                {
+                  "filename": "frappe/model/document.py",
+                  "absPath": "/home/frappe/frappe-bench/apps/frappe/frappe/model/document.py",
+                  "module": "frappe.model.document",
+                  "package": null,
+                  "platform": null,
+                  "instructionAddr": null,
+                  "symbolAddr": null,
+                  "function": "insert",
+                  "rawFunction": null,
+                  "symbol": null,
+                  "context": [
+                    [
+                      304,
+                      "\t\tself.set_new_name(set_name=set_name, set_child_names=set_child_names)"
+                    ],
+                    [
+                      305,
+                      "\t\tself.set_parent_in_children()"
+                    ],
+                    [
+                      306,
+                      "\t\tself.validate_higher_perm_levels()"
+                    ],
+                    [
+                      307,
+                      ""
+                    ],
+                    [
+                      308,
+                      "\t\tself.flags.in_insert = True"
+                    ],
+                    [
+                      309,
+                      "\t\tself.run_before_save_methods()"
+                    ],
+                    [
+                      310,
+                      "\t\tself._validate()"
+                    ],
+                    [
+                      311,
+                      "\t\tself.set_docstatus()"
+                    ],
+                    [
+                      312,
+                      "\t\tself.flags.in_insert = False"
+                    ],
+                    [
+                      313,
+                      ""
+                    ],
+                    [
+                      314,
+                      "\t\t# run validate, on update etc."
+                    ]
+                  ],
+                  "lineNo": 309,
+                  "colNo": null,
+                  "parentIndex": null,
+                  "sampleCount": null,
+                  "inApp": false,
+                  "trust": null,
+                  "errors": null,
+                  "lock": null,
+                  "sourceLink": null,
+                  "vars": {
+                    "ignore_if_duplicate": "False",
+                    "ignore_links": "None",
+                    "ignore_mandatory": "None",
+                    "ignore_permissions": "True",
+                    "self": "<MaterialRequest: MAT-MR-2026-00534>",
+                    "set_child_names": "True",
+                    "set_name": "None"
+                  }
+                },
+                {
+                  "filename": "frappe/model/document.py",
+                  "absPath": "/home/frappe/frappe-bench/apps/frappe/frappe/model/document.py",
+                  "module": "frappe.model.document",
+                  "package": null,
+                  "platform": null,
+                  "instructionAddr": null,
+                  "symbolAddr": null,
+                  "function": "run_before_save_methods",
+                  "rawFunction": null,
+                  "symbol": null,
+                  "context": [
+                    [
+                      1135,
+                      ""
+                    ],
+                    [
+                      1136,
+                      "\t\tif self.flags.ignore_validate:"
+                    ],
+                    [
+                      1137,
+                      "\t\t\treturn"
+                    ],
+                    [
+                      1138,
+                      ""
+                    ],
+                    [
+                      1139,
+                      "\t\tif self._action == \"save\":"
+                    ],
+                    [
+                      1140,
+                      "\t\t\tself.run_method(\"validate\")"
+                    ],
+                    [
+                      1141,
+                      "\t\t\tself.run_method(\"before_save\")"
+                    ],
+                    [
+                      1142,
+                      "\t\telif self._action == \"submit\":"
+                    ],
+                    [
+                      1143,
+                      "\t\t\tself.run_method(\"validate\")"
+                    ],
+                    [
+                      1144,
+                      "\t\t\tself.run_method(\"before_submit\")"
+                    ],
+                    [
+                      1145,
+                      "\t\telif self._action == \"cancel\":"
+                    ]
+                  ],
+                  "lineNo": 1140,
+                  "colNo": null,
+                  "parentIndex": null,
+                  "sampleCount": null,
+                  "inApp": false,
+                  "trust": null,
+                  "errors": null,
+                  "lock": null,
+                  "sourceLink": null,
+                  "vars": {
+                    "self": "<MaterialRequest: MAT-MR-2026-00534>"
+                  }
+                },
+                {
+                  "filename": "frappe/model/document.py",
+                  "absPath": "/home/frappe/frappe-bench/apps/frappe/frappe/model/document.py",
+                  "module": "frappe.model.document",
+                  "package": null,
+                  "platform": null,
+                  "instructionAddr": null,
+                  "symbolAddr": null,
+                  "function": "run_method",
+                  "rawFunction": null,
+                  "symbol": null,
+                  "context": [
+                    [
+                      1006,
+                      "\t\t\t# If method found in __dict__, expect it to be callable"
+                    ],
+                    [
+                      1007,
+                      "\t\t\tif method in self.__dict__ or callable(method_object):"
+                    ],
+                    [
+                      1008,
+                      "\t\t\t\treturn method_object(*args, **kwargs)"
+                    ],
+                    [
+                      1009,
+                      ""
+                    ],
+                    [
+                      1010,
+                      "\t\tfn.__name__ = str(method)"
+                    ],
+                    [
+                      1011,
+                      "\t\tout = Document.hook(fn)(self, *args, **kwargs)"
+                    ],
+                    [
+                      1012,
+                      ""
+                    ],
+                    [
+                      1013,
+                      "\t\tself.run_notifications(method)"
+                    ],
+                    [
+                      1014,
+                      "\t\trun_webhooks(self, method)"
+                    ],
+                    [
+                      1015,
+                      "\t\trun_server_script_for_doc_event(self, method)"
+                    ],
+                    [
+                      1016,
+                      ""
+                    ]
+                  ],
+                  "lineNo": 1011,
+                  "colNo": null,
+                  "parentIndex": null,
+                  "sampleCount": null,
+                  "inApp": false,
+                  "trust": null,
+                  "errors": null,
+                  "lock": null,
+                  "sourceLink": null,
+                  "vars": {
+                    "args": [],
+                    "fn": "<function Document.run_method.<locals>.fn at 0x7b38fe2ec680>",
+                    "kwargs": {},
+                    "method": "'validate'",
+                    "self": "<MaterialRequest: MAT-MR-2026-00534>"
+                  }
+                },
+                {
+                  "filename": "frappe/model/document.py",
+                  "absPath": "/home/frappe/frappe-bench/apps/frappe/frappe/model/document.py",
+                  "module": "frappe.model.document",
+                  "package": null,
+                  "platform": null,
+                  "instructionAddr": null,
+                  "symbolAddr": null,
+                  "function": "composer",
+                  "rawFunction": null,
+                  "symbol": null,
+                  "context": [
+                    [
+                      1366,
+                      "\t\t\t\tmethod, []"
+                    ],
+                    [
+                      1367,
+                      "\t\t\t):"
+                    ],
+                    [
+                      1368,
+                      "\t\t\t\thooks.append(frappe.get_attr(handler))"
+                    ],
+                    [
+                      1369,
+                      ""
+                    ],
+                    [
+                      1370,
+                      "\t\t\tcomposed = compose(f, *hooks)"
+                    ],
+                    [
+                      1371,
+                      "\t\t\treturn composed(self, method, *args, **kwargs)"
+                    ],
+                    [
+                      1372,
+                      ""
+                    ],
+                    [
+                      1373,
+                      "\t\treturn composer"
+                    ],
+                    [
+                      1374,
+                      ""
+                    ],
+                    [
+                      1375,
+                      "\tdef is_whitelisted(self, method_name):"
+                    ],
+                    [
+                      1376,
+                      "\t\tmethod = getattr(self, method_name, None)"
+                    ]
+                  ],
+                  "lineNo": 1371,
+                  "colNo": null,
+                  "parentIndex": null,
+                  "sampleCount": null,
+                  "inApp": false,
+                  "trust": null,
+                  "errors": null,
+                  "lock": null,
+                  "sourceLink": null,
+                  "vars": {
+                    "args": [],
+                    "compose": "<function Document.hook.<locals>.compose at 0x7b38fe2eec00>",
+                    "composed": "<function Document.hook.<locals>.compose.<locals>.runner at 0x7b38fe2ed120>",
+                    "doc_events": {
+                      "*": {
+                        "after_rename": [
+                          "'frappe.desk.notifications.clear_doctype_notifications'"
+                        ],
+                        "on_cancel": [
+                          "'frappe.desk.notifications.clear_doctype_notifications'",
+                          "'frappe.workflow.doctype.workflow_action.workflow_action.process_workflow_actions'",
+                          "'frappe.automation.doctype.assignment_rule.assignment_rule.apply'"
+                        ],
+                        "on_change": [
+                          "'frappe.social.doctype.energy_point_rule.energy_point_rule.process_energy_points'",
+                          "'frappe.automation.doctype.milestone_tracker.milestone_tracker.evaluate_milestone'"
+                        ],
+                        "on_trash": [
+                          "'frappe.desk.notifications.clear_doctype_notifications'",
+                          "'frappe.workflow.doctype.workflow_action.workflow_action.process_workflow_actions'",
+                          "'frappe.search.sqlite_search.delete_doc_index'"
+                        ],
+                        "on_update": [
+                          "'frappe.desk.notifications.clear_doctype_notifications'",
+                          "'frappe.workflow.doctype.workflow_action.workflow_action.process_workflow_actions'",
+                          "'frappe.core.doctype.file.utils.attach_files_to_document'",
+                          "'frappe.automation.doctype.assignment_rule.assignment_rule.apply'",
+                          "'frappe.automation.doctype.assignment_rule.assignment_rule.update_due_date'",
+                          "'frappe.core.doctype.user_type.user_type.apply_permissions_for_non_standard_user_type'",
+                          "'frappe.search.sqlite_search.update_doc_index'"
+                        ],
+                        "on_update_after_submit": [
+                          "'frappe.workflow.doctype.workflow_action.workflow_action.process_workflow_actions'",
+                          "'frappe.automation.doctype.assignment_rule.assignment_rule.apply'",
+                          "'frappe.automation.doctype.assignment_rule.assignment_rule.update_due_date'",
+                          "'frappe.core.doctype.file.utils.attach_files_to_document'"
+                        ],
+                        "validate": [
+                          "'erpnext.support.doctype.service_level_agreement.service_level_agreement.apply'",
+                          "'erpnext.setup.doctype.transaction_deletion_record.transaction_deletion_record.check_for_running_deletion_job'"
+                        ]
+                      },
+                      "Bank Clearance": {
+                        "validate": [
+                          "'erpnext.accounts.doctype.accounting_period.accounting_period.validate_accounting_period_on_doc_save'"
+                        ]
+                      },
+                      "Contact": {
+                        "after_insert": [
+                          "'frappe.integrations.doctype.google_contacts.google_contacts.insert_contacts_to_google_contacts'",
+                          "'erpnext.telephony.doctype.call_log.call_log.link_existing_convers..."
+                        ]
+                      }
+                    }
+                  }
+                },
+                {
+                  "filename": "frappe/model/document.py",
+                  "absPath": "/home/frappe/frappe-bench/apps/frappe/frappe/model/document.py",
+                  "module": "frappe.model.document",
+                  "package": null,
+                  "platform": null,
+                  "instructionAddr": null,
+                  "symbolAddr": null,
+                  "function": "runner",
+                  "rawFunction": null,
+                  "symbol": null,
+                  "context": [
+                    [
+                      1348,
+                      "\t\t\telse:"
+                    ],
+                    [
+                      1349,
+                      "\t\t\t\tself._return_value = new_return_value"
+                    ],
+                    [
+                      1350,
+                      ""
+                    ],
+                    [
+                      1351,
+                      "\t\tdef compose(fn, *hooks):"
+                    ],
+                    [
+                      1352,
+                      "\t\t\tdef runner(self, method, *args, **kwargs):"
+                    ],
+                    [
+                      1353,
+                      "\t\t\t\tadd_to_return_value(self, fn(self, *args, **kwargs))"
+                    ],
+                    [
+                      1354,
+                      "\t\t\t\tfor f in hooks:"
+                    ],
+                    [
+                      1355,
+                      "\t\t\t\t\tadd_to_return_value(self, f(self, method, *args, **kwargs))"
+                    ],
+                    [
+                      1356,
+                      ""
+                    ],
+                    [
+                      1357,
+                      "\t\t\t\treturn self.__dict__.pop(\"_return_value\", None)"
+                    ],
+                    [
+                      1358,
+                      ""
+                    ]
+                  ],
+                  "lineNo": 1353,
+                  "colNo": null,
+                  "parentIndex": null,
+                  "sampleCount": null,
+                  "inApp": false,
+                  "trust": null,
+                  "errors": null,
+                  "lock": null,
+                  "sourceLink": null,
+                  "vars": {
+                    "add_to_return_value": "<function Document.hook.<locals>.add_to_return_value at 0x7b38fe2edb20>",
+                    "args": [],
+                    "fn": "<function Document.run_method.<locals>.fn at 0x7b38fe2ec680>",
+                    "hooks": [
+                      "<function apply at 0x7b390dde7060>",
+                      "<function check_for_running_deletion_job at 0x7b390dde8cc0>"
+                    ],
+                    "kwargs": {},
+                    "method": "'validate'",
+                    "self": "<MaterialRequest: MAT-MR-2026-00534>"
+                  }
+                },
+                {
+                  "filename": "frappe/model/document.py",
+                  "absPath": "/home/frappe/frappe-bench/apps/frappe/frappe/model/document.py",
+                  "module": "frappe.model.document",
+                  "package": null,
+                  "platform": null,
+                  "instructionAddr": null,
+                  "symbolAddr": null,
+                  "function": "fn",
+                  "rawFunction": null,
+                  "symbol": null,
+                  "context": [
+                    [
+                      1003,
+                      "\t\t\tmethod_object = getattr(self, method, None)"
+                    ],
+                    [
+                      1004,
+                      ""
+                    ],
+                    [
+                      1005,
+                      "\t\t\t# Cannot have a field with same name as method"
+                    ],
+                    [
+                      1006,
+                      "\t\t\t# If method found in __dict__, expect it to be callable"
+                    ],
+                    [
+                      1007,
+                      "\t\t\tif method in self.__dict__ or callable(method_object):"
+                    ],
+                    [
+                      1008,
+                      "\t\t\t\treturn method_object(*args, **kwargs)"
+                    ],
+                    [
+                      1009,
+                      ""
+                    ],
+                    [
+                      1010,
+                      "\t\tfn.__name__ = str(method)"
+                    ],
+                    [
+                      1011,
+                      "\t\tout = Document.hook(fn)(self, *args, **kwargs)"
+                    ],
+                    [
+                      1012,
+                      ""
+                    ],
+                    [
+                      1013,
+                      "\t\tself.run_notifications(method)"
+                    ]
+                  ],
+                  "lineNo": 1008,
+                  "colNo": null,
+                  "parentIndex": null,
+                  "sampleCount": null,
+                  "inApp": false,
+                  "trust": null,
+                  "errors": null,
+                  "lock": null,
+                  "sourceLink": null,
+                  "vars": {
+                    "args": [],
+                    "kwargs": {},
+                    "method": "'validate'",
+                    "method_object": "<bound method MaterialRequest.validate of <MaterialRequest: MAT-MR-2026-00534>>",
+                    "self": "<MaterialRequest: MAT-MR-2026-00534>"
+                  }
+                },
+                {
+                  "filename": "erpnext/stock/doctype/material_request/material_request.py",
+                  "absPath": "/home/frappe/frappe-bench/apps/erpnext/erpnext/stock/doctype/material_request/material_request.py",
+                  "module": "erpnext.stock.doctype.material_request.material_request",
+                  "package": null,
+                  "platform": null,
+                  "instructionAddr": null,
+                  "symbolAddr": null,
+                  "function": "validate",
+                  "rawFunction": null,
+                  "symbol": null,
+                  "context": [
+                    [
+                      129,
+                      "\t\t\t\t\t\t\t\"Material Request of maximum {0} can be made for Item {1} against Sales Order {2}\""
+                    ],
+                    [
+                      130,
+                      "\t\t\t\t\t\t).format(actual_so_qty - already_indented, item, so_no)"
+                    ],
+                    [
+                      131,
+                      "\t\t\t\t\t)"
+                    ],
+                    [
+                      132,
+                      ""
+                    ],
+                    [
+                      133,
+                      "\tdef validate(self):"
+                    ],
+                    [
+                      134,
+                      "\t\tsuper().validate()"
+                    ],
+                    [
+                      135,
+                      ""
+                    ],
+                    [
+                      136,
+                      "\t\tself.validate_schedule_date()"
+                    ],
+                    [
+                      137,
+                      "\t\tself.check_for_on_hold_or_closed_status(\"Sales Order\", \"sales_order\")"
+                    ],
+                    [
+                      138,
+                      "\t\tself.validate_uom_is_integer(\"uom\", \"qty\")"
+                    ],
+                    [
+                      139,
+                      "\t\tself.validate_material_request_type()"
+                    ]
+                  ],
+                  "lineNo": 134,
+                  "colNo": null,
+                  "parentIndex": null,
+                  "sampleCount": null,
+                  "inApp": false,
+                  "trust": null,
+                  "errors": null,
+                  "lock": null,
+                  "sourceLink": null,
+                  "vars": {
+                    "__class__": "<class 'erpnext.stock.doctype.material_request.material_request.MaterialRequest'>",
+                    "self": "<MaterialRequest: MAT-MR-2026-00534>"
+                  }
+                },
+                {
+                  "filename": "erpnext/controllers/buying_controller.py",
+                  "absPath": "/home/frappe/frappe-bench/apps/erpnext/erpnext/controllers/buying_controller.py",
+                  "module": "erpnext.controllers.buying_controller",
+                  "package": null,
+                  "platform": null,
+                  "instructionAddr": null,
+                  "symbolAddr": null,
+                  "function": "validate",
+                  "rawFunction": null,
+                  "symbol": null,
+                  "context": [
+                    [
+                      36,
+                      "\t\t\tself.supplier_name = frappe.db.get_value(\"Supplier\", self.supplier, \"supplier_name\")"
+                    ],
+                    [
+                      37,
+                      ""
+                    ],
+                    [
+                      38,
+                      "\t\tself.validate_items()"
+                    ],
+                    [
+                      39,
+                      "\t\tself.set_qty_as_per_stock_uom()"
+                    ],
+                    [
+                      40,
+                      "\t\tself.validate_stock_or_nonstock_items()"
+                    ],
+                    [
+                      41,
+                      "\t\tself.validate_warehouse()"
+                    ],
+                    [
+                      42,
+                      "\t\tself.validate_from_warehouse()"
+                    ],
+                    [
+                      43,
+                      "\t\tself.set_supplier_address()"
+                    ],
+                    [
+                      44,
+                      "\t\tself.validate_asset_return()"
+                    ],
+                    [
+                      45,
+                      "\t\tself.validate_auto_repeat_subscription_dates()"
+                    ],
+                    [
+                      46,
+                      "\t\tself.create_package_for_transfer()"
+                    ]
+                  ],
+                  "lineNo": 41,
+                  "colNo": null,
+                  "parentIndex": null,
+                  "sampleCount": null,
+                  "inApp": false,
+                  "trust": null,
+                  "errors": null,
+                  "lock": null,
+                  "sourceLink": null,
+                  "vars": {
+                    "__class__": "<class 'erpnext.controllers.buying_controller.BuyingController'>",
+                    "self": "<MaterialRequest: MAT-MR-2026-00534>"
+                  }
+                },
+                {
+                  "filename": "erpnext/controllers/stock_controller.py",
+                  "absPath": "/home/frappe/frappe-bench/apps/erpnext/erpnext/controllers/stock_controller.py",
+                  "module": "erpnext.controllers.stock_controller",
+                  "package": null,
+                  "platform": null,
+                  "instructionAddr": null,
+                  "symbolAddr": null,
+                  "function": "validate_warehouse",
+                  "rawFunction": null,
+                  "symbol": null,
+                  "context": [
+                    [
+                      1076,
+                      ""
+                    ],
+                    [
+                      1077,
+                      "\t\twarehouses.extend(from_warehouse)"
+                    ],
+                    [
+                      1078,
+                      ""
+                    ],
+                    [
+                      1079,
+                      "\t\tfor w in warehouses:"
+                    ],
+                    [
+                      1080,
+                      "\t\t\tvalidate_disabled_warehouse(w)"
+                    ],
+                    [
+                      1081,
+                      "\t\t\tvalidate_warehouse_company(w, self.company)"
+                    ],
+                    [
+                      1082,
+                      ""
+                    ],
+                    [
+                      1083,
+                      "\tdef update_billing_percentage(self, update_modified=True):"
+                    ],
+                    [
+                      1084,
+                      "\t\ttarget_ref_field = \"amount\""
+                    ],
+                    [
+                      1085,
+                      "\t\tif self.doctype == \"Delivery Note\":"
+                    ],
+                    [
+                      1086,
+                      "\t\t\ttotal_amount = total_returned = 0"
+                    ]
+                  ],
+                  "lineNo": 1081,
+                  "colNo": null,
+                  "parentIndex": null,
+                  "sampleCount": null,
+                  "inApp": false,
+                  "trust": null,
+                  "errors": null,
+                  "lock": null,
+                  "sourceLink": null,
+                  "vars": {
+                    "from_warehouse": [],
+                    "self": "<MaterialRequest: MAT-MR-2026-00534>",
+                    "target_warehouses": [],
+                    "validate_disabled_warehouse": "<function validate_disabled_warehouse at 0x7b390e349c60>",
+                    "validate_warehouse_company": "<function validate_warehouse_company at 0x7b390e349b20>",
+                    "w": "'SM STA. ROSA - SWEET HARMONY FOOD CORP.'",
+                    "warehouses": [
+                      "'SM STA. ROSA - SWEET HARMONY FOOD CORP.'"
+                    ]
+                  }
+                },
+                {
+                  "filename": "erpnext/stock/utils.py",
+                  "absPath": "/home/frappe/frappe-bench/apps/erpnext/erpnext/stock/utils.py",
+                  "module": "erpnext.stock.utils",
+                  "package": null,
+                  "platform": null,
+                  "instructionAddr": null,
+                  "symbolAddr": null,
+                  "function": "validate_warehouse_company",
+                  "rawFunction": null,
+                  "symbol": null,
+                  "context": [
+                    [
+                      428,
+                      ""
+                    ],
+                    [
+                      429,
+                      ""
+                    ],
+                    [
+                      430,
+                      "def validate_warehouse_company(warehouse, company):"
+                    ],
+                    [
+                      431,
+                      "\twarehouse_company = frappe.db.get_value(\"Warehouse\", warehouse, \"company\", cache=True)"
+                    ],
+                    [
+                      432,
+                      "\tif warehouse_company and warehouse_company != company:"
+                    ],
+                    [
+                      433,
+                      "\t\tfrappe.throw("
+                    ],
+                    [
+                      434,
+                      "\t\t\t_(\"Warehouse {0} does not belong to company {1}\").format(warehouse, company),"
+                    ],
+                    [
+                      435,
+                      "\t\t\tInvalidWarehouseCompany,"
+                    ],
+                    [
+                      436,
+                      "\t\t)"
+                    ],
+                    [
+                      437,
+                      ""
+                    ],
+                    [
+                      438,
+                      ""
+                    ]
+                  ],
+                  "lineNo": 433,
+                  "colNo": null,
+                  "parentIndex": null,
+                  "sampleCount": null,
+                  "inApp": false,
+                  "trust": null,
+                  "errors": null,
+                  "lock": null,
+                  "sourceLink": null,
+                  "vars": {
+                    "company": "'BEBANG ENTERPRISE INC.'",
+                    "warehouse": "'SM STA. ROSA - SWEET HARMONY FOOD CORP.'",
+                    "warehouse_company": "'SM STA. ROSA - SWEET HARMONY FOOD CORP.'"
+                  }
+                },
+                {
+                  "filename": "__init__.py",
+                  "absPath": "/home/frappe/frappe-bench/apps/frappe/frappe/__init__.py",
+                  "module": "frappe",
+                  "package": null,
+                  "platform": null,
+                  "instructionAddr": null,
+                  "symbolAddr": null,
+                  "function": "throw",
+                  "rawFunction": null,
+                  "symbol": null,
+                  "context": [
+                    [
+                      614,
+                      "\t:param is_minimizable: [optional] Allow users to minimize the modal"
+                    ],
+                    [
+                      615,
+                      "\t:param wide: [optional] Show wide modal"
+                    ],
+                    [
+                      616,
+                      "\t:param as_list: [optional] If `msg` is a list, render as un-ordered list."
+                    ],
+                    [
+                      617,
+                      "\t:param primary_action: [optional] Bind a primary server/client side action."
+                    ],
+                    [
+                      618,
+                      "\t\"\"\""
+                    ],
+                    [
+                      619,
+                      "\tmsgprint("
+                    ],
+                    [
+                      620,
+                      "\t\tmsg,"
+                    ],
+                    [
+                      621,
+                      "\t\traise_exception=exc,"
+                    ],
+                    [
+                      622,
+                      "\t\ttitle=title,"
+                    ],
+                    [
+                      623,
+                      "\t\tindicator=\"red\","
+                    ],
+                    [
+                      624,
+                      "\t\tis_minimizable=is_minimizable,"
+                    ]
+                  ],
+                  "lineNo": 619,
+                  "colNo": null,
+                  "parentIndex": null,
+                  "sampleCount": null,
+                  "inApp": false,
+                  "trust": null,
+                  "errors": null,
+                  "lock": null,
+                  "sourceLink": null,
+                  "vars": {
+                    "as_list": "False",
+                    "exc": "<class 'erpnext.stock.utils.InvalidWarehouseCompany'>",
+                    "is_minimizable": "False",
+                    "msg": "'Warehouse SM STA. ROSA - SWEET HARMONY FOOD CORP. does not belong to company BEBANG ENTERPRISE INC.'",
+                    "primary_action": "None",
+                    "title": "None",
+                    "wide": "False"
+                  }
+                },
+                {
+                  "filename": "__init__.py",
+                  "absPath": "/home/frappe/frappe-bench/apps/frappe/frappe/__init__.py",
+                  "module": "frappe",
+                  "package": null,
+                  "platform": null,
+                  "instructionAddr": null,
+                  "symbolAddr": null,
+                  "function": "msgprint",
+                  "rawFunction": null,
+                  "symbol": null,
+                  "context": [
+                    [
+                      579,
+                      ""
+                    ],
+                    [
+                      580,
+                      "\tif realtime:"
+                    ],
+                    [
+                      581,
+                      "\t\tpublish_realtime(event=\"msgprint\", message=out)"
+                    ],
+                    [
+                      582,
+                      "\telse:"
+                    ],
+                    [
+                      583,
+                      "\t\tmessage_log.append(out)"
+                    ],
+                    [
+                      584,
+                      "\t_raise_exception()"
+                    ],
+                    [
+                      585,
+                      ""
+                    ],
+                    [
+                      586,
+                      ""
+                    ],
+                    [
+                      587,
+                      "def clear_messages():"
+                    ],
+                    [
+                      588,
+                      "\tlocal.message_log = []"
+                    ],
+                    [
+                      589,
+                      ""
+                    ]
+                  ],
+                  "lineNo": 584,
+                  "colNo": null,
+                  "parentIndex": null,
+                  "sampleCount": null,
+                  "inApp": false,
+                  "trust": null,
+                  "errors": null,
+                  "lock": null,
+                  "sourceLink": null,
+                  "vars": {
+                    "alert": "False",
+                    "as_list": "False",
+                    "as_table": "False",
+                    "indicator": "'red'",
+                    "is_minimizable": "False",
+                    "msg": "'Warehouse SM STA. ROSA - SWEET HARMONY FOOD CORP. does not belong to company BEBANG ENTERPRISE INC.'",
+                    "primary_action": "None",
+                    "raise_exception": "<class 'erpnext.stock.utils.InvalidWarehouseCompany'>",
+                    "title": "None",
+                    "wide": "False"
+                  }
+                },
+                {
+                  "filename": "__init__.py",
+                  "absPath": "/home/frappe/frappe-bench/apps/frappe/frappe/__init__.py",
+                  "module": "frappe",
+                  "package": null,
+                  "platform": null,
+                  "instructionAddr": null,
+                  "symbolAddr": null,
+                  "function": "_raise_exception",
+                  "rawFunction": null,
+                  "symbol": null,
+                  "context": [
+                    [
+                      530,
+                      "\t\t\t\texc.args = (msg,)"
+                    ],
+                    [
+                      531,
+                      "\t\t\telse:"
+                    ],
+                    [
+                      532,
+                      "\t\t\t\texc = ValidationError(msg)"
+                    ],
+                    [
+                      533,
+                      "\t\t\tif out.__frappe_exc_id:"
+                    ],
+                    [
+                      534,
+                      "\t\t\t\texc.__frappe_exc_id = out.__frappe_exc_id"
+                    ],
+                    [
+                      535,
+                      "\t\t\traise exc"
+                    ],
+                    [
+                      536,
+                      ""
+                    ],
+                    [
+                      537,
+                      "\tif flags.mute_messages:"
+                    ],
+                    [
+                      538,
+                      "\t\t_raise_exception()"
+                    ],
+                    [
+                      539,
+                      "\t\treturn"
+                    ],
+                    [
+                      540,
+                      ""
+                    ]
+                  ],
+                  "lineNo": 535,
+                  "colNo": null,
+                  "parentIndex": null,
+                  "sampleCount": null,
+                  "inApp": false,
+                  "trust": null,
+                  "errors": null,
+                  "lock": null,
+                  "sourceLink": null,
+                  "vars": {
+                    "exc": "InvalidWarehouseCompany('Warehouse SM STA. ROSA - SWEET HARMONY FOOD CORP. does not belong to company BEBANG ENTERPRISE INC.')",
+                    "inspect": "<module 'inspect' from '/usr/local/lib/python3.11/inspect.py'>",
+                    "msg": "'Warehouse SM STA. ROSA - SWEET HARMONY FOOD CORP. does not belong to company BEBANG ENTERPRISE INC.'",
+                    "out": {
+                      "__frappe_exc_id": "'99caaafb65928d72722a4d90e7ead71fa812ef99fe17d83ebb8476e5'",
+                      "indicator": "'red'",
+                      "message": "'Warehouse SM STA. ROSA - SWEET HARMONY FOOD CORP. does not belong to company BEBANG ENTERPRISE INC.'",
+                      "raise_exception": "1",
+                      "title": "'Message'"
+                    },
+                    "raise_exception": "<class 'erpnext.stock.utils.InvalidWarehouseCompany'>"
+                  }
+                }
+              ],
+              "framesOmitted": null,
+              "registers": null,
+              "hasSystemFrames": false
+            },
+            "rawStacktrace": null,
+            "rawValue": null,
+            "rawModule": null,
+            "rawType": null
+          }
+        ],
+        "hasSystemFrames": false,
+        "excOmitted": null
+      },
+      "type": "exception"
+    },
+    {
+      "data": {
+        "values": [
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T09:38:38.485783Z",
+            "level": "info",
+            "message": "HGET b'_3ca82e0039adc3d1|defaults' [Filtered]",
+            "category": "redis",
+            "data": {
+              "db.operation": "HGET",
+              "redis.command": "HGET",
+              "redis.is_cluster": false
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T09:38:38.486062Z",
+            "level": "info",
+            "message": "HGET b'_3ca82e0039adc3d1|defaults' [Filtered]",
+            "category": "redis",
+            "data": {
+              "db.operation": "HGET",
+              "redis.command": "HGET",
+              "redis.is_cluster": false
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T09:38:38.486331Z",
+            "level": "info",
+            "message": "HGET b'_3ca82e0039adc3d1|user_permissions' [Filtered]",
+            "category": "redis",
+            "data": {
+              "db.operation": "HGET",
+              "redis.command": "HGET",
+              "redis.is_cluster": false
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T09:38:38.486775Z",
+            "level": "info",
+            "message": "HGET b'_3ca82e0039adc3d1|defaults' [Filtered]",
+            "category": "redis",
+            "data": {
+              "db.operation": "HGET",
+              "redis.command": "HGET",
+              "redis.is_cluster": false
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T09:38:38.487020Z",
+            "level": "info",
+            "message": "GET b'_3ca82e0039adc3d1|all_apps'",
+            "category": "redis",
+            "data": {
+              "db.operation": "GET",
+              "redis.command": "GET",
+              "redis.is_cluster": false,
+              "redis.key": "_3ca82e0039adc3d1|all_apps"
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T09:38:38.488135Z",
+            "level": "info",
+            "message": "GET b'_3ca82e0039adc3d1|recorder-intercept'",
+            "category": "redis",
+            "data": {
+              "db.operation": "GET",
+              "redis.command": "GET",
+              "redis.is_cluster": false,
+              "redis.key": "_3ca82e0039adc3d1|recorder-intercept"
+            },
+            "event_id": null
+          },
+          {
+            "type": "default",
+            "timestamp": "2026-04-27T09:38:38.488235Z",
+            "level": "info",
+            "message": "Request to /api/method/hrms.api.store.approve_order",
+            "category": "frappe.request",
+            "data": {
+              "doctype": "",
+              "method": ""
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T09:38:38.488606Z",
+            "level": "info",
+            "message": "GET b'_3ca82e0039adc3d1|server_script_map'",
+            "category": "redis",
+            "data": {
+              "db.operation": "GET",
+              "redis.command": "GET",
+              "redis.is_cluster": false,
+              "redis.key": "_3ca82e0039adc3d1|server_script_map"
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T09:38:38.489316Z",
+            "level": "info",
+            "message": "HGET b'_3ca82e0039adc3d1|doctype_meta' [Filtered]",
+            "category": "redis",
+            "data": {
+              "db.operation": "HGET",
+              "redis.command": "HGET",
+              "redis.is_cluster": false
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T09:38:38.494683Z",
+            "level": "info",
+            "message": "HGET b'_3ca82e0039adc3d1|doctype_meta' [Filtered]",
+            "category": "redis",
+            "data": {
+              "db.operation": "HGET",
+              "redis.command": "HGET",
+              "redis.is_cluster": false
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T09:38:38.495845Z",
+            "level": "info",
+            "message": "HGET b'_3ca82e0039adc3d1|table_columns' [Filtered]",
+            "category": "redis",
+            "data": {
+              "db.operation": "HGET",
+              "redis.command": "HGET",
+              "redis.is_cluster": false
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T09:38:38.496337Z",
+            "level": "info",
+            "message": "HGET b'_3ca82e0039adc3d1|doctype_meta' [Filtered]",
+            "category": "redis",
+            "data": {
+              "db.operation": "HGET",
+              "redis.command": "HGET",
+              "redis.is_cluster": false
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T09:38:38.498960Z",
+            "level": "info",
+            "message": "HGET b'_3ca82e0039adc3d1|roles' [Filtered]",
+            "category": "redis",
+            "data": {
+              "db.operation": "HGET",
+              "redis.command": "HGET",
+              "redis.is_cluster": false
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T09:38:38.499325Z",
+            "level": "info",
+            "message": "HGET b'_3ca82e0039adc3d1|table_columns' [Filtered]",
+            "category": "redis",
+            "data": {
+              "db.operation": "HGET",
+              "redis.command": "HGET",
+              "redis.is_cluster": false
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T09:38:38.499865Z",
+            "level": "info",
+            "message": "HGET b'_3ca82e0039adc3d1|doctype_meta' [Filtered]",
+            "category": "redis",
+            "data": {
+              "db.operation": "HGET",
+              "redis.command": "HGET",
+              "redis.is_cluster": false
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T09:38:38.503209Z",
+            "level": "info",
+            "message": "HGET b'_3ca82e0039adc3d1|roles' [Filtered]",
+            "category": "redis",
+            "data": {
+              "db.operation": "HGET",
+              "redis.command": "HGET",
+              "redis.is_cluster": false
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T09:38:38.504414Z",
+            "level": "info",
+            "message": "HGET b'_3ca82e0039adc3d1|roles' [Filtered]",
+            "category": "redis",
+            "data": {
+              "db.operation": "HGET",
+              "redis.command": "HGET",
+              "redis.is_cluster": false
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T09:38:38.507274Z",
+            "level": "info",
+            "message": "HGET b'_3ca82e0039adc3d1|doctype_meta' [Filtered]",
+            "category": "redis",
+            "data": {
+              "db.operation": "HGET",
+              "redis.command": "HGET",
+              "redis.is_cluster": false
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T09:38:38.510296Z",
+            "level": "info",
+            "message": "HGET b'_3ca82e0039adc3d1|doctype_meta' [Filtered]",
+            "category": "redis",
+            "data": {
+              "db.operation": "HGET",
+              "redis.command": "HGET",
+              "redis.is_cluster": false
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T09:38:38.514919Z",
+            "level": "info",
+            "message": "GET b'_3ca82e0039adc3d1|dynamic_link_map::BEI Approval Queue::reference_doctype'",
+            "category": "redis",
+            "data": {
+              "db.operation": "GET",
+              "redis.command": "GET",
+              "redis.is_cluster": false,
+              "redis.key": "_3ca82e0039adc3d1|dynamic_link_map::BEI Approval Queue::reference_doctype"
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T09:38:38.516729Z",
+            "level": "info",
+            "message": "HGET b'_3ca82e0039adc3d1|notifications' [Filtered]",
+            "category": "redis",
+            "data": {
+              "db.operation": "HGET",
+              "redis.command": "HGET",
+              "redis.is_cluster": false
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T09:38:38.517082Z",
+            "level": "info",
+            "message": "GET b'_3ca82e0039adc3d1|webhooks'",
+            "category": "redis",
+            "data": {
+              "db.operation": "GET",
+              "redis.command": "GET",
+              "redis.is_cluster": false,
+              "redis.key": "_3ca82e0039adc3d1|webhooks"
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T09:38:38.517495Z",
+            "level": "info",
+            "message": "GET b'_3ca82e0039adc3d1|doctypes_with_active_sla'",
+            "category": "redis",
+            "data": {
+              "db.operation": "GET",
+              "redis.command": "GET",
+              "redis.is_cluster": false,
+              "redis.key": "_3ca82e0039adc3d1|doctypes_with_active_sla"
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T09:38:38.518293Z",
+            "level": "info",
+            "message": "HGET b'_3ca82e0039adc3d1|workflow' [Filtered]",
+            "category": "redis",
+            "data": {
+              "db.operation": "HGET",
+              "redis.command": "HGET",
+              "redis.is_cluster": false
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T09:38:38.519417Z",
+            "level": "info",
+            "message": "HGET b'_3ca82e0039adc3d1|notification_config' [Filtered]",
+            "category": "redis",
+            "data": {
+              "db.operation": "HGET",
+              "redis.command": "HGET",
+              "redis.is_cluster": false
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T09:38:38.519862Z",
+            "level": "info",
+            "message": "HGET b'_3ca82e0039adc3d1|assignment_rule_map' [Filtered]",
+            "category": "redis",
+            "data": {
+              "db.operation": "HGET",
+              "redis.command": "HGET",
+              "redis.is_cluster": false
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T09:38:38.520117Z",
+            "level": "info",
+            "message": "HGET b'_3ca82e0039adc3d1|assignment_rule_map' [Filtered]",
+            "category": "redis",
+            "data": {
+              "db.operation": "HGET",
+              "redis.command": "HGET",
+              "redis.is_cluster": false
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T09:38:38.520400Z",
+            "level": "info",
+            "message": "GET b'_3ca82e0039adc3d1|db_tables'",
+            "category": "redis",
+            "data": {
+              "db.operation": "GET",
+              "redis.command": "GET",
+              "redis.is_cluster": false,
+              "redis.key": "_3ca82e0039adc3d1|db_tables"
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T09:38:38.520835Z",
+            "level": "info",
+            "message": "GET b'_3ca82e0039adc3d1|non_standard_user_types'",
+            "category": "redis",
+            "data": {
+              "db.operation": "GET",
+              "redis.command": "GET",
+              "redis.is_cluster": false,
+              "redis.key": "_3ca82e0039adc3d1|non_standard_user_types"
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T09:38:38.521171Z",
+            "level": "info",
+            "message": "DEL b'_3ca82e0039adc3d1|document_cache::BEI Approval Queue::BEI-APQ-2026-01083'",
+            "category": "redis",
+            "data": {
+              "db.operation": "DEL",
+              "redis.command": "DEL",
+              "redis.is_cluster": false,
+              "redis.key": "_3ca82e0039adc3d1|document_cache::BEI Approval Queue::BEI-APQ-2026-01083"
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T09:38:38.521750Z",
+            "level": "info",
+            "message": "HGET b'_3ca82e0039adc3d1|doctype_meta' [Filtered]",
+            "category": "redis",
+            "data": {
+              "db.operation": "HGET",
+              "redis.command": "HGET",
+              "redis.is_cluster": false
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T09:38:38.523481Z",
+            "level": "info",
+            "message": "HGET b'_3ca82e0039adc3d1|merged_translations' [Filtered]",
+            "category": "redis",
+            "data": {
+              "db.operation": "HGET",
+              "redis.command": "HGET",
+              "redis.is_cluster": false
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T09:38:38.525339Z",
+            "level": "info",
+            "message": "HGET b'_3ca82e0039adc3d1|notifications' [Filtered]",
+            "category": "redis",
+            "data": {
+              "db.operation": "HGET",
+              "redis.command": "HGET",
+              "redis.is_cluster": false
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T09:38:38.526119Z",
+            "level": "info",
+            "message": "HGET b'_3ca82e0039adc3d1|workflow' [Filtered]",
+            "category": "redis",
+            "data": {
+              "db.operation": "HGET",
+              "redis.command": "HGET",
+              "redis.is_cluster": false
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T09:38:38.528977Z",
+            "level": "info",
+            "message": "HGET b'_3ca82e0039adc3d1|assignment_rule_map' [Filtered]",
+            "category": "redis",
+            "data": {
+              "db.operation": "HGET",
+              "redis.command": "HGET",
+              "redis.is_cluster": false
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T09:38:38.529490Z",
+            "level": "info",
+            "message": "DEL b'_3ca82e0039adc3d1|document_cache::Version::khht5fij4p'",
+            "category": "redis",
+            "data": {
+              "db.operation": "DEL",
+              "redis.command": "DEL",
+              "redis.is_cluster": false,
+              "redis.key": "_3ca82e0039adc3d1|document_cache::Version::khht5fij4p"
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T09:38:38.531019Z",
+            "level": "info",
+            "message": "HGET b'_3ca82e0039adc3d1|doctype_meta' [Filtered]",
+            "category": "redis",
+            "data": {
+              "db.operation": "HGET",
+              "redis.command": "HGET",
+              "redis.is_cluster": false
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T09:38:38.531613Z",
+            "level": "info",
+            "message": "HGET b'_3ca82e0039adc3d1|milestone_tracker_map' [Filtered]",
+            "category": "redis",
+            "data": {
+              "db.operation": "HGET",
+              "redis.command": "HGET",
+              "redis.is_cluster": false
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T09:38:38.532024Z",
+            "level": "info",
+            "message": "HGET b'_3ca82e0039adc3d1|table_columns' [Filtered]",
+            "category": "redis",
+            "data": {
+              "db.operation": "HGET",
+              "redis.command": "HGET",
+              "redis.is_cluster": false
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T09:38:38.532456Z",
+            "level": "info",
+            "message": "HGET b'_3ca82e0039adc3d1|doctype_meta' [Filtered]",
+            "category": "redis",
+            "data": {
+              "db.operation": "HGET",
+              "redis.command": "HGET",
+              "redis.is_cluster": false
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T09:38:38.538009Z",
+            "level": "info",
+            "message": "GET b'_3ca82e0039adc3d1|dynamic_link_map::ToDo::reference_type'",
+            "category": "redis",
+            "data": {
+              "db.operation": "GET",
+              "redis.command": "GET",
+              "redis.is_cluster": false,
+              "redis.key": "_3ca82e0039adc3d1|dynamic_link_map::ToDo::reference_type"
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T09:38:38.538709Z",
+            "level": "info",
+            "message": "DEL b'_3ca82e0039adc3d1|document_cache::ToDo::kcsllmnlui'",
+            "category": "redis",
+            "data": {
+              "db.operation": "DEL",
+              "redis.command": "DEL",
+              "redis.is_cluster": false,
+              "redis.key": "_3ca82e0039adc3d1|document_cache::ToDo::kcsllmnlui"
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T09:38:38.540268Z",
+            "level": "info",
+            "message": "HGET b'_3ca82e0039adc3d1|notifications' [Filtered]",
+            "category": "redis",
+            "data": {
+              "db.operation": "HGET",
+              "redis.command": "HGET",
+              "redis.is_cluster": false
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T09:38:38.543349Z",
+            "level": "info",
+            "message": "HGET b'_3ca82e0039adc3d1|workflow' [Filtered]",
+            "category": "redis",
+            "data": {
+              "db.operation": "HGET",
+              "redis.command": "HGET",
+              "redis.is_cluster": false
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T09:38:38.547218Z",
+            "level": "info",
+            "message": "HGET b'_3ca82e0039adc3d1|doctype_meta' [Filtered]",
+            "category": "redis",
+            "data": {
+              "db.operation": "HGET",
+              "redis.command": "HGET",
+              "redis.is_cluster": false
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T09:38:38.550047Z",
+            "level": "info",
+            "message": "GET b'_3ca82e0039adc3d1|dynamic_link_map::Comment::reference_doctype'",
+            "category": "redis",
+            "data": {
+              "db.operation": "GET",
+              "redis.command": "GET",
+              "redis.is_cluster": false,
+              "redis.key": "_3ca82e0039adc3d1|dynamic_link_map::Comment::reference_doctype"
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T09:38:38.550547Z",
+            "level": "info",
+            "message": "HGET b'_3ca82e0039adc3d1|notifications' [Filtered]",
+            "category": "redis",
+            "data": {
+              "db.operation": "HGET",
+              "redis.command": "HGET",
+              "redis.is_cluster": false
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T09:38:38.550999Z",
+            "level": "info",
+            "message": "HGET b'_3ca82e0039adc3d1|document_naming_rule_map' [Filtered]",
+            "category": "redis",
+            "data": {
+              "db.operation": "HGET",
+              "redis.command": "HGET",
+              "redis.is_cluster": false
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T09:38:38.552611Z",
+            "level": "info",
+            "message": "HGET b'_3ca82e0039adc3d1|workflow' [Filtered]",
+            "category": "redis",
+            "data": {
+              "db.operation": "HGET",
+              "redis.command": "HGET",
+              "redis.is_cluster": false
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T09:38:38.555009Z",
+            "level": "info",
+            "message": "HGET b'_3ca82e0039adc3d1|assignment_rule_map' [Filtered]",
+            "category": "redis",
+            "data": {
+              "db.operation": "HGET",
+              "redis.command": "HGET",
+              "redis.is_cluster": false
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T09:38:38.555359Z",
+            "level": "info",
+            "message": "HGET b'_3ca82e0039adc3d1|assignment_rule_map' [Filtered]",
+            "category": "redis",
+            "data": {
+              "db.operation": "HGET",
+              "redis.command": "HGET",
+              "redis.is_cluster": false
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T09:38:38.555730Z",
+            "level": "info",
+            "message": "DEL b'_3ca82e0039adc3d1|document_cache::Comment::khhdhsb6iq'",
+            "category": "redis",
+            "data": {
+              "db.operation": "DEL",
+              "redis.command": "DEL",
+              "redis.is_cluster": false,
+              "redis.key": "_3ca82e0039adc3d1|document_cache::Comment::khhdhsb6iq"
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T09:38:38.556325Z",
+            "level": "info",
+            "message": "HGET b'_3ca82e0039adc3d1|milestone_tracker_map' [Filtered]",
+            "category": "redis",
+            "data": {
+              "db.operation": "HGET",
+              "redis.command": "HGET",
+              "redis.is_cluster": false
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T09:38:38.558197Z",
+            "level": "info",
+            "message": "DEL b'_3ca82e0039adc3d1|document_cache::BEI Store Order::BEI-ORD-2026-00440'",
+            "category": "redis",
+            "data": {
+              "db.operation": "DEL",
+              "redis.command": "DEL",
+              "redis.is_cluster": false,
+              "redis.key": "_3ca82e0039adc3d1|document_cache::BEI Store Order::BEI-ORD-2026-00440"
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T09:38:38.559052Z",
+            "level": "info",
+            "message": "DEL b'_3ca82e0039adc3d1|notification_count:ToDo'",
+            "category": "redis",
+            "data": {
+              "db.operation": "DEL",
+              "redis.command": "DEL",
+              "redis.is_cluster": false,
+              "redis.key": "_3ca82e0039adc3d1|notification_count:ToDo"
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T09:38:38.559354Z",
+            "level": "info",
+            "message": "HGET b'_3ca82e0039adc3d1|assignment_rule_map' [Filtered]",
+            "category": "redis",
+            "data": {
+              "db.operation": "HGET",
+              "redis.command": "HGET",
+              "redis.is_cluster": false
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T09:38:38.559601Z",
+            "level": "info",
+            "message": "HGET b'_3ca82e0039adc3d1|assignment_rule_map' [Filtered]",
+            "category": "redis",
+            "data": {
+              "db.operation": "HGET",
+              "redis.command": "HGET",
+              "redis.is_cluster": false
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T09:38:38.559977Z",
+            "level": "info",
+            "message": "DEL b'_3ca82e0039adc3d1|document_cache::ToDo::kcsllmnlui'",
+            "category": "redis",
+            "data": {
+              "db.operation": "DEL",
+              "redis.command": "DEL",
+              "redis.is_cluster": false,
+              "redis.key": "_3ca82e0039adc3d1|document_cache::ToDo::kcsllmnlui"
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T09:38:38.560361Z",
+            "level": "info",
+            "message": "LPUSH b'_3ca82e0039adc3d1|global_search_queue' [Filtered]",
+            "category": "redis",
+            "data": {
+              "db.operation": "LPUSH",
+              "redis.command": "LPUSH",
+              "redis.is_cluster": false
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T09:38:38.564311Z",
+            "level": "info",
+            "message": "DEL b'_3ca82e0039adc3d1|document_cache::Version::khhj6hkkvu'",
+            "category": "redis",
+            "data": {
+              "db.operation": "DEL",
+              "redis.command": "DEL",
+              "redis.is_cluster": false,
+              "redis.key": "_3ca82e0039adc3d1|document_cache::Version::khhj6hkkvu"
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T09:38:38.565351Z",
+            "level": "info",
+            "message": "HGET b'_3ca82e0039adc3d1|milestone_tracker_map' [Filtered]",
+            "category": "redis",
+            "data": {
+              "db.operation": "HGET",
+              "redis.command": "HGET",
+              "redis.is_cluster": false
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T09:38:38.571489Z",
+            "level": "info",
+            "message": "DEL b'_3ca82e0039adc3d1|document_cache::Comment::khhhojajno'",
+            "category": "redis",
+            "data": {
+              "db.operation": "DEL",
+              "redis.command": "DEL",
+              "redis.is_cluster": false,
+              "redis.key": "_3ca82e0039adc3d1|document_cache::Comment::khhhojajno"
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T09:38:38.577497Z",
+            "level": "info",
+            "message": "HGET b'_3ca82e0039adc3d1|doctype_meta' [Filtered]",
+            "category": "redis",
+            "data": {
+              "db.operation": "HGET",
+              "redis.command": "HGET",
+              "redis.is_cluster": false
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T09:38:38.582364Z",
+            "level": "info",
+            "message": "HGET b'_3ca82e0039adc3d1|doctype_meta' [Filtered]",
+            "category": "redis",
+            "data": {
+              "db.operation": "HGET",
+              "redis.command": "HGET",
+              "redis.is_cluster": false
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T09:38:38.586362Z",
+            "level": "info",
+            "message": "HGET b'_3ca82e0039adc3d1|doctype_meta' [Filtered]",
+            "category": "redis",
+            "data": {
+              "db.operation": "HGET",
+              "redis.command": "HGET",
+              "redis.is_cluster": false
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T09:38:38.591220Z",
+            "level": "info",
+            "message": "HGET b'_3ca82e0039adc3d1|notifications' [Filtered]",
+            "category": "redis",
+            "data": {
+              "db.operation": "HGET",
+              "redis.command": "HGET",
+              "redis.is_cluster": false
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T09:38:38.593420Z",
+            "level": "info",
+            "message": "HGET b'_3ca82e0039adc3d1|workflow' [Filtered]",
+            "category": "redis",
+            "data": {
+              "db.operation": "HGET",
+              "redis.command": "HGET",
+              "redis.is_cluster": false
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T09:38:38.597816Z",
+            "level": "info",
+            "message": "HGET b'_3ca82e0039adc3d1|assignment_rule_map' [Filtered]",
+            "category": "redis",
+            "data": {
+              "db.operation": "HGET",
+              "redis.command": "HGET",
+              "redis.is_cluster": false
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T09:38:38.598156Z",
+            "level": "info",
+            "message": "HGET b'_3ca82e0039adc3d1|assignment_rule_map' [Filtered]",
+            "category": "redis",
+            "data": {
+              "db.operation": "HGET",
+              "redis.command": "HGET",
+              "redis.is_cluster": false
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T09:38:38.598533Z",
+            "level": "info",
+            "message": "DEL b'_3ca82e0039adc3d1|document_cache::BEI Store Order::BEI-ORD-2026-00440'",
+            "category": "redis",
+            "data": {
+              "db.operation": "DEL",
+              "redis.command": "DEL",
+              "redis.is_cluster": false,
+              "redis.key": "_3ca82e0039adc3d1|document_cache::BEI Store Order::BEI-ORD-2026-00440"
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T09:38:38.601146Z",
+            "level": "info",
+            "message": "DEL b'_3ca82e0039adc3d1|document_cache::Version::khhfgqhscb'",
+            "category": "redis",
+            "data": {
+              "db.operation": "DEL",
+              "redis.command": "DEL",
+              "redis.is_cluster": false,
+              "redis.key": "_3ca82e0039adc3d1|document_cache::Version::khhfgqhscb"
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T09:38:38.601777Z",
+            "level": "info",
+            "message": "HGET b'_3ca82e0039adc3d1|milestone_tracker_map' [Filtered]",
+            "category": "redis",
+            "data": {
+              "db.operation": "HGET",
+              "redis.command": "HGET",
+              "redis.is_cluster": false
+            },
+            "event_id": null
+          },
+          {
+            "type": "default",
+            "timestamp": "2026-04-27T09:38:38.603063Z",
+            "level": "info",
+            "message": "_create_mr_for_store_order",
+            "category": "bei.backend",
+            "data": {
+              "endpoint_or_job": "hrms.api.store.approve_order",
+              "module": "ordering",
+              "mutation_type": "create",
+              "phase": "mr_creation",
+              "route": "/api/method/hrms.api.store.approve_order"
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T09:38:38.603812Z",
+            "level": "info",
+            "message": "HGET b'_3ca82e0039adc3d1|doctype_meta' [Filtered]",
+            "category": "redis",
+            "data": {
+              "db.operation": "HGET",
+              "redis.command": "HGET",
+              "redis.is_cluster": false
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T09:38:38.611778Z",
+            "level": "info",
+            "message": "HGET b'_3ca82e0039adc3d1|table_columns' [Filtered]",
+            "category": "redis",
+            "data": {
+              "db.operation": "HGET",
+              "redis.command": "HGET",
+              "redis.is_cluster": false
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T09:38:38.612278Z",
+            "level": "info",
+            "message": "HGET b'_3ca82e0039adc3d1|doctype_meta' [Filtered]",
+            "category": "redis",
+            "data": {
+              "db.operation": "HGET",
+              "redis.command": "HGET",
+              "redis.is_cluster": false
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T09:38:38.616280Z",
+            "level": "info",
+            "message": "HGET b'_3ca82e0039adc3d1|doctype_meta' [Filtered]",
+            "category": "redis",
+            "data": {
+              "db.operation": "HGET",
+              "redis.command": "HGET",
+              "redis.is_cluster": false
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T09:38:38.620499Z",
+            "level": "info",
+            "message": "HGET b'_3ca82e0039adc3d1|notifications' [Filtered]",
+            "category": "redis",
+            "data": {
+              "db.operation": "HGET",
+              "redis.command": "HGET",
+              "redis.is_cluster": false
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T09:38:38.620964Z",
+            "level": "info",
+            "message": "HGET b'_3ca82e0039adc3d1|document_naming_rule_map' [Filtered]",
+            "category": "redis",
+            "data": {
+              "db.operation": "HGET",
+              "redis.command": "HGET",
+              "redis.is_cluster": false
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T09:38:38.622613Z",
+            "level": "info",
+            "message": "HGET b'_3ca82e0039adc3d1|notifications' [Filtered]",
+            "category": "redis",
+            "data": {
+              "db.operation": "HGET",
+              "redis.command": "HGET",
+              "redis.is_cluster": false
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T09:38:38.622948Z",
+            "level": "info",
+            "message": "HGET b'_3ca82e0039adc3d1|document_naming_rule_map' [Filtered]",
+            "category": "redis",
+            "data": {
+              "db.operation": "HGET",
+              "redis.command": "HGET",
+              "redis.is_cluster": false
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T09:38:38.623888Z",
+            "level": "info",
+            "message": "GET b'_3ca82e0039adc3d1|document_cache::Item::FG001'",
+            "category": "redis",
+            "data": {
+              "db.operation": "GET",
+              "redis.command": "GET",
+              "redis.is_cluster": false,
+              "redis.key": "_3ca82e0039adc3d1|document_cache::Item::FG001"
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T09:38:38.624609Z",
+            "level": "info",
+            "message": "HGET b'_3ca82e0039adc3d1|doctype_meta' [Filtered]",
+            "category": "redis",
+            "data": {
+              "db.operation": "HGET",
+              "redis.command": "HGET",
+              "redis.is_cluster": false
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T09:38:38.625140Z",
+            "level": "info",
+            "message": "HGET b'_3ca82e0039adc3d1|doctype_meta' [Filtered]",
+            "category": "redis",
+            "data": {
+              "db.operation": "HGET",
+              "redis.command": "HGET",
+              "redis.is_cluster": false
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T09:38:38.625960Z",
+            "level": "info",
+            "message": "GET b'_3ca82e0039adc3d1|document_cache::Item Group::Finished Goods'",
+            "category": "redis",
+            "data": {
+              "db.operation": "GET",
+              "redis.command": "GET",
+              "redis.is_cluster": false,
+              "redis.key": "_3ca82e0039adc3d1|document_cache::Item Group::Finished Goods"
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T09:38:38.626613Z",
+            "level": "info",
+            "message": "GET b'_3ca82e0039adc3d1|document_cache::Company::BEBANG ENTERPRISE INC.'",
+            "category": "redis",
+            "data": {
+              "db.operation": "GET",
+              "redis.command": "GET",
+              "redis.is_cluster": false,
+              "redis.key": "_3ca82e0039adc3d1|document_cache::Company::BEBANG ENTERPRISE INC."
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T09:38:38.628049Z",
+            "level": "info",
+            "message": "HGET b'_3ca82e0039adc3d1|doctype_meta' [Filtered]",
+            "category": "redis",
+            "data": {
+              "db.operation": "HGET",
+              "redis.command": "HGET",
+              "redis.is_cluster": false
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T09:38:38.643567Z",
+            "level": "info",
+            "message": "GET b'_3ca82e0039adc3d1|document_cache::Item Group::All Item Groups'",
+            "category": "redis",
+            "data": {
+              "db.operation": "GET",
+              "redis.command": "GET",
+              "redis.is_cluster": false,
+              "redis.key": "_3ca82e0039adc3d1|document_cache::Item Group::All Item Groups"
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T09:38:38.646748Z",
+            "level": "info",
+            "message": "HGET b'_3ca82e0039adc3d1|doctype_meta' [Filtered]",
+            "category": "redis",
+            "data": {
+              "db.operation": "HGET",
+              "redis.command": "HGET",
+              "redis.is_cluster": false
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T09:38:38.648805Z",
+            "level": "info",
+            "message": "GET b'_3ca82e0039adc3d1|document_cache::Item::FG002'",
+            "category": "redis",
+            "data": {
+              "db.operation": "GET",
+              "redis.command": "GET",
+              "redis.is_cluster": false,
+              "redis.key": "_3ca82e0039adc3d1|document_cache::Item::FG002"
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T09:38:38.657047Z",
+            "level": "info",
+            "message": "GET b'_3ca82e0039adc3d1|document_cache::Item::PM007'",
+            "category": "redis",
+            "data": {
+              "db.operation": "GET",
+              "redis.command": "GET",
+              "redis.is_cluster": false,
+              "redis.key": "_3ca82e0039adc3d1|document_cache::Item::PM007"
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T09:38:38.658007Z",
+            "level": "info",
+            "message": "GET b'_3ca82e0039adc3d1|document_cache::Item Group::Packaging Materials'",
+            "category": "redis",
+            "data": {
+              "db.operation": "GET",
+              "redis.command": "GET",
+              "redis.is_cluster": false,
+              "redis.key": "_3ca82e0039adc3d1|document_cache::Item Group::Packaging Materials"
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T09:38:38.667480Z",
+            "level": "info",
+            "message": "HGET b'_3ca82e0039adc3d1|doctype_meta' [Filtered]",
+            "category": "redis",
+            "data": {
+              "db.operation": "HGET",
+              "redis.command": "HGET",
+              "redis.is_cluster": false
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T09:38:38.672411Z",
+            "level": "info",
+            "message": "GET b'_3ca82e0039adc3d1|document_cache::Cost Center::Main - BEI'",
+            "category": "redis",
+            "data": {
+              "db.operation": "GET",
+              "redis.command": "GET",
+              "redis.is_cluster": false,
+              "redis.key": "_3ca82e0039adc3d1|document_cache::Cost Center::Main - BEI"
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T09:38:38.673016Z",
+            "level": "info",
+            "message": "HGET b'_3ca82e0039adc3d1|table_columns' [Filtered]",
+            "category": "redis",
+            "data": {
+              "db.operation": "HGET",
+              "redis.command": "HGET",
+              "redis.is_cluster": false
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T09:38:38.673434Z",
+            "level": "info",
+            "message": "HGET b'_3ca82e0039adc3d1|doctype_meta' [Filtered]",
+            "category": "redis",
+            "data": {
+              "db.operation": "HGET",
+              "redis.command": "HGET",
+              "redis.is_cluster": false
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T09:38:38.677598Z",
+            "level": "info",
+            "message": "HGET b'_3ca82e0039adc3d1|doctype_meta' [Filtered]",
+            "category": "redis",
+            "data": {
+              "db.operation": "HGET",
+              "redis.command": "HGET",
+              "redis.is_cluster": false
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T09:38:38.679804Z",
+            "level": "info",
+            "message": "HGET b'_3ca82e0039adc3d1|notifications' [Filtered]",
+            "category": "redis",
+            "data": {
+              "db.operation": "HGET",
+              "redis.command": "HGET",
+              "redis.is_cluster": false
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T09:38:38.680630Z",
+            "level": "info",
+            "message": "HGET b'_3ca82e0039adc3d1|workflow' [Filtered]",
+            "category": "redis",
+            "data": {
+              "db.operation": "HGET",
+              "redis.command": "HGET",
+              "redis.is_cluster": false
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T09:38:38.681782Z",
+            "level": "info",
+            "message": "DEL b'_3ca82e0039adc3d1|notification_count:Error Log'",
+            "category": "redis",
+            "data": {
+              "db.operation": "DEL",
+              "redis.command": "DEL",
+              "redis.is_cluster": false,
+              "redis.key": "_3ca82e0039adc3d1|notification_count:Error Log"
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T09:38:38.682125Z",
+            "level": "info",
+            "message": "HGET b'_3ca82e0039adc3d1|assignment_rule_map' [Filtered]",
+            "category": "redis",
+            "data": {
+              "db.operation": "HGET",
+              "redis.command": "HGET",
+              "redis.is_cluster": false
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T09:38:38.682495Z",
+            "level": "info",
+            "message": "DEL b'_3ca82e0039adc3d1|document_cache::Error Log::khic6j2nao'",
+            "category": "redis",
+            "data": {
+              "db.operation": "DEL",
+              "redis.command": "DEL",
+              "redis.is_cluster": false,
+              "redis.key": "_3ca82e0039adc3d1|document_cache::Error Log::khic6j2nao"
+            },
+            "event_id": null
+          },
+          {
+            "type": "default",
+            "timestamp": "2026-04-27T09:38:38.682818Z",
+            "level": "info",
+            "message": "frappe_log_error",
+            "category": "bei.backend",
+            "data": {
+              "endpoint_or_job": "hrms.api.store.approve_order",
+              "module": null,
+              "mutation_type": null,
+              "phase": "log_error",
+              "route": "/api/method/hrms.api.store.approve_order"
+            },
+            "event_id": null
+          }
+        ]
+      },
+      "type": "breadcrumbs"
+    },
+    {
+      "data": {
+        "apiTarget": null,
+        "method": "POST",
+        "url": "http://hq.bebang.ph/api/method/hrms.api.store.approve_order",
+        "query": [],
+        "fragment": null,
+        "data": null,
+        "headers": [
+          [
+            "Accept",
+            "*/*"
+          ],
+          [
+            "Accept-Encoding",
+            "gzip, br"
+          ],
+          [
+            "Accept-Language",
+            "*"
+          ],
+          [
+            "Baggage",
+            "sentry-environment=production,sentry-release=e50b4f7fd0c028ac5c76e6f9163ad83451ebb9ee,sentry-public_key=ea029ce9c61b8661c3cff2beb9b8ca5e,sentry-trace_id=a9850d86628c48f5b985aefe6adf087c,sentry-org_id=[Filtered],sentry-sampled=true,sentry-sample_rand=0.06564744050529503,sentry-sample_rate=0.2"
+          ],
+          [
+            "Cdn-Loop",
+            "cloudflare; loops=1"
+          ],
+          [
+            "Cf-Connecting-Ip",
+            "98.92.183.147"
+          ],
+          [
+            "Cf-Ipcountry",
+            "US"
+          ],
+          [
+            "Cf-Ray",
+            "9f2cdafdc9c8198a-IAD"
+          ],
+          [
+            "Cf-Visitor",
+            "{\"scheme\":\"https\"}"
+          ],
+          [
+            "Connection",
+            "close"
+          ],
+          [
+            "Content-Length",
+            "60"
+          ],
+          [
+            "Content-Type",
+            "application/json"
+          ],
+          [
+            "Cookie",
+            "[Filtered]"
+          ],
+          [
+            "Host",
+            "hq.bebang.ph"
+          ],
+          [
+            "Sec-Fetch-Mode",
+            "cors"
+          ],
+          [
+            "Sentry-Trace",
+            "a9850d86628c48f5b985aefe6adf087c-458d6f5536c38c69-1"
+          ],
+          [
+            "User-Agent",
+            "node"
+          ],
+          [
+            "X-Forwarded-For",
+            ""
+          ],
+          [
+            "X-Forwarded-Proto",
+            "https"
+          ],
+          [
+            "X-Frappe-Site-Name",
+            "hq.bebang.ph"
+          ],
+          [
+            "X-Invocation-Id",
+            "sin1::hjbrl-1777282718231-dcee3256ab3f"
+          ],
+          [
+            "X-Use-X-Accel-Redirect",
+            "True"
+          ],
+          [
+            "X-Vercel-Id",
+            "sin1::hjbrl-1777282718231-dcee3256ab3f"
+          ]
+        ],
+        "cookies": [],
+        "env": {
+          "SERVER_NAME": "0.0.0.0",
+          "SERVER_PORT": "8000"
+        },
+        "inferredContentType": "application/json"
+      },
+      "type": "request"
+    }
+  ],
+  "dist": null,
+  "message": "",
+  "title": "InvalidWarehouseCompany: Warehouse SM STA. ROSA - SWEET HARMONY FOOD CORP. does not belong to company BEBANG ENTERPRISE INC.",
+  "location": "__init__.py",
+  "user": {
+    "id": "test.scm@bebang.ph",
+    "email": "test.scm@bebang.ph",
+    "username": null,
+    "ip_address": null,
+    "name": null,
+    "geo": {
+      "country_code": "SG",
+      "city": "Singapore",
+      "region": "Singapore"
+    },
+    "data": null
+  },
+  "contexts": {
+    "JSON Body": {
+      "approved_quantities": [],
+      "order_name": "BEI-ORD-2026-00440",
+      "type": "default"
+    },
+    "bei_backend_observability": {
+      "extras": {
+        "message_preview": "Warehouse SM STA. ROSA - SWEET HARMONY FOOD CORP. does not belong to company BEBANG ENTERPRISE INC.",
+        "title": "MR Creation Error for Store Order BEI-ORD-2026-00440"
+      },
+      "frappe_cmd": "hrms.api.store.approve_order",
+      "http_method": "POST",
+      "request_route": "/api/method/hrms.api.store.approve_order",
+      "type": "default"
+    },
+    "runtime": {
+      "runtime": "CPython 3.11.6",
+      "name": "CPython",
+      "version": "3.11.6",
+      "build": "3.11.6 (main, Nov 29 2023, 04:30:13) [GCC 12.2.0]",
+      "type": "runtime"
+    },
+    "trace": {
+      "trace_id": "03ecfc4f0c1c4ed2b070a985170dae2a",
+      "span_id": "9273c2fbb2a82e97",
+      "status": "unknown",
+      "client_sample_rate": 0.1,
+      "type": "trace"
+    }
+  },
+  "sdk": {
+    "name": "sentry.python",
+    "version": "2.56.0"
+  },
+  "context": {
+    "sys.argv": [
+      "/home/frappe/frappe-bench/env/bin/gunicorn",
+      "--chdir=/home/frappe/frappe-bench/sites",
+      "--bind=0.0.0.0:8000",
+      "--threads=4",
+      "--workers=2",
+      "--worker-class=gthread",
+      "--worker-tmp-dir=/dev/shm",
+      "--timeout=120",
+      "--preload",
+      "frappe.app:application"
+    ]
+  },
+  "packages": {
+    "annotated-types": "0.7.0",
+    "anyio": "4.12.1",
+    "asttokens": "3.0.1",
+    "babel": "2.13.1",
+    "backcall": "0.2.0",
+    "backoff": "2.2.1",
+    "barcodenumber": "0.5.0",
+    "beautifulsoup4": "4.12.3",
+    "bleach": "6.3.0",
+    "bleach-allowlist": "1.0.3",
+    "boto3": "1.42.74",
+    "botocore": "1.42.74",
+    "braintree": "4.20.0",
+    "brotli": "1.2.0",
+    "cachetools": "7.0.5",
+    "cairocffi": "1.5.1",
+    "certifi": "2026.2.25",
+    "cffi": "2.0.0",
+    "chardet": "5.2.0",
+    "charset-normalizer": "3.4.6",
+    "click": "8.2.1",
+    "croniter": "6.0.0",
+    "cryptography": "46.0.5",
+    "cssselect": "1.4.0",
+    "cssselect2": "0.9.0",
+    "cssutils": "2.11.1",
+    "dataclasses-json": "0.5.14",
+    "decorator": "5.2.1",
+    "distro": "1.9.0",
+    "docopt": "0.6.2",
+    "dropbox": "12.0.2",
+    "email-reply-parser": "0.5.12",
+    "erpnext": "15.102.0",
+    "et_xmlfile": "2.0.0",
+    "executing": "2.2.1",
+    "filelock": "3.20.4",
+    "filetype": "1.2.0",
+    "fonttools": "4.62.1",
+    "frappe": "15.103.0",
+    "gitdb": "4.0.12",
+    "gitpython": "3.1.46",
+    "gocardless_pro": "1.22.0",
+    "google-ai-generativelanguage": "0.6.15",
+    "google-api-core": "2.30.0",
+    "google-api-python-client": "2.193.0",
+    "google-auth": "2.49.1",
+    "google-auth-httplib2": "0.3.0",
+    "google-auth-oauthlib": "1.2.4",
+    "google-generativeai": "0.8.6",
+    "googleapis-common-protos": "1.73.0",
+    "googlemaps": "4.10.0",
+    "grpcio": "1.78.0",
+    "grpcio-status": "1.71.2",
+    "gunicorn": "23.0.0",
+    "h11": "0.16.0",
+    "hiredis": "2.2.3",
+    "holidays": "0.93",
+    "hrms": "16.0.0.dev0",
+    "html5lib": "1.1",
+    "httpcore": "1.0.9",
+    "httplib2": "0.31.2",
+    "httpx": "0.28.1",
+    "idna": "3.11",
+    "ipython": "8.15.0",
+    "isodate": "0.6.1",
+    "jedi": "0.19.2",
+    "jinja2": "3.1.6",
+    "jiter": "0.13.0",
+    "jmespath": "1.1.0",
+    "joblib": "1.5.3",
+    "ldap3": "2.9.1",
+    "lxml": "6.0.2",
+    "markdown2": "2.5.5",
+    "markdownify": "0.14.1",
+    "markupsafe": "3.0.3",
+    "marshmallow": "3.26.2",
+    "matplotlib-inline": "0.2.1",
+    "maxminddb": "3.1.1",
+    "maxminddb-geolite2": "2018.703",
+    "monotonic": "1.6",
+    "more-itertools": "10.8.0",
+    "mypy_extensions": "1.1.0",
+    "num2words": "0.5.14",
+    "numpy": "2.4.3",
+    "oauthlib": "3.3.1",
+    "openai": "2.29.0",
+    "openpyxl": "3.1.5",
+    "packaging": "26.0",
+    "pandas": "3.0.1",
+    "parso": "0.8.6",
+    "passlib": "1.7.4",
+    "payments": "0.0.1",
+    "paytmchecksum": "1.7.0",
+    "pdfkit": "1.0.0",
+    "pexpect": "4.9.0",
+    "phonenumbers": "8.13.55",
+    "pickleshare": "0.7.5",
+    "pillow": "12.1.1",
+    "pip": "26.0.1",
+    "plaid-python": "7.2.1",
+    "ply": "3.11",
+    "posthog": "3.21.0",
+    "premailer": "3.10.0",
+    "prompt_toolkit": "3.0.52",
+    "proto-plus": "1.27.1",
+    "protobuf": "5.29.6",
+    "psutil": "5.9.8",
+    "psycopg2-binary": "2.9.11",
+    "ptyprocess": "0.7.0",
+    "pure_eval": "0.2.3",
+    "pyasn1": "0.6.3",
+    "pyasn1_modules": "0.4.2",
+    "pycountry": "22.3.5",
+    "pycparser": "3.0",
+    "pycryptodome": "3.23.0",
+    "pydantic": "2.12.5",
+    "pydantic_core": "2.41.5",
+    "pydyf": "0.12.1",
+    "pygments": "2.19.2",
+    "pyjwt": "2.8.0",
+    "pymysql": "1.1.1",
+    "pyopenssl": "25.3.0",
+    "pyotp": "2.9.0",
+    "pyparsing": "3.3.2",
+    "pypdf": "6.8.0",
+    "pyphen": "0.17.2",
+    "pypika": "0.48.9",
+    "pypng": "0.20220715.0",
+    "pyqrcode": "1.2.1",
+    "python-dateutil": "2.9.0.post0",
+    "python-stdnum": "2.2",
+    "python-youtube": "0.8.3",
+    "pytz": "2025.2",
+    "pyyaml": "6.0.3",
+    "rapidfuzz": "3.12.2",
+    "rauth": "0.7.3",
+    "razorpay": "2.0.1",
+    "redis": "4.5.5",
+    "requests": "2.32.5",
+    "requests-oauthlib": "1.3.1",
+    "restrictedpython": "8.1",
+    "rq": "1.15.1",
+    "rsa": "4.9.1",
+    "s3transfer": "0.16.0",
+    "scikit-learn": "1.8.0",
+    "scipy": "1.17.1",
+    "semantic-version": "2.10.0",
+    "sentry-sdk": "2.56.0",
+    "setuptools": "70.3.0",
+    "six": "1.17.0",
+    "smmap": "5.0.3",
+    "sniffio": "1.3.1",
+    "soupsieve": "2.8.3",
+    "sql_metadata": "2.11.0",
+    "sqlparse": "0.5.5",
+    "stack-data": "0.6.3",
+    "stone": "3.3.1",
+    "stripe": "10.12.0",
+    "tenacity": "8.2.3",
+    "terminaltables": "3.1.10",
+    "threadpoolctl": "3.6.0",
+    "tinycss2": "1.5.1",
+    "tinyhtml5": "2.1.0",
+    "tomli": "2.0.2",
+    "tqdm": "4.67.3",
+    "traceback-with-variables": "2.0.4",
+    "traitlets": "5.14.3",
+    "typing-inspect": "0.9.0",
+    "typing-inspection": "0.4.2",
+    "typing_extensions": "4.15.0",
+    "unidecode": "1.3.8",
+    "uritemplate": "4.2.0",
+    "urllib3": "2.6.3",
+    "vobject": "0.9.9",
+    "wcwidth": "0.6.0",
+    "weasyprint": "68.0",
+    "webencodings": "0.5.1",
+    "werkzeug": "3.1.6",
+    "wheel": "0.46.3",
+    "whoosh": "2.7.4",
+    "xlrd": "2.0.2",
+    "zopfli": "0.4.1",
+    "zxcvbn": "4.4.28"
+  },
+  "type": "error",
+  "metadata": {
+    "filename": "__init__.py",
+    "function": "_raise_exception",
+    "in_app_frame_mix": "system-only",
+    "type": "InvalidWarehouseCompany",
+    "value": "Warehouse SM STA. ROSA - SWEET HARMONY FOOD CORP. does not belong to company BEBANG ENTERPRISE INC."
+  },
+  "tags": [
+    {
+      "key": "action",
+      "value": "frappe_log_error"
+    },
+    {
+      "key": "endpoint_or_job",
+      "value": "hrms.api.store.approve_order"
+    },
+    {
+      "key": "environment",
+      "value": "development"
+    },
+    {
+      "key": "frappe_cmd",
+      "value": "hrms.api.store.approve_order"
+    },
+    {
+      "key": "frappe_user",
+      "value": "test.scm@bebang.ph"
+    },
+    {
+      "key": "handled",
+      "value": "yes"
+    },
+    {
+      "key": "http_method",
+      "value": "POST"
+    },
+    {
+      "key": "level",
+      "value": "error"
+    },
+    {
+      "key": "mechanism",
+      "value": "generic"
+    },
+    {
+      "key": "module",
+      "value": "ordering"
+    },
+    {
+      "key": "mutation_type",
+      "value": "create"
+    },
+    {
+      "key": "phase",
+      "value": "log_error"
+    },
+    {
+      "key": "release",
+      "value": "bei-hrms@16.0.0-dev"
+    },
+    {
+      "key": "route",
+      "value": "/api/method/hrms.api.store.approve_order"
+    },
+    {
+      "key": "route_action",
+      "value": "approve_order"
+    },
+    {
+      "key": "runtime",
+      "value": "CPython 3.11.6"
+    },
+    {
+      "key": "runtime.name",
+      "value": "CPython"
+    },
+    {
+      "key": "server_name",
+      "value": "a486d1dac125"
+    },
+    {
+      "key": "surface",
+      "value": "frappe_log_error"
+    },
+    {
+      "key": "transaction",
+      "value": "/api/method/hrms.api.store.approve_order"
+    },
+    {
+      "key": "url",
+      "value": "http://hq.bebang.ph/api/method/hrms.api.store.approve_order"
+    },
+    {
+      "key": "user",
+      "value": "id:test.scm@bebang.ph",
+      "query": "user.id:\"test.scm@bebang.ph\""
+    }
+  ],
+  "platform": "python",
+  "dateReceived": "2026-04-27T09:38:38.764230Z",
+  "errors": [],
+  "occurrence": null,
+  "_meta": {
+    "entries": {
+      "0": {
+        "data": {
+          "values": {
+            "0": {
+              "": null,
+              "type": null,
+              "value": null,
+              "mechanism": null,
+              "threadId": null,
+              "module": null,
+              "stacktrace": {
+                "": null,
+                "frames": {
+                  "4": {
+                    "vars": {
+                      "": {
+                        "len": 10
+                      },
+                      "doc_events": {
+                        "": {
+                          "len": 10
+                        },
+                        "Contact": {
+                          "": {
+                            "len": 4
+                          },
+                          "after_insert": {
+                            "1": {
+                              "": {
+                                "rem": [
+                                  [
+                                    "!limit",
+                                    "s",
+                                    66,
+                                    69
+                                  ]
+                                ],
+                                "len": 73,
+                                "chunks": [
+                                  {
+                                    "type": "text",
+                                    "text": "'erpnext.telephony.doctype.call_log.call_log.link_existing_convers"
+                                  },
+                                  {
+                                    "type": "redaction",
+                                    "text": "...",
+                                    "rule_id": "!limit",
+                                    "remark": "s"
+                                  }
+                                ]
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "framesOmitted": null,
+                "registers": null
+              }
+            }
+          }
+        }
+      },
+      "1": {
+        "data": {
+          "values": {
+            "": {
+              "len": 107
+            }
+          }
+        }
+      },
+      "2": {
+        "data": {
+          "": null,
+          "apiTarget": null,
+          "method": null,
+          "url": null,
+          "query": null,
+          "data": null,
+          "headers": {
+            "12": {
+              "1": {
+                "": {
+                  "rem": [
+                    [
+                      "!config",
+                      "s"
+                    ]
+                  ],
+                  "chunks": [
+                    {
+                      "type": "text",
+                      "text": "[Filtered]"
+                    }
+                  ]
+                }
+              }
+            },
+            "17": {
+              "1": {
+                "": {
+                  "rem": [
+                    [
+                      "!config",
+                      "x"
+                    ]
+                  ],
+                  "chunks": []
+                }
+              }
+            },
+            "3": {
+              "1": {
+                "": {
+                  "rem": [
+                    [
+                      "@creditcard:filter",
+                      "s",
+                      200,
+                      210
+                    ]
+                  ],
+                  "len": 298,
+                  "chunks": [
+                    {
+                      "type": "text",
+                      "text": "sentry-environment=production,sentry-release=e50b4f7fd0c028ac5c76e6f9163ad83451ebb9ee,sentry-public_key=ea029ce9c61b8661c3cff2beb9b8ca5e,sentry-trace_id=a9850d86628c48f5b985aefe6adf087c,sentry-org_id="
+                    },
+                    {
+                      "type": "redaction",
+                      "text": "[Filtered]",
+                      "rule_id": "@creditcard:filter",
+                      "remark": "s"
+                    },
+                    {
+                      "type": "text",
+                      "text": ",sentry-sampled=true,sentry-sample_rand=0.06564744050529503,sentry-sample_rate=0.2"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "cookies": null,
+          "env": null
+        }
+      }
+    },
+    "message": null,
+    "user": null,
+    "contexts": null,
+    "sdk": null,
+    "context": null,
+    "packages": null,
+    "tags": {}
+  },
+  "crashFile": null,
+  "culprit": "/api/method/hrms.api.store.approve_order",
+  "dateCreated": "2026-04-27T09:38:38.689000Z",
+  "fingerprints": [
+    "ab3e88efc6aeb2cb4d1a1fab0c55971c"
+  ],
+  "groupingConfig": {
+    "enhancements": "KLUv_SAd6QAAkwORuGFsbC1wbGF0Zm9ybXM6MjAyNi0wMS0yMJA#KLUv_SAd6QAAkwORuGFsbC1wbGF0Zm9ybXM6MjAyNi0wMS0yMJA#KLUv_SAd6QAAkwORuGFsbC1wbGF0Zm9ybXM6MjAyNi0wMS0yMJA",
+    "id": "newstyle:2026-01-20"
+  },
+  "release": {
+    "id": 1670333880,
+    "version": "bei-hrms@16.0.0-dev",
+    "status": "open",
+    "shortVersion": "bei-hrms@16.0.0-dev",
+    "versionInfo": {
+      "package": "bei-hrms",
+      "version": {
+        "raw": "16.0.0-dev",
+        "major": 16,
+        "minor": 0,
+        "patch": 0,
+        "pre": "dev",
+        "buildCode": null,
+        "components": 3
+      },
+      "description": "16.0.0-dev",
+      "buildHash": null
+    },
+    "ref": null,
+    "url": null,
+    "dateReleased": null,
+    "dateCreated": "2026-02-10T11:57:53.986333Z",
+    "data": {},
+    "newGroups": 548,
+    "owner": null,
+    "commitCount": 0,
+    "lastCommit": null,
+    "deployCount": 0,
+    "lastDeploy": null,
+    "authors": [],
+    "projects": [
+      {
+        "id": 4510861213302784,
+        "slug": "bei-hrms",
+        "name": "bei-hrms",
+        "newGroups": 548,
+        "platform": "python",
+        "platforms": [],
+        "hasHealthData": false
+      }
+    ],
+    "firstEvent": "2026-02-10T11:57:53Z",
+    "lastEvent": "2026-04-27T09:38:38Z",
+    "currentProjectMeta": {},
+    "userAgent": null
+  },
+  "userReport": null,
+  "sdkUpdates": [
+    {
+      "type": "updateSdk",
+      "sdkName": "sentry.python",
+      "newSdkVersion": "2.58.0",
+      "sdkUrl": "https://docs.sentry.io/platforms/python",
+      "enables": []
+    }
+  ],
+  "resolvedWith": [
+    null
+  ],
+  "nextEventID": null,
+  "previousEventID": "f16d72dceeb6453696f34afab420e208"
+}
