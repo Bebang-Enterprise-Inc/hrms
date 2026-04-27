@@ -25,3 +25,22 @@
 
 **Phase 1 gate:** 8/8 verifier assertions PASSED. AST parse OK (4062 lines).
 
+## Phase 2 — Backend response stripping + cache fix
+
+| Task | Status | Evidence | Skipped? | If skipped, why? |
+|------|--------|----------|----------|------------------|
+| 2.1 | DONE | `_strip_fleet_context_from_overview` — 12-key docstring (FILTER stores, STRIP discount_rankings, FILTER ranking_state.visible, FILTER analysis.effects baseline-derived keys) | NO | — |
+| 2.2 | DONE | `_strip_fleet_context_from_product_mix` — strips fleet_rank/fleet_total_stores/per_store_breakdown/assortment_gap_count/assortment_gap_products, rewrites store_coverage to "<scope>/<scope>" (B13) | NO | — |
+| 2.3 | DONE | `copy.deepcopy(result)` + strip applied as LAST step in 4 endpoints (overview, summary, store_rankings, product_mix). 6 deepcopy occurrences (4 endpoints + 2 helpers). | NO | — |
+| 2.4 | DONE | `export_sales_dashboard_detail` carries `fleet-safe by schema` comment — no stripping required | NO | — |
+| 2.5 | DONE | `get_sales_dashboard_access_context` sets `is_partner_view=True` and `can_group_by_area=False` for partners; `_build_access_context` docstring explicitly retains `company` field (GAP-A CEO directive 2026-04-27) | NO | — |
+| 2.6 | DONE | 3 wrapper endpoints (`daily_series`, `channel_mix`, `weather_context`) get NEW `set_backend_observability_context` calls with `is_partner_view` extras | NO | — |
+| 2.7 | DONE | `test_sales_dashboard_partner.py` Phase 2 tests verified via standalone Python (helpers extracted, all 12 assertions pass) | NO | — |
+
+**Phase 2 gate:** 5/5 verifier assertions PASSED. AST parse OK. Pure-function unit tests PASSED.
+- `_should_strip_fleet_context` count: 13
+- `_strip_fleet_context_from_*` count: 6 (2 helpers + 4 endpoint call sites)
+- `copy.deepcopy` count: 6 (overview/summary/rankings/product_mix endpoints + 2 helpers)
+- `is_partner_view` count: 11 (4 P1 + 3 P2 wrappers + access_context + 3 internal helper checks)
+
+

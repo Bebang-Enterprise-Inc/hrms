@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from calendar import monthrange
+import copy
 import csv
 import io
 import json
@@ -645,6 +646,140 @@ def _should_strip_fleet_context(roles: set[str]) -> bool:
 		return False
 	other_analytics_roles = ALLOWED_ROLES - {ROLE_STORE_PARTNER}
 	return roles.intersection(other_analytics_roles) == set()
+
+
+def _strip_fleet_context_from_overview(
+	payload: dict[str, Any], scope: dict[str, Any]
+) -> dict[str, Any]:
+	"""Strip / filter fleet-comparison content from a dashboard overview payload.
+
+	The caller MUST pass a `copy.deepcopy()` of any cached payload. This helper
+	mutates `payload` in place and returns it for chaining. Operating on the
+	original (cached) object would poison the cache for non-partner users
+	hitting the same `(location_ids, dates, channel)` cache key (V1/B1).
+
+	Top-level overview keys handled (12 total — keep this list in sync with
+	`_build_dashboard_overview_payload`):
+
+	- `scope`              : KEEP — already partner-scoped server-side
+	- `date_window`        : KEEP — date range, not fleet-derived
+	- `mode_state`         : KEEP — view mode
+	- `summary`            : KEEP — partner's own totals
+	- `freshness`          : KEEP — data freshness, not fleet-derived
+	- `comparisons`        : KEEP — vs same-store prior period (NOT vs fleet)
+	- `daily`              : KEEP — partner's own daily series
+	- `analysis`           : FILTER — strip `effects.channel_mix_shift_vs_baseline`,
+	                          `effects.expected_net_sales_without_vat`,
+	                          `effects.actual_vs_expected_*` (fleet-baseline derived)
+	- `stores`             : FILTER — keep only rows whose `warehouse` is in scope
+	- `ranking_state`      : FILTER — set `visible=False` so frontend hides ranking card
+	- `discount_rankings`  : STRIP — empty list (B12: partners do not see discount comparisons)
+	- `channels`           : KEEP — partner's own channel mix
+	"""
+	scoped_warehouses = {
+		row.get("warehouse")
+		for row in (scope.get("stores") or scope.get("selected_stores") or [])
+		if row.get("warehouse")
+	}
+
+	# stores: keep only partner-scoped warehouses (defense-in-depth — already
+	# scoped server-side via _selected_scope, but a future regression could
+	# reintroduce fleet rows).
+	if isinstance(payload.get("stores"), list) and scoped_warehouses:
+		payload["stores"] = [
+			row for row in payload["stores"]
+			if row.get("warehouse") in scoped_warehouses
+		]
+
+	# discount_rankings: partners never see fleet-discount comparisons.
+	if "discount_rankings" in payload:
+		payload["discount_rankings"] = []
+
+	# ranking_state.visible = False so the frontend hides the discount card.
+	ranking_state = payload.get("ranking_state")
+	if isinstance(ranking_state, dict):
+		ranking_state["visible"] = False
+
+	# analysis.effects: strip fleet-baseline-derived keys but keep the rest of
+	# the analysis object (weather metadata, anomaly text, etc.).
+	analysis = payload.get("analysis")
+	if isinstance(analysis, dict):
+		effects = analysis.get("effects")
+		if isinstance(effects, dict):
+			for key in list(effects.keys()):
+				if (
+					key == "channel_mix_shift_vs_baseline"
+					or key == "expected_net_sales_without_vat"
+					or key.startswith("actual_vs_expected_")
+				):
+					effects.pop(key, None)
+
+	# comparison_meta (only present on rankings endpoint, but defensive here):
+	# drop if it's a fleet comparison; keep if it's vs same-store prior period.
+	comparison_meta = payload.get("comparison_meta")
+	if isinstance(comparison_meta, dict):
+		if comparison_meta.get("rank_delta_reliable") is not None:
+			# rank_delta_* is a fleet-comparison signal — strip the whole block
+			payload["comparison_meta"] = None
+
+	return payload
+
+
+def _strip_fleet_context_from_product_mix(
+	payload: dict[str, Any], scope: dict[str, Any]
+) -> dict[str, Any]:
+	"""Strip fleet-comparison content from a product-mix payload.
+
+	Caller MUST pass a `copy.deepcopy()` of any cached payload. Mutates and
+	returns `payload`.
+
+	Removes from `payload["meta"]`:
+	- `assortment_gap_count` (fleet-derived)
+	- `assortment_gap_products` (fleet-derived)
+
+	Removes from each product in `payload["products"]`:
+	- `fleet_rank` (fleet-derived)
+	- `fleet_total_stores` (fleet-derived)
+	- `per_store_breakdown` (fleet-derived)
+
+	Rewrites:
+	- `store_coverage` to `"<n>/<n>"` where n = partner's scope size, so the
+	  literal fleet count (e.g., "1/44") never appears (B13).
+	"""
+	# meta strips
+	meta = payload.get("meta")
+	if isinstance(meta, dict):
+		meta.pop("assortment_gap_count", None)
+		meta.pop("assortment_gap_products", None)
+
+	# Product-level strips + store_coverage rewrite
+	scope_size = len(scope.get("selected_stores") or scope.get("stores") or [])
+	if scope_size <= 0:
+		scope_size = 1  # avoid "0/0" — shouldn't happen, but defensive
+
+	products = payload.get("products")
+	if isinstance(products, list):
+		for product in products:
+			if not isinstance(product, dict):
+				continue
+			product.pop("fleet_rank", None)
+			product.pop("fleet_total_stores", None)
+			product.pop("per_store_breakdown", None)
+			# wow_delta_pct is computed from this store's own first-half vs
+			# second-half — keep it (CEO directive: vs OWN prior period is
+			# allowed).
+			# store_coverage: rewrite to <scope>/<scope> using partner's scope
+			coverage = product.get("store_coverage")
+			if isinstance(coverage, str) and "/" in coverage:
+				current_count = coverage.split("/", 1)[0].strip() or str(scope_size)
+				try:
+					current_int = int(current_count)
+				except ValueError:
+					current_int = scope_size
+				current_int = min(current_int, scope_size)
+				product["store_coverage"] = f"{current_int}/{scope_size}"
+
+	return payload
 
 
 def _selected_scope(requested_stores: list[str], user: str | None = None) -> dict[str, Any]:
@@ -1691,6 +1826,14 @@ def _effective_discount_end_day(sales_effective_end_day: date, freshness: dict[s
 
 
 def _build_access_context(scope: dict[str, Any]) -> dict[str, Any]:
+	"""Build the access-context payload returned by `get_sales_dashboard_access_context`.
+
+	Note (S227 GAP-A, 2026-04-27): per-store `company` field (legal entity)
+	is intentionally retained in `allowed_stores` for partners — partners
+	see their entity name in the store picker, it is THEIR entity. The
+	canonical store rows from `_resolve_allowed_store_scope` already include
+	`company` and that field is intentionally retained for partners.
+	"""
 	location_ids = [store["location_id"] for store in scope["stores"]]
 	weather_max = _get_weather_max_business_date(location_ids)
 	return {
@@ -3462,8 +3605,26 @@ def _build_export_rows(
 
 @frappe.whitelist()
 def get_sales_dashboard_access_context() -> dict[str, Any]:
+	# S227: tag partner sessions for Sentry; access-context is the entry
+	# point my.bebang.ph hits before any Analytics page render, so it's a
+	# good frame on which to attribute partner traffic in observability.
+	is_partner = _should_strip_fleet_context(_get_roles())
+	set_backend_observability_context(
+		module="sales",
+		action="get_sales_dashboard_access_context",
+		mutation_type="read",
+		extras={"is_partner_view": is_partner},
+	)
 	scope = _resolve_allowed_store_scope()
-	return _build_access_context(scope)
+	context = _build_access_context(scope)
+	# S227 task 2.5: when partner, set is_partner_view (frontend keys
+	# conditional rendering off this field) and force can_group_by_area=False
+	# (no fleet area-grouping affordances). The per-store `company` field
+	# (legal entity) is intentionally retained — partners see their entity.
+	if is_partner:
+		context["is_partner_view"] = True
+		context["can_group_by_area"] = False
+	return context
 
 
 @frappe.whitelist()
@@ -3484,7 +3645,7 @@ def get_sales_dashboard_overview(
 	)
 	scope = _selected_scope(_parse_stores_param(stores))
 	start_day, end_day = _resolve_date_range(start_date, end_date)
-	return _build_dashboard_overview_payload(
+	result = _build_dashboard_overview_payload(
 		scope,
 		start_day,
 		end_day,
@@ -3493,6 +3654,14 @@ def get_sales_dashboard_overview(
 		include_comparisons=_to_bool_flag(include_comparisons, default=False),
 		ranking_mode=ranking_mode,
 	)
+	# S227 V1/B1: deepcopy-after-cache to prevent cache poisoning across role
+	# classes. _build_dashboard_overview_payload may return a cached object;
+	# stripping in-place would contaminate non-partner users hitting the same
+	# (location_ids, dates, channel) cache key. Strip is the LAST step.
+	if _should_strip_fleet_context(_get_roles()):
+		result = copy.deepcopy(result)
+		_strip_fleet_context_from_overview(result, scope)
+	return result
 
 
 @frappe.whitelist()
@@ -3514,7 +3683,7 @@ def get_sales_dashboard_summary(
 	_ = ranking_mode
 	scope = _selected_scope(_parse_stores_param(stores))
 	start_day, end_day = _resolve_date_range(start_date, end_date)
-	return _build_dashboard_summary_payload(
+	result = _build_dashboard_summary_payload(
 		scope,
 		start_day,
 		end_day,
@@ -3522,6 +3691,11 @@ def get_sales_dashboard_summary(
 		channel,
 		include_comparisons=_to_bool_flag(include_comparisons, default=False),
 	)
+	# S227 V1/B1: deepcopy-after-cache then strip. Last step before return.
+	if _should_strip_fleet_context(_get_roles()):
+		result = copy.deepcopy(result)
+		_strip_fleet_context_from_overview(result, scope)
+	return result
 
 
 @frappe.whitelist()
@@ -3533,6 +3707,16 @@ def get_sales_dashboard_daily_series(
 	channel: str = "all",
 	ranking_mode: str = DEFAULT_RANKING_MODE,
 ) -> dict[str, Any]:
+	# S227 task 2.6: previously this wrapper had no Sentry attribution. Add
+	# `is_partner_view` so partner traffic is filterable in Sentry. The wrapper
+	# inherits stripping via the overview call below (overview now strips for
+	# partners as its LAST step).
+	set_backend_observability_context(
+		module="sales",
+		action="get_sales_dashboard_daily_series",
+		mutation_type="read",
+		extras={"is_partner_view": _should_strip_fleet_context(_get_roles())},
+	)
 	overview = get_sales_dashboard_overview(
 		start_date=start_date,
 		end_date=end_date,
@@ -3558,6 +3742,13 @@ def get_sales_dashboard_channel_mix(
 	channel: str = "all",
 	ranking_mode: str = DEFAULT_RANKING_MODE,
 ) -> dict[str, Any]:
+	# S227 task 2.6: previously this wrapper had no Sentry attribution.
+	set_backend_observability_context(
+		module="sales",
+		action="get_sales_dashboard_channel_mix",
+		mutation_type="read",
+		extras={"is_partner_view": _should_strip_fleet_context(_get_roles())},
+	)
 	overview = get_sales_dashboard_overview(
 		start_date=start_date,
 		end_date=end_date,
@@ -3624,7 +3815,7 @@ def get_sales_dashboard_store_rankings(
 			"comparison_available": True,
 			"rank_delta_reliable": span_days >= 7,
 		}
-	return {
+	result = {
 		"scope": {"selected_stores": overview["scope"]["selected_stores"], "channel": channel},
 		"date_window": overview["date_window"],
 		"mode_state": overview["mode_state"],
@@ -3633,6 +3824,20 @@ def get_sales_dashboard_store_rankings(
 		"discount_rankings": overview["discount_rankings"],
 		"comparison_meta": comparison_meta,
 	}
+	# S227 V1/B1: deepcopy-after-cache then strip. Last step before return.
+	# The overview wrapper above already strips, but rankings repacks specific
+	# keys — re-strip here as defense-in-depth so any ranking-specific
+	# additions (comparison_meta) also get filtered. The repacked dict is a
+	# fresh object so deepcopy is cheap.
+	if _should_strip_fleet_context(_get_roles()):
+		result = copy.deepcopy(result)
+		# Reconstruct minimal scope for the strip helper (rankings doesn't
+		# carry the full canonical scope here)
+		_strip_fleet_context_from_overview(
+			result,
+			{"stores": overview["scope"]["selected_stores"], "selected_stores": overview["scope"]["selected_stores"]},
+		)
+	return result
 
 
 @frappe.whitelist()
@@ -3644,6 +3849,16 @@ def get_sales_dashboard_weather_context(
 	channel: str = "all",
 	ranking_mode: str = DEFAULT_RANKING_MODE,
 ) -> dict[str, Any]:
+	# S227 task 2.6: previously this wrapper had no Sentry attribution. The
+	# weather wrapper inherits the strip via overview's analysis-effects
+	# stripping (channel_mix_shift_vs_baseline, expected_net_sales_without_vat
+	# are removed there before this wrapper repacks `analysis`).
+	set_backend_observability_context(
+		module="sales",
+		action="get_sales_dashboard_weather_context",
+		mutation_type="read",
+		extras={"is_partner_view": _should_strip_fleet_context(_get_roles())},
+	)
 	overview = get_sales_dashboard_overview(
 		start_date=start_date,
 		end_date=end_date,
@@ -3670,6 +3885,13 @@ def export_sales_dashboard_detail(
 	channel: str = "all",
 	ranking_mode: str = DEFAULT_RANKING_MODE,
 ) -> dict[str, Any]:
+	# S227 task 2.4 NO-OP: this CSV export is fleet-safe by schema. Its
+	# `fieldnames` list (below) is per-day-per-store rows scoped via
+	# `_selected_scope` — there are no fleet-comparison columns
+	# (no fleet_rank, no fleet_total_stores, no per_store_breakdown).
+	# Partner-view does not require additional stripping here.
+	# (Frontend `downloadCsv` in product/page.tsx is a separate concern,
+	# handled in Phase 4 task 4.9.)
 	_ = ranking_mode
 	scope = _selected_scope(_parse_stores_param(stores))
 	start_day, end_day = _resolve_date_range(start_date, end_date)
@@ -4041,7 +4263,7 @@ def get_product_mix_analytics(
 	if is_single_store and scope.get("selected_stores"):
 		store_name = scope["selected_stores"][0].get("warehouse_name")
 
-	return {
+	result = {
 		"products": products_limited,
 		"meta": {
 			"start_date": start_day.isoformat(),
@@ -4060,3 +4282,11 @@ def get_product_mix_analytics(
 			"assortment_gap_products": assortment_gap_products,
 		},
 	}
+	# S227 V1/B1: deepcopy-after-cache then strip. _supabase_get_all and the
+	# fleet_product_mix branch use _cache_get_or_set; the fleet rows feed into
+	# the product list above, so the final dict references cached data
+	# transitively. Strip is the LAST step before return.
+	if _should_strip_fleet_context(_get_roles()):
+		result = copy.deepcopy(result)
+		_strip_fleet_context_from_product_mix(result, scope)
+	return result
