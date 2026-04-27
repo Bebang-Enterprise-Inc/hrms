@@ -1,7 +1,8 @@
 {
-  "phase": "1",
-  "status": "complete",
-  "timestamp": "2026-04-27T00:55:00+08:00",
+  "phase": "2",
+  "status": "blocked",
+  "blocker": "awaiting_sam_phase_3_approval_token_on_pr_689",
+  "timestamp": "2026-04-27T01:50:00+08:00",
   "evidence_paths": [
     "output/s225/verification/canonical_preflight.txt",
     "output/s225/verification/baseline.json",
@@ -11,28 +12,31 @@
     "output/s225/verification/s226_deploy_check.json",
     "output/s225/verification/phase_1_decision.md",
     "output/s225/verification/phase_1_decision_v2.md",
+    "output/s225/verification/duplicate_warehouse_audit.json",
+    "output/s225/verification/duplicate_warehouse_audit.md",
+    "output/s225/verification/sam_consolidation_pr.txt",
     "output/l3/s225/sweep_ledger.json"
   ],
-  "next_phase": "2",
-  "blockers": [],
+  "next_phase": "3 (pending Sam approval token on PR #689)",
+  "blockers": [
+    "Phase 3 mutates master data — requires Sam's explicit approval token in PR #689 comment.",
+    "Approval tokens accepted: 'S225 Phase 3 APPROVED ALL' OR 'S225 Phase 3 APPROVED: <cluster_id>...' OR 'S225 Phase 3 SKIP: <cluster_id>...'.",
+    "scripts/s225_check_sam_approval.py polls the PR for the token and writes sam_consolidation_approval.md."
+  ],
   "canonical_postcheck_violations": 0,
-  "branch_head_sha": "1ba746b9d",
-  "phase_1_summary_post_s226": {
-    "s224_deploy_verified": true,
-    "s226_deploy_verified": true,
-    "pattern_b_rest_probe": "PASS",
-    "pattern_c_rest_probe": "PASS",
-    "container_code_markers_s224": "4/4",
-    "container_code_markers_s226": "4/4",
-    "targeted_sweep_post_s226": {
-      "total_tests": 6,
-      "fully_passed": 2,
-      "failed": 4,
-      "stores_pattern_b_failures": 0,
-      "stores_pattern_c_failures": 0,
-      "stores_s223_defect_11_reappearance": 0,
-      "stores_pattern_a_dispatchpage_timeout": 4
-    },
-    "decision": "Proceeding to Phase 2 — Phase 1 intent (validate S224) satisfied. Remaining failures are Pattern A which S225 Phase 4 will fix. Phase 2 is read-only audit, no risk."
+  "branch_head_sha": "cc639141b",
+  "phase_2_summary": {
+    "warehouses_scanned": 331,
+    "duplicate_clusters_found": 2,
+    "intercompany_clusters": 0,
+    "manual_review_required": 0,
+    "auto_apply_eligible": 2,
+    "stranded_skus": 79,
+    "stranded_stock_units": 32627.0,
+    "clusters": [
+      {"cluster_id": "cluster-3md-logistics-camangyanan-bki", "winner_stock": 797874.0, "loser_stock": 32627.0, "intercompany": false},
+      {"cluster_id": "cluster-royal-cold-storage-taytay-rcs-bki", "winner_stock": 1873.0, "loser_stock": 0.0, "intercompany": false}
+    ],
+    "pr_url": "https://github.com/Bebang-Enterprise-Inc/hrms/pull/689"
   }
 }

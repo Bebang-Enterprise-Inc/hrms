@@ -4,7 +4,7 @@
 |---|---|---|---|---|---|
 | 0 | Boot + both worktrees + canonical preflight | DONE | output/s225/verification/canonical_preflight.txt, baseline.json | NO | — |
 | 1 | Validate S224 PR #687 + Pattern B + Pattern C | DONE (intent satisfied) | output/s225/verification/{s224_deploy_sha_check,s224_pattern_b_validation,s224_pattern_c_validation,s226_deploy_check,phase_1_decision_v2}.{json,md} | PARTIAL (sweep) | S224 verified deployed (4/4 markers + REST probes PASS). S226 deployed (PR #688 merged) — confirmed unblocking the queue visibility (failure-class shifted from "DEFECT-11 invisible queue" to Pattern A "DispatchPage timeout"). Remaining 4 failures are Pattern A which Phase 4 will fix. Proceeding to Phase 2 with documented rationale (phase_1_decision_v2.md). |
-| 2 | Warehouse duplicate audit | PENDING | — | — | — |
+| 2 | Warehouse duplicate audit | DONE — **awaiting Sam approval token on PR #689** | output/s225/verification/duplicate_warehouse_audit.{json,md}, sam_consolidation_pr.txt | NO | 2 clusters found (3MD + ROYAL COLD STORAGE), both em-dash duplicates, both auto-apply eligible. 79 stranded SKUs, 32627 units. FG004 (S223 Sentry's canonical Pattern A item) has 648 KG stranded — consolidation will free it for proper dispatch. |
 | 3 | Consolidation (Sam-gated) | PENDING | — | — | — |
 | 4 | FOR UPDATE lock implementation | PENDING | — | — | — |
 | 4.5 | Wait-for-deploy gate | PENDING | — | — | — |
