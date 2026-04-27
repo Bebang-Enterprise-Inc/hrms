@@ -1,0 +1,159 @@
+{
+  "ssm_command_id": "592b33b2-72b5-4314-a2f5-a5312114d999",
+  "ssm_status": "Success",
+  "result": {
+    "committed": false,
+    "candidate_pending_total": 144,
+    "orphan_count": 135,
+    "orphan_reasons": {
+      "ORDER_DELETED": 111,
+      "ORDER_FULLY_APPROVED": 24
+    },
+    "applied_count": 0,
+    "errors_count": 0,
+    "remaining_pending_after": 144,
+    "errors_sample": [],
+    "orphans_sample": [
+      {
+        "queue_name": "BEI-APQ-2026-00168",
+        "order_name": "BEI-ORD-2026-00248",
+        "assignee": "test.area@bebang.ph",
+        "reason": "ORDER_DELETED"
+      },
+      {
+        "queue_name": "BEI-APQ-2026-00169",
+        "order_name": "BEI-ORD-2026-00249",
+        "assignee": "test.area@bebang.ph",
+        "reason": "ORDER_DELETED"
+      },
+      {
+        "queue_name": "BEI-APQ-2026-00170",
+        "order_name": "BEI-ORD-2026-00250",
+        "assignee": "test.area@bebang.ph",
+        "reason": "ORDER_DELETED"
+      },
+      {
+        "queue_name": "BEI-APQ-2026-00171",
+        "order_name": "BEI-ORD-2026-00251",
+        "assignee": "test.area@bebang.ph",
+        "reason": "ORDER_DELETED"
+      },
+      {
+        "queue_name": "BEI-APQ-2026-00173",
+        "order_name": "BEI-ORD-2026-00252",
+        "assignee": "ian@bebang.ph",
+        "reason": "ORDER_DELETED"
+      },
+      {
+        "queue_name": "BEI-APQ-2026-00175",
+        "order_name": "BEI-ORD-2026-00253",
+        "assignee": "ian@bebang.ph",
+        "reason": "ORDER_DELETED"
+      },
+      {
+        "queue_name": "BEI-APQ-2026-00176",
+        "order_name": "BEI-ORD-2026-00253",
+        "assignee": "test.area@bebang.ph",
+        "reason": "ORDER_DELETED"
+      },
+      {
+        "queue_name": "BEI-APQ-2026-00177",
+        "order_name": "BEI-ORD-2026-00254",
+        "assignee": "test.area@bebang.ph",
+        "reason": "ORDER_FULLY_APPROVED",
+        "order_status": "Pending Approval",
+        "approval_stage": "Single Approval"
+      },
+      {
+        "queue_name": "BEI-APQ-2026-00178",
+        "order_name": "BEI-ORD-2026-00255",
+        "assignee": "test.area@bebang.ph",
+        "reason": "ORDER_FULLY_APPROVED",
+        "order_status": "Pending Approval",
+        "approval_stage": "Single Approval"
+      },
+      {
+        "queue_name": "BEI-APQ-2026-00179",
+        "order_name": "BEI-ORD-2026-00256",
+        "assignee": "test.area@bebang.ph",
+        "reason": "ORDER_FULLY_APPROVED",
+        "order_status": "Pending Approval",
+        "approval_stage": "Single Approval"
+      },
+      {
+        "queue_name": "BEI-APQ-2026-00180",
+        "order_name": "BEI-ORD-2026-00257",
+        "assignee": "test.area@bebang.ph",
+        "reason": "ORDER_FULLY_APPROVED",
+        "order_status": "Pending Approval",
+        "approval_stage": "Single Approval"
+      },
+      {
+        "queue_name": "BEI-APQ-2026-00181",
+        "order_name": "BEI-ORD-2026-00258",
+        "assignee": "test.area@bebang.ph",
+        "reason": "ORDER_FULLY_APPROVED",
+        "order_status": "Pending Approval",
+        "approval_stage": "Single Approval"
+      },
+      {
+        "queue_name": "BEI-APQ-2026-00182",
+        "order_name": "BEI-ORD-2026-00259",
+        "assignee": "test.area@bebang.ph",
+        "reason": "ORDER_FULLY_APPROVED",
+        "order_status": "Pending Approval",
+        "approval_stage": "Single Approval"
+      },
+      {
+        "queue_name": "BEI-APQ-2026-00185",
+        "order_name": "BEI-ORD-2026-00262",
+        "assignee": "test.area@bebang.ph",
+        "reason": "ORDER_FULLY_APPROVED",
+        "order_status": "Pending Approval",
+        "approval_stage": "Single Approval"
+      },
+      {
+        "queue_name": "BEI-APQ-2026-00186",
+        "order_name": "BEI-ORD-2026-00263",
+        "assignee": "test.area@bebang.ph",
+        "reason": "ORDER_FULLY_APPROVED",
+        "order_status": "Pending Approval",
+        "approval_stage": "Single Approval"
+      },
+      {
+        "queue_name": "BEI-APQ-2026-00207",
+        "order_name": "BEI-ORD-2026-00278",
+        "assignee": "test.area@bebang.ph",
+        "reason": "ORDER_FULLY_APPROVED",
+        "order_status": "Pending Approval",
+        "approval_stage": "Single Approval"
+      },
+      {
+        "queue_name": "BEI-APQ-2026-00208",
+        "order_name": "BEI-ORD-2026-00279",
+        "assignee": "test.area@bebang.ph",
+        "reason": "ORDER_FULLY_APPROVED",
+        "order_status": "Pending Approval",
+        "approval_stage": "Single Approval"
+      },
+      {
+        "queue_name": "BEI-APQ-2026-00330",
+        "order_name": "BEI-ORD-2026-00340",
+        "assignee": "ian@bebang.ph",
+        "reason": "ORDER_DELETED"
+      },
+      {
+        "queue_name": "BEI-APQ-2026-00358",
+        "order_name": "BEI-ORD-2026-00354",
+        "assignee": "ian@bebang.ph",
+        "reason": "ORDER_DELETED"
+      },
+      {
+        "queue_name": "BEI-APQ-2026-00360",
+        "order_name": "BEI-ORD-2026-00355",
+        "assignee": "ian@bebang.ph",
+        "reason": "ORDER_DELETED"
+      }
+    ]
+  }
+}
