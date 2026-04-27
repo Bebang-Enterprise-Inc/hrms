@@ -1,0 +1,1019 @@
+{
+  "id": "4b36cc924d654057aa10ac4d0130e24e",
+  "groupID": "7362834239",
+  "eventID": "4b36cc924d654057aa10ac4d0130e24e",
+  "projectID": "4510861213302784",
+  "size": 16360,
+  "entries": [
+    {
+      "data": {
+        "formatted": "Failed to capture exception\nSite: hq.bebang.ph\nForm Dict: {}"
+      },
+      "type": "message"
+    },
+    {
+      "data": {
+        "values": [
+          {
+            "type": "RuntimeError",
+            "value": "object is not bound",
+            "mechanism": {
+              "type": "logging",
+              "handled": true
+            },
+            "threadId": null,
+            "module": null,
+            "stacktrace": {
+              "frames": [
+                {
+                  "filename": "frappe/utils/sentry.py",
+                  "absPath": "/home/frappe/frappe-bench/apps/frappe/frappe/utils/sentry.py",
+                  "module": "frappe.utils.sentry",
+                  "package": null,
+                  "platform": null,
+                  "instructionAddr": null,
+                  "symbolAddr": null,
+                  "function": "capture_exception",
+                  "rawFunction": null,
+                  "symbol": null,
+                  "context": [
+                    [
+                      112,
+                      "\t\t\tif ("
+                    ],
+                    [
+                      113,
+                      "\t\t\t\tos.getenv(\"ENABLE_SENTRY_DB_MONITORING\") is None"
+                    ],
+                    [
+                      114,
+                      "\t\t\t\tor os.getenv(\"SENTRY_TRACING_SAMPLE_RATE\") is None"
+                    ],
+                    [
+                      115,
+                      "\t\t\t\tor os.getenv(\"SENTRY_PROFILING_SAMPLE_RATE\") is None"
+                    ],
+                    [
+                      116,
+                      "\t\t\t):"
+                    ],
+                    [
+                      117,
+                      "\t\t\t\tset_scope(scope)"
+                    ],
+                    [
+                      118,
+                      "\t\t\tif frappe.request:"
+                    ],
+                    [
+                      119,
+                      "\t\t\t\tevt_processor = _make_wsgi_event_processor(frappe.request.environ, False)"
+                    ],
+                    [
+                      120,
+                      "\t\t\t\tscope.add_event_processor(evt_processor)"
+                    ],
+                    [
+                      121,
+                      "\t\t\t\tif frappe.request.is_json:"
+                    ],
+                    [
+                      122,
+                      "\t\t\t\t\tscope.set_context(\"JSON Body\", frappe.request.json)"
+                    ]
+                  ],
+                  "lineNo": 117,
+                  "colNo": null,
+                  "parentIndex": null,
+                  "sampleCount": null,
+                  "inApp": true,
+                  "trust": null,
+                  "errors": null,
+                  "lock": null,
+                  "sourceLink": null,
+                  "vars": {
+                    "hub": "<sentry_sdk.hub.Hub object at 0x784c36e0b2d0>",
+                    "message": "\"S225 lock wait 22082ms for PINNACLE COLD STORAGE SOLUTIONS - BKI/['PM007']\\nS225 Lock Contention\"",
+                    "scope": "<Scope id=0x784c428b5440 name=None type=ScopeType.ISOLATION>"
+                  }
+                },
+                {
+                  "filename": "frappe/utils/sentry.py",
+                  "absPath": "/home/frappe/frappe-bench/apps/frappe/frappe/utils/sentry.py",
+                  "module": "frappe.utils.sentry",
+                  "package": null,
+                  "platform": null,
+                  "instructionAddr": null,
+                  "symbolAddr": null,
+                  "function": "set_scope",
+                  "rawFunction": null,
+                  "symbol": null,
+                  "context": [
+                    [
+                      65,
+                      "\t\tscope.set_transaction_name(transaction_name)"
+                    ],
+                    [
+                      66,
+                      "\telse:"
+                    ],
+                    [
+                      67,
+                      "\t\tif frappe.form_dict.cmd:"
+                    ],
+                    [
+                      68,
+                      "\t\t\tpath = f\"/api/method/{frappe.form_dict.cmd}\""
+                    ],
+                    [
+                      69,
+                      "\t\telse:"
+                    ],
+                    [
+                      70,
+                      "\t\t\tpath = frappe.request.path"
+                    ],
+                    [
+                      71,
+                      ""
+                    ],
+                    [
+                      72,
+                      "\t\tscope.set_transaction_name("
+                    ],
+                    [
+                      73,
+                      "\t\t\tpath,"
+                    ],
+                    [
+                      74,
+                      "\t\t\tsource=SOURCE_FOR_STYLE[\"endpoint\"],"
+                    ],
+                    [
+                      75,
+                      "\t\t)"
+                    ]
+                  ],
+                  "lineNo": 70,
+                  "colNo": null,
+                  "parentIndex": null,
+                  "sampleCount": null,
+                  "inApp": true,
+                  "trust": null,
+                  "errors": null,
+                  "lock": null,
+                  "sourceLink": null,
+                  "vars": {
+                    "job": "None",
+                    "scope": "<Scope id=0x784c428b5440 name=None type=ScopeType.ISOLATION>"
+                  }
+                },
+                {
+                  "filename": "werkzeug/local.py",
+                  "absPath": "/home/frappe/frappe-bench/env/lib/python3.11/site-packages/werkzeug/local.py",
+                  "module": "werkzeug.local",
+                  "package": null,
+                  "platform": null,
+                  "instructionAddr": null,
+                  "symbolAddr": null,
+                  "function": "__get__",
+                  "rawFunction": null,
+                  "symbol": null,
+                  "context": [
+                    [
+                      313,
+                      "                return self.class_value"
+                    ],
+                    [
+                      314,
+                      ""
+                    ],
+                    [
+                      315,
+                      "            return self"
+                    ],
+                    [
+                      316,
+                      ""
+                    ],
+                    [
+                      317,
+                      "        try:"
+                    ],
+                    [
+                      318,
+                      "            obj = instance._get_current_object()"
+                    ],
+                    [
+                      319,
+                      "        except RuntimeError:"
+                    ],
+                    [
+                      320,
+                      "            if self.fallback is None:"
+                    ],
+                    [
+                      321,
+                      "                raise"
+                    ],
+                    [
+                      322,
+                      ""
+                    ],
+                    [
+                      323,
+                      "            fallback = self.fallback.__get__(instance, owner)"
+                    ]
+                  ],
+                  "lineNo": 318,
+                  "colNo": null,
+                  "parentIndex": null,
+                  "sampleCount": null,
+                  "inApp": false,
+                  "trust": null,
+                  "errors": null,
+                  "lock": null,
+                  "sourceLink": null,
+                  "vars": {
+                    "instance": "<LocalProxy unbound>",
+                    "owner": "<class 'werkzeug.local.LocalProxy'>",
+                    "self": "proxy __getattr__"
+                  }
+                },
+                {
+                  "filename": "werkzeug/local.py",
+                  "absPath": "/home/frappe/frappe-bench/env/lib/python3.11/site-packages/werkzeug/local.py",
+                  "module": "werkzeug.local",
+                  "package": null,
+                  "platform": null,
+                  "instructionAddr": null,
+                  "symbolAddr": null,
+                  "function": "_get_current_object",
+                  "rawFunction": null,
+                  "symbol": null,
+                  "context": [
+                    [
+                      496,
+                      ""
+                    ],
+                    [
+                      497,
+                      "            def _get_current_object() -> T:"
+                    ],
+                    [
+                      498,
+                      "                try:"
+                    ],
+                    [
+                      499,
+                      "                    return get_name(local)  # type: ignore[return-value]"
+                    ],
+                    [
+                      500,
+                      "                except AttributeError:"
+                    ],
+                    [
+                      501,
+                      "                    raise RuntimeError(unbound_message) from None"
+                    ],
+                    [
+                      502,
+                      ""
+                    ],
+                    [
+                      503,
+                      "        elif isinstance(local, LocalStack):"
+                    ],
+                    [
+                      504,
+                      ""
+                    ],
+                    [
+                      505,
+                      "            def _get_current_object() -> T:"
+                    ],
+                    [
+                      506,
+                      "                obj = local.top"
+                    ]
+                  ],
+                  "lineNo": 501,
+                  "colNo": null,
+                  "parentIndex": null,
+                  "sampleCount": null,
+                  "inApp": false,
+                  "trust": null,
+                  "errors": null,
+                  "lock": null,
+                  "sourceLink": null,
+                  "vars": {
+                    "get_name": "operator.attrgetter('request')",
+                    "local": "<werkzeug.local.Local object at 0x784c722d7790>",
+                    "unbound_message": "'object is not bound'"
+                  }
+                }
+              ],
+              "framesOmitted": null,
+              "registers": null,
+              "hasSystemFrames": true
+            },
+            "rawStacktrace": null,
+            "rawValue": null,
+            "rawModule": null,
+            "rawType": null
+          }
+        ],
+        "hasSystemFrames": true,
+        "excOmitted": null
+      },
+      "type": "exception"
+    },
+    {
+      "data": {
+        "values": [
+          {
+            "type": "default",
+            "timestamp": "2026-04-27T08:44:31.617217Z",
+            "level": "info",
+            "message": "create_stock_transfer",
+            "category": "bei.backend",
+            "data": {
+              "endpoint_or_job": "hrms.api.warehouse.create_stock_transfer",
+              "module": "warehouse",
+              "mutation_type": "create",
+              "phase": "mutation",
+              "route": "unknown"
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T08:44:31.619411Z",
+            "level": "info",
+            "message": "HGET b'_3ca82e0039adc3d1|roles' [Filtered]",
+            "category": "redis",
+            "data": {
+              "db.operation": "HGET",
+              "redis.command": "HGET",
+              "redis.is_cluster": false
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T08:44:31.632020Z",
+            "level": "info",
+            "message": "GET b'_3ca82e0039adc3d1|document_cache::User::test.scm@bebang.ph'",
+            "category": "redis",
+            "data": {
+              "db.operation": "GET",
+              "redis.command": "GET",
+              "redis.is_cluster": false,
+              "redis.key": "_3ca82e0039adc3d1|document_cache::User::test.scm@bebang.ph"
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T08:44:31.642112Z",
+            "level": "info",
+            "message": "HGET b'_3ca82e0039adc3d1|defaults' [Filtered]",
+            "category": "redis",
+            "data": {
+              "db.operation": "HGET",
+              "redis.command": "HGET",
+              "redis.is_cluster": false
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T08:44:31.642498Z",
+            "level": "info",
+            "message": "GET b'_3ca82e0039adc3d1|all_apps'",
+            "category": "redis",
+            "data": {
+              "db.operation": "GET",
+              "redis.command": "GET",
+              "redis.is_cluster": false,
+              "redis.key": "_3ca82e0039adc3d1|all_apps"
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T08:44:31.658315Z",
+            "level": "info",
+            "message": "HGET b'_3ca82e0039adc3d1|doctype_meta' [Filtered]",
+            "category": "redis",
+            "data": {
+              "db.operation": "HGET",
+              "redis.command": "HGET",
+              "redis.is_cluster": false
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T08:44:31.680887Z",
+            "level": "info",
+            "message": "HGET b'_3ca82e0039adc3d1|table_columns' [Filtered]",
+            "category": "redis",
+            "data": {
+              "db.operation": "HGET",
+              "redis.command": "HGET",
+              "redis.is_cluster": false
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T08:44:31.759695Z",
+            "level": "info",
+            "message": "HGET b'_3ca82e0039adc3d1|doctype_meta' [Filtered]",
+            "category": "redis",
+            "data": {
+              "db.operation": "HGET",
+              "redis.command": "HGET",
+              "redis.is_cluster": false
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T08:44:31.843074Z",
+            "level": "info",
+            "message": "HGET b'_3ca82e0039adc3d1|doctype_meta' [Filtered]",
+            "category": "redis",
+            "data": {
+              "db.operation": "HGET",
+              "redis.command": "HGET",
+              "redis.is_cluster": false
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T08:44:31.844093Z",
+            "level": "info",
+            "message": "SET b'_3ca82e0039adc3d1|document_cache::User::test.scm@bebang.ph' [Filtered]",
+            "category": "redis",
+            "data": {
+              "db.operation": "SET",
+              "redis.command": "SET",
+              "redis.is_cluster": false,
+              "redis.key": "_3ca82e0039adc3d1|document_cache::User::test.scm@bebang.ph"
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T08:44:31.845986Z",
+            "level": "info",
+            "message": "HSET b'_3ca82e0039adc3d1|roles' [Filtered] [Filtered]",
+            "category": "redis",
+            "data": {
+              "db.operation": "HSET",
+              "redis.command": "HSET",
+              "redis.is_cluster": false
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T08:44:32.068928Z",
+            "level": "info",
+            "message": "HGET b'_3ca82e0039adc3d1|doctype_meta' [Filtered]",
+            "category": "redis",
+            "data": {
+              "db.operation": "HGET",
+              "redis.command": "HGET",
+              "redis.is_cluster": false
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T08:44:32.196704Z",
+            "level": "info",
+            "message": "HGET b'_3ca82e0039adc3d1|doctype_meta' [Filtered]",
+            "category": "redis",
+            "data": {
+              "db.operation": "HGET",
+              "redis.command": "HGET",
+              "redis.is_cluster": false
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T08:44:32.371193Z",
+            "level": "info",
+            "message": "HGET b'_3ca82e0039adc3d1|doctype_meta' [Filtered]",
+            "category": "redis",
+            "data": {
+              "db.operation": "HGET",
+              "redis.command": "HGET",
+              "redis.is_cluster": false
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T08:44:32.386094Z",
+            "level": "info",
+            "message": "HGET b'_3ca82e0039adc3d1|user_permissions' [Filtered]",
+            "category": "redis",
+            "data": {
+              "db.operation": "HGET",
+              "redis.command": "HGET",
+              "redis.is_cluster": false
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T08:44:32.391324Z",
+            "level": "info",
+            "message": "HGET b'_3ca82e0039adc3d1|defaults' [Filtered]",
+            "category": "redis",
+            "data": {
+              "db.operation": "HGET",
+              "redis.command": "HGET",
+              "redis.is_cluster": false
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T08:44:32.399469Z",
+            "level": "info",
+            "message": "HGET b'_3ca82e0039adc3d1|defaults' [Filtered]",
+            "category": "redis",
+            "data": {
+              "db.operation": "HGET",
+              "redis.command": "HGET",
+              "redis.is_cluster": false
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T08:44:32.402677Z",
+            "level": "info",
+            "message": "GET b'_3ca82e0039adc3d1|document_cache::System Settings::System Settings'",
+            "category": "redis",
+            "data": {
+              "db.operation": "GET",
+              "redis.command": "GET",
+              "redis.is_cluster": false,
+              "redis.key": "_3ca82e0039adc3d1|document_cache::System Settings::System Settings"
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T08:44:32.412594Z",
+            "level": "info",
+            "message": "HGET b'_3ca82e0039adc3d1|table_columns' [Filtered]",
+            "category": "redis",
+            "data": {
+              "db.operation": "HGET",
+              "redis.command": "HGET",
+              "redis.is_cluster": false
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T08:44:54.496068Z",
+            "level": "info",
+            "message": "HGET b'_3ca82e0039adc3d1|doctype_meta' [Filtered]",
+            "category": "redis",
+            "data": {
+              "db.operation": "HGET",
+              "redis.command": "HGET",
+              "redis.is_cluster": false
+            },
+            "event_id": null
+          }
+        ]
+      },
+      "type": "breadcrumbs"
+    }
+  ],
+  "dist": null,
+  "message": "Failed to capture exception\nSite: hq.bebang.ph\nForm Dict: {}",
+  "title": "RuntimeError: object is not bound",
+  "location": "frappe/utils/sentry.py",
+  "user": {
+    "id": "test.scm@bebang.ph",
+    "email": "test.scm@bebang.ph",
+    "username": null,
+    "ip_address": null,
+    "name": null,
+    "geo": {
+      "country_code": "SG",
+      "city": "Singapore",
+      "region": "Singapore"
+    },
+    "data": null
+  },
+  "contexts": {
+    "bei_backend_observability": {
+      "extras": {
+        "item_count": 1,
+        "mr_name": "MAT-MR-2026-00135",
+        "source_warehouse": "PINNACLE COLD STORAGE SOLUTIONS - BKI",
+        "target_warehouse": "PINNACLE COLD STORAGE SOLUTIONS - BKI"
+      },
+      "frappe_cmd": "",
+      "http_method": "unknown",
+      "request_route": "unknown",
+      "type": "default"
+    },
+    "runtime": {
+      "runtime": "CPython 3.11.6",
+      "name": "CPython",
+      "version": "3.11.6",
+      "build": "3.11.6 (main, Nov 29 2023, 04:30:13) [GCC 12.2.0]",
+      "type": "runtime"
+    },
+    "trace": {
+      "trace_id": "ce2c1d350b6346429806d6f156fb6cf4",
+      "span_id": "99cdf35a30981d67",
+      "status": "unknown",
+      "client_sample_rate": 0.1,
+      "type": "trace"
+    }
+  },
+  "sdk": {
+    "name": "sentry.python",
+    "version": "2.56.0"
+  },
+  "context": {
+    "asctime": "2026-04-27 08:44:54,496",
+    "sys.argv": [
+      "/tmp/s225_stress.py"
+    ]
+  },
+  "packages": {
+    "annotated-types": "0.7.0",
+    "anyio": "4.12.1",
+    "asttokens": "3.0.1",
+    "babel": "2.13.1",
+    "backcall": "0.2.0",
+    "backoff": "2.2.1",
+    "barcodenumber": "0.5.0",
+    "beautifulsoup4": "4.12.3",
+    "bleach": "6.3.0",
+    "bleach-allowlist": "1.0.3",
+    "boto3": "1.42.74",
+    "botocore": "1.42.74",
+    "braintree": "4.20.0",
+    "brotli": "1.2.0",
+    "cachetools": "7.0.5",
+    "cairocffi": "1.5.1",
+    "certifi": "2026.2.25",
+    "cffi": "2.0.0",
+    "chardet": "5.2.0",
+    "charset-normalizer": "3.4.6",
+    "click": "8.2.1",
+    "croniter": "6.0.0",
+    "cryptography": "46.0.5",
+    "cssselect": "1.4.0",
+    "cssselect2": "0.9.0",
+    "cssutils": "2.11.1",
+    "dataclasses-json": "0.5.14",
+    "decorator": "5.2.1",
+    "distro": "1.9.0",
+    "docopt": "0.6.2",
+    "dropbox": "12.0.2",
+    "email-reply-parser": "0.5.12",
+    "erpnext": "15.102.0",
+    "et_xmlfile": "2.0.0",
+    "executing": "2.2.1",
+    "filelock": "3.20.4",
+    "filetype": "1.2.0",
+    "fonttools": "4.62.1",
+    "frappe": "15.103.0",
+    "gitdb": "4.0.12",
+    "gitpython": "3.1.46",
+    "gocardless_pro": "1.22.0",
+    "google-ai-generativelanguage": "0.6.15",
+    "google-api-core": "2.30.0",
+    "google-api-python-client": "2.193.0",
+    "google-auth": "2.49.1",
+    "google-auth-httplib2": "0.3.0",
+    "google-auth-oauthlib": "1.2.4",
+    "google-generativeai": "0.8.6",
+    "googleapis-common-protos": "1.73.0",
+    "googlemaps": "4.10.0",
+    "grpcio": "1.78.0",
+    "grpcio-status": "1.71.2",
+    "gunicorn": "23.0.0",
+    "h11": "0.16.0",
+    "hiredis": "2.2.3",
+    "holidays": "0.93",
+    "hrms": "16.0.0.dev0",
+    "html5lib": "1.1",
+    "httpcore": "1.0.9",
+    "httplib2": "0.31.2",
+    "httpx": "0.28.1",
+    "idna": "3.11",
+    "ipython": "8.15.0",
+    "isodate": "0.6.1",
+    "jedi": "0.19.2",
+    "jinja2": "3.1.6",
+    "jiter": "0.13.0",
+    "jmespath": "1.1.0",
+    "joblib": "1.5.3",
+    "ldap3": "2.9.1",
+    "lxml": "6.0.2",
+    "markdown2": "2.5.5",
+    "markdownify": "0.14.1",
+    "markupsafe": "3.0.3",
+    "marshmallow": "3.26.2",
+    "matplotlib-inline": "0.2.1",
+    "maxminddb": "3.1.1",
+    "maxminddb-geolite2": "2018.703",
+    "monotonic": "1.6",
+    "more-itertools": "10.8.0",
+    "mypy_extensions": "1.1.0",
+    "num2words": "0.5.14",
+    "numpy": "2.4.3",
+    "oauthlib": "3.3.1",
+    "openai": "2.29.0",
+    "openpyxl": "3.1.5",
+    "packaging": "26.0",
+    "pandas": "3.0.1",
+    "parso": "0.8.6",
+    "passlib": "1.7.4",
+    "payments": "0.0.1",
+    "paytmchecksum": "1.7.0",
+    "pdfkit": "1.0.0",
+    "pexpect": "4.9.0",
+    "phonenumbers": "8.13.55",
+    "pickleshare": "0.7.5",
+    "pillow": "12.1.1",
+    "pip": "26.0.1",
+    "plaid-python": "7.2.1",
+    "ply": "3.11",
+    "posthog": "3.21.0",
+    "premailer": "3.10.0",
+    "prompt_toolkit": "3.0.52",
+    "proto-plus": "1.27.1",
+    "protobuf": "5.29.6",
+    "psutil": "5.9.8",
+    "psycopg2-binary": "2.9.11",
+    "ptyprocess": "0.7.0",
+    "pure_eval": "0.2.3",
+    "pyasn1": "0.6.3",
+    "pyasn1_modules": "0.4.2",
+    "pycountry": "22.3.5",
+    "pycparser": "3.0",
+    "pycryptodome": "3.23.0",
+    "pydantic": "2.12.5",
+    "pydantic_core": "2.41.5",
+    "pydyf": "0.12.1",
+    "pygments": "2.19.2",
+    "pyjwt": "2.8.0",
+    "pymysql": "1.1.1",
+    "pyopenssl": "25.3.0",
+    "pyotp": "2.9.0",
+    "pyparsing": "3.3.2",
+    "pypdf": "6.8.0",
+    "pyphen": "0.17.2",
+    "pypika": "0.48.9",
+    "pypng": "0.20220715.0",
+    "pyqrcode": "1.2.1",
+    "python-dateutil": "2.9.0.post0",
+    "python-stdnum": "2.2",
+    "python-youtube": "0.8.3",
+    "pytz": "2025.2",
+    "pyyaml": "6.0.3",
+    "rapidfuzz": "3.12.2",
+    "rauth": "0.7.3",
+    "razorpay": "2.0.1",
+    "redis": "4.5.5",
+    "requests": "2.32.5",
+    "requests-oauthlib": "1.3.1",
+    "restrictedpython": "8.1",
+    "rq": "1.15.1",
+    "rsa": "4.9.1",
+    "s3transfer": "0.16.0",
+    "scikit-learn": "1.8.0",
+    "scipy": "1.17.1",
+    "semantic-version": "2.10.0",
+    "sentry-sdk": "2.56.0",
+    "setuptools": "70.3.0",
+    "six": "1.17.0",
+    "smmap": "5.0.3",
+    "sniffio": "1.3.1",
+    "soupsieve": "2.8.3",
+    "sql_metadata": "2.11.0",
+    "sqlparse": "0.5.5",
+    "stack-data": "0.6.3",
+    "stone": "3.3.1",
+    "stripe": "10.12.0",
+    "tenacity": "8.2.3",
+    "terminaltables": "3.1.10",
+    "threadpoolctl": "3.6.0",
+    "tinycss2": "1.5.1",
+    "tinyhtml5": "2.1.0",
+    "tomli": "2.0.2",
+    "tqdm": "4.67.3",
+    "traceback-with-variables": "2.0.4",
+    "traitlets": "5.14.3",
+    "typing-inspect": "0.9.0",
+    "typing-inspection": "0.4.2",
+    "typing_extensions": "4.15.0",
+    "unidecode": "1.3.8",
+    "uritemplate": "4.2.0",
+    "urllib3": "2.6.3",
+    "vobject": "0.9.9",
+    "wcwidth": "0.6.0",
+    "weasyprint": "68.0",
+    "webencodings": "0.5.1",
+    "werkzeug": "3.1.6",
+    "wheel": "0.46.3",
+    "whoosh": "2.7.4",
+    "xlrd": "2.0.2",
+    "zopfli": "0.4.1",
+    "zxcvbn": "4.4.28"
+  },
+  "type": "error",
+  "metadata": {
+    "filename": "frappe/utils/sentry.py",
+    "function": "set_scope",
+    "in_app_frame_mix": "mixed",
+    "type": "RuntimeError",
+    "value": "object is not bound"
+  },
+  "tags": [
+    {
+      "key": "action",
+      "value": "create_stock_transfer"
+    },
+    {
+      "key": "endpoint_or_job",
+      "value": "hrms.api.warehouse.create_stock_transfer"
+    },
+    {
+      "key": "environment",
+      "value": "development"
+    },
+    {
+      "key": "handled",
+      "value": "yes"
+    },
+    {
+      "key": "http_method",
+      "value": "unknown"
+    },
+    {
+      "key": "level",
+      "value": "error"
+    },
+    {
+      "key": "logger",
+      "value": "None-hq.bebang.ph"
+    },
+    {
+      "key": "mechanism",
+      "value": "logging"
+    },
+    {
+      "key": "module",
+      "value": "warehouse"
+    },
+    {
+      "key": "mutation_type",
+      "value": "create"
+    },
+    {
+      "key": "phase",
+      "value": "mutation"
+    },
+    {
+      "key": "release",
+      "value": "bei-hrms@16.0.0-dev"
+    },
+    {
+      "key": "route",
+      "value": "unknown"
+    },
+    {
+      "key": "route_action",
+      "value": "create_stock_transfer"
+    },
+    {
+      "key": "runtime",
+      "value": "CPython 3.11.6"
+    },
+    {
+      "key": "runtime.name",
+      "value": "CPython"
+    },
+    {
+      "key": "server_name",
+      "value": "a486d1dac125"
+    },
+    {
+      "key": "surface",
+      "value": "frappe_whitelist"
+    },
+    {
+      "key": "user",
+      "value": "id:test.scm@bebang.ph",
+      "query": "user.id:\"test.scm@bebang.ph\""
+    }
+  ],
+  "platform": "python",
+  "dateReceived": "2026-04-27T08:44:54.512439Z",
+  "errors": [],
+  "occurrence": null,
+  "_meta": {
+    "entries": {},
+    "message": null,
+    "user": null,
+    "contexts": null,
+    "sdk": null,
+    "context": null,
+    "packages": null,
+    "tags": {}
+  },
+  "crashFile": null,
+  "culprit": "frappe.utils.sentry in set_scope",
+  "dateCreated": "2026-04-27T08:44:54.500000Z",
+  "fingerprints": [
+    "6f5a75fe219a6a7230f5f5a1f47b36e4",
+    "cd647d5a5a6e21d881186805ef000bfe"
+  ],
+  "groupingConfig": {
+    "enhancements": "KLUv_SAd6QAAkwORuGFsbC1wbGF0Zm9ybXM6MjAyNi0wMS0yMJA#KLUv_SAd6QAAkwORuGFsbC1wbGF0Zm9ybXM6MjAyNi0wMS0yMJA#KLUv_SAd6QAAkwORuGFsbC1wbGF0Zm9ybXM6MjAyNi0wMS0yMJA",
+    "id": "newstyle:2026-01-20"
+  },
+  "release": {
+    "id": 1670333880,
+    "version": "bei-hrms@16.0.0-dev",
+    "status": "open",
+    "shortVersion": "bei-hrms@16.0.0-dev",
+    "versionInfo": {
+      "package": "bei-hrms",
+      "version": {
+        "raw": "16.0.0-dev",
+        "major": 16,
+        "minor": 0,
+        "patch": 0,
+        "pre": "dev",
+        "buildCode": null,
+        "components": 3
+      },
+      "description": "16.0.0-dev",
+      "buildHash": null
+    },
+    "ref": null,
+    "url": null,
+    "dateReleased": null,
+    "dateCreated": "2026-02-10T11:57:53.986333Z",
+    "data": {},
+    "newGroups": 548,
+    "owner": null,
+    "commitCount": 0,
+    "lastCommit": null,
+    "deployCount": 0,
+    "lastDeploy": null,
+    "authors": [],
+    "projects": [
+      {
+        "id": 4510861213302784,
+        "slug": "bei-hrms",
+        "name": "bei-hrms",
+        "newGroups": 548,
+        "platform": "python",
+        "platforms": [],
+        "hasHealthData": false
+      }
+    ],
+    "firstEvent": "2026-02-10T11:57:53Z",
+    "lastEvent": "2026-04-27T11:19:10Z",
+    "currentProjectMeta": {},
+    "userAgent": null
+  },
+  "userReport": null,
+  "sdkUpdates": [
+    {
+      "type": "updateSdk",
+      "sdkName": "sentry.python",
+      "newSdkVersion": "2.58.0",
+      "sdkUrl": "https://docs.sentry.io/platforms/python",
+      "enables": []
+    }
+  ],
+  "resolvedWith": [
+    null
+  ],
+  "nextEventID": null,
+  "previousEventID": "30ed2ddfb7ce4c16861cd410b52e6c1a"
+}

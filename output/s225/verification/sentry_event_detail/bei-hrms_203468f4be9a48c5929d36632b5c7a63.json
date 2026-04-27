@@ -1,0 +1,1273 @@
+{
+  "id": "203468f4be9a48c5929d36632b5c7a63",
+  "groupID": "7437998065",
+  "eventID": "203468f4be9a48c5929d36632b5c7a63",
+  "projectID": "4510861213302784",
+  "size": 19474,
+  "entries": [
+    {
+      "data": {
+        "values": [
+          {
+            "type": "HTTPError",
+            "value": "409 Client Error: Conflict for url: https://csnniykjrychgajfrgua.supabase.co/rest/v1/pos_order_items",
+            "mechanism": {
+              "type": "wsgi",
+              "handled": false
+            },
+            "threadId": null,
+            "module": "requests.exceptions",
+            "stacktrace": {
+              "frames": [
+                {
+                  "filename": "hrms/api/mosaic_webhook.py",
+                  "absPath": "/home/frappe/frappe-bench/apps/hrms/hrms/api/mosaic_webhook.py",
+                  "module": "hrms.api.mosaic_webhook",
+                  "package": null,
+                  "platform": null,
+                  "instructionAddr": null,
+                  "symbolAddr": null,
+                  "function": "_handle_order_completed",
+                  "rawFunction": null,
+                  "symbol": null,
+                  "context": [
+                    [
+                      241,
+                      "            return {\"ok\": True, \"handled\": False, \"reason\": \"payload_incomplete_deferred_to_poll\","
+                    ],
+                    [
+                      242,
+                      "                    \"order_id\": order_id}"
+                    ],
+                    [
+                      243,
+                      "        order = data  # trust the webhook payload"
+                    ],
+                    [
+                      244,
+                      ""
+                    ],
+                    [
+                      245,
+                      "    try:"
+                    ],
+                    [
+                      246,
+                      "        _upsert_completed_order(order)"
+                    ],
+                    [
+                      247,
+                      "    except Exception as e:"
+                    ],
+                    [
+                      248,
+                      "        frappe.log_error("
+                    ],
+                    [
+                      249,
+                      "            title=\"Mosaic webhook order.completed upsert failed\","
+                    ],
+                    [
+                      250,
+                      "            message=f\"order_id={order_id} error={str(e)[:500]}\","
+                    ],
+                    [
+                      251,
+                      "        )"
+                    ]
+                  ],
+                  "lineNo": 246,
+                  "colNo": null,
+                  "parentIndex": null,
+                  "sampleCount": null,
+                  "inApp": false,
+                  "trust": null,
+                  "errors": null,
+                  "lock": null,
+                  "sourceLink": null,
+                  "vars": {
+                    "data": {
+                      "bill_number": "39399",
+                      "business_date": "'2026-04-27'",
+                      "id": "51870449",
+                      "location_id": "2340",
+                      "pax_count": "1",
+                      "receipt_number": "39296",
+                      "reference_id": "'BS9625104680'",
+                      "service_channel_id": "19",
+                      "service_type_id": "3",
+                      "short_order_id": "'BS9625104680'"
+                    },
+                    "e": "HTTPError('409 Client Error: Conflict for url: https://csnniykjrychgajfrgua.supabase.co/rest/v1/pos_order_items')",
+                    "order": {
+                      "bill_number": "39399",
+                      "business_date": "'2026-04-27'",
+                      "id": "51870449",
+                      "location_id": "2340",
+                      "pax_count": "1",
+                      "receipt_number": "39296",
+                      "reference_id": "'BS9625104680'",
+                      "service_channel_id": "19",
+                      "service_type_id": "3",
+                      "short_order_id": "'BS9625104680'"
+                    },
+                    "order_id": "51870449"
+                  }
+                },
+                {
+                  "filename": "hrms/api/mosaic_webhook.py",
+                  "absPath": "/home/frappe/frappe-bench/apps/hrms/hrms/api/mosaic_webhook.py",
+                  "module": "hrms.api.mosaic_webhook",
+                  "package": null,
+                  "platform": null,
+                  "instructionAddr": null,
+                  "symbolAddr": null,
+                  "function": "_upsert_completed_order",
+                  "rawFunction": null,
+                  "symbol": null,
+                  "context": [
+                    [
+                      487,
+                      "            f\"{SUPABASE_URL}/rest/v1/pos_order_items\","
+                    ],
+                    [
+                      488,
+                      "            headers=headers,"
+                    ],
+                    [
+                      489,
+                      "            json=item_rows,"
+                    ],
+                    [
+                      490,
+                      "            timeout=15,"
+                    ],
+                    [
+                      491,
+                      "        )"
+                    ],
+                    [
+                      492,
+                      "        r_items.raise_for_status()"
+                    ],
+                    [
+                      493,
+                      ""
+                    ],
+                    [
+                      494,
+                      ""
+                    ],
+                    [
+                      495,
+                      "def _find_credential(location_id) -> dict:"
+                    ],
+                    [
+                      496,
+                      "    \"\"\"Look up the credential row for a given Mosaic location_id from the CSV SSOT.\"\"\""
+                    ],
+                    [
+                      497,
+                      "    if not MOSAIC_KEYS_CSV.exists():"
+                    ]
+                  ],
+                  "lineNo": 492,
+                  "colNo": null,
+                  "parentIndex": null,
+                  "sampleCount": null,
+                  "inApp": false,
+                  "trust": null,
+                  "errors": null,
+                  "lock": null,
+                  "sourceLink": null,
+                  "vars": {
+                    "headers": {
+                      "Authorization": "[Filtered]",
+                      "Content-Type": "'application/json'",
+                      "Prefer": "'resolution=merge-duplicates,return=minimal'",
+                      "apikey": "[Filtered]"
+                    },
+                    "item_rows": [
+                      {
+                        "gross_sales": "684",
+                        "line_number": "0",
+                        "net_sales": "610.7143",
+                        "order_id": "51870449",
+                        "product_id": "177837",
+                        "product_name": "'The Mango Supreme'",
+                        "quantity": "3",
+                        "unit_price": "228",
+                        "vat_amount": "73.2857",
+                        "vatable_sales": "610.7143"
+                      },
+                      {
+                        "gross_sales": "684",
+                        "line_number": "1",
+                        "net_sales": "610.7143",
+                        "order_id": "51870449",
+                        "product_id": "175744",
+                        "product_name": "'Presidential'",
+                        "quantity": "3",
+                        "unit_price": "228",
+                        "vat_amount": "73.2857",
+                        "vatable_sales": "610.7143"
+                      }
+                    ],
+                    "key": "[Filtered]",
+                    "order": {
+                      "bill_number": "39399",
+                      "business_date": "'2026-04-27'",
+                      "id": "51870449",
+                      "location_id": "2340",
+                      "pax_count": "1",
+                      "receipt_number": "39296",
+                      "reference_id": "'BS9625104680'",
+                      "service_channel_id": "19",
+                      "service_type_id": "3",
+                      "short_order_id": "'BS9625104680'"
+                    },
+                    "order_row": {
+                      "bill_number": "39399",
+                      "business_date": "'2026-04-27'",
+                      "channel": "'WebDelivery'",
+                      "id": "51870449",
+                      "location_id": "2340",
+                      "original_gross_sales": "0",
+                      "pax_count": "1",
+                      "receipt_number": "39296",
+                      "service_channel_id": "19",
+                      "service_type_id": "3"
+                    },
+                    "r_items": "<Response [409]>",
+                    "r_order": "<Response [200]>"
+                  }
+                },
+                {
+                  "filename": "requests/models.py",
+                  "absPath": "/home/frappe/frappe-bench/env/lib/python3.11/site-packages/requests/models.py",
+                  "module": "requests.models",
+                  "package": null,
+                  "platform": null,
+                  "instructionAddr": null,
+                  "symbolAddr": null,
+                  "function": "raise_for_status",
+                  "rawFunction": null,
+                  "symbol": null,
+                  "context": [
+                    [
+                      1021,
+                      "            http_error_msg = ("
+                    ],
+                    [
+                      1022,
+                      "                f\"{self.status_code} Server Error: {reason} for url: {self.url}\""
+                    ],
+                    [
+                      1023,
+                      "            )"
+                    ],
+                    [
+                      1024,
+                      ""
+                    ],
+                    [
+                      1025,
+                      "        if http_error_msg:"
+                    ],
+                    [
+                      1026,
+                      "            raise HTTPError(http_error_msg, response=self)"
+                    ],
+                    [
+                      1027,
+                      ""
+                    ],
+                    [
+                      1028,
+                      "    def close(self):"
+                    ],
+                    [
+                      1029,
+                      "        \"\"\"Releases the connection back to the pool. Once this method has been"
+                    ],
+                    [
+                      1030,
+                      "        called the underlying ``raw`` object must not be accessed again."
+                    ],
+                    [
+                      1031,
+                      ""
+                    ]
+                  ],
+                  "lineNo": 1026,
+                  "colNo": null,
+                  "parentIndex": null,
+                  "sampleCount": null,
+                  "inApp": false,
+                  "trust": null,
+                  "errors": null,
+                  "lock": null,
+                  "sourceLink": null,
+                  "vars": {
+                    "http_error_msg": "'409 Client Error: Conflict for url: https://csnniykjrychgajfrgua.supabase.co/rest/v1/pos_order_items'",
+                    "reason": "'Conflict'",
+                    "self": "<Response [409]>"
+                  }
+                }
+              ],
+              "framesOmitted": null,
+              "registers": null,
+              "hasSystemFrames": false
+            },
+            "rawStacktrace": null,
+            "rawValue": null,
+            "rawModule": null,
+            "rawType": null
+          }
+        ],
+        "hasSystemFrames": false,
+        "excOmitted": null
+      },
+      "type": "exception"
+    },
+    {
+      "data": {
+        "values": [
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T09:27:58.183360Z",
+            "level": "info",
+            "message": "GET b'_3ca82e0039adc3d1|installed_app_modules'",
+            "category": "redis",
+            "data": {
+              "db.operation": "GET",
+              "redis.command": "GET",
+              "redis.is_cluster": false,
+              "redis.key": "_3ca82e0039adc3d1|installed_app_modules"
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T09:27:58.184221Z",
+            "level": "info",
+            "message": "GET b'_3ca82e0039adc3d1|document_cache::User::Guest'",
+            "category": "redis",
+            "data": {
+              "db.operation": "GET",
+              "redis.command": "GET",
+              "redis.is_cluster": false,
+              "redis.key": "_3ca82e0039adc3d1|document_cache::User::Guest"
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T09:27:58.184844Z",
+            "level": "info",
+            "message": "HGET b'_3ca82e0039adc3d1|defaults' [Filtered]",
+            "category": "redis",
+            "data": {
+              "db.operation": "HGET",
+              "redis.command": "HGET",
+              "redis.is_cluster": false
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T09:27:58.185150Z",
+            "level": "info",
+            "message": "HGET b'_3ca82e0039adc3d1|defaults' [Filtered]",
+            "category": "redis",
+            "data": {
+              "db.operation": "HGET",
+              "redis.command": "HGET",
+              "redis.is_cluster": false
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T09:27:58.185567Z",
+            "level": "info",
+            "message": "GET b'_3ca82e0039adc3d1|languages'",
+            "category": "redis",
+            "data": {
+              "db.operation": "GET",
+              "redis.command": "GET",
+              "redis.is_cluster": false,
+              "redis.key": "_3ca82e0039adc3d1|languages"
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T09:27:58.186036Z",
+            "level": "info",
+            "message": "HGET b'_3ca82e0039adc3d1|defaults' [Filtered]",
+            "category": "redis",
+            "data": {
+              "db.operation": "HGET",
+              "redis.command": "HGET",
+              "redis.is_cluster": false
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T09:27:58.186284Z",
+            "level": "info",
+            "message": "GET b'_3ca82e0039adc3d1|all_apps'",
+            "category": "redis",
+            "data": {
+              "db.operation": "GET",
+              "redis.command": "GET",
+              "redis.is_cluster": false,
+              "redis.key": "_3ca82e0039adc3d1|all_apps"
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T09:27:58.187424Z",
+            "level": "info",
+            "message": "GET b'_3ca82e0039adc3d1|recorder-intercept'",
+            "category": "redis",
+            "data": {
+              "db.operation": "GET",
+              "redis.command": "GET",
+              "redis.is_cluster": false,
+              "redis.key": "_3ca82e0039adc3d1|recorder-intercept"
+            },
+            "event_id": null
+          },
+          {
+            "type": "default",
+            "timestamp": "2026-04-27T09:27:58.187525Z",
+            "level": "info",
+            "message": "Request to /api/method/hrms.api.mosaic_webhook.receive",
+            "category": "frappe.request",
+            "data": {
+              "doctype": "",
+              "method": ""
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T09:27:58.187914Z",
+            "level": "info",
+            "message": "GET b'_3ca82e0039adc3d1|server_script_map'",
+            "category": "redis",
+            "data": {
+              "db.operation": "GET",
+              "redis.command": "GET",
+              "redis.is_cluster": false,
+              "redis.key": "_3ca82e0039adc3d1|server_script_map"
+            },
+            "event_id": null
+          },
+          {
+            "type": "default",
+            "timestamp": "2026-04-27T09:27:58.188477Z",
+            "level": "info",
+            "message": "mosaic_webhook_receive",
+            "category": "bei.backend",
+            "data": {
+              "endpoint_or_job": "hrms.api.mosaic_webhook.receive",
+              "module": "mosaic",
+              "mutation_type": "update",
+              "phase": null,
+              "route": "/api/method/hrms.api.mosaic_webhook.receive"
+            },
+            "event_id": null
+          },
+          {
+            "type": "default",
+            "timestamp": "2026-04-27T09:27:58.188676Z",
+            "level": "info",
+            "message": "handle_order_completed",
+            "category": "bei.backend",
+            "data": {
+              "endpoint_or_job": "hrms.api.mosaic_webhook.receive",
+              "module": "mosaic",
+              "mutation_type": "create",
+              "phase": null,
+              "route": "/api/method/hrms.api.mosaic_webhook.receive"
+            },
+            "event_id": null
+          },
+          {
+            "type": "http",
+            "timestamp": "2026-04-27T09:27:58.497123Z",
+            "level": "info",
+            "message": null,
+            "category": "httplib",
+            "data": {
+              "http.fragment": "",
+              "http.method": "POST",
+              "http.query": "",
+              "http.response.status_code": 200,
+              "reason": "OK",
+              "thread.id": "135485090543296",
+              "thread.name": "ThreadPoolExecutor-0_0",
+              "url": "https://csnniykjrychgajfrgua.supabase.co/rest/v1/pos_orders"
+            },
+            "event_id": null
+          },
+          {
+            "type": "http",
+            "timestamp": "2026-04-27T09:27:58.634108Z",
+            "level": "warning",
+            "message": null,
+            "category": "httplib",
+            "data": {
+              "http.fragment": "",
+              "http.method": "POST",
+              "http.query": "",
+              "http.response.status_code": 409,
+              "reason": "Conflict",
+              "thread.id": "135485090543296",
+              "thread.name": "ThreadPoolExecutor-0_0",
+              "url": "https://csnniykjrychgajfrgua.supabase.co/rest/v1/pos_order_items"
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T09:27:58.635357Z",
+            "level": "info",
+            "message": "HGET b'_3ca82e0039adc3d1|doctype_meta' [Filtered]",
+            "category": "redis",
+            "data": {
+              "db.operation": "HGET",
+              "redis.command": "HGET",
+              "redis.is_cluster": false
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-27T09:27:58.636096Z",
+            "level": "info",
+            "message": "GET b'_3ca82e0039adc3d1|document_cache::System Settings::System Settings'",
+            "category": "redis",
+            "data": {
+              "db.operation": "GET",
+              "redis.command": "GET",
+              "redis.is_cluster": false,
+              "redis.key": "_3ca82e0039adc3d1|document_cache::System Settings::System Settings"
+            },
+            "event_id": null
+          }
+        ]
+      },
+      "type": "breadcrumbs"
+    },
+    {
+      "data": {
+        "apiTarget": null,
+        "method": "POST",
+        "url": "http://hq.bebang.ph/api/method/hrms.api.mosaic_webhook.receive",
+        "query": [],
+        "fragment": null,
+        "data": null,
+        "headers": [
+          [
+            "Accept",
+            "application/json"
+          ],
+          [
+            "Accept-Encoding",
+            "gzip, br"
+          ],
+          [
+            "Cdn-Loop",
+            "cloudflare; loops=1"
+          ],
+          [
+            "Cf-Connecting-Ip",
+            "18.139.58.63"
+          ],
+          [
+            "Cf-Ipcountry",
+            "SG"
+          ],
+          [
+            "Cf-Ray",
+            "9f2ccb5c7ecdce23-SIN"
+          ],
+          [
+            "Cf-Visitor",
+            "{\"scheme\":\"https\"}"
+          ],
+          [
+            "Connection",
+            "close"
+          ],
+          [
+            "Content-Length",
+            "1415"
+          ],
+          [
+            "Content-Type",
+            "application/json"
+          ],
+          [
+            "Host",
+            "hq.bebang.ph"
+          ],
+          [
+            "User-Agent",
+            "GuzzleHttp/7"
+          ],
+          [
+            "X-Forwarded-For",
+            ""
+          ],
+          [
+            "X-Forwarded-Proto",
+            "https"
+          ],
+          [
+            "X-Frappe-Site-Name",
+            "hq.bebang.ph"
+          ],
+          [
+            "X-Use-X-Accel-Redirect",
+            "True"
+          ]
+        ],
+        "cookies": [],
+        "env": {
+          "SERVER_NAME": "0.0.0.0",
+          "SERVER_PORT": "8000"
+        },
+        "inferredContentType": "application/json"
+      },
+      "type": "request"
+    }
+  ],
+  "dist": null,
+  "message": "",
+  "title": "HTTPError: 409 Client Error: Conflict for url: https://csnniykjrychgajfrgua.supabase.co/rest/v1/pos_order_items",
+  "location": "requests/models.py",
+  "user": {
+    "id": "hq.bebang.ph",
+    "email": null,
+    "username": null,
+    "ip_address": null,
+    "name": null,
+    "geo": {
+      "country_code": "SG",
+      "city": "Singapore",
+      "region": "Singapore"
+    },
+    "data": null
+  },
+  "contexts": {
+    "JSON Body": {
+      "data": {
+        "bill_number": 39399,
+        "billed_at": "2026-04-27T07:41:11.000000Z",
+        "business_date": "2026-04-27",
+        "cancellation_reason": null,
+        "cancelled_at": null,
+        "completed_at": "2026-04-27T09:09:44.000000Z",
+        "fulfillment_option": "DELIVERY",
+        "id": 51870449,
+        "items": [
+          {
+            "gross_sales": 684,
+            "item_code": "177837",
+            "modifiers": [],
+            "name": "The Mango Supreme",
+            "net_sales": 610.7143,
+            "plu": "177837",
+            "price": 228,
+            "product_id": 177837,
+            "quantity": 3,
+            "sku": null,
+            "vat_amount": 73.2857,
+            "vat_exempt_sales": 0,
+            "vatable_sales": 610.7143,
+            "zero_rated_sales": 0
+          },
+          {
+            "gross_sales": 684,
+            "item_code": "175744",
+            "modifiers": [],
+            "name": "Presidential",
+            "net_sales": 610.7143,
+            "plu": "175744",
+            "price": 228,
+            "product_id": 175744,
+            "quantity": 3,
+            "sku": null,
+            "vat_amount": 73.2857,
+            "vat_exempt_sales": 0,
+            "vatable_sales": 610.7143,
+            "zero_rated_sales": 0
+          }
+        ],
+        "location_id": 2340,
+        "order_status": "COMPLETED",
+        "paid_at": "2026-04-27T07:41:11.000000Z",
+        "pax_count": 1,
+        "payment_methods": [
+          {
+            "paid_amount": 0,
+            "payment_type": "Cash",
+            "returned_amount": 0
+          }
+        ],
+        "payment_status": "PAID",
+        "price_breakdown": {
+          "delivery_fee": null,
+          "gross_sales": 1368,
+          "is_free_delivery": false,
+          "net_sales": 1221.4286,
+          "original_gross_sales": 0,
+          "total_discounts": 0,
+          "vat_amount": 146.5714,
+          "vat_exempt_sales": 0,
+          "vatable_sales": 1221.4286,
+          "zero_rated_sales": 0
+        },
+        "receipt_number": 39296,
+        "reference_id": "BS9625104680",
+        "service_channel_id": 19,
+        "service_type_id": 3,
+        "short_order_id": "BS9625104680",
+        "taxes": []
+      },
+      "event": "order.completed",
+      "timestamp": "2026-04-27 17:27:58",
+      "type": "default"
+    },
+    "bei_backend_observability": {
+      "extras": {},
+      "frappe_cmd": "hrms.api.mosaic_webhook.receive",
+      "http_method": "POST",
+      "request_route": "/api/method/hrms.api.mosaic_webhook.receive",
+      "type": "default"
+    },
+    "runtime": {
+      "runtime": "CPython 3.11.6",
+      "name": "CPython",
+      "version": "3.11.6",
+      "build": "3.11.6 (main, Nov 29 2023, 04:30:13) [GCC 12.2.0]",
+      "type": "runtime"
+    },
+    "trace": {
+      "trace_id": "03ecfc4f0c1c4ed2b070a985170dae2a",
+      "span_id": "9273c2fbb2a82e97",
+      "status": "unknown",
+      "client_sample_rate": 0.1,
+      "type": "trace"
+    }
+  },
+  "sdk": {
+    "name": "sentry.python",
+    "version": "2.56.0"
+  },
+  "context": {
+    "sys.argv": [
+      "/home/frappe/frappe-bench/env/bin/gunicorn",
+      "--chdir=/home/frappe/frappe-bench/sites",
+      "--bind=0.0.0.0:8000",
+      "--threads=4",
+      "--workers=2",
+      "--worker-class=gthread",
+      "--worker-tmp-dir=/dev/shm",
+      "--timeout=120",
+      "--preload",
+      "frappe.app:application"
+    ]
+  },
+  "packages": {
+    "annotated-types": "0.7.0",
+    "anyio": "4.12.1",
+    "asttokens": "3.0.1",
+    "babel": "2.13.1",
+    "backcall": "0.2.0",
+    "backoff": "2.2.1",
+    "barcodenumber": "0.5.0",
+    "beautifulsoup4": "4.12.3",
+    "bleach": "6.3.0",
+    "bleach-allowlist": "1.0.3",
+    "boto3": "1.42.74",
+    "botocore": "1.42.74",
+    "braintree": "4.20.0",
+    "brotli": "1.2.0",
+    "cachetools": "7.0.5",
+    "cairocffi": "1.5.1",
+    "certifi": "2026.2.25",
+    "cffi": "2.0.0",
+    "chardet": "5.2.0",
+    "charset-normalizer": "3.4.6",
+    "click": "8.2.1",
+    "croniter": "6.0.0",
+    "cryptography": "46.0.5",
+    "cssselect": "1.4.0",
+    "cssselect2": "0.9.0",
+    "cssutils": "2.11.1",
+    "dataclasses-json": "0.5.14",
+    "decorator": "5.2.1",
+    "distro": "1.9.0",
+    "docopt": "0.6.2",
+    "dropbox": "12.0.2",
+    "email-reply-parser": "0.5.12",
+    "erpnext": "15.102.0",
+    "et_xmlfile": "2.0.0",
+    "executing": "2.2.1",
+    "filelock": "3.20.4",
+    "filetype": "1.2.0",
+    "fonttools": "4.62.1",
+    "frappe": "15.103.0",
+    "gitdb": "4.0.12",
+    "gitpython": "3.1.46",
+    "gocardless_pro": "1.22.0",
+    "google-ai-generativelanguage": "0.6.15",
+    "google-api-core": "2.30.0",
+    "google-api-python-client": "2.193.0",
+    "google-auth": "2.49.1",
+    "google-auth-httplib2": "0.3.0",
+    "google-auth-oauthlib": "1.2.4",
+    "google-generativeai": "0.8.6",
+    "googleapis-common-protos": "1.73.0",
+    "googlemaps": "4.10.0",
+    "grpcio": "1.78.0",
+    "grpcio-status": "1.71.2",
+    "gunicorn": "23.0.0",
+    "h11": "0.16.0",
+    "hiredis": "2.2.3",
+    "holidays": "0.93",
+    "hrms": "16.0.0.dev0",
+    "html5lib": "1.1",
+    "httpcore": "1.0.9",
+    "httplib2": "0.31.2",
+    "httpx": "0.28.1",
+    "idna": "3.11",
+    "ipython": "8.15.0",
+    "isodate": "0.6.1",
+    "jedi": "0.19.2",
+    "jinja2": "3.1.6",
+    "jiter": "0.13.0",
+    "jmespath": "1.1.0",
+    "joblib": "1.5.3",
+    "ldap3": "2.9.1",
+    "lxml": "6.0.2",
+    "markdown2": "2.5.5",
+    "markdownify": "0.14.1",
+    "markupsafe": "3.0.3",
+    "marshmallow": "3.26.2",
+    "matplotlib-inline": "0.2.1",
+    "maxminddb": "3.1.1",
+    "maxminddb-geolite2": "2018.703",
+    "monotonic": "1.6",
+    "more-itertools": "10.8.0",
+    "mypy_extensions": "1.1.0",
+    "num2words": "0.5.14",
+    "numpy": "2.4.3",
+    "oauthlib": "3.3.1",
+    "openai": "2.29.0",
+    "openpyxl": "3.1.5",
+    "packaging": "26.0",
+    "pandas": "3.0.1",
+    "parso": "0.8.6",
+    "passlib": "1.7.4",
+    "payments": "0.0.1",
+    "paytmchecksum": "1.7.0",
+    "pdfkit": "1.0.0",
+    "pexpect": "4.9.0",
+    "phonenumbers": "8.13.55",
+    "pickleshare": "0.7.5",
+    "pillow": "12.1.1",
+    "pip": "26.0.1",
+    "plaid-python": "7.2.1",
+    "ply": "3.11",
+    "posthog": "3.21.0",
+    "premailer": "3.10.0",
+    "prompt_toolkit": "3.0.52",
+    "proto-plus": "1.27.1",
+    "protobuf": "5.29.6",
+    "psutil": "5.9.8",
+    "psycopg2-binary": "2.9.11",
+    "ptyprocess": "0.7.0",
+    "pure_eval": "0.2.3",
+    "pyasn1": "0.6.3",
+    "pyasn1_modules": "0.4.2",
+    "pycountry": "22.3.5",
+    "pycparser": "3.0",
+    "pycryptodome": "3.23.0",
+    "pydantic": "2.12.5",
+    "pydantic_core": "2.41.5",
+    "pydyf": "0.12.1",
+    "pygments": "2.19.2",
+    "pyjwt": "2.8.0",
+    "pymysql": "1.1.1",
+    "pyopenssl": "25.3.0",
+    "pyotp": "2.9.0",
+    "pyparsing": "3.3.2",
+    "pypdf": "6.8.0",
+    "pyphen": "0.17.2",
+    "pypika": "0.48.9",
+    "pypng": "0.20220715.0",
+    "pyqrcode": "1.2.1",
+    "python-dateutil": "2.9.0.post0",
+    "python-stdnum": "2.2",
+    "python-youtube": "0.8.3",
+    "pytz": "2025.2",
+    "pyyaml": "6.0.3",
+    "rapidfuzz": "3.12.2",
+    "rauth": "0.7.3",
+    "razorpay": "2.0.1",
+    "redis": "4.5.5",
+    "requests": "2.32.5",
+    "requests-oauthlib": "1.3.1",
+    "restrictedpython": "8.1",
+    "rq": "1.15.1",
+    "rsa": "4.9.1",
+    "s3transfer": "0.16.0",
+    "scikit-learn": "1.8.0",
+    "scipy": "1.17.1",
+    "semantic-version": "2.10.0",
+    "sentry-sdk": "2.56.0",
+    "setuptools": "70.3.0",
+    "six": "1.17.0",
+    "smmap": "5.0.3",
+    "sniffio": "1.3.1",
+    "soupsieve": "2.8.3",
+    "sql_metadata": "2.11.0",
+    "sqlparse": "0.5.5",
+    "stack-data": "0.6.3",
+    "stone": "3.3.1",
+    "stripe": "10.12.0",
+    "tenacity": "8.2.3",
+    "terminaltables": "3.1.10",
+    "threadpoolctl": "3.6.0",
+    "tinycss2": "1.5.1",
+    "tinyhtml5": "2.1.0",
+    "tomli": "2.0.2",
+    "tqdm": "4.67.3",
+    "traceback-with-variables": "2.0.4",
+    "traitlets": "5.14.3",
+    "typing-inspect": "0.9.0",
+    "typing-inspection": "0.4.2",
+    "typing_extensions": "4.15.0",
+    "unidecode": "1.3.8",
+    "uritemplate": "4.2.0",
+    "urllib3": "2.6.3",
+    "vobject": "0.9.9",
+    "wcwidth": "0.6.0",
+    "weasyprint": "68.0",
+    "webencodings": "0.5.1",
+    "werkzeug": "3.1.6",
+    "wheel": "0.46.3",
+    "whoosh": "2.7.4",
+    "xlrd": "2.0.2",
+    "zopfli": "0.4.1",
+    "zxcvbn": "4.4.28"
+  },
+  "type": "error",
+  "metadata": {
+    "filename": "requests/models.py",
+    "function": "raise_for_status",
+    "in_app_frame_mix": "system-only",
+    "type": "HTTPError",
+    "value": "409 Client Error: Conflict for url: https://csnniykjrychgajfrgua.supabase.co/rest/v1/pos_order_items"
+  },
+  "tags": [
+    {
+      "key": "action",
+      "value": "handle_order_completed"
+    },
+    {
+      "key": "endpoint_or_job",
+      "value": "hrms.api.mosaic_webhook.receive"
+    },
+    {
+      "key": "environment",
+      "value": "development"
+    },
+    {
+      "key": "frappe_cmd",
+      "value": "hrms.api.mosaic_webhook.receive"
+    },
+    {
+      "key": "frappe_user",
+      "value": "Guest"
+    },
+    {
+      "key": "handled",
+      "value": "no"
+    },
+    {
+      "key": "http_method",
+      "value": "POST"
+    },
+    {
+      "key": "level",
+      "value": "error"
+    },
+    {
+      "key": "mechanism",
+      "value": "wsgi"
+    },
+    {
+      "key": "module",
+      "value": "mosaic"
+    },
+    {
+      "key": "mutation_type",
+      "value": "create"
+    },
+    {
+      "key": "release",
+      "value": "bei-hrms@16.0.0-dev"
+    },
+    {
+      "key": "route",
+      "value": "/api/method/hrms.api.mosaic_webhook.receive"
+    },
+    {
+      "key": "route_action",
+      "value": "receive"
+    },
+    {
+      "key": "runtime",
+      "value": "CPython 3.11.6"
+    },
+    {
+      "key": "runtime.name",
+      "value": "CPython"
+    },
+    {
+      "key": "server_name",
+      "value": "a486d1dac125"
+    },
+    {
+      "key": "surface",
+      "value": "frappe_whitelist"
+    },
+    {
+      "key": "transaction",
+      "value": "/api/method/hrms.api.mosaic_webhook.receive"
+    },
+    {
+      "key": "url",
+      "value": "http://hq.bebang.ph/api/method/hrms.api.mosaic_webhook.receive"
+    },
+    {
+      "key": "user",
+      "value": "id:hq.bebang.ph",
+      "query": "user.id:\"hq.bebang.ph\""
+    }
+  ],
+  "platform": "python",
+  "dateReceived": "2026-04-27T09:27:58.646849Z",
+  "errors": [],
+  "occurrence": null,
+  "_meta": {
+    "entries": {
+      "0": {
+        "data": {
+          "values": {
+            "0": {
+              "": null,
+              "type": null,
+              "value": null,
+              "mechanism": null,
+              "threadId": null,
+              "module": null,
+              "stacktrace": {
+                "": null,
+                "frames": {
+                  "1": {
+                    "vars": {
+                      "headers": {
+                        "Authorization": {
+                          "": {
+                            "rem": [
+                              [
+                                "@password:filter",
+                                "s",
+                                0,
+                                10
+                              ]
+                            ],
+                            "len": 50,
+                            "chunks": [
+                              {
+                                "type": "redaction",
+                                "text": "[Filtered]",
+                                "rule_id": "@password:filter",
+                                "remark": "s"
+                              }
+                            ]
+                          }
+                        },
+                        "apikey": {
+                          "": {
+                            "rem": [
+                              [
+                                "@password:filter",
+                                "s",
+                                0,
+                                10
+                              ]
+                            ],
+                            "len": 43,
+                            "chunks": [
+                              {
+                                "type": "redaction",
+                                "text": "[Filtered]",
+                                "rule_id": "@password:filter",
+                                "remark": "s"
+                              }
+                            ]
+                          }
+                        }
+                      },
+                      "key": {
+                        "": {
+                          "rem": [
+                            [
+                              "@password:filter",
+                              "s",
+                              0,
+                              10
+                            ]
+                          ],
+                          "len": 43,
+                          "chunks": [
+                            {
+                              "type": "redaction",
+                              "text": "[Filtered]",
+                              "rule_id": "@password:filter",
+                              "remark": "s"
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  }
+                },
+                "framesOmitted": null,
+                "registers": null
+              }
+            }
+          }
+        }
+      },
+      "2": {
+        "data": {
+          "": null,
+          "apiTarget": null,
+          "method": null,
+          "url": null,
+          "query": null,
+          "data": null,
+          "headers": {
+            "12": {
+              "1": {
+                "": {
+                  "rem": [
+                    [
+                      "!config",
+                      "x"
+                    ]
+                  ],
+                  "chunks": []
+                }
+              }
+            }
+          },
+          "cookies": null,
+          "env": null
+        }
+      }
+    },
+    "message": null,
+    "user": null,
+    "contexts": null,
+    "sdk": null,
+    "context": null,
+    "packages": null,
+    "tags": {}
+  },
+  "crashFile": null,
+  "culprit": "/api/method/hrms.api.mosaic_webhook.receive",
+  "dateCreated": "2026-04-27T09:27:58.637000Z",
+  "fingerprints": [
+    "2ce09b046826b5c086fad88f49c609d1"
+  ],
+  "groupingConfig": {
+    "enhancements": "KLUv_SAd6QAAkwORuGFsbC1wbGF0Zm9ybXM6MjAyNi0wMS0yMJA#KLUv_SAd6QAAkwORuGFsbC1wbGF0Zm9ybXM6MjAyNi0wMS0yMJA#KLUv_SAd6QAAkwORuGFsbC1wbGF0Zm9ybXM6MjAyNi0wMS0yMJA",
+    "id": "newstyle:2026-01-20"
+  },
+  "release": {
+    "id": 1670333880,
+    "version": "bei-hrms@16.0.0-dev",
+    "status": "open",
+    "shortVersion": "bei-hrms@16.0.0-dev",
+    "versionInfo": {
+      "package": "bei-hrms",
+      "version": {
+        "raw": "16.0.0-dev",
+        "major": 16,
+        "minor": 0,
+        "patch": 0,
+        "pre": "dev",
+        "buildCode": null,
+        "components": 3
+      },
+      "description": "16.0.0-dev",
+      "buildHash": null
+    },
+    "ref": null,
+    "url": null,
+    "dateReleased": null,
+    "dateCreated": "2026-02-10T11:57:53.986333Z",
+    "data": {},
+    "newGroups": 548,
+    "owner": null,
+    "commitCount": 0,
+    "lastCommit": null,
+    "deployCount": 0,
+    "lastDeploy": null,
+    "authors": [],
+    "projects": [
+      {
+        "id": 4510861213302784,
+        "slug": "bei-hrms",
+        "name": "bei-hrms",
+        "newGroups": 548,
+        "platform": "python",
+        "platforms": [],
+        "hasHealthData": false
+      }
+    ],
+    "firstEvent": "2026-02-10T11:57:53Z",
+    "lastEvent": "2026-04-27T11:19:10Z",
+    "currentProjectMeta": {},
+    "userAgent": null
+  },
+  "userReport": null,
+  "sdkUpdates": [
+    {
+      "type": "updateSdk",
+      "sdkName": "sentry.python",
+      "newSdkVersion": "2.58.0",
+      "sdkUrl": "https://docs.sentry.io/platforms/python",
+      "enables": []
+    }
+  ],
+  "resolvedWith": [
+    null
+  ],
+  "nextEventID": null,
+  "previousEventID": "21fc887408994d0db1cf462627275a53"
+}

@@ -1,0 +1,1334 @@
+{
+  "id": "b0a871e09813459994a18ea40620927e",
+  "groupID": "7438734283",
+  "eventID": "b0a871e09813459994a18ea40620927e",
+  "projectID": "4510861213040640",
+  "size": 21481,
+  "entries": [
+    {
+      "data": {
+        "values": [
+          {
+            "type": "Error",
+            "value": "Frappe API error: 417 - Warehouse ROBINSONS ANTIPOLO - BEBANG ENTERPRISE INC. does not belong to company BEBANG ENTERPRISE INC.",
+            "mechanism": {
+              "type": "generic",
+              "handled": true
+            },
+            "threadId": null,
+            "module": null,
+            "stacktrace": {
+              "frames": [
+                {
+                  "filename": "app/dashboard/store-ops/order-approvals/page.tsx",
+                  "absPath": "turbopack:///[project]/app/dashboard/store-ops/order-approvals/page.tsx",
+                  "module": "app/dashboard/store-ops/order-approvals/page",
+                  "package": null,
+                  "platform": null,
+                  "instructionAddr": null,
+                  "symbolAddr": null,
+                  "function": "B",
+                  "rawFunction": null,
+                  "symbol": null,
+                  "context": [
+                    [
+                      183,
+                      "          ? `DR Number: ${result.data.dr_number}`"
+                    ],
+                    [
+                      184,
+                      "          : result.data.message || \"Approval recorded.\","
+                    ],
+                    [
+                      185,
+                      "      });"
+                    ],
+                    [
+                      186,
+                      "      onApproved();"
+                    ],
+                    [
+                      187,
+                      "    } else {"
+                    ],
+                    [
+                      188,
+                      "      handleError(new Error(result.error || \"Failed to approve order\"), {"
+                    ],
+                    [
+                      189,
+                      "        title: \"Failed to approve store order\","
+                    ],
+                    [
+                      190,
+                      "        context: \"reviewing a store order in the approval hub\","
+                    ],
+                    [
+                      191,
+                      "        module: \"approval_hub\","
+                    ],
+                    [
+                      192,
+                      "        route: \"/dashboard/store-ops/order-approvals\","
+                    ],
+                    [
+                      193,
+                      "        actionName: \"approve_store_order\","
+                    ]
+                  ],
+                  "lineNo": 188,
+                  "colNo": 23,
+                  "parentIndex": null,
+                  "sampleCount": null,
+                  "inApp": true,
+                  "trust": null,
+                  "errors": null,
+                  "lock": null,
+                  "sourceLink": null,
+                  "vars": null,
+                  "map": "27d42a69b39c231a.js.map",
+                  "origFunction": "?",
+                  "origAbsPath": "?",
+                  "origFilename": "?",
+                  "origLineNo": "?",
+                  "origColNo": "?"
+                }
+              ],
+              "framesOmitted": null,
+              "registers": null,
+              "hasSystemFrames": true
+            },
+            "rawStacktrace": {
+              "frames": [
+                {
+                  "filename": "app:///_next/static/chunks/a3f5b8249f9fb8c8.js",
+                  "absPath": "app:///_next/static/chunks/a3f5b8249f9fb8c8.js?dpl=dpl_An82L8yrsZqRX87uF9NPvbDVwdmC",
+                  "module": null,
+                  "package": null,
+                  "platform": null,
+                  "instructionAddr": null,
+                  "symbolAddr": null,
+                  "function": "B",
+                  "rawFunction": null,
+                  "symbol": null,
+                  "context": [
+                    [
+                      1,
+                      "{snip} d\"!=typeof self?self:{},n=(new e.Error).stack;n&&((e._debugIds|| (e._debugIds={}))[n]=\"92499968-5d0b-f89f-875a-e6970671b9ee\")}catch(e){}}();"
+                    ],
+                    [
+                      2,
+                      "{snip} ata.message||\"Approval recorded.\"}),s()):(0,k.handleError)(Error(t.error||\"Failed to approve order\"),{title:\"Failed to approve store order\", {snip}"
+                    ],
+                    [
+                      3,
+                      ""
+                    ],
+                    [
+                      4,
+                      "//# debugId=92499968-5d0b-f89f-875a-e6970671b9ee"
+                    ],
+                    [
+                      5,
+                      "//# sourceMappingURL=27d42a69b39c231a.js.map"
+                    ]
+                  ],
+                  "lineNo": 2,
+                  "colNo": 20264,
+                  "parentIndex": null,
+                  "sampleCount": null,
+                  "inApp": true,
+                  "trust": null,
+                  "errors": null,
+                  "lock": null,
+                  "sourceLink": null,
+                  "vars": null
+                }
+              ],
+              "framesOmitted": null,
+              "registers": null,
+              "hasSystemFrames": true
+            },
+            "rawValue": null,
+            "rawModule": null,
+            "rawType": null
+          }
+        ],
+        "hasSystemFrames": true,
+        "excOmitted": null
+      },
+      "type": "exception"
+    },
+    {
+      "data": {
+        "values": [
+          {
+            "type": "default",
+            "timestamp": "2026-04-27T09:13:30.315000Z",
+            "level": "info",
+            "message": null,
+            "category": "navigation",
+            "data": {
+              "from": "/dashboard/store-ops/order-approvals",
+              "to": "/dashboard/store-ops/order-approvals"
+            },
+            "event_id": null
+          },
+          {
+            "type": "default",
+            "timestamp": "2026-04-27T09:13:30.318000Z",
+            "level": "info",
+            "message": "[BEI-Tasks] Cache-bust: 41803 - Admin sidebar visibility hotfix plus client and service-worker cache reset",
+            "category": "console",
+            "data": {
+              "arguments": [
+                "[BEI-Tasks] Cache-bust: 41803 - Admin sidebar visibility hotfix plus client and service-worker cache reset"
+              ],
+              "logger": "console"
+            },
+            "event_id": null
+          },
+          {
+            "type": "http",
+            "timestamp": "2026-04-27T09:13:30.431000Z",
+            "level": "info",
+            "message": null,
+            "category": "fetch",
+            "data": {
+              "__span": "88208b7c1e222d00",
+              "method": "GET",
+              "response_body_size": 719,
+              "status_code": 200,
+              "url": "https://my.bebang.ph/dashboard?_rsc=12oh1"
+            },
+            "event_id": null
+          },
+          {
+            "type": "http",
+            "timestamp": "2026-04-27T09:13:30.433000Z",
+            "level": "info",
+            "message": null,
+            "category": "fetch",
+            "data": {
+              "__span": "89debbebbfd315e4",
+              "method": "GET",
+              "response_body_size": 859,
+              "status_code": 200,
+              "url": "https://my.bebang.ph/clearance/exit-interview?_rsc=12oh1"
+            },
+            "event_id": null
+          },
+          {
+            "type": "http",
+            "timestamp": "2026-04-27T09:13:30.433000Z",
+            "level": "info",
+            "message": null,
+            "category": "fetch",
+            "data": {
+              "__span": "a6beb3a9ff3d4559",
+              "method": "GET",
+              "response_body_size": 719,
+              "status_code": 200,
+              "url": "https://my.bebang.ph/clearance?_rsc=12oh1"
+            },
+            "event_id": null
+          },
+          {
+            "type": "http",
+            "timestamp": "2026-04-27T09:13:30.435000Z",
+            "level": "info",
+            "message": null,
+            "category": "fetch",
+            "data": {
+              "__span": "8c77edd11abb9322",
+              "method": "GET",
+              "response_body_size": 851,
+              "status_code": 200,
+              "url": "https://my.bebang.ph/dashboard/my-profile?_rsc=12oh1"
+            },
+            "event_id": null
+          },
+          {
+            "type": "http",
+            "timestamp": "2026-04-27T09:13:30.507000Z",
+            "level": "info",
+            "message": null,
+            "category": "fetch",
+            "data": {
+              "__span": "b88d688e56e210d7",
+              "method": "GET",
+              "status_code": 200,
+              "url": "https://my.bebang.ph/dashboard?_rsc=1g8gt"
+            },
+            "event_id": null
+          },
+          {
+            "type": "http",
+            "timestamp": "2026-04-27T09:13:30.509000Z",
+            "level": "info",
+            "message": null,
+            "category": "fetch",
+            "data": {
+              "__span": "8699c5e7e8c6befa",
+              "method": "GET",
+              "status_code": 200,
+              "url": "https://my.bebang.ph/clearance/exit-interview?_rsc=1ugw0"
+            },
+            "event_id": null
+          },
+          {
+            "type": "http",
+            "timestamp": "2026-04-27T09:13:30.509000Z",
+            "level": "info",
+            "message": null,
+            "category": "fetch",
+            "data": {
+              "__span": "9dc95cb33ace910d",
+              "method": "GET",
+              "status_code": 200,
+              "url": "https://my.bebang.ph/dashboard?_rsc=1ugw0"
+            },
+            "event_id": null
+          },
+          {
+            "type": "http",
+            "timestamp": "2026-04-27T09:13:30.538000Z",
+            "level": "info",
+            "message": null,
+            "category": "fetch",
+            "data": {
+              "__span": "84642371a75e4f74",
+              "method": "GET",
+              "status_code": 200,
+              "url": "https://my.bebang.ph/clearance/exit-interview?_rsc=169g7"
+            },
+            "event_id": null
+          },
+          {
+            "type": "http",
+            "timestamp": "2026-04-27T09:13:30.574000Z",
+            "level": "info",
+            "message": null,
+            "category": "fetch",
+            "data": {
+              "__span": "a06ce82833b003fb",
+              "method": "GET",
+              "status_code": 200,
+              "url": "https://my.bebang.ph/clearance?_rsc=1ugw0"
+            },
+            "event_id": null
+          },
+          {
+            "type": "http",
+            "timestamp": "2026-04-27T09:13:30.576000Z",
+            "level": "info",
+            "message": null,
+            "category": "fetch",
+            "data": {
+              "__span": "a170a4ed8ea0389f",
+              "method": "GET",
+              "status_code": 200,
+              "url": "https://my.bebang.ph/clearance/exit-interview?_rsc=78u3h"
+            },
+            "event_id": null
+          },
+          {
+            "type": "http",
+            "timestamp": "2026-04-27T09:13:30.585000Z",
+            "level": "info",
+            "message": null,
+            "category": "fetch",
+            "data": {
+              "__span": "8dea4cce90240ebb",
+              "method": "GET",
+              "response_body_size": 422,
+              "status_code": 200,
+              "url": "https://my.bebang.ph/clearance/exit-interview?_rsc=1fz6g"
+            },
+            "event_id": null
+          },
+          {
+            "type": "http",
+            "timestamp": "2026-04-27T09:13:30.603000Z",
+            "level": "info",
+            "message": null,
+            "category": "fetch",
+            "data": {
+              "__span": "b51bd36abb858627",
+              "method": "GET",
+              "status_code": 200,
+              "url": "https://my.bebang.ph/clearance?_rsc=1t766"
+            },
+            "event_id": null
+          },
+          {
+            "type": "http",
+            "timestamp": "2026-04-27T09:13:30.644000Z",
+            "level": "info",
+            "message": null,
+            "category": "fetch",
+            "data": {
+              "__span": "bb721de6263a57b9",
+              "method": "GET",
+              "status_code": 200,
+              "url": "https://my.bebang.ph/dashboard/my-profile?_rsc=1ugw0"
+            },
+            "event_id": null
+          },
+          {
+            "type": "http",
+            "timestamp": "2026-04-27T09:13:30.647000Z",
+            "level": "info",
+            "message": null,
+            "category": "fetch",
+            "data": {
+              "__span": "9c1d13caefc99bec",
+              "method": "GET",
+              "status_code": 200,
+              "url": "https://my.bebang.ph/dashboard/my-profile?_rsc=7z2yu"
+            },
+            "event_id": null
+          },
+          {
+            "type": "http",
+            "timestamp": "2026-04-27T09:13:30.653000Z",
+            "level": "info",
+            "message": null,
+            "category": "fetch",
+            "data": {
+              "__span": "a31d42d3daaa5de2",
+              "method": "GET",
+              "status_code": 200,
+              "url": "https://my.bebang.ph/dashboard/my-profile?_rsc=1qxcc"
+            },
+            "event_id": null
+          },
+          {
+            "type": "http",
+            "timestamp": "2026-04-27T09:13:30.654000Z",
+            "level": "info",
+            "message": null,
+            "category": "fetch",
+            "data": {
+              "__span": "9896369b0c3eca40",
+              "method": "GET",
+              "response_body_size": 422,
+              "status_code": 200,
+              "url": "https://my.bebang.ph/dashboard/my-profile?_rsc=yumv8"
+            },
+            "event_id": null
+          },
+          {
+            "type": "http",
+            "timestamp": "2026-04-27T09:13:30.710000Z",
+            "level": "info",
+            "message": null,
+            "category": "fetch",
+            "data": {
+              "__span": "a64f5fc574a466cc",
+              "method": "GET",
+              "status_code": 200,
+              "url": "https://my.bebang.ph/dashboard?_rsc=3vrzv"
+            },
+            "event_id": null
+          },
+          {
+            "type": "http",
+            "timestamp": "2026-04-27T09:13:31.143000Z",
+            "level": "info",
+            "message": null,
+            "category": "fetch",
+            "data": {
+              "__span": "ab54f14ee7fc38d6",
+              "method": "GET",
+              "status_code": 200,
+              "url": "/api/employee/me"
+            },
+            "event_id": null
+          },
+          {
+            "type": "http",
+            "timestamp": "2026-04-27T09:13:31.242000Z",
+            "level": "info",
+            "message": null,
+            "category": "fetch",
+            "data": {
+              "__span": "893aa0bc2827ad55",
+              "method": "GET",
+              "response_body_size": 841,
+              "status_code": 200,
+              "url": "https://my.bebang.ph/dashboard/queue?_rsc=12oh1"
+            },
+            "event_id": null
+          },
+          {
+            "type": "http",
+            "timestamp": "2026-04-27T09:13:31.242000Z",
+            "level": "info",
+            "message": null,
+            "category": "fetch",
+            "data": {
+              "__span": "b61cf0dc9cb8ddcc",
+              "method": "GET",
+              "response_body_size": 857,
+              "status_code": 200,
+              "url": "https://my.bebang.ph/dashboard/communication?_rsc=12oh1"
+            },
+            "event_id": null
+          },
+          {
+            "type": "http",
+            "timestamp": "2026-04-27T09:13:31.244000Z",
+            "level": "info",
+            "message": null,
+            "category": "fetch",
+            "data": {
+              "__span": "aa56b39a1d2d494e",
+              "method": "GET",
+              "response_body_size": 867,
+              "status_code": 200,
+              "url": "https://my.bebang.ph/dashboard/campaign-giveaways?_rsc=12oh1"
+            },
+            "event_id": null
+          },
+          {
+            "type": "http",
+            "timestamp": "2026-04-27T09:13:31.246000Z",
+            "level": "info",
+            "message": null,
+            "category": "fetch",
+            "data": {
+              "__span": "be66547c3473292b",
+              "method": "GET",
+              "response_body_size": 991,
+              "status_code": 200,
+              "url": "https://my.bebang.ph/dashboard/store-ops/order-approvals?_rsc=12oh1"
+            },
+            "event_id": null
+          },
+          {
+            "type": "http",
+            "timestamp": "2026-04-27T09:13:31.304000Z",
+            "level": "info",
+            "message": null,
+            "category": "fetch",
+            "data": {
+              "__span": "881cb48853ce878c",
+              "method": "GET",
+              "response_body_size": 835,
+              "status_code": 200,
+              "url": "https://my.bebang.ph/dashboard/hr?_rsc=12oh1"
+            },
+            "event_id": null
+          },
+          {
+            "type": "http",
+            "timestamp": "2026-04-27T09:13:31.307000Z",
+            "level": "info",
+            "message": null,
+            "category": "fetch",
+            "data": {
+              "__span": "a58f35d7f5c9414f",
+              "method": "GET",
+              "response_body_size": 845,
+              "status_code": 200,
+              "url": "https://my.bebang.ph/dashboard/expense?_rsc=12oh1"
+            },
+            "event_id": null
+          },
+          {
+            "type": "http",
+            "timestamp": "2026-04-27T09:13:31.309000Z",
+            "level": "info",
+            "message": null,
+            "category": "fetch",
+            "data": {
+              "__span": "8837438629166c52",
+              "method": "GET",
+              "status_code": 200,
+              "url": "https://my.bebang.ph/dashboard/accounting/critical-items-control-tower?_rsc=12oh1"
+            },
+            "event_id": null
+          },
+          {
+            "type": "http",
+            "timestamp": "2026-04-27T09:13:31.310000Z",
+            "level": "info",
+            "message": null,
+            "category": "fetch",
+            "data": {
+              "__span": "be893dd38d385afd",
+              "method": "GET",
+              "response_body_size": 979,
+              "status_code": 200,
+              "url": "https://my.bebang.ph/dashboard/store-ops/receiving?_rsc=12oh1"
+            },
+            "event_id": null
+          },
+          {
+            "type": "http",
+            "timestamp": "2026-04-27T09:13:31.372000Z",
+            "level": "info",
+            "message": null,
+            "category": "fetch",
+            "data": {
+              "__span": "bf11e807cf5931aa",
+              "method": "GET",
+              "response_body_size": 422,
+              "status_code": 200,
+              "url": "https://my.bebang.ph/dashboard/communication?_rsc=1j8z1"
+            },
+            "event_id": null
+          },
+          {
+            "type": "http",
+            "timestamp": "2026-04-27T09:13:31.376000Z",
+            "level": "info",
+            "message": null,
+            "category": "fetch",
+            "data": {
+              "__span": "ad6adac2e6378990",
+              "method": "GET",
+              "status_code": 200,
+              "url": "https://my.bebang.ph/dashboard/store-ops/order-approvals?_rsc=1ugw0"
+            },
+            "event_id": null
+          },
+          {
+            "type": "http",
+            "timestamp": "2026-04-27T09:13:31.386000Z",
+            "level": "info",
+            "message": null,
+            "category": "fetch",
+            "data": {
+              "__span": "b36aef13f5435c35",
+              "method": "GET",
+              "status_code": 200,
+              "url": "https://my.bebang.ph/dashboard/communication?_rsc=1xrsg"
+            },
+            "event_id": null
+          },
+          {
+            "type": "http",
+            "timestamp": "2026-04-27T09:13:31.389000Z",
+            "level": "info",
+            "message": null,
+            "category": "fetch",
+            "data": {
+              "__span": "997b213276e75e82",
+              "method": "GET",
+              "status_code": 200,
+              "url": "https://my.bebang.ph/dashboard/communication?_rsc=1ugw0"
+            },
+            "event_id": null
+          },
+          {
+            "type": "http",
+            "timestamp": "2026-04-27T09:13:31.434000Z",
+            "level": "info",
+            "message": null,
+            "category": "fetch",
+            "data": {
+              "__span": "95d6f73545d23cef",
+              "method": "GET",
+              "response_body_size": 422,
+              "status_code": 200,
+              "url": "https://my.bebang.ph/dashboard/store-ops/order-approvals?_rsc=lot9y"
+            },
+            "event_id": null
+          },
+          {
+            "type": "http",
+            "timestamp": "2026-04-27T09:13:31.451000Z",
+            "level": "info",
+            "message": null,
+            "category": "fetch",
+            "data": {
+              "__span": "9e97f052ee12a2e7",
+              "method": "GET",
+              "status_code": 200,
+              "url": "https://my.bebang.ph/dashboard/queue?_rsc=1ugw0"
+            },
+            "event_id": null
+          },
+          {
+            "type": "http",
+            "timestamp": "2026-04-27T09:13:31.451000Z",
+            "level": "info",
+            "message": null,
+            "category": "fetch",
+            "data": {
+              "__span": "adcec986df6596d4",
+              "method": "GET",
+              "response_body_size": 422,
+              "status_code": 200,
+              "url": "https://my.bebang.ph/dashboard/store-ops/order-approvals?_rsc=1gwg2"
+            },
+            "event_id": null
+          },
+          {
+            "type": "http",
+            "timestamp": "2026-04-27T09:13:31.453000Z",
+            "level": "info",
+            "message": null,
+            "category": "fetch",
+            "data": {
+              "__span": "8beeaf648613e001",
+              "method": "GET",
+              "status_code": 200,
+              "url": "https://my.bebang.ph/dashboard/store-ops/order-approvals?_rsc=14gjy"
+            },
+            "event_id": null
+          },
+          {
+            "type": "http",
+            "timestamp": "2026-04-27T09:13:31.502000Z",
+            "level": "info",
+            "message": null,
+            "category": "fetch",
+            "data": {
+              "__span": "938c3d0d355d438f",
+              "method": "GET",
+              "response_body_size": 422,
+              "status_code": 200,
+              "url": "https://my.bebang.ph/dashboard/queue?_rsc=kn1fk"
+            },
+            "event_id": null
+          },
+          {
+            "type": "http",
+            "timestamp": "2026-04-27T09:13:31.511000Z",
+            "level": "info",
+            "message": null,
+            "category": "fetch",
+            "data": {
+              "__span": "8af67e33384ec7a4",
+              "method": "GET",
+              "status_code": 200,
+              "url": "https://my.bebang.ph/dashboard/campaign-giveaways?_rsc=1ugw0"
+            },
+            "event_id": null
+          },
+          {
+            "type": "http",
+            "timestamp": "2026-04-27T09:13:31.512000Z",
+            "level": "info",
+            "message": null,
+            "category": "fetch",
+            "data": {
+              "__span": "976b16d370dc3080",
+              "method": "GET",
+              "status_code": 200,
+              "url": "https://my.bebang.ph/dashboard/campaign-giveaways?_rsc=1v729"
+            },
+            "event_id": null
+          },
+          {
+            "type": "http",
+            "timestamp": "2026-04-27T09:13:31.513000Z",
+            "level": "info",
+            "message": null,
+            "category": "fetch",
+            "data": {
+              "__span": "a0ae41fdbdbc45ac",
+              "method": "GET",
+              "status_code": 200,
+              "url": "https://my.bebang.ph/dashboard/queue?_rsc=y6gsv"
+            },
+            "event_id": null
+          },
+          {
+            "type": "http",
+            "timestamp": "2026-04-27T09:13:31.563000Z",
+            "level": "info",
+            "message": null,
+            "category": "fetch",
+            "data": {
+              "__span": "b5158f4a56cae525",
+              "method": "GET",
+              "status_code": 200,
+              "url": "https://my.bebang.ph/dashboard/campaign-giveaways?_rsc=aff1x"
+            },
+            "event_id": null
+          },
+          {
+            "type": "http",
+            "timestamp": "2026-04-27T09:13:31.575000Z",
+            "level": "info",
+            "message": null,
+            "category": "fetch",
+            "data": {
+              "__span": "80705a683da9ac51",
+              "method": "GET",
+              "status_code": 200,
+              "url": "https://my.bebang.ph/dashboard/accounting/critical-items-control-tower?_rsc=18nzp"
+            },
+            "event_id": null
+          },
+          {
+            "type": "http",
+            "timestamp": "2026-04-27T09:13:31.576000Z",
+            "level": "info",
+            "message": null,
+            "category": "fetch",
+            "data": {
+              "__span": "b4004f853b1220ab",
+              "method": "GET",
+              "response_body_size": 422,
+              "status_code": 200,
+              "url": "https://my.bebang.ph/dashboard/accounting/critical-items-control-tower?_rsc=194ph"
+            },
+            "event_id": null
+          },
+          {
+            "type": "http",
+            "timestamp": "2026-04-27T09:13:31.586000Z",
+            "level": "info",
+            "message": null,
+            "category": "fetch",
+            "data": {
+              "__span": "9df07f6bff31e575",
+              "method": "GET",
+              "status_code": 200,
+              "url": "https://my.bebang.ph/dashboard/accounting/critical-items-control-tower?_rsc=1ugw0"
+            },
+            "event_id": null
+          },
+          {
+            "type": "http",
+            "timestamp": "2026-04-27T09:13:31.633000Z",
+            "level": "info",
+            "message": null,
+            "category": "fetch",
+            "data": {
+              "__span": "b845afc84ff67dd0",
+              "method": "GET",
+              "status_code": 200,
+              "url": "https://my.bebang.ph/dashboard/accounting/critical-items-control-tower?_rsc=pjv4o"
+            },
+            "event_id": null
+          },
+          {
+            "type": "http",
+            "timestamp": "2026-04-27T09:13:31.638000Z",
+            "level": "info",
+            "message": null,
+            "category": "fetch",
+            "data": {
+              "__span": "9174cdeb63b14c75",
+              "method": "GET",
+              "status_code": 200,
+              "url": "https://my.bebang.ph/dashboard/store-ops/receiving?_rsc=1ugw0"
+            },
+            "event_id": null
+          },
+          {
+            "type": "http",
+            "timestamp": "2026-04-27T09:13:31.639000Z",
+            "level": "info",
+            "message": null,
+            "category": "fetch",
+            "data": {
+              "__span": "ac0e135bb592e35f",
+              "method": "GET",
+              "response_body_size": 422,
+              "status_code": 200,
+              "url": "https://my.bebang.ph/dashboard/store-ops/receiving?_rsc=14xnl"
+            },
+            "event_id": null
+          },
+          {
+            "type": "http",
+            "timestamp": "2026-04-27T09:13:31.647000Z",
+            "level": "info",
+            "message": null,
+            "category": "fetch",
+            "data": {
+              "__span": "a36577dcb7f4a8c1",
+              "method": "GET",
+              "status_code": 200,
+              "url": "https://my.bebang.ph/dashboard/store-ops/receiving?_rsc=xcui8"
+            },
+            "event_id": null
+          },
+          {
+            "type": "http",
+            "timestamp": "2026-04-27T09:13:31.699000Z",
+            "level": "info",
+            "message": null,
+            "category": "fetch",
+            "data": {
+              "__span": "9a4358ce67efb165",
+              "method": "GET",
+              "status_code": 200,
+              "url": "https://my.bebang.ph/dashboard/expense?_rsc=1ugw0"
+            },
+            "event_id": null
+          },
+          {
+            "type": "http",
+            "timestamp": "2026-04-27T09:13:31.701000Z",
+            "level": "info",
+            "message": null,
+            "category": "fetch",
+            "data": {
+              "__span": "9bb27bef5b36ac01",
+              "method": "GET",
+              "response_body_size": 422,
+              "status_code": 200,
+              "url": "https://my.bebang.ph/dashboard/expense?_rsc=1mx7l"
+            },
+            "event_id": null
+          },
+          {
+            "type": "http",
+            "timestamp": "2026-04-27T09:13:31.702000Z",
+            "level": "info",
+            "message": null,
+            "category": "fetch",
+            "data": {
+              "__span": "b1cef762a7017cdb",
+              "method": "GET",
+              "status_code": 200,
+              "url": "https://my.bebang.ph/dashboard/expense?_rsc=nq3l0"
+            },
+            "event_id": null
+          },
+          {
+            "type": "http",
+            "timestamp": "2026-04-27T09:13:31.706000Z",
+            "level": "info",
+            "message": null,
+            "category": "fetch",
+            "data": {
+              "__span": "b0e2ec260b9127b9",
+              "method": "GET",
+              "status_code": 200,
+              "url": "https://my.bebang.ph/dashboard/hr?_rsc=1ugw0"
+            },
+            "event_id": null
+          },
+          {
+            "type": "http",
+            "timestamp": "2026-04-27T09:13:31.729000Z",
+            "level": "info",
+            "message": null,
+            "category": "fetch",
+            "data": {
+              "__span": "bc71b9900ed90961",
+              "method": "GET",
+              "status_code": 200,
+              "url": "/api/ordering?action=get_order_review_queue&date=&status=Pending+Approval"
+            },
+            "event_id": null
+          },
+          {
+            "type": "http",
+            "timestamp": "2026-04-27T09:13:31.762000Z",
+            "level": "info",
+            "message": null,
+            "category": "fetch",
+            "data": {
+              "__span": "a3646e8baf7b17fb",
+              "method": "GET",
+              "status_code": 200,
+              "url": "https://my.bebang.ph/dashboard/hr?_rsc=1vyvf"
+            },
+            "event_id": null
+          },
+          {
+            "type": "http",
+            "timestamp": "2026-04-27T09:13:31.776000Z",
+            "level": "info",
+            "message": null,
+            "category": "fetch",
+            "data": {
+              "__span": "831c72bb6c00686f",
+              "method": "GET",
+              "status_code": 200,
+              "url": "https://my.bebang.ph/dashboard/hr?_rsc=9ufts"
+            },
+            "event_id": null
+          },
+          {
+            "type": "default",
+            "timestamp": "2026-04-27T09:13:32.783000Z",
+            "level": "info",
+            "message": "a95cfad8d1464858b4aaa31d32501a5f",
+            "category": "sentry.transaction",
+            "data": null,
+            "event_id": "a95cfad8d1464858b4aaa31d32501a5f"
+          },
+          {
+            "type": "default",
+            "timestamp": "2026-04-27T09:13:33.897000Z",
+            "level": "info",
+            "message": "div.flex-1.min-w-0 > p.text-sm.text-muted-foreground.mt-0.5",
+            "category": "ui.click",
+            "data": null,
+            "event_id": null
+          },
+          {
+            "type": "http",
+            "timestamp": "2026-04-27T09:13:34.452000Z",
+            "level": "info",
+            "message": null,
+            "category": "fetch",
+            "data": {
+              "__span": "93cfe63e04db2436",
+              "method": "GET",
+              "status_code": 200,
+              "url": "/api/ordering?action=get_order_detail&order_name=BEI-ORD-2026-00421"
+            },
+            "event_id": null
+          },
+          {
+            "type": "default",
+            "timestamp": "2026-04-27T09:13:34.730000Z",
+            "level": "info",
+            "message": "button.inline-flex.items-center.justify-center.gap-2.whitespace-nowrap.rounded-md.text-sm.font-medium.transition-all.disabled:pointer-events-none.disabled:opacity-50.[&_svg]:pointer-events-none.[&_svg:not([class*='size-'])]:size-4.[&_svg]:shrink-0.outline-none.focus-visible:border-ring.focus-visible:ring-ring/50.focus-visible:ring-[3px].aria-invalid:ring-destructive/20.dark:aria-invalid:ring-destructive/40.aria-invalid:border-destructive.text-primary-foreground.h-9.px-4.py-2.has-[>svg]:px-3.flex-1.bg-green-600.hover:bg-green-700",
+            "category": "ui.click",
+            "data": null,
+            "event_id": null
+          },
+          {
+            "type": "http",
+            "timestamp": "2026-04-27T09:13:35.500000Z",
+            "level": "error",
+            "message": null,
+            "category": "fetch",
+            "data": {
+              "__span": "9489d80437e33d98",
+              "method": "POST",
+              "request_body_size": 77,
+              "status_code": 500,
+              "url": "/api/ordering"
+            },
+            "event_id": null
+          },
+          {
+            "type": "default",
+            "timestamp": "2026-04-27T09:13:35.501000Z",
+            "level": "error",
+            "message": "approve_store_order",
+            "category": "bei.observability",
+            "data": {
+              "module": "approval_hub",
+              "route": "/dashboard/store-ops/order-approvals"
+            },
+            "event_id": null
+          }
+        ]
+      },
+      "type": "breadcrumbs"
+    },
+    {
+      "data": {
+        "apiTarget": null,
+        "method": null,
+        "url": "https://my.bebang.ph/dashboard/store-ops/order-approvals",
+        "query": [],
+        "fragment": null,
+        "data": null,
+        "headers": [
+          [
+            "User-Agent",
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.7632.6 Safari/537.36"
+          ]
+        ],
+        "cookies": [],
+        "env": null,
+        "inferredContentType": null
+      },
+      "type": "request"
+    },
+    {
+      "data": {
+        "images": [
+          {
+            "code_file": "app:///_next/static/chunks/a3f5b8249f9fb8c8.js?dpl=dpl_An82L8yrsZqRX87uF9NPvbDVwdmC",
+            "debug_id": "92499968-5d0b-f89f-875a-e6970671b9ee",
+            "type": "sourcemap"
+          }
+        ]
+      },
+      "type": "debugmeta"
+    }
+  ],
+  "dist": null,
+  "message": "",
+  "title": "Error: Frappe API error: 417 - Warehouse ROBINSONS ANTIPOLO - BEBANG ENTERPRISE INC. does not belong to company BEBANG ENTERPRISE INC.",
+  "location": "app/dashboard/store-ops/order-approvals/page.tsx",
+  "user": {
+    "id": null,
+    "email": "test.scm@bebang.ph",
+    "username": "test.scm",
+    "ip_address": null,
+    "name": null,
+    "geo": {
+      "country_code": "PH",
+      "city": "Baliuag",
+      "region": "Philippines"
+    },
+    "data": null
+  },
+  "contexts": {
+    "bei_observability": {
+      "context": "reviewing a store order in the approval hub",
+      "technical_message": "Frappe API error: 417 - Warehouse ROBINSONS ANTIPOLO - BEBANG ENTERPRISE INC. does not belong to company BEBANG ENTERPRISE INC.",
+      "type": "default",
+      "user_message": "Frappe API error: 417 - Warehouse ROBINSONS ANTIPOLO - BEBANG ENTERPRISE INC. does not belong to company BEBANG ENTERPRISE INC."
+    },
+    "browser": {
+      "browser": "Chrome 145.0.7632",
+      "name": "Chrome",
+      "version": "145.0.7632",
+      "type": "browser"
+    },
+    "os": {
+      "os": "Windows >=10",
+      "name": "Windows",
+      "version": ">=10",
+      "type": "os"
+    },
+    "react": {
+      "type": "default",
+      "version": "19.3.0-canary-[Filtered]"
+    },
+    "trace": {
+      "trace_id": "ae9531268d0c45d89e9e0039b63ac53a",
+      "span_id": "a0769d04fe901ec9",
+      "status": "unknown",
+      "client_sample_rate": 0.2,
+      "type": "trace"
+    }
+  },
+  "sdk": {
+    "name": "sentry.javascript.nextjs",
+    "version": "10.38.0"
+  },
+  "context": {},
+  "packages": {},
+  "type": "error",
+  "metadata": {
+    "filename": "app/dashboard/store-ops/order-approvals/page.tsx",
+    "function": "B",
+    "in_app_frame_mix": "in-app-only",
+    "type": "Error",
+    "value": "Frappe API error: 417 - Warehouse ROBINSONS ANTIPOLO - BEBANG ENTERPRISE INC. does not belong to company BEBANG ENTERPRISE INC."
+  },
+  "tags": [
+    {
+      "key": "action",
+      "value": "approve_store_order"
+    },
+    {
+      "key": "branch",
+      "value": "unknown"
+    },
+    {
+      "key": "browser",
+      "value": "Chrome 145.0.7632"
+    },
+    {
+      "key": "browser.name",
+      "value": "Chrome"
+    },
+    {
+      "key": "department",
+      "value": "unknown"
+    },
+    {
+      "key": "designation",
+      "value": "unknown"
+    },
+    {
+      "key": "environment",
+      "value": "production"
+    },
+    {
+      "key": "handled",
+      "value": "yes"
+    },
+    {
+      "key": "level",
+      "value": "error"
+    },
+    {
+      "key": "mechanism",
+      "value": "generic"
+    },
+    {
+      "key": "module",
+      "value": "approval_hub"
+    },
+    {
+      "key": "mutation_type",
+      "value": "approve"
+    },
+    {
+      "key": "os",
+      "value": "Windows >=10"
+    },
+    {
+      "key": "os.name",
+      "value": "Windows"
+    },
+    {
+      "key": "phase",
+      "value": "mutation"
+    },
+    {
+      "key": "record_id",
+      "value": "BEI-ORD-2026-00421"
+    },
+    {
+      "key": "release",
+      "value": "e50b4f7fd0c028ac5c76e6f9163ad83451ebb9ee"
+    },
+    {
+      "key": "replayId",
+      "value": "b118635783064b1eb31c551d9ebbb490"
+    },
+    {
+      "key": "route",
+      "value": "/dashboard/store-ops/order-approvals"
+    },
+    {
+      "key": "surface",
+      "value": "toast_handler"
+    },
+    {
+      "key": "transaction",
+      "value": "/dashboard/store-ops/order-approvals"
+    },
+    {
+      "key": "turbopack",
+      "value": "True"
+    },
+    {
+      "key": "url",
+      "value": "https://my.bebang.ph/dashboard/store-ops/order-approvals"
+    },
+    {
+      "key": "user",
+      "value": "username:test.scm",
+      "query": "user.username:\"test.scm\""
+    }
+  ],
+  "platform": "javascript",
+  "dateReceived": "2026-04-27T09:13:35.834141Z",
+  "errors": [],
+  "occurrence": null,
+  "_meta": {
+    "entries": {},
+    "message": null,
+    "user": null,
+    "contexts": {
+      "react": {
+        "version": {
+          "": {
+            "rem": [
+              [
+                "@creditcard:filter",
+                "s",
+                14,
+                24
+              ]
+            ],
+            "len": 31,
+            "chunks": [
+              {
+                "type": "text",
+                "text": "19.3.0-canary-"
+              },
+              {
+                "type": "redaction",
+                "text": "[Filtered]",
+                "rule_id": "@creditcard:filter",
+                "remark": "s"
+              }
+            ]
+          }
+        }
+      }
+    },
+    "sdk": null,
+    "context": null,
+    "packages": null,
+    "tags": {}
+  },
+  "crashFile": null,
+  "culprit": "/dashboard/store-ops/order-approvals",
+  "dateCreated": "2026-04-27T09:13:35.502000Z",
+  "fingerprints": [
+    "d5c1bfc6f1c055cdbc9dd21b509e591c"
+  ],
+  "groupingConfig": {
+    "enhancements": "KLUv_SAd6QAAkwORuGFsbC1wbGF0Zm9ybXM6MjAyNi0wMS0yMJA#KLUv_SAd6QAAkwORuGFsbC1wbGF0Zm9ybXM6MjAyNi0wMS0yMJA#KLUv_SAd6QAAkwORuGFsbC1wbGF0Zm9ybXM6MjAyNi0wMS0yMJA",
+    "id": "newstyle:2026-01-20"
+  },
+  "release": {
+    "id": 1759502894,
+    "version": "e50b4f7fd0c028ac5c76e6f9163ad83451ebb9ee",
+    "status": "open",
+    "shortVersion": "e50b4f7fd0c028ac5c76e6f9163ad83451ebb9ee",
+    "versionInfo": {
+      "package": null,
+      "version": {
+        "raw": "e50b4f7fd0c028ac5c76e6f9163ad83451ebb9ee"
+      },
+      "description": "e50b4f7fd0c0",
+      "buildHash": "e50b4f7fd0c028ac5c76e6f9163ad83451ebb9ee"
+    },
+    "ref": null,
+    "url": null,
+    "dateReleased": "2026-04-27T08:07:49.556450Z",
+    "dateCreated": "2026-04-27T08:06:52.466197Z",
+    "data": {},
+    "newGroups": 0,
+    "owner": null,
+    "commitCount": 0,
+    "lastCommit": null,
+    "deployCount": 2,
+    "lastDeploy": {
+      "id": "122344967",
+      "environment": "vercel-production",
+      "dateStarted": null,
+      "dateFinished": "2026-04-27T08:07:50.781809Z",
+      "name": null,
+      "url": "https://bei-tasks-6zmekva28-sam-7906s-projects.vercel.app"
+    },
+    "authors": [],
+    "projects": [
+      {
+        "id": 4510861213040640,
+        "slug": "bei-tasks",
+        "name": "bei-tasks",
+        "newGroups": 0,
+        "platform": "javascript-nextjs",
+        "platforms": [],
+        "hasHealthData": false
+      }
+    ],
+    "firstEvent": "2026-04-27T08:52:31Z",
+    "lastEvent": "2026-04-27T09:38:38Z",
+    "currentProjectMeta": {},
+    "userAgent": "sentry-cli/2.58.4 turbopack-plugin/4.9.0"
+  },
+  "userReport": null,
+  "sdkUpdates": [
+    {
+      "type": "updateSdk",
+      "sdkName": "sentry.javascript.nextjs",
+      "newSdkVersion": "10.50.0",
+      "sdkUrl": "https://docs.sentry.io/platforms/javascript/guides/nextjs/",
+      "enables": []
+    }
+  ],
+  "resolvedWith": [
+    "debug-id"
+  ],
+  "nextEventID": "05ed1ebe8eec4a2c9c65a818a659a8b6",
+  "previousEventID": "86e6f524a1084a509e08996adafce0e6"
+}
