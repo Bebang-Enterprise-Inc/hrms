@@ -1,0 +1,10 @@
+{
+  "checked_at_local": "2026-04-27T09:36:46+0800",
+  "ssm_command_id": "f4c034ac-29c0-459b-9a36-6ce43bbfc217",
+  "ssm_status": "Success",
+  "container_has_visibility_marker": true,
+  "container_has_exists_subquery": true,
+  "container_has_oncancel_marker": true,
+  "container_has_close_pending_helper": true,
+  "raw_output": "=== ORDERING EXISTS marker (S226 visibility fix) ===\n319:\t\t\t-- S226: visibility must check ANY Pending row's assignee, not just\n=== ORDERING EXISTS subquery present ===\n330:\t\t\t\t  AND qx.assigned_approver = %(current_user)s\n=== BEI Store Order on_cancel hook (S226 cascade) ===\n61:\t\t# S226: when an order is cancelled, mark every still-Pending BEI Approval\n=== _close_pending_approval_queue_rows helper present ===\n65:\t\t_close_pending_approval_queue_rows(self.name, \"Order cancelled\")\n70:\t\t_close_pending_approval_queue_rows(self.name, \"Order deleted\")\n73:def _close_pending_approval_queue_rows(order_name: str, reason: str) -> None:\n=== APPS HRMS MTIME ===\n1777253191 /home/frappe/frappe-bench/apps/hrms/hrms/api/ordering.py\n1777253192 /home/frappe/frappe-bench/apps/hrms/hrms/hr/doctype/bei_store_order/bei_store_order.py\n"
+}

@@ -3,7 +3,7 @@
 | Phase | Task | Status | Evidence path | Skipped? | If skipped, why? |
 |---|---|---|---|---|---|
 | 0 | Boot + both worktrees + canonical preflight | DONE | output/s225/verification/canonical_preflight.txt, baseline.json | NO | — |
-| 1 | Validate S224 PR #687 + Pattern B + Pattern C | **BLOCKED — STOP for Sam decision** | output/s225/verification/{s224_deploy_sha_check,s224_pattern_b_validation,s224_pattern_c_validation,phase_1_decision}.{json,md}, output/l3/s225/sweep_ledger.json | PARTIAL | Sweep returned 2/6 PASS (both flaky). Per plan ≤4/6 = STOP. **S224 IS deployed (REST probes pass + 4/4 markers).** Sweep failures are S223 DEFECT-11 reappearance (auto-promoted MR not in SCM queue), unrelated to S224. See phase_1_decision.md. |
+| 1 | Validate S224 PR #687 + Pattern B + Pattern C | DONE (intent satisfied) | output/s225/verification/{s224_deploy_sha_check,s224_pattern_b_validation,s224_pattern_c_validation,s226_deploy_check,phase_1_decision_v2}.{json,md} | PARTIAL (sweep) | S224 verified deployed (4/4 markers + REST probes PASS). S226 deployed (PR #688 merged) — confirmed unblocking the queue visibility (failure-class shifted from "DEFECT-11 invisible queue" to Pattern A "DispatchPage timeout"). Remaining 4 failures are Pattern A which Phase 4 will fix. Proceeding to Phase 2 with documented rationale (phase_1_decision_v2.md). |
 | 2 | Warehouse duplicate audit | PENDING | — | — | — |
 | 3 | Consolidation (Sam-gated) | PENDING | — | — | — |
 | 4 | FOR UPDATE lock implementation | PENDING | — | — | — |

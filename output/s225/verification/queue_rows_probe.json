@@ -1,0 +1,657 @@
+{
+  "schema_columns": [
+    "name",
+    "status",
+    "reference_doctype",
+    "reference_name",
+    "assigned_approver",
+    "creation",
+    "approved_by",
+    "approved_at",
+    "submitted_at",
+    "rejection_reason"
+  ],
+  "per_order_summary": [
+    {
+      "ref": "BEI-ORD-2026-00403",
+      "total_rows": 14,
+      "by_status": {
+        "Approved": 9,
+        "Pending": 5
+      },
+      "pending_assignees": [
+        "ian@bebang.ph",
+        "test.area@bebang.ph",
+        "ian@bebang.ph",
+        "test.area@bebang.ph",
+        "test.area@bebang.ph"
+      ],
+      "all_assignees": [
+        "test.area@bebang.ph",
+        "test.area@bebang.ph",
+        "ian@bebang.ph",
+        "test.area@bebang.ph",
+        "ian@bebang.ph",
+        "test.area@bebang.ph",
+        "test.area@bebang.ph",
+        "test.area@bebang.ph",
+        "test.area@bebang.ph",
+        "ian@bebang.ph",
+        "test.area@bebang.ph",
+        "ian@bebang.ph",
+        "test.area@bebang.ph",
+        "test.area@bebang.ph"
+      ],
+      "stages": [
+        "?",
+        "?",
+        "?",
+        "?",
+        "?",
+        "?",
+        "?",
+        "?",
+        "?",
+        "?",
+        "?",
+        "?",
+        "?",
+        "?"
+      ]
+    },
+    {
+      "ref": "BEI-ORD-2026-00404",
+      "total_rows": 15,
+      "by_status": {
+        "Approved": 15
+      },
+      "pending_assignees": [],
+      "all_assignees": [
+        "test.area@bebang.ph",
+        "test.area@bebang.ph",
+        "ian@bebang.ph",
+        "test.area@bebang.ph",
+        "ian@bebang.ph",
+        "test.area@bebang.ph",
+        "test.area@bebang.ph",
+        "test.area@bebang.ph",
+        "test.area@bebang.ph",
+        "ian@bebang.ph",
+        "test.area@bebang.ph",
+        "ian@bebang.ph",
+        "test.area@bebang.ph",
+        "ian@bebang.ph",
+        "test.area@bebang.ph"
+      ],
+      "stages": [
+        "?",
+        "?",
+        "?",
+        "?",
+        "?",
+        "?",
+        "?",
+        "?",
+        "?",
+        "?",
+        "?",
+        "?",
+        "?",
+        "?",
+        "?"
+      ]
+    },
+    {
+      "ref": "BEI-ORD-2026-00405",
+      "total_rows": 15,
+      "by_status": {
+        "Approved": 15
+      },
+      "pending_assignees": [],
+      "all_assignees": [
+        "test.area@bebang.ph",
+        "test.area@bebang.ph",
+        "ian@bebang.ph",
+        "test.area@bebang.ph",
+        "ian@bebang.ph",
+        "test.area@bebang.ph",
+        "test.area@bebang.ph",
+        "test.area@bebang.ph",
+        "test.area@bebang.ph",
+        "ian@bebang.ph",
+        "test.area@bebang.ph",
+        "ian@bebang.ph",
+        "test.area@bebang.ph",
+        "ian@bebang.ph",
+        "test.area@bebang.ph"
+      ],
+      "stages": [
+        "?",
+        "?",
+        "?",
+        "?",
+        "?",
+        "?",
+        "?",
+        "?",
+        "?",
+        "?",
+        "?",
+        "?",
+        "?",
+        "?",
+        "?"
+      ]
+    },
+    {
+      "ref": "BEI-ORD-2026-00406",
+      "total_rows": 14,
+      "by_status": {
+        "Approved": 14
+      },
+      "pending_assignees": [],
+      "all_assignees": [
+        "test.area@bebang.ph",
+        "ian@bebang.ph",
+        "test.area@bebang.ph",
+        "ian@bebang.ph",
+        "test.area@bebang.ph",
+        "test.area@bebang.ph",
+        "test.area@bebang.ph",
+        "test.area@bebang.ph",
+        "ian@bebang.ph",
+        "test.area@bebang.ph",
+        "ian@bebang.ph",
+        "test.area@bebang.ph",
+        "ian@bebang.ph",
+        "test.area@bebang.ph"
+      ],
+      "stages": [
+        "?",
+        "?",
+        "?",
+        "?",
+        "?",
+        "?",
+        "?",
+        "?",
+        "?",
+        "?",
+        "?",
+        "?",
+        "?",
+        "?"
+      ]
+    },
+    {
+      "ref": "BEI-ORD-2026-00407",
+      "total_rows": 14,
+      "by_status": {
+        "Approved": 13,
+        "Pending": 1
+      },
+      "pending_assignees": [
+        "test.area@bebang.ph"
+      ],
+      "all_assignees": [
+        "test.area@bebang.ph",
+        "ian@bebang.ph",
+        "test.area@bebang.ph",
+        "ian@bebang.ph",
+        "test.area@bebang.ph",
+        "test.area@bebang.ph",
+        "test.area@bebang.ph",
+        "test.area@bebang.ph",
+        "ian@bebang.ph",
+        "test.area@bebang.ph",
+        "ian@bebang.ph",
+        "test.area@bebang.ph",
+        "ian@bebang.ph",
+        "test.area@bebang.ph"
+      ],
+      "stages": [
+        "?",
+        "?",
+        "?",
+        "?",
+        "?",
+        "?",
+        "?",
+        "?",
+        "?",
+        "?",
+        "?",
+        "?",
+        "?",
+        "?"
+      ]
+    },
+    {
+      "ref": "BEI-ORD-2026-00408",
+      "total_rows": 13,
+      "by_status": {
+        "Approved": 7,
+        "Pending": 6
+      },
+      "pending_assignees": [
+        "ian@bebang.ph",
+        "test.area@bebang.ph",
+        "ian@bebang.ph",
+        "test.area@bebang.ph",
+        "ian@bebang.ph",
+        "test.area@bebang.ph"
+      ],
+      "all_assignees": [
+        "test.area@bebang.ph",
+        "ian@bebang.ph",
+        "test.area@bebang.ph",
+        "test.area@bebang.ph",
+        "test.area@bebang.ph",
+        "test.area@bebang.ph",
+        "test.area@bebang.ph",
+        "ian@bebang.ph",
+        "test.area@bebang.ph",
+        "ian@bebang.ph",
+        "test.area@bebang.ph",
+        "ian@bebang.ph",
+        "test.area@bebang.ph"
+      ],
+      "stages": [
+        "?",
+        "?",
+        "?",
+        "?",
+        "?",
+        "?",
+        "?",
+        "?",
+        "?",
+        "?",
+        "?",
+        "?",
+        "?"
+      ]
+    },
+    {
+      "ref": "BEI-ORD-2026-00409",
+      "total_rows": 14,
+      "by_status": {
+        "Approved": 13,
+        "Pending": 1
+      },
+      "pending_assignees": [
+        "test.area@bebang.ph"
+      ],
+      "all_assignees": [
+        "test.area@bebang.ph",
+        "ian@bebang.ph",
+        "test.area@bebang.ph",
+        "ian@bebang.ph",
+        "test.area@bebang.ph",
+        "test.area@bebang.ph",
+        "test.area@bebang.ph",
+        "test.area@bebang.ph",
+        "ian@bebang.ph",
+        "test.area@bebang.ph",
+        "ian@bebang.ph",
+        "test.area@bebang.ph",
+        "ian@bebang.ph",
+        "test.area@bebang.ph"
+      ],
+      "stages": [
+        "?",
+        "?",
+        "?",
+        "?",
+        "?",
+        "?",
+        "?",
+        "?",
+        "?",
+        "?",
+        "?",
+        "?",
+        "?",
+        "?"
+      ]
+    },
+    {
+      "ref": "BEI-ORD-2026-00410",
+      "total_rows": 13,
+      "by_status": {
+        "Approved": 7,
+        "Pending": 6
+      },
+      "pending_assignees": [
+        "ian@bebang.ph",
+        "test.area@bebang.ph",
+        "ian@bebang.ph",
+        "test.area@bebang.ph",
+        "ian@bebang.ph",
+        "test.area@bebang.ph"
+      ],
+      "all_assignees": [
+        "test.area@bebang.ph",
+        "ian@bebang.ph",
+        "test.area@bebang.ph",
+        "test.area@bebang.ph",
+        "test.area@bebang.ph",
+        "test.area@bebang.ph",
+        "test.area@bebang.ph",
+        "ian@bebang.ph",
+        "test.area@bebang.ph",
+        "ian@bebang.ph",
+        "test.area@bebang.ph",
+        "ian@bebang.ph",
+        "test.area@bebang.ph"
+      ],
+      "stages": [
+        "?",
+        "?",
+        "?",
+        "?",
+        "?",
+        "?",
+        "?",
+        "?",
+        "?",
+        "?",
+        "?",
+        "?",
+        "?"
+      ]
+    },
+    {
+      "ref": "BEI-ORD-2026-00411",
+      "total_rows": 14,
+      "by_status": {
+        "Approved": 13,
+        "Pending": 1
+      },
+      "pending_assignees": [
+        "test.area@bebang.ph"
+      ],
+      "all_assignees": [
+        "test.area@bebang.ph",
+        "ian@bebang.ph",
+        "test.area@bebang.ph",
+        "ian@bebang.ph",
+        "test.area@bebang.ph",
+        "test.area@bebang.ph",
+        "test.area@bebang.ph",
+        "test.area@bebang.ph",
+        "ian@bebang.ph",
+        "test.area@bebang.ph",
+        "ian@bebang.ph",
+        "test.area@bebang.ph",
+        "ian@bebang.ph",
+        "test.area@bebang.ph"
+      ],
+      "stages": [
+        "?",
+        "?",
+        "?",
+        "?",
+        "?",
+        "?",
+        "?",
+        "?",
+        "?",
+        "?",
+        "?",
+        "?",
+        "?",
+        "?"
+      ]
+    },
+    {
+      "ref": "BEI-ORD-2026-00412",
+      "total_rows": 13,
+      "by_status": {
+        "Approved": 7,
+        "Pending": 6
+      },
+      "pending_assignees": [
+        "ian@bebang.ph",
+        "test.area@bebang.ph",
+        "ian@bebang.ph",
+        "test.area@bebang.ph",
+        "ian@bebang.ph",
+        "test.area@bebang.ph"
+      ],
+      "all_assignees": [
+        "test.area@bebang.ph",
+        "ian@bebang.ph",
+        "test.area@bebang.ph",
+        "test.area@bebang.ph",
+        "test.area@bebang.ph",
+        "test.area@bebang.ph",
+        "test.area@bebang.ph",
+        "ian@bebang.ph",
+        "test.area@bebang.ph",
+        "ian@bebang.ph",
+        "test.area@bebang.ph",
+        "ian@bebang.ph",
+        "test.area@bebang.ph"
+      ],
+      "stages": [
+        "?",
+        "?",
+        "?",
+        "?",
+        "?",
+        "?",
+        "?",
+        "?",
+        "?",
+        "?",
+        "?",
+        "?",
+        "?"
+      ]
+    },
+    {
+      "ref": "BEI-ORD-2026-00413",
+      "total_rows": 13,
+      "by_status": {
+        "Approved": 7,
+        "Pending": 6
+      },
+      "pending_assignees": [
+        "ian@bebang.ph",
+        "test.area@bebang.ph",
+        "ian@bebang.ph",
+        "test.area@bebang.ph",
+        "ian@bebang.ph",
+        "test.area@bebang.ph"
+      ],
+      "all_assignees": [
+        "test.area@bebang.ph",
+        "ian@bebang.ph",
+        "test.area@bebang.ph",
+        "test.area@bebang.ph",
+        "test.area@bebang.ph",
+        "test.area@bebang.ph",
+        "test.area@bebang.ph",
+        "ian@bebang.ph",
+        "test.area@bebang.ph",
+        "ian@bebang.ph",
+        "test.area@bebang.ph",
+        "ian@bebang.ph",
+        "test.area@bebang.ph"
+      ],
+      "stages": [
+        "?",
+        "?",
+        "?",
+        "?",
+        "?",
+        "?",
+        "?",
+        "?",
+        "?",
+        "?",
+        "?",
+        "?",
+        "?"
+      ]
+    },
+    {
+      "ref": "BEI-ORD-2026-00414",
+      "total_rows": 10,
+      "by_status": {
+        "Approved": 4,
+        "Pending": 6
+      },
+      "pending_assignees": [
+        "ian@bebang.ph",
+        "test.area@bebang.ph",
+        "ian@bebang.ph",
+        "test.area@bebang.ph",
+        "ian@bebang.ph",
+        "test.area@bebang.ph"
+      ],
+      "all_assignees": [
+        "test.area@bebang.ph",
+        "test.area@bebang.ph",
+        "test.area@bebang.ph",
+        "test.area@bebang.ph",
+        "ian@bebang.ph",
+        "test.area@bebang.ph",
+        "ian@bebang.ph",
+        "test.area@bebang.ph",
+        "ian@bebang.ph",
+        "test.area@bebang.ph"
+      ],
+      "stages": [
+        "?",
+        "?",
+        "?",
+        "?",
+        "?",
+        "?",
+        "?",
+        "?",
+        "?",
+        "?"
+      ]
+    }
+  ],
+  "existing_per_ref": {
+    "BEI-ORD-2026-00403": null,
+    "BEI-ORD-2026-00404": null,
+    "BEI-ORD-2026-00405": null,
+    "BEI-ORD-2026-00406": null,
+    "BEI-ORD-2026-00407": null,
+    "BEI-ORD-2026-00408": null,
+    "BEI-ORD-2026-00409": null,
+    "BEI-ORD-2026-00410": null,
+    "BEI-ORD-2026-00411": null,
+    "BEI-ORD-2026-00412": null,
+    "BEI-ORD-2026-00413": null,
+    "BEI-ORD-2026-00414": null
+  },
+  "global_pending_total": 144,
+  "multi_pending_pattern": [
+    {
+      "reference_name": "BEI-ORD-2026-00400",
+      "n_pending": 7,
+      "approvers": "ian@bebang.ph,test.area@bebang.ph"
+    },
+    {
+      "reference_name": "BEI-ORD-2026-00408",
+      "n_pending": 6,
+      "approvers": "ian@bebang.ph,test.area@bebang.ph"
+    },
+    {
+      "reference_name": "BEI-ORD-2026-00410",
+      "n_pending": 6,
+      "approvers": "ian@bebang.ph,test.area@bebang.ph"
+    },
+    {
+      "reference_name": "BEI-ORD-2026-00412",
+      "n_pending": 6,
+      "approvers": "ian@bebang.ph,test.area@bebang.ph"
+    },
+    {
+      "reference_name": "BEI-ORD-2026-00413",
+      "n_pending": 6,
+      "approvers": "ian@bebang.ph,test.area@bebang.ph"
+    },
+    {
+      "reference_name": "BEI-ORD-2026-00414",
+      "n_pending": 6,
+      "approvers": "ian@bebang.ph,test.area@bebang.ph"
+    },
+    {
+      "reference_name": "BEI-ORD-2026-00415",
+      "n_pending": 6,
+      "approvers": "ian@bebang.ph,test.area@bebang.ph"
+    },
+    {
+      "reference_name": "BEI-ORD-2026-00416",
+      "n_pending": 6,
+      "approvers": "ian@bebang.ph,test.area@bebang.ph"
+    },
+    {
+      "reference_name": "BEI-ORD-2026-00403",
+      "n_pending": 5,
+      "approvers": "ian@bebang.ph,test.area@bebang.ph"
+    },
+    {
+      "reference_name": "BEI-ORD-2026-00399",
+      "n_pending": 4,
+      "approvers": "ian@bebang.ph,test.area@bebang.ph"
+    },
+    {
+      "reference_name": "BEI-ORD-2026-00435",
+      "n_pending": 4,
+      "approvers": "ian@bebang.ph,test.area@bebang.ph"
+    },
+    {
+      "reference_name": "BEI-ORD-2026-00417",
+      "n_pending": 3,
+      "approvers": "ian@bebang.ph,test.area@bebang.ph"
+    },
+    {
+      "reference_name": "BEI-ORD-2026-00253",
+      "n_pending": 2,
+      "approvers": "ian@bebang.ph,test.area@bebang.ph"
+    },
+    {
+      "reference_name": "BEI-ORD-2026-00340",
+      "n_pending": 2,
+      "approvers": "ian@bebang.ph,test.area@bebang.ph"
+    },
+    {
+      "reference_name": "BEI-ORD-2026-00354",
+      "n_pending": 2,
+      "approvers": "ian@bebang.ph,test.area@bebang.ph"
+    },
+    {
+      "reference_name": "BEI-ORD-2026-00355",
+      "n_pending": 2,
+      "approvers": "ian@bebang.ph,test.area@bebang.ph"
+    },
+    {
+      "reference_name": "BEI-ORD-2026-00356",
+      "n_pending": 2,
+      "approvers": "ian@bebang.ph,test.area@bebang.ph"
+    },
+    {
+      "reference_name": "BEI-ORD-2026-00357",
+      "n_pending": 2,
+      "approvers": "ian@bebang.ph,test.area@bebang.ph"
+    },
+    {
+      "reference_name": "BEI-ORD-2026-00360",
+      "n_pending": 2,
+      "approvers": "ian@bebang.ph,test.area@bebang.ph"
+    },
+    {
+      "reference_name": "BEI-ORD-2026-00365",
+      "n_pending": 2,
+      "approvers": "ian@bebang.ph,test.area@bebang.ph"
+    }
+  ]
+}
