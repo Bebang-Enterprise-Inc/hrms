@@ -1,0 +1,648 @@
+{
+  "PM001": {
+    "total_bins": 43,
+    "all_bins": [
+      {
+        "warehouse": "3MD LOGISTICS - CAMANGYANAN - BKI",
+        "actual_qty": 75052.0,
+        "reserved_qty": 0.0,
+        "projected_qty": 75052.0,
+        "ordered_qty": 0.0,
+        "indented_qty": 0.0
+      },
+      {
+        "warehouse": "ROBINSONS GALLERIA SOUTH - TUNGSTEN CAPITAL HOLDINGS OPC",
+        "actual_qty": 5618.0,
+        "reserved_qty": 0.0,
+        "projected_qty": 5618.0,
+        "ordered_qty": 0.0,
+        "indented_qty": 0.0
+      },
+      {
+        "warehouse": "SM MALL OF ASIA - BEBANG SMOA INC.",
+        "actual_qty": 5580.0,
+        "reserved_qty": 0.0,
+        "projected_qty": 5580.0,
+        "ordered_qty": 0.0,
+        "indented_qty": 0.0
+      },
+      {
+        "warehouse": "SM CALOOCAN - TAJ FOOD CORP.",
+        "actual_qty": 3813.0,
+        "reserved_qty": 0.0,
+        "projected_qty": 3813.0,
+        "ordered_qty": 0.0,
+        "indented_qty": 0.0
+      },
+      {
+        "warehouse": "SM TAYTAY - DAY ONES FOOD AND DRINK ESTABLISHMENTS CORP.",
+        "actual_qty": 3797.0,
+        "reserved_qty": 0.0,
+        "projected_qty": 3797.0,
+        "ordered_qty": 0.0,
+        "indented_qty": 0.0
+      },
+      {
+        "warehouse": "SM SAN JOSE DEL MONTE - JL TRADE OPC",
+        "actual_qty": 3705.0,
+        "reserved_qty": 0.0,
+        "projected_qty": 3705.0,
+        "ordered_qty": 0.0,
+        "indented_qty": 0.0
+      },
+      {
+        "warehouse": "EVER COMMONWEALTH - DLS DESSERT CRAFT INC.",
+        "actual_qty": 3614.0,
+        "reserved_qty": 0.0,
+        "projected_qty": 3614.0,
+        "ordered_qty": 0.0,
+        "indented_qty": 0.0
+      },
+      {
+        "warehouse": "SM BICUTAN - BEBANG SM BICUTAN INC.",
+        "actual_qty": 3405.0,
+        "reserved_qty": 0.0,
+        "projected_qty": 3405.0,
+        "ordered_qty": 0.0,
+        "indented_qty": 0.0
+      },
+      {
+        "warehouse": "LUCKY CHINATOWN - BEBANG LCT INC.",
+        "actual_qty": 3374.0,
+        "reserved_qty": 0.0,
+        "projected_qty": 3374.0,
+        "ordered_qty": 0.0,
+        "indented_qty": 0.0
+      },
+      {
+        "warehouse": "SM STA. ROSA - SWEET HARMONY FOOD CORP.",
+        "actual_qty": 3250.0,
+        "reserved_qty": 0.0,
+        "projected_qty": 3250.0,
+        "ordered_qty": 0.0,
+        "indented_qty": 0.0
+      },
+      {
+        "warehouse": "BF HOMES - BEBANG BF HOMES INC.",
+        "actual_qty": 3241.0,
+        "reserved_qty": 0.0,
+        "projected_qty": 3241.0,
+        "ordered_qty": 0.0,
+        "indented_qty": 0.0
+      },
+      {
+        "warehouse": "NAIA T3 - HALO-HALO TERMINAL FOOD CORP.",
+        "actual_qty": 2874.0,
+        "reserved_qty": 0.0,
+        "projected_qty": 2874.0,
+        "ordered_qty": 0.0,
+        "indented_qty": 0.0
+      },
+      {
+        "warehouse": "FESTIVAL MALL ALABANG - BEBANG FESTIVAL INC.",
+        "actual_qty": 2833.0,
+        "reserved_qty": 0.0,
+        "projected_qty": 2833.0,
+        "ordered_qty": 0.0,
+        "indented_qty": 0.0
+      },
+      {
+        "warehouse": "SM SANGANDAAN - TUNGSTEN CAPITAL HOLDINGS OPC",
+        "actual_qty": 2484.0,
+        "reserved_qty": 0.0,
+        "projected_qty": 2484.0,
+        "ordered_qty": 0.0,
+        "indented_qty": 0.0
+      },
+      {
+        "warehouse": "D'VERDE CALAMBA - TAJ FOOD CORP.",
+        "actual_qty": 2446.0,
+        "reserved_qty": 0.0,
+        "projected_qty": 2446.0,
+        "ordered_qty": 0.0,
+        "indented_qty": 0.0
+      },
+      {
+        "warehouse": "SM CLARK - RED TALDAWA FOODS OPC",
+        "actual_qty": 2150.0,
+        "reserved_qty": 0.0,
+        "projected_qty": 2150.0,
+        "ordered_qty": 0.0,
+        "indented_qty": 0.0
+      },
+      {
+        "warehouse": "MEGAWORLD VENICE GRAND CANAL - BEBANG VENICE GRAND CANAL INC.",
+        "actual_qty": 2107.0,
+        "reserved_qty": 0.0,
+        "projected_qty": 2107.0,
+        "ordered_qty": 0.0,
+        "indented_qty": 0.0
+      },
+      {
+        "warehouse": "VISTA MALL TAGUIG - TRICERN FOOD CORP.",
+        "actual_qty": 2036.0,
+        "reserved_qty": 0.0,
+        "projected_qty": 2036.0,
+        "ordered_qty": 0.0,
+        "indented_qty": 0.0
+      },
+      {
+        "warehouse": "MEGAWIDE PITX - BEBANG PITX INC.",
+        "actual_qty": 1866.0,
+        "reserved_qty": 0.0,
+        "projected_qty": 1866.0,
+        "ordered_qty": 0.0,
+        "indented_qty": 0.0
+      },
+      {
+        "warehouse": "ARANETA GATEWAY - TUNGSTEN CAPITAL HOLDINGS OPC",
+        "actual_qty": 1846.0,
+        "reserved_qty": 0.0,
+        "projected_qty": 1846.0,
+        "ordered_qty": 0.0,
+        "indented_qty": 0.0
+      },
+      {
+        "warehouse": "AYALA EVO - BEBANG MEGA INC.",
+        "actual_qty": 1764.0,
+        "reserved_qty": 0.0,
+        "projected_qty": 1764.0,
+        "ordered_qty": 0.0,
+        "indented_qty": 0.0
+      },
+      {
+        "warehouse": "UP TOWN MALL BGC - DMD HOLDINGS INC.",
+        "actual_qty": 1679.0,
+        "reserved_qty": 0.0,
+        "projected_qty": 1679.0,
+        "ordered_qty": 0.0,
+        "indented_qty": 0.0
+      },
+      {
+        "warehouse": "AYALA FAIRVIEW TERRACES - BEBANG FT INC.",
+        "actual_qty": 1467.0,
+        "reserved_qty": 0.0,
+        "projected_qty": 1467.0,
+        "ordered_qty": 0.0,
+        "indented_qty": 0.0
+      },
+      {
+        "warehouse": "CTTM TOMAS MORATO - B CUBED VENTURES CORP.",
+        "actual_qty": 1334.0,
+        "reserved_qty": 0.0,
+        "projected_qty": 1334.0,
+        "ordered_qty": 0.0,
+        "indented_qty": 0.0
+      },
+      {
+        "warehouse": "SM VALENZUELA - BEBANG SMV INC.",
+        "actual_qty": 1301.0,
+        "reserved_qty": 0.0,
+        "projected_qty": 1301.0,
+        "ordered_qty": 0.0,
+        "indented_qty": 0.0
+      },
+      {
+        "warehouse": "SM GRAND CENTRAL - BEBANG GRAND CENTRAL INC.",
+        "actual_qty": 1295.0,
+        "reserved_qty": 0.0,
+        "projected_qty": 1295.0,
+        "ordered_qty": 0.0,
+        "indented_qty": 0.0
+      },
+      {
+        "warehouse": "SM TANZA - BEBANG MEGA INC.",
+        "actual_qty": 1278.0,
+        "reserved_qty": 0.0,
+        "projected_qty": 1278.0,
+        "ordered_qty": 0.0,
+        "indented_qty": 0.0
+      },
+      {
+        "warehouse": "SM NORTH EDSA - BEBANG NORTH EDSA INC.",
+        "actual_qty": 1164.0,
+        "reserved_qty": 0.0,
+        "projected_qty": 1164.0,
+        "ordered_qty": 0.0,
+        "indented_qty": 0.0
+      },
+      {
+        "warehouse": "THE GRID ROCKWELL - TASTECARTEL CORP.",
+        "actual_qty": 1086.0,
+        "reserved_qty": 0.0,
+        "projected_qty": 1086.0,
+        "ordered_qty": 0.0,
+        "indented_qty": 0.0
+      },
+      {
+        "warehouse": "STORES - BEI",
+        "actual_qty": 1050.0,
+        "reserved_qty": 0.0,
+        "projected_qty": 2700.0,
+        "ordered_qty": 1650.0,
+        "indented_qty": 0.0
+      },
+      {
+        "warehouse": "THE TERMINAL - BEBANG STARMALL ALABANG INC.",
+        "actual_qty": 1029.0,
+        "reserved_qty": 0.0,
+        "projected_qty": 1029.0,
+        "ordered_qty": 0.0,
+        "indented_qty": 0.0
+      },
+      {
+        "warehouse": "SM EAST ORTIGAS - BEBANG SMEO INC.",
+        "actual_qty": 1000.0,
+        "reserved_qty": 0.0,
+        "projected_qty": 1000.0,
+        "ordered_qty": 0.0,
+        "indented_qty": 0.0
+      },
+      {
+        "warehouse": "AYALA UP TOWN CENTER - BEBANG UP TOWN CENTER INC.",
+        "actual_qty": 942.0,
+        "reserved_qty": 0.0,
+        "projected_qty": 942.0,
+        "ordered_qty": 0.0,
+        "indented_qty": 0.0
+      },
+      {
+        "warehouse": "SM MARILAO - BEBANG MARILAO INC.",
+        "actual_qty": 866.0,
+        "reserved_qty": 0.0,
+        "projected_qty": 866.0,
+        "ordered_qty": 0.0,
+        "indented_qty": 0.0
+      },
+      {
+        "warehouse": "AYALA SOLENAD - HFFM SOLENAD FOOD SERVICES INC.",
+        "actual_qty": 851.0,
+        "reserved_qty": 0.0,
+        "projected_qty": 851.0,
+        "ordered_qty": 0.0,
+        "indented_qty": 0.0
+      },
+      {
+        "warehouse": "Greenhills Ortigas - BEIFRANCHISE FOOD OPC",
+        "actual_qty": 826.0,
+        "reserved_qty": 0.0,
+        "projected_qty": 826.0,
+        "ordered_qty": 0.0,
+        "indented_qty": 0.0
+      },
+      {
+        "warehouse": "SM MARIKINA - BEBANG SM MARIKINA INC.",
+        "actual_qty": 814.0,
+        "reserved_qty": 0.0,
+        "projected_qty": 814.0,
+        "ordered_qty": 0.0,
+        "indented_qty": 0.0
+      },
+      {
+        "warehouse": "SM PULILAN - BEBANG SMM INC.",
+        "actual_qty": 799.0,
+        "reserved_qty": 0.0,
+        "projected_qty": 799.0,
+        "ordered_qty": 0.0,
+        "indented_qty": 0.0
+      },
+      {
+        "warehouse": "AYALA MARKET MARKET - BEBANG MARKET MARKET INC.",
+        "actual_qty": 667.0,
+        "reserved_qty": 0.0,
+        "projected_qty": 667.0,
+        "ordered_qty": 0.0,
+        "indented_qty": 0.0
+      },
+      {
+        "warehouse": "AYALA VERMOSA - BEBANG MEGA INC.",
+        "actual_qty": 375.0,
+        "reserved_qty": 0.0,
+        "projected_qty": 375.0,
+        "ordered_qty": 0.0,
+        "indented_qty": 0.0
+      },
+      {
+        "warehouse": "3MD LOGISTICS \u2013 CAMANGYANAN - BKI",
+        "actual_qty": 0.0,
+        "reserved_qty": 0.0,
+        "projected_qty": 0.0,
+        "ordered_qty": 0.0,
+        "indented_qty": 0.0
+      },
+      {
+        "warehouse": "PINNACLE COLD STORAGE SOLUTIONS - BKI",
+        "actual_qty": 0.0,
+        "reserved_qty": 0.0,
+        "projected_qty": 0.0,
+        "ordered_qty": 0.0,
+        "indented_qty": 0.0
+      },
+      {
+        "warehouse": "SHAW BLVD - BKI",
+        "actual_qty": 0.0,
+        "reserved_qty": 0.0,
+        "projected_qty": 0.0,
+        "ordered_qty": 0.0,
+        "indented_qty": 0.0
+      }
+    ]
+  },
+  "FG001": {
+    "total_bins": 4,
+    "all_bins": [
+      {
+        "warehouse": "3MD LOGISTICS - CAMANGYANAN - BKI",
+        "actual_qty": 73005.0,
+        "reserved_qty": 0.0,
+        "projected_qty": 73005.0,
+        "ordered_qty": 0.0,
+        "indented_qty": 0.0
+      },
+      {
+        "warehouse": "PINNACLE COLD STORAGE SOLUTIONS - BKI",
+        "actual_qty": 3683.0,
+        "reserved_qty": 0.0,
+        "projected_qty": -2314.0,
+        "ordered_qty": 0.0,
+        "indented_qty": -5997.0
+      },
+      {
+        "warehouse": "3MD LOGISTICS \u2013 CAMANGYANAN - BKI",
+        "actual_qty": 0.0,
+        "reserved_qty": 0.0,
+        "projected_qty": 0.0,
+        "ordered_qty": 0.0,
+        "indented_qty": 0.0
+      },
+      {
+        "warehouse": "SHAW BLVD - BKI",
+        "actual_qty": 0.0,
+        "reserved_qty": 0.0,
+        "projected_qty": 0.0,
+        "ordered_qty": 0.0,
+        "indented_qty": 0.0
+      }
+    ]
+  },
+  "pcs_bki_bins": [
+    {
+      "warehouse": "PINNACLE COLD STORAGE SOLUTIONS - BKI",
+      "actual_qty": 0.0,
+      "reserved_qty": 0.0,
+      "projected_qty": 0.0,
+      "ordered_qty": 0.0,
+      "indented_qty": 0.0
+    },
+    {
+      "warehouse": "PINNACLE COLD STORAGE SOLUTIONS - BKI",
+      "actual_qty": 3683.0,
+      "reserved_qty": 0.0,
+      "projected_qty": -2314.0,
+      "ordered_qty": 0.0,
+      "indented_qty": -5997.0
+    }
+  ],
+  "recent_se_touching_pcs": [
+    {
+      "parent": "MAT-STE-2026-01171",
+      "s_warehouse": "PINNACLE COLD STORAGE SOLUTIONS - BKI",
+      "t_warehouse": null,
+      "item_code": "FG001",
+      "qty": 5.0,
+      "creation": "2026-04-28 09:24:06.210185",
+      "docstatus": 1,
+      "stock_entry_type": "Material Issue"
+    },
+    {
+      "parent": "MAT-STE-2026-01170",
+      "s_warehouse": "PINNACLE COLD STORAGE SOLUTIONS - BKI",
+      "t_warehouse": null,
+      "item_code": "FG001",
+      "qty": 5.0,
+      "creation": "2026-04-28 09:23:57.757888",
+      "docstatus": 1,
+      "stock_entry_type": "Material Issue"
+    },
+    {
+      "parent": "MAT-STE-2026-01169",
+      "s_warehouse": "PINNACLE COLD STORAGE SOLUTIONS - BKI",
+      "t_warehouse": null,
+      "item_code": "FG001",
+      "qty": 5.0,
+      "creation": "2026-04-28 09:23:09.373750",
+      "docstatus": 1,
+      "stock_entry_type": "Material Issue"
+    },
+    {
+      "parent": "MAT-STE-2026-01168",
+      "s_warehouse": "PINNACLE COLD STORAGE SOLUTIONS - BKI",
+      "t_warehouse": null,
+      "item_code": "FG001",
+      "qty": 5.0,
+      "creation": "2026-04-28 09:23:01.012675",
+      "docstatus": 1,
+      "stock_entry_type": "Material Issue"
+    },
+    {
+      "parent": "MAT-STE-2026-01167",
+      "s_warehouse": "PINNACLE COLD STORAGE SOLUTIONS - BKI",
+      "t_warehouse": null,
+      "item_code": "FG001",
+      "qty": 5.0,
+      "creation": "2026-04-28 09:22:12.455855",
+      "docstatus": 1,
+      "stock_entry_type": "Material Issue"
+    },
+    {
+      "parent": "MAT-STE-2026-01166",
+      "s_warehouse": "PINNACLE COLD STORAGE SOLUTIONS - BKI",
+      "t_warehouse": null,
+      "item_code": "FG001",
+      "qty": 5.0,
+      "creation": "2026-04-28 09:22:04.028030",
+      "docstatus": 1,
+      "stock_entry_type": "Material Issue"
+    },
+    {
+      "parent": "MAT-STE-2026-01165",
+      "s_warehouse": "PINNACLE COLD STORAGE SOLUTIONS - BKI",
+      "t_warehouse": null,
+      "item_code": "FG001",
+      "qty": 5.0,
+      "creation": "2026-04-28 09:21:17.270711",
+      "docstatus": 1,
+      "stock_entry_type": "Material Issue"
+    },
+    {
+      "parent": "MAT-STE-2026-01164",
+      "s_warehouse": "PINNACLE COLD STORAGE SOLUTIONS - BKI",
+      "t_warehouse": null,
+      "item_code": "FG001",
+      "qty": 5.0,
+      "creation": "2026-04-28 09:21:08.805418",
+      "docstatus": 1,
+      "stock_entry_type": "Material Issue"
+    },
+    {
+      "parent": "MAT-STE-2026-01157",
+      "s_warehouse": "PINNACLE COLD STORAGE SOLUTIONS - BKI",
+      "t_warehouse": null,
+      "item_code": "FG001",
+      "qty": 5.0,
+      "creation": "2026-04-28 09:17:32.067126",
+      "docstatus": 1,
+      "stock_entry_type": "Material Issue"
+    },
+    {
+      "parent": "MAT-STE-2026-01156",
+      "s_warehouse": "PINNACLE COLD STORAGE SOLUTIONS - BKI",
+      "t_warehouse": null,
+      "item_code": "FG001",
+      "qty": 5.0,
+      "creation": "2026-04-28 09:17:23.705958",
+      "docstatus": 1,
+      "stock_entry_type": "Material Issue"
+    },
+    {
+      "parent": "MAT-STE-2026-01139",
+      "s_warehouse": "PINNACLE COLD STORAGE SOLUTIONS - BKI",
+      "t_warehouse": null,
+      "item_code": "FG001",
+      "qty": 5.0,
+      "creation": "2026-04-28 09:05:30.229124",
+      "docstatus": 1,
+      "stock_entry_type": "Material Issue"
+    },
+    {
+      "parent": "MAT-STE-2026-01138",
+      "s_warehouse": "PINNACLE COLD STORAGE SOLUTIONS - BKI",
+      "t_warehouse": null,
+      "item_code": "FG001",
+      "qty": 5.0,
+      "creation": "2026-04-28 09:05:21.511833",
+      "docstatus": 1,
+      "stock_entry_type": "Material Issue"
+    },
+    {
+      "parent": "MAT-STE-2026-01129",
+      "s_warehouse": "PINNACLE COLD STORAGE SOLUTIONS - BKI",
+      "t_warehouse": null,
+      "item_code": "FG001",
+      "qty": 5.0,
+      "creation": "2026-04-28 08:55:35.114120",
+      "docstatus": 1,
+      "stock_entry_type": "Material Issue"
+    },
+    {
+      "parent": "MAT-STE-2026-01128",
+      "s_warehouse": "PINNACLE COLD STORAGE SOLUTIONS - BKI",
+      "t_warehouse": null,
+      "item_code": "FG001",
+      "qty": 5.0,
+      "creation": "2026-04-28 08:55:26.723261",
+      "docstatus": 1,
+      "stock_entry_type": "Material Issue"
+    },
+    {
+      "parent": "MAT-STE-2026-01127",
+      "s_warehouse": "PINNACLE COLD STORAGE SOLUTIONS - BKI",
+      "t_warehouse": null,
+      "item_code": "FG001",
+      "qty": 5.0,
+      "creation": "2026-04-28 08:48:20.971010",
+      "docstatus": 1,
+      "stock_entry_type": "Material Issue"
+    },
+    {
+      "parent": "MAT-STE-2026-01126",
+      "s_warehouse": "PINNACLE COLD STORAGE SOLUTIONS - BKI",
+      "t_warehouse": null,
+      "item_code": "FG001",
+      "qty": 5.0,
+      "creation": "2026-04-28 08:48:12.510690",
+      "docstatus": 1,
+      "stock_entry_type": "Material Issue"
+    },
+    {
+      "parent": "MAT-STE-2026-01125",
+      "s_warehouse": "PINNACLE COLD STORAGE SOLUTIONS - BKI",
+      "t_warehouse": null,
+      "item_code": "FG001",
+      "qty": 5.0,
+      "creation": "2026-04-28 08:45:44.387265",
+      "docstatus": 1,
+      "stock_entry_type": "Material Issue"
+    },
+    {
+      "parent": "MAT-STE-2026-01124",
+      "s_warehouse": "PINNACLE COLD STORAGE SOLUTIONS - BKI",
+      "t_warehouse": null,
+      "item_code": "FG001",
+      "qty": 5.0,
+      "creation": "2026-04-28 08:45:35.834288",
+      "docstatus": 1,
+      "stock_entry_type": "Material Issue"
+    },
+    {
+      "parent": "MAT-STE-2026-01121",
+      "s_warehouse": "PINNACLE COLD STORAGE SOLUTIONS - BKI",
+      "t_warehouse": null,
+      "item_code": "FG001",
+      "qty": 5.0,
+      "creation": "2026-04-28 08:43:49.886641",
+      "docstatus": 1,
+      "stock_entry_type": "Material Issue"
+    },
+    {
+      "parent": "MAT-STE-2026-01120",
+      "s_warehouse": "PINNACLE COLD STORAGE SOLUTIONS - BKI",
+      "t_warehouse": null,
+      "item_code": "FG001",
+      "qty": 5.0,
+      "creation": "2026-04-28 08:43:41.163566",
+      "docstatus": 1,
+      "stock_entry_type": "Material Issue"
+    },
+    {
+      "parent": "MAT-STE-2026-01117",
+      "s_warehouse": "PINNACLE COLD STORAGE SOLUTIONS - BKI",
+      "t_warehouse": null,
+      "item_code": "FG001",
+      "qty": 5.0,
+      "creation": "2026-04-28 08:41:56.449875",
+      "docstatus": 1,
+      "stock_entry_type": "Material Issue"
+    },
+    {
+      "parent": "MAT-STE-2026-01116",
+      "s_warehouse": "PINNACLE COLD STORAGE SOLUTIONS - BKI",
+      "t_warehouse": null,
+      "item_code": "FG001",
+      "qty": 5.0,
+      "creation": "2026-04-28 08:41:48.045915",
+      "docstatus": 1,
+      "stock_entry_type": "Material Issue"
+    },
+    {
+      "parent": "MAT-STE-2026-01113",
+      "s_warehouse": "PINNACLE COLD STORAGE SOLUTIONS - BKI",
+      "t_warehouse": null,
+      "item_code": "FG001",
+      "qty": 5.0,
+      "creation": "2026-04-28 08:40:02.991513",
+      "docstatus": 1,
+      "stock_entry_type": "Material Issue"
+    },
+    {
+      "parent": "MAT-STE-2026-01112",
+      "s_warehouse": "PINNACLE COLD STORAGE SOLUTIONS - BKI",
+      "t_warehouse": null,
+      "item_code": "FG001",
+      "qty": 5.0,
+      "creation": "2026-04-28 08:39:53.805501",
+      "docstatus": 1,
+      "stock_entry_type": "Material Issue"
+    }
+  ]
+}
