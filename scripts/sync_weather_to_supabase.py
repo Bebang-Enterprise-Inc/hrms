@@ -315,8 +315,13 @@ def fetch_weather_bundle(latitude: float, longitude: float, date_str: str) -> di
 		"end_date": date_str,
 	}
 
+	# (connect=10s, read=60s) — open-meteo's archive-api is occasionally slow
+	# serving historical windows; 20s caused ~30% of store-groups to time out
+	# during the 12-day backfill 2026-04-15 -> 2026-04-28. 60s gives backfills
+	# substantially better per-day coverage with no meaningful impact on the
+	# scheduled 30-min job runtime (forecast endpoint typically responds <2s).
 	try:
-		response = requests.get(base_url, params=params, timeout=20)
+		response = requests.get(base_url, params=params, timeout=(10, 60))
 		response.raise_for_status()
 		payload = response.json()
 	except Exception as exc:
