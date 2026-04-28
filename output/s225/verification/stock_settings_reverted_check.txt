@@ -1,0 +1,3 @@
+{"allow_negative_stock": 0, "allow_negative_stock_for_batch": 0}
+
+Both flags reverted to 0: True
