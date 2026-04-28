@@ -541,6 +541,20 @@ def _filter_sales_warehouses(rows: list[dict[str, Any]]) -> list[dict[str, Any]]
 					),
 				)
 			continue
+		# 2026-04-28 fix: lookup_sales_location matches by normalized warehouse
+		# name only, so a Franchisor-entity warehouse (e.g. "SM Megamall - BFC"
+		# under a Franchisor Company) whose warehouse_name happens to match a
+		# canonical Store warehouse_name (e.g. "SM Megamall") inherits the
+		# canonical mapping payload. That lets non-canonical warehouses leak
+		# into the admin/HQ resolver's all-stores view (Sam previously saw 54
+		# stores while only 48 are canonical Active stores; the 6 extras were
+		# all "- BFC" Franchisor duplicates). Reject mismatches: the row's
+		# company must equal the canonical match's company. Stakeholder /
+		# Partner branches are unaffected because their warehouses are pre-
+		# filtered by the access-row warehouse name (only canonical names live
+		# in BEI Sales Dashboard Store Access).
+		if row.get("company") and match.get("company") and row.get("company") != match.get("company"):
+			continue
 		# S200: Use warehouse_name from mapping (derived from Company store prefix)
 		# instead of the raw Warehouse.warehouse_name field which may be stale.
 		filtered.append(
