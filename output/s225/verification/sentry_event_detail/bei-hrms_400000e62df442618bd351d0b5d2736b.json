@@ -1,0 +1,1604 @@
+{
+  "id": "400000e62df442618bd351d0b5d2736b",
+  "groupID": "7442939231",
+  "eventID": "400000e62df442618bd351d0b5d2736b",
+  "projectID": "4510861213302784",
+  "size": 24829,
+  "entries": [
+    {
+      "data": {
+        "values": [
+          {
+            "type": "PermissionError",
+            "value": "Order BEI-ORD-2026-00439 is currently assigned to test.area@bebang.ph.",
+            "mechanism": {
+              "type": "generic",
+              "handled": true
+            },
+            "threadId": null,
+            "module": "frappe.exceptions",
+            "stacktrace": {
+              "frames": [
+                {
+                  "filename": "frappe/app.py",
+                  "absPath": "/home/frappe/frappe-bench/apps/frappe/frappe/app.py",
+                  "module": "frappe.app",
+                  "package": null,
+                  "platform": null,
+                  "instructionAddr": null,
+                  "symbolAddr": null,
+                  "function": "application",
+                  "rawFunction": null,
+                  "symbol": null,
+                  "context": [
+                    [
+                      115,
+                      "\t\t\t)"
+                    ],
+                    [
+                      116,
+                      "\t\t\tfrappe.handler.handle()"
+                    ],
+                    [
+                      117,
+                      "\t\t\tresponse = frappe.utils.response.build_response(\"json\")"
+                    ],
+                    [
+                      118,
+                      ""
+                    ],
+                    [
+                      119,
+                      "\t\telif request.path.startswith(\"/api/\"):"
+                    ],
+                    [
+                      120,
+                      "\t\t\tresponse = frappe.api.handle(request)"
+                    ],
+                    [
+                      121,
+                      ""
+                    ],
+                    [
+                      122,
+                      "\t\telif request.path.startswith(\"/backups\"):"
+                    ],
+                    [
+                      123,
+                      "\t\t\tresponse = frappe.utils.response.download_backup(request.path)"
+                    ],
+                    [
+                      124,
+                      ""
+                    ],
+                    [
+                      125,
+                      "\t\telif request.path.startswith(\"/private/files/\"):"
+                    ]
+                  ],
+                  "lineNo": 120,
+                  "colNo": null,
+                  "parentIndex": null,
+                  "sampleCount": null,
+                  "inApp": false,
+                  "trust": null,
+                  "errors": null,
+                  "lock": null,
+                  "sourceLink": null,
+                  "vars": {
+                    "e": "PermissionError('Order BEI-ORD-2026-00439 is currently assigned to test.area@bebang.ph.')",
+                    "request": "<Request 'http://hq.bebang.ph/api/method/hrms.api.store.approve_order' [POST]>",
+                    "response": "None",
+                    "rollback": "True"
+                  }
+                },
+                {
+                  "filename": "frappe/api/__init__.py",
+                  "absPath": "/home/frappe/frappe-bench/apps/frappe/frappe/api/__init__.py",
+                  "module": "frappe.api",
+                  "package": null,
+                  "platform": null,
+                  "instructionAddr": null,
+                  "symbolAddr": null,
+                  "function": "handle",
+                  "rawFunction": null,
+                  "symbol": null,
+                  "context": [
+                    [
+                      47,
+                      "\ttry:"
+                    ],
+                    [
+                      48,
+                      "\t\tendpoint, arguments = API_URL_MAP.bind_to_environ(request.environ).match()"
+                    ],
+                    [
+                      49,
+                      "\texcept NotFound:  # Wrap 404 - backward compatiblity"
+                    ],
+                    [
+                      50,
+                      "\t\traise frappe.DoesNotExistError"
+                    ],
+                    [
+                      51,
+                      ""
+                    ],
+                    [
+                      52,
+                      "\tdata = endpoint(**arguments)"
+                    ],
+                    [
+                      53,
+                      "\tif isinstance(data, Response):"
+                    ],
+                    [
+                      54,
+                      "\t\treturn data"
+                    ],
+                    [
+                      55,
+                      ""
+                    ],
+                    [
+                      56,
+                      "\tif data is not None:"
+                    ],
+                    [
+                      57,
+                      "\t\tfrappe.response[\"data\"] = data"
+                    ]
+                  ],
+                  "lineNo": 52,
+                  "colNo": null,
+                  "parentIndex": null,
+                  "sampleCount": null,
+                  "inApp": false,
+                  "trust": null,
+                  "errors": null,
+                  "lock": null,
+                  "sourceLink": null,
+                  "vars": {
+                    "arguments": {
+                      "method": "'hrms.api.store.approve_order'"
+                    },
+                    "endpoint": "<function handle_rpc_call at 0x763f8eccc540>",
+                    "request": "<Request 'http://hq.bebang.ph/api/method/hrms.api.store.approve_order' [POST]>"
+                  }
+                },
+                {
+                  "filename": "frappe/api/v1.py",
+                  "absPath": "/home/frappe/frappe-bench/apps/frappe/frappe/api/v1.py",
+                  "module": "frappe.api.v1",
+                  "package": null,
+                  "platform": null,
+                  "instructionAddr": null,
+                  "symbolAddr": null,
+                  "function": "handle_rpc_call",
+                  "rawFunction": null,
+                  "symbol": null,
+                  "context": [
+                    [
+                      35,
+                      "\timport frappe.handler"
+                    ],
+                    [
+                      36,
+                      ""
+                    ],
+                    [
+                      37,
+                      "\tmethod = method.split(\"/\")[0]  # for backward compatiblity"
+                    ],
+                    [
+                      38,
+                      ""
+                    ],
+                    [
+                      39,
+                      "\tfrappe.form_dict.cmd = method"
+                    ],
+                    [
+                      40,
+                      "\treturn frappe.handler.handle()"
+                    ],
+                    [
+                      41,
+                      ""
+                    ],
+                    [
+                      42,
+                      ""
+                    ],
+                    [
+                      43,
+                      "def create_doc(doctype: str):"
+                    ],
+                    [
+                      44,
+                      "\tdata = get_request_form_data()"
+                    ],
+                    [
+                      45,
+                      "\tdata.pop(\"doctype\", None)"
+                    ]
+                  ],
+                  "lineNo": 40,
+                  "colNo": null,
+                  "parentIndex": null,
+                  "sampleCount": null,
+                  "inApp": false,
+                  "trust": null,
+                  "errors": null,
+                  "lock": null,
+                  "sourceLink": null,
+                  "vars": {
+                    "frappe": "<module 'frappe' from '/home/frappe/frappe-bench/apps/frappe/frappe/__init__.py'>",
+                    "method": "'hrms.api.store.approve_order'"
+                  }
+                },
+                {
+                  "filename": "frappe/handler.py",
+                  "absPath": "/home/frappe/frappe-bench/apps/frappe/frappe/handler.py",
+                  "module": "frappe.handler",
+                  "package": null,
+                  "platform": null,
+                  "instructionAddr": null,
+                  "symbolAddr": null,
+                  "function": "handle",
+                  "rawFunction": null,
+                  "symbol": null,
+                  "context": [
+                    [
+                      48,
+                      ""
+                    ],
+                    [
+                      49,
+                      "\tcmd = frappe.local.form_dict.cmd"
+                    ],
+                    [
+                      50,
+                      "\tdata = None"
+                    ],
+                    [
+                      51,
+                      ""
+                    ],
+                    [
+                      52,
+                      "\tif cmd != \"login\":"
+                    ],
+                    [
+                      53,
+                      "\t\tdata = execute_cmd(cmd)"
+                    ],
+                    [
+                      54,
+                      ""
+                    ],
+                    [
+                      55,
+                      "\t# data can be an empty string or list which are valid responses"
+                    ],
+                    [
+                      56,
+                      "\tif data is not None:"
+                    ],
+                    [
+                      57,
+                      "\t\tif isinstance(data, Response):"
+                    ],
+                    [
+                      58,
+                      "\t\t\t# method returns a response object, pass it on"
+                    ]
+                  ],
+                  "lineNo": 53,
+                  "colNo": null,
+                  "parentIndex": null,
+                  "sampleCount": null,
+                  "inApp": false,
+                  "trust": null,
+                  "errors": null,
+                  "lock": null,
+                  "sourceLink": null,
+                  "vars": {
+                    "cmd": "'hrms.api.store.approve_order'",
+                    "data": "None"
+                  }
+                },
+                {
+                  "filename": "frappe/handler.py",
+                  "absPath": "/home/frappe/frappe-bench/apps/frappe/frappe/handler.py",
+                  "module": "frappe.handler",
+                  "package": null,
+                  "platform": null,
+                  "instructionAddr": null,
+                  "symbolAddr": null,
+                  "function": "execute_cmd",
+                  "rawFunction": null,
+                  "symbol": null,
+                  "context": [
+                    [
+                      81,
+                      ""
+                    ],
+                    [
+                      82,
+                      "\tif method != run_doc_method:"
+                    ],
+                    [
+                      83,
+                      "\t\tis_whitelisted(method)"
+                    ],
+                    [
+                      84,
+                      "\t\tis_valid_http_method(method)"
+                    ],
+                    [
+                      85,
+                      ""
+                    ],
+                    [
+                      86,
+                      "\treturn frappe.call(method, **frappe.form_dict)"
+                    ],
+                    [
+                      87,
+                      ""
+                    ],
+                    [
+                      88,
+                      ""
+                    ],
+                    [
+                      89,
+                      "def run_server_script(server_script):"
+                    ],
+                    [
+                      90,
+                      "\tresponse = frappe.get_doc(\"Server Script\", server_script).execute_method()"
+                    ],
+                    [
+                      91,
+                      ""
+                    ]
+                  ],
+                  "lineNo": 86,
+                  "colNo": null,
+                  "parentIndex": null,
+                  "sampleCount": null,
+                  "inApp": false,
+                  "trust": null,
+                  "errors": null,
+                  "lock": null,
+                  "sourceLink": null,
+                  "vars": {
+                    "cmd": "'hrms.api.store.approve_order'",
+                    "from_async": "False",
+                    "method": "<function approve_order at 0x763f8b917420>",
+                    "server_script": "None"
+                  }
+                },
+                {
+                  "filename": "__init__.py",
+                  "absPath": "/home/frappe/frappe-bench/apps/frappe/frappe/__init__.py",
+                  "module": "frappe",
+                  "package": null,
+                  "platform": null,
+                  "instructionAddr": null,
+                  "symbolAddr": null,
+                  "function": "call",
+                  "rawFunction": null,
+                  "symbol": null,
+                  "context": [
+                    [
+                      1759,
+                      "\tif isinstance(fn, str):"
+                    ],
+                    [
+                      1760,
+                      "\t\tfn = get_attr(fn)"
+                    ],
+                    [
+                      1761,
+                      ""
+                    ],
+                    [
+                      1762,
+                      "\tnewargs = get_newargs(fn, kwargs)"
+                    ],
+                    [
+                      1763,
+                      ""
+                    ],
+                    [
+                      1764,
+                      "\treturn fn(*args, **newargs)"
+                    ],
+                    [
+                      1765,
+                      ""
+                    ],
+                    [
+                      1766,
+                      ""
+                    ],
+                    [
+                      1767,
+                      "_cached_inspect_signature = functools.lru_cache(inspect.signature)"
+                    ],
+                    [
+                      1768,
+                      ""
+                    ],
+                    [
+                      1769,
+                      ""
+                    ]
+                  ],
+                  "lineNo": 1764,
+                  "colNo": null,
+                  "parentIndex": null,
+                  "sampleCount": null,
+                  "inApp": false,
+                  "trust": null,
+                  "errors": null,
+                  "lock": null,
+                  "sourceLink": null,
+                  "vars": {
+                    "args": [],
+                    "fn": "<function approve_order at 0x763f8b917420>",
+                    "kwargs": {
+                      "approved_quantities": [],
+                      "cmd": "'hrms.api.store.approve_order'",
+                      "order_name": "'BEI-ORD-2026-00439'"
+                    },
+                    "newargs": {
+                      "approved_quantities": [],
+                      "order_name": "'BEI-ORD-2026-00439'"
+                    }
+                  }
+                },
+                {
+                  "filename": "frappe/utils/typing_validations.py",
+                  "absPath": "/home/frappe/frappe-bench/apps/frappe/frappe/utils/typing_validations.py",
+                  "module": "frappe.utils.typing_validations",
+                  "package": null,
+                  "platform": null,
+                  "instructionAddr": null,
+                  "symbolAddr": null,
+                  "function": "wrapper",
+                  "rawFunction": null,
+                  "symbol": null,
+                  "context": [
+                    [
+                      27,
+                      "\t\t:param kwargs: Function keyword arguments.\"\"\""
+                    ],
+                    [
+                      28,
+                      ""
+                    ],
+                    [
+                      29,
+                      "\t\tif apply_condition():"
+                    ],
+                    [
+                      30,
+                      "\t\t\targs, kwargs = transform_parameter_types(func, args, kwargs)"
+                    ],
+                    [
+                      31,
+                      ""
+                    ],
+                    [
+                      32,
+                      "\t\treturn func(*args, **kwargs)"
+                    ],
+                    [
+                      33,
+                      ""
+                    ],
+                    [
+                      34,
+                      "\treturn wrapper"
+                    ],
+                    [
+                      35,
+                      ""
+                    ],
+                    [
+                      36,
+                      ""
+                    ],
+                    [
+                      37,
+                      "def qualified_name(obj) -> str:"
+                    ]
+                  ],
+                  "lineNo": 32,
+                  "colNo": null,
+                  "parentIndex": null,
+                  "sampleCount": null,
+                  "inApp": false,
+                  "trust": null,
+                  "errors": null,
+                  "lock": null,
+                  "sourceLink": null,
+                  "vars": {
+                    "apply_condition": "<function whitelist.<locals>.innerfn.<locals>.<lambda> at 0x763f8b917380>",
+                    "args": [],
+                    "func": "<function approve_order at 0x763f8b9172e0>",
+                    "kwargs": {
+                      "approved_quantities": [],
+                      "order_name": "'BEI-ORD-2026-00439'"
+                    }
+                  }
+                },
+                {
+                  "filename": "hrms/api/store.py",
+                  "absPath": "/home/frappe/frappe-bench/apps/hrms/hrms/api/store.py",
+                  "module": "hrms.api.store",
+                  "package": null,
+                  "platform": null,
+                  "instructionAddr": null,
+                  "symbolAddr": null,
+                  "function": "approve_order",
+                  "rawFunction": null,
+                  "symbol": null,
+                  "context": [
+                    [
+                      3499,
+                      "\t\t\tassigned_approver != user"
+                    ],
+                    [
+                      3500,
+                      "\t\t\tand not is_system_user"
+                    ],
+                    [
+                      3501,
+                      "\t\t\tand not is_fallback_override"
+                    ],
+                    [
+                      3502,
+                      "\t\t\tand not is_stage2_warehouse_manager_delegate"
+                    ],
+                    [
+                      3503,
+                      "\t\t):"
+                    ],
+                    [
+                      3504,
+                      "\t\t\tfrappe.throw("
+                    ],
+                    [
+                      3505,
+                      "\t\t\t\t_(\"Order {0} is currently assigned to {1}.\").format(order_name, assigned_approver),"
+                    ],
+                    [
+                      3506,
+                      "\t\t\t\tfrappe.PermissionError,"
+                    ],
+                    [
+                      3507,
+                      "\t\t\t)"
+                    ],
+                    [
+                      3508,
+                      "\telse:"
+                    ],
+                    [
+                      3509,
+                      "\t\tallowed_roles = {AREA_SUPERVISOR_ROLE}.union(SYSTEM_APPROVER_ROLES)"
+                    ]
+                  ],
+                  "lineNo": 3504,
+                  "colNo": null,
+                  "parentIndex": null,
+                  "sampleCount": null,
+                  "inApp": false,
+                  "trust": null,
+                  "errors": null,
+                  "lock": null,
+                  "sourceLink": null,
+                  "vars": {
+                    "active_entry": {
+                      "assigned_approver": "'test.area@bebang.ph'",
+                      "creation": "datetime.datetime(2026, 4, 28, 9, 13, 43, 403182)",
+                      "name": "'BEI-APQ-2026-01120'",
+                      "priority": "'Normal'",
+                      "submitted_at": "datetime.datetime(2026, 4, 28, 9, 13, 43, 402933)"
+                    },
+                    "approved_quantities": [],
+                    "assigned_approver": "'test.area@bebang.ph'",
+                    "fallback_approver": "'edlice@bebang.ph'",
+                    "is_fallback_override": "False",
+                    "is_system_user": "False",
+                    "order": "<BEIStoreOrder: BEI-ORD-2026-00439>",
+                    "order_name": "'BEI-ORD-2026-00439'",
+                    "pending_entries": [
+                      {
+                        "assigned_approver": "'test.area@bebang.ph'",
+                        "creation": "datetime.datetime(2026, 4, 28, 9, 13, 43, 403182)",
+                        "name": "'BEI-APQ-2026-01120'",
+                        "priority": "'Normal'",
+                        "submitted_at": "datetime.datetime(2026, 4, 28, 9, 13, 43, 402933)"
+                      }
+                    ],
+                    "user": "'test.scm@bebang.ph'"
+                  }
+                },
+                {
+                  "filename": "__init__.py",
+                  "absPath": "/home/frappe/frappe-bench/apps/frappe/frappe/__init__.py",
+                  "module": "frappe",
+                  "package": null,
+                  "platform": null,
+                  "instructionAddr": null,
+                  "symbolAddr": null,
+                  "function": "throw",
+                  "rawFunction": null,
+                  "symbol": null,
+                  "context": [
+                    [
+                      614,
+                      "\t:param is_minimizable: [optional] Allow users to minimize the modal"
+                    ],
+                    [
+                      615,
+                      "\t:param wide: [optional] Show wide modal"
+                    ],
+                    [
+                      616,
+                      "\t:param as_list: [optional] If `msg` is a list, render as un-ordered list."
+                    ],
+                    [
+                      617,
+                      "\t:param primary_action: [optional] Bind a primary server/client side action."
+                    ],
+                    [
+                      618,
+                      "\t\"\"\""
+                    ],
+                    [
+                      619,
+                      "\tmsgprint("
+                    ],
+                    [
+                      620,
+                      "\t\tmsg,"
+                    ],
+                    [
+                      621,
+                      "\t\traise_exception=exc,"
+                    ],
+                    [
+                      622,
+                      "\t\ttitle=title,"
+                    ],
+                    [
+                      623,
+                      "\t\tindicator=\"red\","
+                    ],
+                    [
+                      624,
+                      "\t\tis_minimizable=is_minimizable,"
+                    ]
+                  ],
+                  "lineNo": 619,
+                  "colNo": null,
+                  "parentIndex": null,
+                  "sampleCount": null,
+                  "inApp": false,
+                  "trust": null,
+                  "errors": null,
+                  "lock": null,
+                  "sourceLink": null,
+                  "vars": {
+                    "as_list": "False",
+                    "exc": "<class 'frappe.exceptions.PermissionError'>",
+                    "is_minimizable": "False",
+                    "msg": "'Order BEI-ORD-2026-00439 is currently assigned to test.area@bebang.ph.'",
+                    "primary_action": "None",
+                    "title": "None",
+                    "wide": "False"
+                  }
+                },
+                {
+                  "filename": "__init__.py",
+                  "absPath": "/home/frappe/frappe-bench/apps/frappe/frappe/__init__.py",
+                  "module": "frappe",
+                  "package": null,
+                  "platform": null,
+                  "instructionAddr": null,
+                  "symbolAddr": null,
+                  "function": "msgprint",
+                  "rawFunction": null,
+                  "symbol": null,
+                  "context": [
+                    [
+                      579,
+                      ""
+                    ],
+                    [
+                      580,
+                      "\tif realtime:"
+                    ],
+                    [
+                      581,
+                      "\t\tpublish_realtime(event=\"msgprint\", message=out)"
+                    ],
+                    [
+                      582,
+                      "\telse:"
+                    ],
+                    [
+                      583,
+                      "\t\tmessage_log.append(out)"
+                    ],
+                    [
+                      584,
+                      "\t_raise_exception()"
+                    ],
+                    [
+                      585,
+                      ""
+                    ],
+                    [
+                      586,
+                      ""
+                    ],
+                    [
+                      587,
+                      "def clear_messages():"
+                    ],
+                    [
+                      588,
+                      "\tlocal.message_log = []"
+                    ],
+                    [
+                      589,
+                      ""
+                    ]
+                  ],
+                  "lineNo": 584,
+                  "colNo": null,
+                  "parentIndex": null,
+                  "sampleCount": null,
+                  "inApp": false,
+                  "trust": null,
+                  "errors": null,
+                  "lock": null,
+                  "sourceLink": null,
+                  "vars": {
+                    "alert": "False",
+                    "as_list": "False",
+                    "as_table": "False",
+                    "indicator": "'red'",
+                    "is_minimizable": "False",
+                    "msg": "'Order BEI-ORD-2026-00439 is currently assigned to test.area@bebang.ph.'",
+                    "primary_action": "None",
+                    "raise_exception": "<class 'frappe.exceptions.PermissionError'>",
+                    "title": "None",
+                    "wide": "False"
+                  }
+                },
+                {
+                  "filename": "__init__.py",
+                  "absPath": "/home/frappe/frappe-bench/apps/frappe/frappe/__init__.py",
+                  "module": "frappe",
+                  "package": null,
+                  "platform": null,
+                  "instructionAddr": null,
+                  "symbolAddr": null,
+                  "function": "_raise_exception",
+                  "rawFunction": null,
+                  "symbol": null,
+                  "context": [
+                    [
+                      530,
+                      "\t\t\t\texc.args = (msg,)"
+                    ],
+                    [
+                      531,
+                      "\t\t\telse:"
+                    ],
+                    [
+                      532,
+                      "\t\t\t\texc = ValidationError(msg)"
+                    ],
+                    [
+                      533,
+                      "\t\t\tif out.__frappe_exc_id:"
+                    ],
+                    [
+                      534,
+                      "\t\t\t\texc.__frappe_exc_id = out.__frappe_exc_id"
+                    ],
+                    [
+                      535,
+                      "\t\t\traise exc"
+                    ],
+                    [
+                      536,
+                      ""
+                    ],
+                    [
+                      537,
+                      "\tif flags.mute_messages:"
+                    ],
+                    [
+                      538,
+                      "\t\t_raise_exception()"
+                    ],
+                    [
+                      539,
+                      "\t\treturn"
+                    ],
+                    [
+                      540,
+                      ""
+                    ]
+                  ],
+                  "lineNo": 535,
+                  "colNo": null,
+                  "parentIndex": null,
+                  "sampleCount": null,
+                  "inApp": false,
+                  "trust": null,
+                  "errors": null,
+                  "lock": null,
+                  "sourceLink": null,
+                  "vars": {
+                    "exc": "PermissionError('Order BEI-ORD-2026-00439 is currently assigned to test.area@bebang.ph.')",
+                    "inspect": "<module 'inspect' from '/usr/local/lib/python3.11/inspect.py'>",
+                    "msg": "'Order BEI-ORD-2026-00439 is currently assigned to test.area@bebang.ph.'",
+                    "out": {
+                      "__frappe_exc_id": "'6d44a4b1bedf59146873c17c031339ad1c577d784db57b04b688f3eb'",
+                      "indicator": "'red'",
+                      "message": "'Order BEI-ORD-2026-00439 is currently assigned to test.area@bebang.ph.'",
+                      "raise_exception": "1",
+                      "title": "'Message'"
+                    },
+                    "raise_exception": "<class 'frappe.exceptions.PermissionError'>"
+                  }
+                }
+              ],
+              "framesOmitted": null,
+              "registers": null,
+              "hasSystemFrames": false
+            },
+            "rawStacktrace": null,
+            "rawValue": null,
+            "rawModule": null,
+            "rawType": null
+          }
+        ],
+        "hasSystemFrames": false,
+        "excOmitted": null
+      },
+      "type": "exception"
+    },
+    {
+      "data": {
+        "values": [
+          {
+            "type": "redis",
+            "timestamp": "2026-04-28T01:14:08.163862Z",
+            "level": "info",
+            "message": "GET b'_3ca82e0039adc3d1|installed_app_modules'",
+            "category": "redis",
+            "data": {
+              "db.operation": "GET",
+              "redis.command": "GET",
+              "redis.is_cluster": false,
+              "redis.key": "_3ca82e0039adc3d1|installed_app_modules"
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-28T01:14:08.164788Z",
+            "level": "info",
+            "message": "HGET b'_3ca82e0039adc3d1|session' [Filtered]",
+            "category": "redis",
+            "data": {
+              "db.operation": "HGET",
+              "redis.command": "HGET",
+              "redis.is_cluster": false
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-28T01:14:08.166327Z",
+            "level": "info",
+            "message": "GET b'_3ca82e0039adc3d1|document_cache::System Settings::System Settings'",
+            "category": "redis",
+            "data": {
+              "db.operation": "GET",
+              "redis.command": "GET",
+              "redis.is_cluster": false,
+              "redis.key": "_3ca82e0039adc3d1|document_cache::System Settings::System Settings"
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-28T01:14:08.174487Z",
+            "level": "info",
+            "message": "GET b'_3ca82e0039adc3d1|document_cache::User::test.scm@bebang.ph'",
+            "category": "redis",
+            "data": {
+              "db.operation": "GET",
+              "redis.command": "GET",
+              "redis.is_cluster": false,
+              "redis.key": "_3ca82e0039adc3d1|document_cache::User::test.scm@bebang.ph"
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-28T01:14:08.175474Z",
+            "level": "info",
+            "message": "HGET b'_3ca82e0039adc3d1|defaults' [Filtered]",
+            "category": "redis",
+            "data": {
+              "db.operation": "HGET",
+              "redis.command": "HGET",
+              "redis.is_cluster": false
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-28T01:14:08.177120Z",
+            "level": "info",
+            "message": "HGET b'_3ca82e0039adc3d1|defaults' [Filtered]",
+            "category": "redis",
+            "data": {
+              "db.operation": "HGET",
+              "redis.command": "HGET",
+              "redis.is_cluster": false
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-28T01:14:08.177563Z",
+            "level": "info",
+            "message": "HGET b'_3ca82e0039adc3d1|user_permissions' [Filtered]",
+            "category": "redis",
+            "data": {
+              "db.operation": "HGET",
+              "redis.command": "HGET",
+              "redis.is_cluster": false
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-28T01:14:08.178279Z",
+            "level": "info",
+            "message": "HGET b'_3ca82e0039adc3d1|defaults' [Filtered]",
+            "category": "redis",
+            "data": {
+              "db.operation": "HGET",
+              "redis.command": "HGET",
+              "redis.is_cluster": false
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-28T01:14:08.179221Z",
+            "level": "info",
+            "message": "GET b'_3ca82e0039adc3d1|all_apps'",
+            "category": "redis",
+            "data": {
+              "db.operation": "GET",
+              "redis.command": "GET",
+              "redis.is_cluster": false,
+              "redis.key": "_3ca82e0039adc3d1|all_apps"
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-28T01:14:08.180743Z",
+            "level": "info",
+            "message": "GET b'_3ca82e0039adc3d1|recorder-intercept'",
+            "category": "redis",
+            "data": {
+              "db.operation": "GET",
+              "redis.command": "GET",
+              "redis.is_cluster": false,
+              "redis.key": "_3ca82e0039adc3d1|recorder-intercept"
+            },
+            "event_id": null
+          },
+          {
+            "type": "default",
+            "timestamp": "2026-04-28T01:14:08.180848Z",
+            "level": "info",
+            "message": "Request to /api/method/hrms.api.store.approve_order",
+            "category": "frappe.request",
+            "data": {
+              "doctype": "",
+              "method": ""
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-28T01:14:08.181400Z",
+            "level": "info",
+            "message": "GET b'_3ca82e0039adc3d1|server_script_map'",
+            "category": "redis",
+            "data": {
+              "db.operation": "GET",
+              "redis.command": "GET",
+              "redis.is_cluster": false,
+              "redis.key": "_3ca82e0039adc3d1|server_script_map"
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-28T01:14:08.182414Z",
+            "level": "info",
+            "message": "HGET b'_3ca82e0039adc3d1|doctype_meta' [Filtered]",
+            "category": "redis",
+            "data": {
+              "db.operation": "HGET",
+              "redis.command": "HGET",
+              "redis.is_cluster": false
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-28T01:14:08.188861Z",
+            "level": "info",
+            "message": "HGET b'_3ca82e0039adc3d1|doctype_meta' [Filtered]",
+            "category": "redis",
+            "data": {
+              "db.operation": "HGET",
+              "redis.command": "HGET",
+              "redis.is_cluster": false
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-28T01:14:08.190172Z",
+            "level": "info",
+            "message": "HGET b'_3ca82e0039adc3d1|table_columns' [Filtered]",
+            "category": "redis",
+            "data": {
+              "db.operation": "HGET",
+              "redis.command": "HGET",
+              "redis.is_cluster": false
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-28T01:14:08.190691Z",
+            "level": "info",
+            "message": "HGET b'_3ca82e0039adc3d1|doctype_meta' [Filtered]",
+            "category": "redis",
+            "data": {
+              "db.operation": "HGET",
+              "redis.command": "HGET",
+              "redis.is_cluster": false
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-28T01:14:08.193060Z",
+            "level": "info",
+            "message": "HGET b'_3ca82e0039adc3d1|roles' [Filtered]",
+            "category": "redis",
+            "data": {
+              "db.operation": "HGET",
+              "redis.command": "HGET",
+              "redis.is_cluster": false
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-28T01:14:08.193502Z",
+            "level": "info",
+            "message": "HGET b'_3ca82e0039adc3d1|table_columns' [Filtered]",
+            "category": "redis",
+            "data": {
+              "db.operation": "HGET",
+              "redis.command": "HGET",
+              "redis.is_cluster": false
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-28T01:14:08.194049Z",
+            "level": "info",
+            "message": "HGET b'_3ca82e0039adc3d1|doctype_meta' [Filtered]",
+            "category": "redis",
+            "data": {
+              "db.operation": "HGET",
+              "redis.command": "HGET",
+              "redis.is_cluster": false
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-28T01:14:08.197127Z",
+            "level": "info",
+            "message": "HGET b'_3ca82e0039adc3d1|roles' [Filtered]",
+            "category": "redis",
+            "data": {
+              "db.operation": "HGET",
+              "redis.command": "HGET",
+              "redis.is_cluster": false
+            },
+            "event_id": null
+          },
+          {
+            "type": "redis",
+            "timestamp": "2026-04-28T01:14:08.197593Z",
+            "level": "info",
+            "message": "HGET b'_3ca82e0039adc3d1|merged_translations' [Filtered]",
+            "category": "redis",
+            "data": {
+              "db.operation": "HGET",
+              "redis.command": "HGET",
+              "redis.is_cluster": false
+            },
+            "event_id": null
+          },
+          {
+            "type": "default",
+            "timestamp": "2026-04-28T01:14:08.197938Z",
+            "level": "info",
+            "message": "handle_exception",
+            "category": "bei.backend",
+            "data": {
+              "endpoint_or_job": "hrms.api.store.approve_order",
+              "module": null,
+              "mutation_type": "mutation",
+              "phase": "backend_exception",
+              "route": "/api/method/hrms.api.store.approve_order"
+            },
+            "event_id": null
+          }
+        ]
+      },
+      "type": "breadcrumbs"
+    }
+  ],
+  "dist": null,
+  "message": "",
+  "title": "PermissionError: Order BEI-ORD-2026-00439 is currently assigned to test.area@bebang.ph.",
+  "location": "__init__.py",
+  "user": {
+    "id": "test.scm@bebang.ph",
+    "email": "test.scm@bebang.ph",
+    "username": null,
+    "ip_address": null,
+    "name": null,
+    "geo": {
+      "country_code": "SG",
+      "city": "Singapore",
+      "region": "Singapore"
+    },
+    "data": null
+  },
+  "contexts": {
+    "bei_backend_observability": {
+      "extras": {
+        "exception_type": "PermissionError",
+        "http_status": 403
+      },
+      "frappe_cmd": "hrms.api.store.approve_order",
+      "http_method": "POST",
+      "request_route": "/api/method/hrms.api.store.approve_order",
+      "type": "default"
+    },
+    "runtime": {
+      "runtime": "CPython 3.11.6",
+      "name": "CPython",
+      "version": "3.11.6",
+      "build": "3.11.6 (main, Nov 29 2023, 04:30:13) [GCC 12.2.0]",
+      "type": "runtime"
+    },
+    "trace": {
+      "trace_id": "364c78c923864dc186fab1e582388701",
+      "span_id": "998692cfaf78868c",
+      "status": "unknown",
+      "client_sample_rate": 0.1,
+      "type": "trace"
+    }
+  },
+  "sdk": {
+    "name": "sentry.python",
+    "version": "2.56.0"
+  },
+  "context": {
+    "sys.argv": [
+      "/home/frappe/frappe-bench/env/bin/gunicorn",
+      "--chdir=/home/frappe/frappe-bench/sites",
+      "--bind=0.0.0.0:8000",
+      "--threads=4",
+      "--workers=2",
+      "--worker-class=gthread",
+      "--worker-tmp-dir=/dev/shm",
+      "--timeout=120",
+      "--preload",
+      "frappe.app:application"
+    ]
+  },
+  "packages": {
+    "annotated-types": "0.7.0",
+    "anyio": "4.12.1",
+    "asttokens": "3.0.1",
+    "babel": "2.13.1",
+    "backcall": "0.2.0",
+    "backoff": "2.2.1",
+    "barcodenumber": "0.5.0",
+    "beautifulsoup4": "4.12.3",
+    "bleach": "6.3.0",
+    "bleach-allowlist": "1.0.3",
+    "boto3": "1.42.74",
+    "botocore": "1.42.74",
+    "braintree": "4.20.0",
+    "brotli": "1.2.0",
+    "cachetools": "7.0.5",
+    "cairocffi": "1.5.1",
+    "certifi": "2026.2.25",
+    "cffi": "2.0.0",
+    "chardet": "5.2.0",
+    "charset-normalizer": "3.4.6",
+    "click": "8.2.1",
+    "croniter": "6.0.0",
+    "cryptography": "46.0.5",
+    "cssselect": "1.4.0",
+    "cssselect2": "0.9.0",
+    "cssutils": "2.11.1",
+    "dataclasses-json": "0.5.14",
+    "decorator": "5.2.1",
+    "distro": "1.9.0",
+    "docopt": "0.6.2",
+    "dropbox": "12.0.2",
+    "email-reply-parser": "0.5.12",
+    "erpnext": "15.102.0",
+    "et_xmlfile": "2.0.0",
+    "executing": "2.2.1",
+    "filelock": "3.20.4",
+    "filetype": "1.2.0",
+    "fonttools": "4.62.1",
+    "frappe": "15.103.0",
+    "gitdb": "4.0.12",
+    "gitpython": "3.1.46",
+    "gocardless_pro": "1.22.0",
+    "google-ai-generativelanguage": "0.6.15",
+    "google-api-core": "2.30.0",
+    "google-api-python-client": "2.193.0",
+    "google-auth": "2.49.1",
+    "google-auth-httplib2": "0.3.0",
+    "google-auth-oauthlib": "1.2.4",
+    "google-generativeai": "0.8.6",
+    "googleapis-common-protos": "1.73.0",
+    "googlemaps": "4.10.0",
+    "grpcio": "1.78.0",
+    "grpcio-status": "1.71.2",
+    "gunicorn": "23.0.0",
+    "h11": "0.16.0",
+    "hiredis": "2.2.3",
+    "holidays": "0.93",
+    "hrms": "16.0.0.dev0",
+    "html5lib": "1.1",
+    "httpcore": "1.0.9",
+    "httplib2": "0.31.2",
+    "httpx": "0.28.1",
+    "idna": "3.11",
+    "ipython": "8.15.0",
+    "isodate": "0.6.1",
+    "jedi": "0.19.2",
+    "jinja2": "3.1.6",
+    "jiter": "0.13.0",
+    "jmespath": "1.1.0",
+    "joblib": "1.5.3",
+    "ldap3": "2.9.1",
+    "lxml": "6.0.2",
+    "markdown2": "2.5.5",
+    "markdownify": "0.14.1",
+    "markupsafe": "3.0.3",
+    "marshmallow": "3.26.2",
+    "matplotlib-inline": "0.2.1",
+    "maxminddb": "3.1.1",
+    "maxminddb-geolite2": "2018.703",
+    "monotonic": "1.6",
+    "more-itertools": "10.8.0",
+    "mypy_extensions": "1.1.0",
+    "num2words": "0.5.14",
+    "numpy": "2.4.3",
+    "oauthlib": "3.3.1",
+    "openai": "2.29.0",
+    "openpyxl": "3.1.5",
+    "packaging": "26.0",
+    "pandas": "3.0.1",
+    "parso": "0.8.6",
+    "passlib": "1.7.4",
+    "payments": "0.0.1",
+    "paytmchecksum": "1.7.0",
+    "pdfkit": "1.0.0",
+    "pexpect": "4.9.0",
+    "phonenumbers": "8.13.55",
+    "pickleshare": "0.7.5",
+    "pillow": "12.1.1",
+    "pip": "26.0.1",
+    "plaid-python": "7.2.1",
+    "ply": "3.11",
+    "posthog": "3.21.0",
+    "premailer": "3.10.0",
+    "prompt_toolkit": "3.0.52",
+    "proto-plus": "1.27.1",
+    "protobuf": "5.29.6",
+    "psutil": "5.9.8",
+    "psycopg2-binary": "2.9.11",
+    "ptyprocess": "0.7.0",
+    "pure_eval": "0.2.3",
+    "pyasn1": "0.6.3",
+    "pyasn1_modules": "0.4.2",
+    "pycountry": "22.3.5",
+    "pycparser": "3.0",
+    "pycryptodome": "3.23.0",
+    "pydantic": "2.12.5",
+    "pydantic_core": "2.41.5",
+    "pydyf": "0.12.1",
+    "pygments": "2.19.2",
+    "pyjwt": "2.8.0",
+    "pymysql": "1.1.1",
+    "pyopenssl": "25.3.0",
+    "pyotp": "2.9.0",
+    "pyparsing": "3.3.2",
+    "pypdf": "6.8.0",
+    "pyphen": "0.17.2",
+    "pypika": "0.48.9",
+    "pypng": "0.20220715.0",
+    "pyqrcode": "1.2.1",
+    "python-dateutil": "2.9.0.post0",
+    "python-stdnum": "2.2",
+    "python-youtube": "0.8.3",
+    "pytz": "2025.2",
+    "pyyaml": "6.0.3",
+    "rapidfuzz": "3.12.2",
+    "rauth": "0.7.3",
+    "razorpay": "2.0.1",
+    "redis": "4.5.5",
+    "requests": "2.32.5",
+    "requests-oauthlib": "1.3.1",
+    "restrictedpython": "8.1",
+    "rq": "1.15.1",
+    "rsa": "4.9.1",
+    "s3transfer": "0.16.0",
+    "scikit-learn": "1.8.0",
+    "scipy": "1.17.1",
+    "semantic-version": "2.10.0",
+    "sentry-sdk": "2.56.0",
+    "setuptools": "70.3.0",
+    "six": "1.17.0",
+    "smmap": "5.0.3",
+    "sniffio": "1.3.1",
+    "soupsieve": "2.8.3",
+    "sql_metadata": "2.11.0",
+    "sqlparse": "0.5.5",
+    "stack-data": "0.6.3",
+    "stone": "3.3.1",
+    "stripe": "10.12.0",
+    "tenacity": "8.2.3",
+    "terminaltables": "3.1.10",
+    "threadpoolctl": "3.6.0",
+    "tinycss2": "1.5.1",
+    "tinyhtml5": "2.1.0",
+    "tomli": "2.0.2",
+    "tqdm": "4.67.3",
+    "traceback-with-variables": "2.0.4",
+    "traitlets": "5.14.3",
+    "typing-inspect": "0.9.0",
+    "typing-inspection": "0.4.2",
+    "typing_extensions": "4.15.0",
+    "unidecode": "1.3.8",
+    "uritemplate": "4.2.0",
+    "urllib3": "2.6.3",
+    "vobject": "0.9.9",
+    "wcwidth": "0.6.0",
+    "weasyprint": "68.0",
+    "webencodings": "0.5.1",
+    "werkzeug": "3.1.6",
+    "wheel": "0.46.3",
+    "whoosh": "2.7.4",
+    "xlrd": "2.0.2",
+    "zopfli": "0.4.1",
+    "zxcvbn": "4.4.28"
+  },
+  "type": "error",
+  "metadata": {
+    "filename": "__init__.py",
+    "function": "_raise_exception",
+    "in_app_frame_mix": "system-only",
+    "type": "PermissionError",
+    "value": "Order BEI-ORD-2026-00439 is currently assigned to test.area@bebang.ph."
+  },
+  "tags": [
+    {
+      "key": "action",
+      "value": "handle_exception"
+    },
+    {
+      "key": "endpoint_or_job",
+      "value": "hrms.api.store.approve_order"
+    },
+    {
+      "key": "environment",
+      "value": "development"
+    },
+    {
+      "key": "error_source",
+      "value": "api_validation"
+    },
+    {
+      "key": "frappe_cmd",
+      "value": "hrms.api.store.approve_order"
+    },
+    {
+      "key": "handled",
+      "value": "yes"
+    },
+    {
+      "key": "http_method",
+      "value": "POST"
+    },
+    {
+      "key": "level",
+      "value": "warning"
+    },
+    {
+      "key": "mechanism",
+      "value": "generic"
+    },
+    {
+      "key": "mutation_type",
+      "value": "mutation"
+    },
+    {
+      "key": "phase",
+      "value": "backend_exception"
+    },
+    {
+      "key": "release",
+      "value": "bei-hrms@16.0.0-dev"
+    },
+    {
+      "key": "route",
+      "value": "/api/method/hrms.api.store.approve_order"
+    },
+    {
+      "key": "route_action",
+      "value": "approve_order"
+    },
+    {
+      "key": "runtime",
+      "value": "CPython 3.11.6"
+    },
+    {
+      "key": "runtime.name",
+      "value": "CPython"
+    },
+    {
+      "key": "server_name",
+      "value": "5367efd11e3b"
+    },
+    {
+      "key": "surface",
+      "value": "frappe_request"
+    },
+    {
+      "key": "user",
+      "value": "id:test.scm@bebang.ph",
+      "query": "user.id:\"test.scm@bebang.ph\""
+    }
+  ],
+  "platform": "python",
+  "dateReceived": "2026-04-28T01:14:08.213011Z",
+  "errors": [],
+  "occurrence": null,
+  "_meta": {
+    "entries": {},
+    "message": null,
+    "user": null,
+    "contexts": null,
+    "sdk": null,
+    "context": null,
+    "packages": null,
+    "tags": {}
+  },
+  "crashFile": null,
+  "culprit": "frappe in _raise_exception",
+  "dateCreated": "2026-04-28T01:14:08.202000Z",
+  "fingerprints": [
+    "dee258e76ce1f9bb3e5f71e6a3273ed8"
+  ],
+  "groupingConfig": {
+    "enhancements": "KLUv_SAd6QAAkwORuGFsbC1wbGF0Zm9ybXM6MjAyNi0wMS0yMJA#KLUv_SAd6QAAkwORuGFsbC1wbGF0Zm9ybXM6MjAyNi0wMS0yMJA#KLUv_SAd6QAAkwORuGFsbC1wbGF0Zm9ybXM6MjAyNi0wMS0yMJA",
+    "id": "newstyle:2026-01-20"
+  },
+  "release": {
+    "id": 1670333880,
+    "version": "bei-hrms@16.0.0-dev",
+    "status": "open",
+    "shortVersion": "bei-hrms@16.0.0-dev",
+    "versionInfo": {
+      "package": "bei-hrms",
+      "version": {
+        "raw": "16.0.0-dev",
+        "major": 16,
+        "minor": 0,
+        "patch": 0,
+        "pre": "dev",
+        "buildCode": null,
+        "components": 3
+      },
+      "description": "16.0.0-dev",
+      "buildHash": null
+    },
+    "ref": null,
+    "url": null,
+    "dateReleased": null,
+    "dateCreated": "2026-02-10T11:57:53.986333Z",
+    "data": {},
+    "newGroups": 566,
+    "owner": null,
+    "commitCount": 0,
+    "lastCommit": null,
+    "deployCount": 0,
+    "lastDeploy": null,
+    "authors": [],
+    "projects": [
+      {
+        "id": 4510861213302784,
+        "slug": "bei-hrms",
+        "name": "bei-hrms",
+        "newGroups": 566,
+        "platform": "python",
+        "platforms": [],
+        "hasHealthData": false
+      }
+    ],
+    "firstEvent": "2026-02-10T11:57:53Z",
+    "lastEvent": "2026-04-28T01:33:31Z",
+    "currentProjectMeta": {},
+    "userAgent": null
+  },
+  "userReport": null,
+  "sdkUpdates": [
+    {
+      "type": "updateSdk",
+      "sdkName": "sentry.python",
+      "newSdkVersion": "2.58.0",
+      "sdkUrl": "https://docs.sentry.io/platforms/python",
+      "enables": []
+    }
+  ],
+  "resolvedWith": [
+    null
+  ],
+  "nextEventID": "2ddeccf0d0f1490abd48075e5120552e",
+  "previousEventID": "f18d88a213794b2d910928daaa8405c7"
+}

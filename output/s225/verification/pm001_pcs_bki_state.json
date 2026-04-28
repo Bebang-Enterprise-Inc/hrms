@@ -1,0 +1,55 @@
+{
+  "PM001": [
+    {
+      "warehouse": "PINNACLE COLD STORAGE SOLUTIONS - BKI",
+      "item_code": "PM001",
+      "actual_qty": 0.0,
+      "reserved_qty": 0.0,
+      "ordered_qty": 0.0,
+      "indented_qty": 0.0,
+      "planned_qty": 0.0,
+      "projected_qty": 0.0,
+      "reserved_qty_for_production": 0.0
+    }
+  ],
+  "FG001": [
+    {
+      "warehouse": "PINNACLE COLD STORAGE SOLUTIONS - BKI",
+      "item_code": "FG001",
+      "actual_qty": 3683.0,
+      "reserved_qty": 0.0,
+      "ordered_qty": 0.0,
+      "indented_qty": -5997.0,
+      "planned_qty": 0.0,
+      "projected_qty": -2314.0,
+      "reserved_qty_for_production": 0.0
+    }
+  ],
+  "PM001_master": {
+    "item_group": "Packaging Materials",
+    "stock_uom": "PIECE",
+    "is_stock_item": 1,
+    "include_item_in_manufacturing": 1,
+    "item_defaults": [
+      {
+        "company": "BEBANG KITCHEN INC.",
+        "default_warehouse": null,
+        "default_supplier": null
+      }
+    ]
+  },
+  "FG001_master": {
+    "item_group": "Finished Goods",
+    "stock_uom": "PIECE",
+    "is_stock_item": 1,
+    "include_item_in_manufacturing": 1,
+    "item_defaults": [
+      {
+        "company": "BEBANG KITCHEN INC.",
+        "default_warehouse": null,
+        "default_supplier": null
+      }
+    ]
+  },
+  "recent_mrs_pm001_pcs": []
+}

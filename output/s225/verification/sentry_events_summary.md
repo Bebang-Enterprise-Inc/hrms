@@ -1,6 +1,6 @@
 # Sentry Events — S225 Sweep Window
 
-Window UTC: 2026-04-27T00:00:00+00:00 → 2026-04-27T11:22:14.911570+00:00
+Window UTC: 2026-04-28T00:00:00+00:00 → 2026-04-28T01:55:02.581956+00:00
 
 ## Project: `bei-hrms`
 
@@ -13,71 +13,55 @@ Total events: 100
 
 | Count | Bucket |
 |---|---|
-| 49 | `Sales Dashboard: unmapped warehouse dropped` |
-| 15 | `HTTPError: 409 Client Error: Conflict for url: https://csnniykjrychgajfrgua.supabase.co/rest/v1/pos_order_items` |
-| 12 | `RuntimeError: object is not bound` |
-| 9 | `S225 Lock Contention` |
-| 3 | `ValidationError: Stock decreased between resolution and dispatch — SCM must re-resolve order line for PM001 (have 0.0, need 5.0) at Pinnacle Cold Storage Solutions - BKI.` |
-| 3 | `ValueError: Invalid site name `$host`` |
-| 2 | `PermissionError: Store selection 'BGC' is outside your allowed scope.` |
-| 1 | `InvalidWarehouseCompany: Warehouse SM STA. ROSA - SWEET HARMONY FOOD CORP. does not belong to company BEBANG ENTERPRISE INC.` |
-| 1 | `ValidationError: The Batch BACKFILL-20260421-FG004-PINNACLE-COLD-STORAGE-SOLUTIONS of an item FG004 has negative stock in the warehouse PINNACLE COLD STORAGE SOLUTIONS - BKI as of 27-04-2026 17:19:14.` |
-| 1 | `InvalidWarehouseCompany: Warehouse ROBINSONS ANTIPOLO - BEBANG ENTERPRISE INC. does not belong to company BEBANG ENTERPRISE INC.` |
-| 1 | `InvalidWarehouseCompany: Warehouse ORTIGAS GREENHILLS - BEIFRANCHISE FOOD OPC does not belong to company BEBANG ENTERPRISE INC.` |
-| 1 | `InvalidWarehouseCompany: Warehouse ORTIGAS ESTANCIA - BB ESTANCIA FOOD CORP. does not belong to company BEBANG ENTERPRISE INC.` |
-| 1 | `ValidationError: Stock decreased between resolution and dispatch — SCM must re-resolve order line for PM001 (have 0.0, need 2.0) at Pinnacle Cold Storage Solutions - BKI.` |
-| 1 | `PermissionError: Store selection 'SM AURA - BEBANG MEGA INC.' is outside your allowed scope.` |
+| 97 | `Sales Dashboard: unmapped warehouse dropped` |
+| 2 | `PermissionError: Order <ID> is currently assigned to test.area@bebang.ph.` |
+| 1 | `S225 follow-up: no commissary route for SM STA. ROSA - SWEET HARMONY FOOD CORP.+DRY; defaulting source to store warehouse. Add a BEI...` |
 
 ### Top culprits (file:line)
 
 | Count | Culprit |
 |---|---|
-| 26 | `/api/method/hrms.api.sales_dashboard.get_sales_dashboard_overview` |
-| 21 | `/api/method/hrms.api.sales_dashboard.get_sales_dashboard_access_context` |
-| 15 | `/api/method/hrms.api.mosaic_webhook.receive` |
-| 9 | `frappe.utils.sentry in set_scope` |
-| 8 | `/api/method/hrms.api.store.approve_order` |
-| 4 | `frappe in _raise_exception` |
-| 3 | `werkzeug.local in _get_current_object` |
-| 3 | `frappe in init` |
-| 2 | `/api/method/hrms.api.sales_dashboard.get_product_mix_analytics` |
+| 69 | `/api/method/hrms.api.sales_dashboard.get_sales_dashboard_overview` |
+| 28 | `/api/method/hrms.api.sales_dashboard.get_sales_dashboard_access_context` |
+| 2 | `frappe in _raise_exception` |
+| 1 | `/api/method/hrms.api.store.approve_order` |
 
 ### First 30 events (chronological)
 
-- [2026-04-27T01:44:27.006000Z] **None** `/api/method/hrms.api.sales_dashboard.get_sales_dashboard_overview` — Sales Dashboard: unmapped warehouse dropped
-- [2026-04-27T01:44:27.052000Z] **None** `/api/method/hrms.api.sales_dashboard.get_sales_dashboard_access_context` — Sales Dashboard: unmapped warehouse dropped
-- [2026-04-27T01:44:27.060000Z] **None** `/api/method/hrms.api.sales_dashboard.get_sales_dashboard_overview` — Sales Dashboard: unmapped warehouse dropped
-- [2026-04-27T01:44:27.073000Z] **None** `/api/method/hrms.api.sales_dashboard.get_sales_dashboard_access_context` — Sales Dashboard: unmapped warehouse dropped
-- [2026-04-27T01:44:27.167000Z] **None** `/api/method/hrms.api.sales_dashboard.get_sales_dashboard_overview` — Sales Dashboard: unmapped warehouse dropped
-- [2026-04-27T01:44:27.182000Z] **None** `/api/method/hrms.api.sales_dashboard.get_sales_dashboard_access_context` — Sales Dashboard: unmapped warehouse dropped
-- [2026-04-27T01:44:27.211000Z] **None** `/api/method/hrms.api.sales_dashboard.get_sales_dashboard_access_context` — Sales Dashboard: unmapped warehouse dropped
-- [2026-04-27T01:44:27.219000Z] **None** `/api/method/hrms.api.sales_dashboard.get_sales_dashboard_overview` — Sales Dashboard: unmapped warehouse dropped
-- [2026-04-27T01:44:27.260000Z] **None** `/api/method/hrms.api.sales_dashboard.get_sales_dashboard_access_context` — Sales Dashboard: unmapped warehouse dropped
-- [2026-04-27T01:44:27.268000Z] **None** `/api/method/hrms.api.sales_dashboard.get_sales_dashboard_overview` — Sales Dashboard: unmapped warehouse dropped
-- [2026-04-27T01:44:27.334000Z] **None** `/api/method/hrms.api.sales_dashboard.get_sales_dashboard_access_context` — Sales Dashboard: unmapped warehouse dropped
-- [2026-04-27T01:44:27.363000Z] **None** `/api/method/hrms.api.sales_dashboard.get_sales_dashboard_access_context` — Sales Dashboard: unmapped warehouse dropped
-- [2026-04-27T01:44:27.454000Z] **None** `/api/method/hrms.api.sales_dashboard.get_sales_dashboard_access_context` — Sales Dashboard: unmapped warehouse dropped
-- [2026-04-27T01:44:27.493000Z] **None** `/api/method/hrms.api.sales_dashboard.get_sales_dashboard_overview` — Sales Dashboard: unmapped warehouse dropped
-- [2026-04-27T01:44:27.527000Z] **None** `/api/method/hrms.api.sales_dashboard.get_sales_dashboard_overview` — Sales Dashboard: unmapped warehouse dropped
-- [2026-04-27T01:44:27.640000Z] **None** `/api/method/hrms.api.sales_dashboard.get_sales_dashboard_access_context` — Sales Dashboard: unmapped warehouse dropped
-- [2026-04-27T01:44:27.662000Z] **None** `/api/method/hrms.api.sales_dashboard.get_sales_dashboard_access_context` — Sales Dashboard: unmapped warehouse dropped
-- [2026-04-27T01:44:27.666000Z] **None** `/api/method/hrms.api.sales_dashboard.get_sales_dashboard_overview` — Sales Dashboard: unmapped warehouse dropped
-- [2026-04-27T01:44:27.726000Z] **None** `/api/method/hrms.api.sales_dashboard.get_sales_dashboard_access_context` — Sales Dashboard: unmapped warehouse dropped
-- [2026-04-27T01:44:27.747000Z] **None** `/api/method/hrms.api.sales_dashboard.get_sales_dashboard_overview` — Sales Dashboard: unmapped warehouse dropped
-- [2026-04-27T01:44:27.755000Z] **None** `/api/method/hrms.api.sales_dashboard.get_sales_dashboard_access_context` — Sales Dashboard: unmapped warehouse dropped
-- [2026-04-27T01:44:27.776000Z] **None** `/api/method/hrms.api.sales_dashboard.get_sales_dashboard_overview` — Sales Dashboard: unmapped warehouse dropped
-- [2026-04-27T01:44:27.801000Z] **None** `/api/method/hrms.api.sales_dashboard.get_sales_dashboard_overview` — Sales Dashboard: unmapped warehouse dropped
-- [2026-04-27T01:44:27.814000Z] **None** `/api/method/hrms.api.sales_dashboard.get_sales_dashboard_access_context` — Sales Dashboard: unmapped warehouse dropped
-- [2026-04-27T01:44:27.832000Z] **None** `/api/method/hrms.api.sales_dashboard.get_sales_dashboard_access_context` — Sales Dashboard: unmapped warehouse dropped
-- [2026-04-27T01:44:27.851000Z] **None** `/api/method/hrms.api.sales_dashboard.get_sales_dashboard_overview` — Sales Dashboard: unmapped warehouse dropped
-- [2026-04-27T01:44:27.861000Z] **None** `/api/method/hrms.api.sales_dashboard.get_sales_dashboard_access_context` — Sales Dashboard: unmapped warehouse dropped
-- [2026-04-27T01:44:27.904000Z] **None** `/api/method/hrms.api.sales_dashboard.get_sales_dashboard_overview` — Sales Dashboard: unmapped warehouse dropped
-- [2026-04-27T01:44:27.988000Z] **None** `/api/method/hrms.api.sales_dashboard.get_sales_dashboard_overview` — Sales Dashboard: unmapped warehouse dropped
-- [2026-04-27T01:44:28.012000Z] **None** `/api/method/hrms.api.sales_dashboard.get_sales_dashboard_overview` — Sales Dashboard: unmapped warehouse dropped
+- [2026-04-28T01:05:12.057000Z] **None** `/api/method/hrms.api.sales_dashboard.get_sales_dashboard_overview` — Sales Dashboard: unmapped warehouse dropped
+- [2026-04-28T01:05:12.078000Z] **None** `/api/method/hrms.api.sales_dashboard.get_sales_dashboard_overview` — Sales Dashboard: unmapped warehouse dropped
+- [2026-04-28T01:05:12.090000Z] **None** `/api/method/hrms.api.sales_dashboard.get_sales_dashboard_overview` — Sales Dashboard: unmapped warehouse dropped
+- [2026-04-28T01:05:12.097000Z] **None** `/api/method/hrms.api.sales_dashboard.get_sales_dashboard_overview` — Sales Dashboard: unmapped warehouse dropped
+- [2026-04-28T01:05:12.112000Z] **None** `/api/method/hrms.api.sales_dashboard.get_sales_dashboard_overview` — Sales Dashboard: unmapped warehouse dropped
+- [2026-04-28T01:05:12.129000Z] **None** `/api/method/hrms.api.sales_dashboard.get_sales_dashboard_overview` — Sales Dashboard: unmapped warehouse dropped
+- [2026-04-28T01:05:12.162000Z] **None** `/api/method/hrms.api.sales_dashboard.get_sales_dashboard_overview` — Sales Dashboard: unmapped warehouse dropped
+- [2026-04-28T01:05:12.166000Z] **None** `/api/method/hrms.api.sales_dashboard.get_sales_dashboard_overview` — Sales Dashboard: unmapped warehouse dropped
+- [2026-04-28T01:05:12.189000Z] **None** `/api/method/hrms.api.sales_dashboard.get_sales_dashboard_overview` — Sales Dashboard: unmapped warehouse dropped
+- [2026-04-28T01:05:12.200000Z] **None** `/api/method/hrms.api.sales_dashboard.get_sales_dashboard_overview` — Sales Dashboard: unmapped warehouse dropped
+- [2026-04-28T01:05:12.204000Z] **None** `/api/method/hrms.api.sales_dashboard.get_sales_dashboard_overview` — Sales Dashboard: unmapped warehouse dropped
+- [2026-04-28T01:05:12.211000Z] **None** `/api/method/hrms.api.sales_dashboard.get_sales_dashboard_overview` — Sales Dashboard: unmapped warehouse dropped
+- [2026-04-28T01:05:12.216000Z] **None** `/api/method/hrms.api.sales_dashboard.get_sales_dashboard_overview` — Sales Dashboard: unmapped warehouse dropped
+- [2026-04-28T01:14:08.202000Z] **None** `frappe in _raise_exception` — PermissionError: Order BEI-ORD-2026-00439 is currently assigned to test.area@bebang.ph.
+- [2026-04-28T01:15:26.878000Z] **None** `/api/method/hrms.api.store.approve_order` — S225 follow-up: no commissary route for SM STA. ROSA - SWEET HARMONY FOOD CORP.+DRY; defaulting source to store warehouse. Add a BEI...
+- [2026-04-28T01:15:42.316000Z] **None** `frappe in _raise_exception` — PermissionError: Order BEI-ORD-2026-00440 is currently assigned to test.area@bebang.ph.
+- [2026-04-28T01:33:09.188000Z] **None** `/api/method/hrms.api.sales_dashboard.get_sales_dashboard_access_context` — Sales Dashboard: unmapped warehouse dropped
+- [2026-04-28T01:33:09.206000Z] **None** `/api/method/hrms.api.sales_dashboard.get_sales_dashboard_access_context` — Sales Dashboard: unmapped warehouse dropped
+- [2026-04-28T01:33:09.210000Z] **None** `/api/method/hrms.api.sales_dashboard.get_sales_dashboard_overview` — Sales Dashboard: unmapped warehouse dropped
+- [2026-04-28T01:33:09.214000Z] **None** `/api/method/hrms.api.sales_dashboard.get_sales_dashboard_access_context` — Sales Dashboard: unmapped warehouse dropped
+- [2026-04-28T01:33:09.226000Z] **None** `/api/method/hrms.api.sales_dashboard.get_sales_dashboard_access_context` — Sales Dashboard: unmapped warehouse dropped
+- [2026-04-28T01:33:09.231000Z] **None** `/api/method/hrms.api.sales_dashboard.get_sales_dashboard_access_context` — Sales Dashboard: unmapped warehouse dropped
+- [2026-04-28T01:33:09.239000Z] **None** `/api/method/hrms.api.sales_dashboard.get_sales_dashboard_overview` — Sales Dashboard: unmapped warehouse dropped
+- [2026-04-28T01:33:09.244000Z] **None** `/api/method/hrms.api.sales_dashboard.get_sales_dashboard_access_context` — Sales Dashboard: unmapped warehouse dropped
+- [2026-04-28T01:33:09.247000Z] **None** `/api/method/hrms.api.sales_dashboard.get_sales_dashboard_overview` — Sales Dashboard: unmapped warehouse dropped
+- [2026-04-28T01:33:09.261000Z] **None** `/api/method/hrms.api.sales_dashboard.get_sales_dashboard_access_context` — Sales Dashboard: unmapped warehouse dropped
+- [2026-04-28T01:33:09.266000Z] **None** `/api/method/hrms.api.sales_dashboard.get_sales_dashboard_overview` — Sales Dashboard: unmapped warehouse dropped
+- [2026-04-28T01:33:09.275000Z] **None** `/api/method/hrms.api.sales_dashboard.get_sales_dashboard_access_context` — Sales Dashboard: unmapped warehouse dropped
+- [2026-04-28T01:33:09.286000Z] **None** `/api/method/hrms.api.sales_dashboard.get_sales_dashboard_overview` — Sales Dashboard: unmapped warehouse dropped
+- [2026-04-28T01:33:09.294000Z] **None** `/api/method/hrms.api.sales_dashboard.get_sales_dashboard_access_context` — Sales Dashboard: unmapped warehouse dropped
 
 ## Project: `bei-tasks`
 
-Total events: 30
+Total events: 27
 
 ### By level
 
@@ -86,57 +70,49 @@ Total events: 30
 
 | Count | Bucket |
 |---|---|
-| 6 | `Error: Frappe API error: 417 - Warehouse ROBINSONS ANTIPOLO - BEBANG ENTERPRISE INC. does not belong to company BEBANG ENTERPRISE INC.` |
-| 6 | `Error: Frappe API error: 403 - Order <ID> is currently assigned to test.area@bebang.ph.` |
-| 3 | `Error: Frappe API error: 417 - Stock decreased between resolution and dispatch — SCM must re-resolve order line for PM001 (have 0.0, need 5.0) at Pinnacle Cold Storage Solutions - BKI.` |
-| 3 | `Error: Frappe API error: 417 - Warehouse ORTIGAS ESTANCIA - BB ESTANCIA FOOD CORP. does not belong to company BEBANG ENTERPRISE INC.` |
-| 3 | `Error: Frappe API error: 417 - Stock decreased between resolution and dispatch — SCM must re-resolve order line for PM001 (have 0.0, need 2.0) at Pinnacle Cold Storage Solutions - BKI.` |
-| 2 | `Error: Frappe API error: 417 - Warehouse SM STA. ROSA - SWEET HARMONY FOOD CORP. does not belong to company BEBANG ENTERPRISE INC.` |
-| 2 | `Error: ` |
-| 2 | `Error: Frappe API error: 417 - Stock decreased between resolution and dispatch — SCM must re-resolve order line for KL004 (have 0.0, need 3.0) at Pinnacle Cold Storage Solutions - BKI.` |
-| 1 | `FrappeHttpError: ` |
-| 1 | `Error: Frappe API error: 417 - Warehouse ORTIGAS GREENHILLS - BEIFRANCHISE FOOD OPC does not belong to company BEBANG ENTERPRISE INC.` |
-| 1 | `404: /api/method/frappe.integrations.oauth2_logins.login_via_google` |
+| 9 | `Error: Frappe API error: 403 - Order <ID> is currently assigned to test.area@bebang.ph.` |
+| 8 | `Error: ` |
+| 5 | `Error: Frappe API error: 417 - Stock decreased between resolution and dispatch — SCM must re-resolve order line for PM001 (have 0.0, need 5.0) at Pinnacle Cold Storage Solutions - BKI.` |
+| 1 | `Error: Frappe API error: 417 - Stock decreased between resolution and dispatch — SCM must re-resolve order line for FG001 (have 0.0, need 5.0) at SM STA. ROSA - SWEET HARMONY FOOD CORP..` |
+| 1 | `Error: Frappe API error: 417 - Stock decreased between resolution and dispatch — SCM must re-resolve order line for PM001 (have 0.0, need 5.0) at ROBINSONS ANTIPOLO - BEBANG ENTERPRISE INC..` |
+| 1 | `Error: Frappe API error: 417 - Stock decreased between resolution and dispatch — SCM must re-resolve order line for PM001 (have 0.0, need 5.0) at ORTIGAS GREENHILLS - BEIFRANCHISE FOOD OPC.` |
+| 1 | `Error: Frappe API error: 417 - Stock decreased between resolution and dispatch — SCM must re-resolve order line for PM001 (have 0.0, need 5.0) at ORTIGAS ESTANCIA - BB ESTANCIA FOOD CORP..` |
+| 1 | `Error: Frappe API error: 417 - Stock decreased between resolution and dispatch — SCM must re-resolve order line for PM001 (have 0.0, need 2.0) at Pinnacle Cold Storage Solutions - BKI.` |
 
 ### Top culprits (file:line)
 
 | Count | Culprit |
 |---|---|
-| 20 | `/dashboard/store-ops/order-approvals` |
-| 6 | `POST /api/ordering` |
-| 2 | `/dashboard/warehouse/dispatch` |
-| 1 | `POST /api/warehouse` |
-| 1 | `/api/method/frappe.integrations.oauth2_logins.login_via_google` |
+| 18 | `/dashboard/store-ops/order-approvals` |
+| 8 | `/dashboard/warehouse/dispatch` |
+| 1 | `POST /api/ordering` |
 
 ### First 30 events (chronological)
 
-- [2026-04-27T01:41:03.219000Z] **None** `/dashboard/store-ops/order-approvals` — Error: Frappe API error: 417 - Stock decreased between resolution and dispatch — SCM must re-resolve order line for PM001 (have 0.0, need 2.0) at Pinnacle Cold Storage Solutions - BKI.
-- [2026-04-27T01:41:19.080000Z] **None** `/dashboard/store-ops/order-approvals` — Error: Frappe API error: 403 - Order BEI-ORD-2026-00406 is currently assigned to test.area@bebang.ph.
-- [2026-04-27T01:42:12.677000Z] **None** `POST /api/ordering` — Error: Frappe API error: 417 - Stock decreased between resolution and dispatch — SCM must re-resolve order line for KL004 (have 0.0, need 3.0) at Pinnacle Cold Storage Solutions - BKI.
-- [2026-04-27T01:42:12.800000Z] **None** `/dashboard/store-ops/order-approvals` — Error: Frappe API error: 417 - Stock decreased between resolution and dispatch — SCM must re-resolve order line for KL004 (have 0.0, need 3.0) at Pinnacle Cold Storage Solutions - BKI.
-- [2026-04-27T01:42:28.533000Z] **None** `/dashboard/store-ops/order-approvals` — Error: Frappe API error: 403 - Order BEI-ORD-2026-00407 is currently assigned to test.area@bebang.ph.
-- [2026-04-27T01:43:22.482000Z] **None** `/dashboard/store-ops/order-approvals` — Error: Frappe API error: 417 - Warehouse ORTIGAS ESTANCIA - BB ESTANCIA FOOD CORP. does not belong to company BEBANG ENTERPRISE INC.
-- [2026-04-27T01:43:38.079000Z] **None** `/dashboard/store-ops/order-approvals` — Error: Frappe API error: 403 - Order BEI-ORD-2026-00408 is currently assigned to test.area@bebang.ph.
-- [2026-04-27T01:44:35.504000Z] **None** `/dashboard/store-ops/order-approvals` — Error: Frappe API error: 417 - Warehouse ORTIGAS ESTANCIA - BB ESTANCIA FOOD CORP. does not belong to company BEBANG ENTERPRISE INC.
-- [2026-04-27T01:44:51.210000Z] **None** `/dashboard/store-ops/order-approvals` — Error: Frappe API error: 403 - Order BEI-ORD-2026-00409 is currently assigned to test.area@bebang.ph.
-- [2026-04-27T01:45:42.597000Z] **None** `POST /api/ordering` — Error: Frappe API error: 417 - Warehouse ROBINSONS ANTIPOLO - BEBANG ENTERPRISE INC. does not belong to company BEBANG ENTERPRISE INC.
-- [2026-04-27T01:45:42.714000Z] **None** `/dashboard/store-ops/order-approvals` — Error: Frappe API error: 417 - Warehouse ROBINSONS ANTIPOLO - BEBANG ENTERPRISE INC. does not belong to company BEBANG ENTERPRISE INC.
-- [2026-04-27T01:45:58.263000Z] **None** `/dashboard/store-ops/order-approvals` — Error: Frappe API error: 403 - Order BEI-ORD-2026-00410 is currently assigned to test.area@bebang.ph.
-- [2026-04-27T01:46:51.579000Z] **None** `POST /api/ordering` — Error: Frappe API error: 417 - Warehouse ROBINSONS ANTIPOLO - BEBANG ENTERPRISE INC. does not belong to company BEBANG ENTERPRISE INC.
-- [2026-04-27T01:46:51.686000Z] **None** `/dashboard/store-ops/order-approvals` — Error: Frappe API error: 417 - Warehouse ROBINSONS ANTIPOLO - BEBANG ENTERPRISE INC. does not belong to company BEBANG ENTERPRISE INC.
-- [2026-04-27T01:47:07.141000Z] **None** `/dashboard/store-ops/order-approvals` — Error: Frappe API error: 403 - Order BEI-ORD-2026-00411 is currently assigned to test.area@bebang.ph.
-- [2026-04-27T02:24:29.061000Z] **None** `/api/method/frappe.integrations.oauth2_logins.login_via_google` — 404: /api/method/frappe.integrations.oauth2_logins.login_via_google
-- [2026-04-27T08:52:31.160000Z] **None** `/dashboard/store-ops/order-approvals` — Error: Frappe API error: 417 - Stock decreased between resolution and dispatch — SCM must re-resolve order line for PM001 (have 0.0, need 5.0) at Pinnacle Cold Storage Solutions - BKI.
-- [2026-04-27T08:54:07.220000Z] **None** `/dashboard/store-ops/order-approvals` — Error: Frappe API error: 417 - Stock decreased between resolution and dispatch — SCM must re-resolve order line for PM001 (have 0.0, need 5.0) at Pinnacle Cold Storage Solutions - BKI.
-- [2026-04-27T09:08:54.476000Z] **None** `/dashboard/store-ops/order-approvals` — Error: Frappe API error: 417 - Stock decreased between resolution and dispatch — SCM must re-resolve order line for PM001 (have 0.0, need 2.0) at Pinnacle Cold Storage Solutions - BKI.
-- [2026-04-27T09:08:54.610000Z] **None** `POST /api/ordering` — Error: Frappe API error: 417 - Stock decreased between resolution and dispatch — SCM must re-resolve order line for PM001 (have 0.0, need 2.0) at Pinnacle Cold Storage Solutions - BKI.
-- [2026-04-27T09:10:28.638000Z] **None** `/dashboard/store-ops/order-approvals` — Error: Frappe API error: 417 - Warehouse ORTIGAS ESTANCIA - BB ESTANCIA FOOD CORP. does not belong to company BEBANG ENTERPRISE INC.
-- [2026-04-27T09:12:02.275000Z] **None** `/dashboard/store-ops/order-approvals` — Error: Frappe API error: 417 - Warehouse ORTIGAS GREENHILLS - BEIFRANCHISE FOOD OPC does not belong to company BEBANG ENTERPRISE INC.
-- [2026-04-27T09:13:35.502000Z] **None** `/dashboard/store-ops/order-approvals` — Error: Frappe API error: 417 - Warehouse ROBINSONS ANTIPOLO - BEBANG ENTERPRISE INC. does not belong to company BEBANG ENTERPRISE INC.
-- [2026-04-27T09:13:35.655000Z] **None** `POST /api/ordering` — Error: Frappe API error: 417 - Warehouse ROBINSONS ANTIPOLO - BEBANG ENTERPRISE INC. does not belong to company BEBANG ENTERPRISE INC.
-- [2026-04-27T09:19:14.665000Z] **None** `/dashboard/warehouse/dispatch` — Error: 
-- [2026-04-27T09:19:14.669000Z] **None** `/dashboard/warehouse/dispatch` — Error: 
-- [2026-04-27T09:19:14.820000Z] **None** `POST /api/warehouse` — FrappeHttpError: 
-- [2026-04-27T09:37:03.260000Z] **None** `/dashboard/store-ops/order-approvals` — Error: Frappe API error: 417 - Stock decreased between resolution and dispatch — SCM must re-resolve order line for PM001 (have 0.0, need 5.0) at Pinnacle Cold Storage Solutions - BKI.
-- [2026-04-27T09:38:38.624000Z] **None** `/dashboard/store-ops/order-approvals` — Error: Frappe API error: 417 - Warehouse SM STA. ROSA - SWEET HARMONY FOOD CORP. does not belong to company BEBANG ENTERPRISE INC.
-- [2026-04-27T09:38:38.850000Z] **None** `POST /api/ordering` — Error: Frappe API error: 417 - Warehouse SM STA. ROSA - SWEET HARMONY FOOD CORP. does not belong to company BEBANG ENTERPRISE INC.
+- [2026-04-28T00:33:48.967000Z] **None** `/dashboard/store-ops/order-approvals` — Error: Frappe API error: 417 - Stock decreased between resolution and dispatch — SCM must re-resolve order line for PM001 (have 0.0, need 5.0) at Pinnacle Cold Storage Solutions - BKI.
+- [2026-04-28T00:34:05.557000Z] **None** `/dashboard/store-ops/order-approvals` — Error: Frappe API error: 403 - Order BEI-ORD-2026-00405 is currently assigned to test.area@bebang.ph.
+- [2026-04-28T00:35:24.374000Z] **None** `/dashboard/store-ops/order-approvals` — Error: Frappe API error: 417 - Stock decreased between resolution and dispatch — SCM must re-resolve order line for PM001 (have 0.0, need 5.0) at Pinnacle Cold Storage Solutions - BKI.
+- [2026-04-28T00:35:39.952000Z] **None** `/dashboard/store-ops/order-approvals` — Error: Frappe API error: 403 - Order BEI-ORD-2026-00406 is currently assigned to test.area@bebang.ph.
+- [2026-04-28T00:37:55.129000Z] **None** `/dashboard/store-ops/order-approvals` — Error: Frappe API error: 417 - Stock decreased between resolution and dispatch — SCM must re-resolve order line for PM001 (have 0.0, need 5.0) at Pinnacle Cold Storage Solutions - BKI.
+- [2026-04-28T00:37:57.660000Z] **None** `POST /api/ordering` — Error: Frappe API error: 417 - Stock decreased between resolution and dispatch — SCM must re-resolve order line for PM001 (have 0.0, need 5.0) at Pinnacle Cold Storage Solutions - BKI.
+- [2026-04-28T00:38:10.918000Z] **None** `/dashboard/store-ops/order-approvals` — Error: Frappe API error: 403 - Order BEI-ORD-2026-00408 is currently assigned to test.area@bebang.ph.
+- [2026-04-28T00:46:30.648000Z] **None** `/dashboard/warehouse/dispatch` — Error: 
+- [2026-04-28T00:46:30.653000Z] **None** `/dashboard/warehouse/dispatch` — Error: 
+- [2026-04-28T00:48:45.045000Z] **None** `/dashboard/store-ops/order-approvals` — Error: Frappe API error: 417 - Stock decreased between resolution and dispatch — SCM must re-resolve order line for PM001 (have 0.0, need 2.0) at Pinnacle Cold Storage Solutions - BKI.
+- [2026-04-28T00:49:00.771000Z] **None** `/dashboard/store-ops/order-approvals` — Error: Frappe API error: 403 - Order BEI-ORD-2026-00418 is currently assigned to test.area@bebang.ph.
+- [2026-04-28T00:50:19.874000Z] **None** `/dashboard/store-ops/order-approvals` — Error: Frappe API error: 417 - Stock decreased between resolution and dispatch — SCM must re-resolve order line for PM001 (have 0.0, need 5.0) at ORTIGAS ESTANCIA - BB ESTANCIA FOOD CORP..
+- [2026-04-28T00:50:35.295000Z] **None** `/dashboard/store-ops/order-approvals` — Error: Frappe API error: 403 - Order BEI-ORD-2026-00419 is currently assigned to test.area@bebang.ph.
+- [2026-04-28T00:51:53.316000Z] **None** `/dashboard/store-ops/order-approvals` — Error: Frappe API error: 417 - Stock decreased between resolution and dispatch — SCM must re-resolve order line for PM001 (have 0.0, need 5.0) at ORTIGAS GREENHILLS - BEIFRANCHISE FOOD OPC.
+- [2026-04-28T00:52:08.899000Z] **None** `/dashboard/store-ops/order-approvals` — Error: Frappe API error: 403 - Order BEI-ORD-2026-00420 is currently assigned to test.area@bebang.ph.
+- [2026-04-28T00:53:27.268000Z] **None** `/dashboard/store-ops/order-approvals` — Error: Frappe API error: 417 - Stock decreased between resolution and dispatch — SCM must re-resolve order line for PM001 (have 0.0, need 5.0) at ROBINSONS ANTIPOLO - BEBANG ENTERPRISE INC..
+- [2026-04-28T00:53:42.891000Z] **None** `/dashboard/store-ops/order-approvals` — Error: Frappe API error: 403 - Order BEI-ORD-2026-00421 is currently assigned to test.area@bebang.ph.
+- [2026-04-28T00:56:20.861000Z] **None** `/dashboard/warehouse/dispatch` — Error: 
+- [2026-04-28T00:56:20.867000Z] **None** `/dashboard/warehouse/dispatch` — Error: 
+- [2026-04-28T00:58:00.834000Z] **None** `/dashboard/warehouse/dispatch` — Error: 
+- [2026-04-28T00:58:00.841000Z] **None** `/dashboard/warehouse/dispatch` — Error: 
+- [2026-04-28T00:59:51.214000Z] **None** `/dashboard/warehouse/dispatch` — Error: 
+- [2026-04-28T00:59:51.219000Z] **None** `/dashboard/warehouse/dispatch` — Error: 
+- [2026-04-28T01:13:49.804000Z] **None** `/dashboard/store-ops/order-approvals` — Error: Frappe API error: 417 - Stock decreased between resolution and dispatch — SCM must re-resolve order line for PM001 (have 0.0, need 5.0) at Pinnacle Cold Storage Solutions - BKI.
+- [2026-04-28T01:14:05.689000Z] **None** `/dashboard/store-ops/order-approvals` — Error: Frappe API error: 403 - Order BEI-ORD-2026-00439 is currently assigned to test.area@bebang.ph.
+- [2026-04-28T01:15:24.369000Z] **None** `/dashboard/store-ops/order-approvals` — Error: Frappe API error: 417 - Stock decreased between resolution and dispatch — SCM must re-resolve order line for FG001 (have 0.0, need 5.0) at SM STA. ROSA - SWEET HARMONY FOOD CORP..
+- [2026-04-28T01:15:39.794000Z] **None** `/dashboard/store-ops/order-approvals` — Error: Frappe API error: 403 - Order BEI-ORD-2026-00440 is currently assigned to test.area@bebang.ph.
