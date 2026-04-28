@@ -1,0 +1,18 @@
+{
+  "checked_at_local": "2026-04-28T08:28:05+0800",
+  "ssm_command_id": "e08247bd-6d03-49c3-aa70-3241d0b678f0",
+  "ssm_status": "Success",
+  "expected_merge_sha": "73b89feb8",
+  "container_apps_hrms_mtime": "1777294318 /home/frappe/frappe-bench/apps/hrms/hrms/api/store.py",
+  "all_7_defects_present": true,
+  "per_defect": {
+    "defect_1_source_route_missing": true,
+    "defect_2_approve_order_idempotency": true,
+    "defect_3_warehouse_queue_ordered": true,
+    "defect_4_lock_wait_try_except": true,
+    "defect_5_sentry_set_scope_patch": true,
+    "defect_6_sales_dashboard_non_pos": true,
+    "defect_7_mosaic_on_conflict": true
+  },
+  "raw_output": "=== APPS_HRMS MTIME ===\n1777294318 /home/frappe/frappe-bench/apps/hrms/hrms/api/store.py\n=== defect_1_source_route_missing ===\n1\n=== defect_2_approve_order_idempotency ===\n1\n=== defect_3_warehouse_queue_ordered ===\n1\n=== defect_4_lock_wait_try_except ===\n1\n=== defect_5_sentry_set_scope_patch ===\n2\n=== defect_6_sales_dashboard_non_pos ===\n1\n=== defect_7_mosaic_on_conflict ===\n1\n"
+}
