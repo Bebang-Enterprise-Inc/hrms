@@ -1,0 +1,9 @@
+{
+  "captured_at": "2026-04-29T09:45:00+08:00",
+  "repo": "Bebang-Enterprise-Inc/hrms",
+  "release_branch": "production",
+  "release_head_sha": "3e47ceacec9fa3b5dea59c6799d38c07bdc1d9d9",
+  "device_mapping_blob_sha": "a6f0dda7b174cd8de8dace16456c78b629d5ad8c",
+  "live_evidence_basis": "device_mapping.py blob SHA + sn_mapping_all.csv via SSM",
+  "captured_by": "S230 Phase 0 task 0-3"
+}
