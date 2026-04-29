@@ -37,6 +37,33 @@ Agent-authored tests failed us repeatedly:
 
 ## Execution Protocol
 
+### TEST DATA SEEDING & TEARDOWN via /frappe-bulk-edits (MANDATORY — READ FIRST)
+
+**The L3 sweep IS NOT allowed to fail because production lacks test data.** If a scenario needs inventory, users, custom field values, BEI Routes, MR/SO records, or any record that does not exist in production at the moment the scenario runs, the agent MUST seed it via `/frappe-bulk-edits` BEFORE running the scenario. After all scenarios complete, the agent MUST delete every seeded record via `/frappe-bulk-edits`. This is execution work, not optional polish.
+
+**Concrete rule, no exceptions:**
+
+1. **Detect missing data BEFORE execution.** During Step -1 precondition build (below), enumerate every record class the scenarios touch (test inventory items, store warehouses, user accounts, BEI Routes, custom fields, etc.). For each, query production: does it exist with the values the scenario needs?
+2. **If missing → seed it via `/frappe-bulk-edits`.** Use the SSM-replay pipeline. Examples:
+   - Test inventory short → bulk-insert Stock Entry to top up actual_qty at the assigned hub for every test SKU before the sweep
+   - Test user missing → bulk-create User + Employee + Roles via INSERT_SQL
+   - Custom field value missing → bulk-update via UPDATE_SQL
+   - BEI Route missing → bulk-create the BEI Route + BEI Route Stop docs
+3. **Track every seeded record in a teardown ledger.** Write to `output/l3/{sprint}/teardown_ledger.json` with `{doctype, name, action: "DELETE" | "REVERT_FIELDS", original_values}` per record. Without the ledger, teardown is impossible.
+4. **Run scenarios.** Now preconditions are real, not aspirational.
+5. **Teardown via `/frappe-bulk-edits` at closeout.** Read the ledger, delete every seeded record (or revert every field). Verify production is back to its pre-sweep state. Write `output/l3/{sprint}/teardown_complete.json` with the deletion proof.
+6. **Closeout is NOT complete until teardown is verified.** A test run that leaves seeded data behind is a failed run, even if every scenario passed.
+
+**Forbidden behaviors (these are how this rule got broken before — see S225 incident 2026-04-28):**
+- ❌ Mark a scenario `PRECONDITION_BLOCKED` because test inventory is short. **Wrong.** Seed the inventory.
+- ❌ Recommend product code changes (resolver fallbacks, route auto-failover, removed validations) to "fix" tests that fail on missing data. **Wrong, and dangerous.** Do not break the system to pass a test. Seed the data.
+- ❌ Leave seeded test data in production after the sweep ends. **Wrong.** Teardown is mandatory.
+- ❌ Skip seeding because "the test should work without it" or "the data should already be there." If the scenario fails, the data isn't there. Seed it.
+
+**The golden test for any "test failure":** would seeding the missing data make this scenario pass? If yes, seed it and re-run. If no, it's a real product bug — file a defect.
+
+**Reference skill:** `/frappe-bulk-edits` (SSM-replay pipeline for bulk INSERT/UPDATE/DELETE on Frappe production via savepoints).
+
 ### Step -1: Scenario Preconditions + Runtime Window (MANDATORY)
 
 Before executing any scenario:
@@ -47,14 +74,14 @@ Before executing any scenario:
    - scenario IDs selected from `index.yaml`
 2. Build a precondition checklist per scenario:
    - required role login availability
-   - required seed data / dependency records
+   - required seed data / dependency records (cross-check vs the TEST DATA SEEDING section above — every missing record gets seeded, not flagged as blocked)
    - runtime windows (cutoff open/closed, delivery day constraints, schedule gates)
 3. For time-gated scenarios:
    - verify gate state via API first (for example `validate_order_schedule`)
    - if gate state mismatches scenario requirements, resolve with one of:
      - existing live records that already satisfy the condition, or
      - controlled temporary config override with explicit rollback plan and proof, only when requested/authorized
-4. If preconditions cannot be met, mark `PRECONDITION_BLOCKED` with evidence and continue other scenarios.
+4. **If a precondition record is missing → seed it via `/frappe-bulk-edits` (per the TEST DATA SEEDING section above) and add it to the teardown ledger. Do NOT mark `PRECONDITION_BLOCKED` for missing data that can be seeded.** `PRECONDITION_BLOCKED` is reserved for environmental issues that seeding cannot resolve (e.g., production outage, hard-coded business calendar holidays).
 
 ### Step 0: Read Scenario Index + Files (MANDATORY)
 
