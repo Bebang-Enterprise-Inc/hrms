@@ -1,7 +1,7 @@
 """
 Biometric Device to Store Location Mapping
-Source: UPDATED_IT_Device_SN_Mapping.xlsx (Feb 2026)
-Last Updated: 2026-02-25
+Source: UPDATED_IT_Device_SN_Mapping.xlsx (Feb 2026) + S230 (Apr 2026)
+Last Updated: 2026-04-29 (S230: added Ortigas Estancia + Xentromall Montalban)
 """
 
 # Master device mapping - NEVER return "UNKNOWN"
@@ -45,15 +45,17 @@ DEVICE_TO_STORE = {
     'UDP3252900048': 'SM TAYTAY',
     'UDP3252900145': 'SM STA. ROSA',
     'UDP3252900155': 'STA LUCIA GRAND MALL',
+    'UDP3252900163': 'MYTOWN',
     'UDP3252900188': 'D VERDE CALAMBA',
+    'UDP3252900249': 'ORTIGAS ESTANCIA',  # S230: matches Frappe tabBranch row + canonical store name
+    'UDP3252900251': 'GREENHILLS',
     'UDP3252900282': 'AYALA UP TOWN CENTER',
     'UDP3252900284': 'AYALA SOLENAD',
     'UDP3252900287': 'NAIA T3',
     'UDP3252900298': 'UPTOWN BGC',
     'UDP3252900302': 'ARANETA GATEWAY',
     'UDP3252900305': 'VISTA MALL TAGUIG',
-    'UDP3252900163': 'MYTOWN',
-    'UDP3252900251': 'GREENHILLS',
+    'UDP3254701502': 'XENTROMALL MONTALBAN',  # S230: matches Frappe tabEmployee.branch for the 12 active Xentro crew + Frappe Company XENTROMALL MONTALBAN - PERPETUAL FOOD CORP.
 }
 
 def get_store_name(serial_number: str) -> str:

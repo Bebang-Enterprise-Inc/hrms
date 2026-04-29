@@ -1,0 +1,54 @@
+{
+  "captured_at": "2026-04-29T11:55:00+08:00",
+  "sprint": "S230",
+  "probes": [
+    {
+      "probe": "P1.server_allowlist",
+      "expected": "UDP3252900249,ESTANCIA AND UDP3254701502,XENTROMALL_MONTALBAN both present in /opt/.../sn_mapping_all.csv",
+      "actual": "Both present, file is 51 rows (was 50)",
+      "pass": true,
+      "evidence": "SSM CommandId f872edf7 \u2014 output/s230/manual_steps.md note"
+    },
+    {
+      "probe": "P2.local_mapping_resolves",
+      "expected": "device_mapping.py has 50 entries, get_store_name resolves both",
+      "actual": "50 entries; UDP3252900249\u2192ORTIGAS ESTANCIA; UDP3254701502\u2192XENTROMALL MONTALBAN",
+      "pass": true,
+      "evidence": "Python smoke test 2026-04-29; output/s230/verification/local_mapping_after.diff"
+    },
+    {
+      "probe": "P3.adms_userinfo_queued",
+      "expected": "12 PENDING USERINFO per device on 4 target C5 devices = 48 rows",
+      "actual": "12 PENDING confirmed on UDP3251200193, UDP3252900048, UDP3235200594, UDP3254701502 = 48 total",
+      "pass": true,
+      "evidence": "SSM CommandId 27156561 \u2014 INSERT 0 48 + post-verify SELECT"
+    },
+    {
+      "probe": "P4.tab_byte_compliance",
+      "expected": "Each USERINFO command_text contains >= 2 actual tab bytes (0x09)",
+      "actual": "96 tab bytes total / 48 rows = 2 per row exactly",
+      "pass": true,
+      "evidence": "tmp/s230/insert_userinfo.sql od -c output"
+    },
+    {
+      "probe": "P5.no_duplicate_enrollment",
+      "expected": "Zero duplicate (sn, pin) pairs across the new batch and existing PENDING/ACKED",
+      "actual": "Built batch ONLY for the 4 net-new devices (Ortigas, Taytay, Antipolo, Xentro home); skipped Marikina + Sta Lucia + Brittany where 12 each were already ACKED",
+      "pass": true,
+      "evidence": "tmp/s230/PROVENANCE.md lines 60-78 enrollment math"
+    },
+    {
+      "probe": "P6.heartbeat_watch_deferred",
+      "expected": "Heartbeat ACK callbacks observed within 10 minutes of push",
+      "actual": "DEFERRED \u2014 pending Sam's API container restart per manual_steps.md Step 1; existing C5 secondaries (Ortigas/Taytay/Antipolo) should pick up new commands within 60s of next heartbeat",
+      "pass": "PARTIAL",
+      "evidence": "manual_steps.md describes the gating step"
+    }
+  ],
+  "summary": {
+    "total_probes": 6,
+    "pass": 5,
+    "partial": 1,
+    "fail": 0
+  }
+}
