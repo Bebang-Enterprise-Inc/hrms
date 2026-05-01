@@ -128,46 +128,165 @@ def download_file(drive, file_id, dest_path):
     Path(dest_path).write_bytes(fh.read())
 
 
+_BDO_HEADER_ALIASES = {
+    'date':        ['POSTING DATE', 'POSTING_DATE', 'TRANSACTION DATE', 'TXN DATE', 'DATE'],
+    'branch':      ['BRANCH', 'BRANCH NAME'],
+    'description': ['DESCRIPTION', 'PARTICULARS', 'NARRATIVE', 'TRANSACTION DESCRIPTION', 'REMARKS'],
+    'debit':       ['DEBIT', 'WITHDRAWAL', 'WITHDRAWALS', 'DR', 'AMOUNT DEBIT'],
+    'credit':      ['CREDIT', 'DEPOSIT', 'DEPOSITS', 'CR', 'AMOUNT CREDIT'],
+    'balance':     ['RUNNING BALANCE', 'BALANCE', 'CURRENT BALANCE'],
+    'check':       ['CHECK NUMBER', 'CHECK NO', 'CHECK NO.', 'CHECK#', 'CHK NO', 'CHEQUE', 'CHEQUE NO', 'CHEQUE NO.'],
+}
+_BDO_ACCT_NUM_KEYS = ['ACCOUNT NUMBER', 'ACCOUNT NO', 'ACCOUNT NO.', 'ACCT NO', 'ACCT NUMBER']
+_BDO_ACCT_NAME_KEYS = ['ACCOUNT NAME', 'CUSTOMER NAME', 'NAME', 'ACCT NAME']
+
+
+def _bdo_detect_schema(ws, scan_rows: int = 50, scan_cols: int = 25):
+    """Auto-detect column positions for date/desc/debit/credit/check from header row.
+
+    Returns dict {field: 1-based-col-idx, 'header_row': N, 'acct_num': str, 'acct_name': str}
+    or {'skip': reason} if no header detected.
+
+    Designed to handle BDO's multiple file layouts:
+      - Stores file: date in col 2, desc in col 7, etc.
+      - Head Office file: date in col 1, desc in col 6, etc.
+      - Legacy formats with stringified dates
+      - Empty placeholder tabs (skipped)
+    """
+    if ws.max_row < 2 or ws.max_column < 3:
+        return {'skip': f'too small ({ws.max_row}r x {ws.max_column}c)'}
+
+    cols_found = {}
+    header_row = 0
+    for r in range(1, min(scan_rows + 1, ws.max_row + 1)):
+        for c in range(1, min(scan_cols + 1, ws.max_column + 1)):
+            v = str(ws.cell(r, c).value or '').strip().upper()
+            if not v:
+                continue
+            for field_name, aliases in _BDO_HEADER_ALIASES.items():
+                if v in aliases and field_name not in cols_found:
+                    cols_found[field_name] = c
+                    header_row = max(header_row, r)
+        if len(cols_found) >= 4 and 'date' in cols_found and 'description' in cols_found:
+            break
+
+    if not cols_found.get('date') or not cols_found.get('description'):
+        return {'skip': f'no header row detected (found: {sorted(cols_found.keys())})'}
+
+    if not cols_found.get('check'):
+        cols_found['check'] = -1  # sentinel — accounts without check column
+
+    # Find account number + name in pre-header rows
+    acct_num = ''
+    acct_name = ''
+    for r in range(1, min(header_row, scan_rows)):
+        for c in range(1, min(scan_cols + 1, ws.max_column + 1)):
+            v = str(ws.cell(r, c).value or '').strip().upper()
+            if not v:
+                continue
+            for key in _BDO_ACCT_NUM_KEYS:
+                if key in v and not acct_num:
+                    for dc in range(1, 5):
+                        rv = ws.cell(r, c + dc).value
+                        if rv not in (None, ''):
+                            acct_num = str(rv).strip()
+                            break
+            for key in _BDO_ACCT_NAME_KEYS:
+                if key in v and not acct_name:
+                    for dc in range(1, 5):
+                        rv = ws.cell(r, c + dc).value
+                        if rv not in (None, '') and not str(rv).strip().isdigit():
+                            acct_name = str(rv).strip()
+                            break
+
+    return {
+        **cols_found,
+        'header_row': header_row,
+        'acct_num': acct_num,
+        'acct_name': acct_name,
+    }
+
+
+def _bdo_normalize_date(v):
+    """Return MM/DD/YYYY string or None if not a parseable date."""
+    if v in (None, ''):
+        return None
+    if hasattr(v, 'strftime'):  # datetime.datetime or datetime.date
+        return v.strftime('%m/%d/%Y')
+    if isinstance(v, str):
+        import re
+        s = v.strip()
+        if re.match(r'^\d{2}/\d{2}/\d{4}$', s):
+            return s
+        m = re.match(r'^(\d{4})-(\d{2})-(\d{2})', s)
+        if m:
+            return f'{m.group(2)}/{m.group(3)}/{m.group(1)}'
+        m = re.match(r'^(\d{2})-(\d{2})-(\d{4})$', s)
+        if m:
+            return f'{m.group(1)}/{m.group(2)}/{m.group(3)}'
+    return None
+
+
 def extract_bdo_txns(xlsx_path):
-    """Extract all transaction rows from BDO xlsx (3 tabs)."""
+    """Extract transaction rows from BDO xlsx — auto-detects column positions per tab.
+
+    Robust to:
+      - Multiple BDO file layouts (Stores vs Head Office have different column positions)
+      - Empty placeholder tabs (1-row or 1-column)
+      - Header row at any position in first 50 rows
+      - Datetime objects, MM/DD/YYYY strings, ISO dates, MM-DD-YYYY strings
+      - Tabs with no check column (deposits-only accounts)
+      - Sparse tabs with high max_column
+      - Header label aliases (PARTICULARS / CHEQUE NO / etc.)
+    """
+    def parse_num(v):
+        if v in (None, ''):
+            return 0.0
+        try:
+            return float(str(v).replace(',', '').strip())
+        except (ValueError, TypeError):
+            return 0.0
+
     wb = openpyxl.load_workbook(xlsx_path, data_only=True)
-    COL_DATE, COL_DESC, COL_DEBIT, COL_CREDIT, COL_CHECK = 2, 7, 8, 9, 12
     txns = []
     for tab in wb.sheetnames:
         ws = wb[tab]
-        acct_num = ws.cell(12, 5).value
-        acct_name = ws.cell(14, 5).value
-        for r_idx in range(1, ws.max_row + 1):
-            row = [ws.cell(r_idx, c).value for c in range(1, ws.max_column + 1)]
-            if str(row[COL_DATE-1] or '').strip() == 'POSTING DATE':
+        schema = _bdo_detect_schema(ws)
+        if 'skip' in schema:
+            continue
+        date_col = schema['date']
+        desc_col = schema['description']
+        debit_col = schema.get('debit')
+        credit_col = schema.get('credit')
+        check_col = schema.get('check', -1)
+        # Compute the highest column index we need to safely read
+        col_indices = [c for c in [date_col, desc_col, debit_col, credit_col, check_col] if c and c > 0]
+        max_col = max(col_indices) if col_indices else 0
+        for r in range(schema['header_row'] + 1, ws.max_row + 1):
+            row = [ws.cell(r, c).value for c in range(1, ws.max_column + 1)]
+            if len(row) < max_col:
                 continue
-            if str(row[COL_DESC-1] or '').strip() == 'DESCRIPTION':
+            date_str = _bdo_normalize_date(row[date_col - 1])
+            if not date_str:
                 continue
-            date_val = row[COL_DATE-1]
-            if not date_val or not (isinstance(date_val, str) and len(date_val) == 10 and date_val[2] == '/'):
-                continue
-
-            def parse_num(v):
-                if v in (None, ''):
-                    return 0.0
-                try:
-                    return float(str(v).replace(',', '').strip())
-                except (ValueError, TypeError):
-                    return 0.0
-            debit = parse_num(row[COL_DEBIT-1])
-            credit = parse_num(row[COL_CREDIT-1])
-            chk = str(row[COL_CHECK-1] or '').strip().lstrip('0')
-            if not chk or chk == '0':
+            debit = parse_num(row[debit_col - 1]) if debit_col else 0.0
+            credit = parse_num(row[credit_col - 1]) if credit_col else 0.0
+            if check_col == -1:
+                continue  # no check column on this tab
+            chk_raw = str(row[check_col - 1] or '').strip()
+            chk_clean = chk_raw.lstrip('0') if chk_raw else ''
+            if not chk_clean or chk_clean == '0':
                 continue
             txns.append({
-                'account': str(acct_name),
-                'account_number': str(acct_num),
-                'date': date_val,
-                'description': str(row[COL_DESC-1] or '').strip(),
+                'account': str(schema.get('acct_name', '')),
+                'account_number': str(schema.get('acct_num', '')),
+                'date': date_str,
+                'description': str(row[desc_col - 1] or '').strip(),
                 'debit': debit,
                 'credit': credit,
-                'check_number': str(row[COL_CHECK-1] or '').strip(),
-                'check_clean': chk,
+                'check_number': chk_raw,
+                'check_clean': chk_clean,
+                'tab': tab,
             })
     return pd.DataFrame(txns)
 
