@@ -173,7 +173,13 @@ def _supabase_headers(*, prefer: str = "") -> dict[str, str]:
 
 def supabase_upsert(client: httpx.Client, table: str, rows: list[dict],
                     on_conflict: str | None = None) -> None:
-    """UPSERT rows into a Supabase table via PostgREST in batches."""
+    """UPSERT rows into a Supabase table via PostgREST in batches.
+
+    S232: catches HTTP 409 (unique constraint violation, e.g., from the
+    pos_orders_bill_number_natural_key partial index) by splitting the offending
+    batch and routing duplicate rows to pos_duplicates with reason='race_409'.
+    Does NOT retry 409 — the conflict won't resolve itself.
+    """
     if not rows:
         return
     url = f"{SUPABASE_URL}/rest/v1/{table}"
@@ -190,12 +196,133 @@ def supabase_upsert(client: httpx.Client, table: str, rows: list[dict],
             )
             if r.status_code in (200, 201):
                 break
+            # S232: 409 = unique constraint violation. Cannot retry.
+            # If table is pos_orders, route conflicting rows to pos_duplicates.
+            if r.status_code == 409 and table == "pos_orders":
+                _handle_pos_orders_409(client, batch, r.text)
+                break
             if r.status_code == 429 and attempt < MAX_RETRIES:
                 time.sleep(RETRY_WAIT)
                 continue
             raise RuntimeError(
                 f"Supabase upsert {table} failed ({r.status_code}): {r.text[:300]}"
             )
+
+
+def _handle_pos_orders_409(client: httpx.Client, batch: list[dict], error_text: str) -> None:
+    """S232: when pos_orders upsert returns 409 (bill_number unique violation),
+    look up the kept_order_id for each row and write it to pos_duplicates.
+    """
+    log(f"  S232: pos_orders upsert returned 409 — splitting batch of {len(batch)} for race_409 handling")
+    for row in batch:
+        bill_number = row.get("bill_number")
+        if bill_number is None:
+            log(f"  S232: 409 row {row.get('id')} has NULL bill_number; skipping (cluster-window fallback not implemented in poll path)")
+            continue
+        # Look up the kept row that's already there
+        try:
+            r = client.get(
+                f"{SUPABASE_URL}/rest/v1/pos_orders",
+                params={
+                    "select": "id",
+                    "location_id": f"eq.{row['location_id']}",
+                    "business_date": f"eq.{row['business_date']}",
+                    "bill_number": f"eq.{bill_number}",
+                    "is_duplicate": "is.false",
+                    "limit": "1",
+                },
+                headers=_supabase_headers(),
+                timeout=30,
+            )
+            if r.status_code == 200 and r.json():
+                kept_id = int(r.json()[0]["id"])
+                _write_pos_duplicate(client, row, kept_id, source="poll", reason="race_409")
+            else:
+                log(f"  S232: 409 row {row.get('id')} — could not find kept twin; skipping")
+        except Exception as exc:
+            log(f"  S232: 409 row {row.get('id')} lookup failed: {exc}")
+
+
+def _write_pos_duplicate(client: httpx.Client, rejected_row: dict, kept_id: int,
+                         source: str, reason: str) -> None:
+    """S232: insert a row into pos_duplicates audit table."""
+    try:
+        body = {
+            "order_id": rejected_row["id"],
+            "kept_order_id": kept_id,
+            "location_id": rejected_row["location_id"],
+            "business_date": rejected_row["business_date"],
+            "bill_number": rejected_row.get("bill_number"),
+            "source": source,
+            "payload": rejected_row,
+            "reason": reason,
+        }
+        r = client.post(
+            f"{SUPABASE_URL}/rest/v1/pos_duplicates",
+            headers=_supabase_headers(prefer="resolution=ignore-duplicates,return=minimal"),
+            json=body,
+            timeout=30,
+        )
+        if r.status_code not in (200, 201, 204):
+            log(f"  S232: pos_duplicates insert failed ({r.status_code}): {r.text[:200]}")
+    except Exception as exc:
+        log(f"  S232: pos_duplicates insert exception: {exc}")
+
+
+def find_bill_number_twin_batch(client: httpx.Client, order_rows: list[dict]) -> dict[int, int]:
+    """S232: bulk-lookup existing kept rows for a batch of pos_orders.
+
+    Returns: {new_order_id: existing_kept_order_id} for every new row whose
+    (location_id, business_date, bill_number) already has a kept twin.
+
+    Used by the upsert pipeline as a pre-check, so we can route to pos_duplicates
+    without paying the 409 round-trip for every duplicate.
+    """
+    if not order_rows:
+        return {}
+    # Group by (location_id, business_date) for efficient lookup
+    twin_map: dict[int, int] = {}
+    by_location_date: dict[tuple, list[dict]] = {}
+    for row in order_rows:
+        if row.get("bill_number") is None:
+            continue
+        key = (row["location_id"], row["business_date"])
+        by_location_date.setdefault(key, []).append(row)
+
+    for (location_id, business_date), rows in by_location_date.items():
+        bill_numbers = [r["bill_number"] for r in rows]
+        if not bill_numbers:
+            continue
+        # PostgREST 'in' filter
+        bill_str = ",".join(str(b) for b in bill_numbers)
+        try:
+            r = client.get(
+                f"{SUPABASE_URL}/rest/v1/pos_orders",
+                params={
+                    "select": "id,bill_number",
+                    "location_id": f"eq.{location_id}",
+                    "business_date": f"eq.{business_date}",
+                    "bill_number": f"in.({bill_str})",
+                    "is_duplicate": "is.false",
+                },
+                headers=_supabase_headers(),
+                timeout=30,
+            )
+            if r.status_code != 200:
+                continue
+            existing_by_bill: dict[int, int] = {
+                int(x["bill_number"]): int(x["id"]) for x in r.json() if x.get("bill_number") is not None
+            }
+            # For each new row whose bill_number already has a kept twin AND
+            # the new id is DIFFERENT from the kept id → this is a duplicate
+            for new_row in rows:
+                kept_id = existing_by_bill.get(new_row["bill_number"])
+                if kept_id is not None and kept_id != new_row["id"]:
+                    twin_map[new_row["id"]] = kept_id
+        except Exception as exc:
+            log(f"  S232: bill_number twin lookup failed for ({location_id}, {business_date}): {exc}")
+            continue
+    return twin_map
 
 
 def supabase_exec_sql(client: httpx.Client, sql: str) -> Any:
@@ -385,6 +512,8 @@ def map_order(order: dict) -> dict:
         "business_date": order["business_date"],
         "bill_number": order.get("bill_number"),
         "receipt_number": order.get("receipt_number"),
+        "short_order_id": order.get("short_order_id"),  # S232: aggregator code (FP-XXXX, GF-XXXX)
+        "webhook_received_at": datetime.now(timezone.utc).isoformat(),  # S232: poll-time stamp for cluster-window fallback
         "pax_count": order.get("pax_count"),
         "service_type_id": order.get("service_type_id"),
         "service_channel_id": order.get("service_channel_id"),
@@ -464,17 +593,58 @@ def map_order_items(order: dict) -> list[dict]:
     return rows
 
 
+def infer_payment_type(service_channel_id: int | None) -> str | None:
+    """S232 Phase 4 — infer payment type for aggregator orders missing payment_methods.
+
+    The Mosaic API returns payment_methods 250/250 in the API path, but the webhook
+    serializer drops them ~98% of the time for aggregator channels (resolved via
+    inference). This helper provides safety-net coverage for the ~2% of poll-path
+    orders that also arrive with empty payment_methods.
+
+    service_channel_id mapping (verified via 2026-05-01 live API probe):
+      1  → GrabFood     → 'GRAB ONLINE'
+      2  → FoodPanda    → 'FOODPANDA ONLINE'
+      None / other      → None (no inference)
+    """
+    if service_channel_id == 1:
+        return "GRAB ONLINE"
+    if service_channel_id == 2:
+        return "FOODPANDA ONLINE"
+    return None
+
+
 def map_order_payments(order: dict) -> list[dict]:
-    """Map Mosaic order payments to pos_order_payments rows."""
+    """Map Mosaic order payments to pos_order_payments rows.
+
+    S232 Phase 4: when payment_methods is empty/null AND the order is on an
+    aggregator service_channel (1=GrabFood, 2=FoodPanda), synthesize a single
+    inferred payment row with payment_type='GRAB ONLINE'/'FOODPANDA ONLINE'
+    and inferred=true (for traceability).
+    """
+    payments = order.get("payment_methods") or order.get("payments") or []
     rows = []
-    for idx, payment in enumerate(order.get("payment_methods") or order.get("payments") or []):
+    for idx, payment in enumerate(payments):
         rows.append({
             "order_id": order["id"],
             "line_number": idx,
             "payment_type": payment.get("payment_type"),
             "paid_amount": payment.get("paid_amount", 0),
             "returned_amount": payment.get("returned_amount", 0),
+            "inferred": False,
         })
+    # S232: aggregator inference fallback
+    if not rows:
+        inferred = infer_payment_type(order.get("service_channel_id"))
+        if inferred is not None:
+            pb = order.get("price_breakdown") or {}
+            rows.append({
+                "order_id": order["id"],
+                "line_number": 0,
+                "payment_type": inferred,
+                "paid_amount": pb.get("original_gross_sales") or pb.get("gross_sales") or 0,
+                "returned_amount": 0,
+                "inferred": True,
+            })
     return rows
 
 
@@ -533,6 +703,25 @@ def sync_store_day(client: httpx.Client, cred: dict,
         order_rows.append(map_order(order))
         item_rows.extend(map_order_items(order))
         payment_rows.extend(map_order_payments(order))
+
+    # S232: dedup pre-check — find_bill_number_twin for each row, route duplicates to pos_duplicates.
+    # The unique partial index on pos_orders (location_id, business_date, bill_number) WHERE
+    # bill_number IS NOT NULL AND is_duplicate = false will also catch any race conditions via 409.
+    twin_map = find_bill_number_twin_batch(client, order_rows)
+    if twin_map:
+        log(f"  S232: found {len(twin_map)} bill_number twins — routing duplicates to pos_duplicates")
+        # Find the actual order dicts for rejected ids (we need the full payload)
+        rejected_ids = set(twin_map.keys())
+        for order in orders:
+            if order["id"] in rejected_ids:
+                _write_pos_duplicate(
+                    client, order, twin_map[order["id"]],
+                    source="poll", reason="bill_number_twin",
+                )
+        # Filter out rejected rows from the upsert batches
+        order_rows = [r for r in order_rows if r["id"] not in rejected_ids]
+        item_rows = [r for r in item_rows if r["order_id"] not in rejected_ids]
+        payment_rows = [r for r in payment_rows if r["order_id"] not in rejected_ids]
 
     # Upsert into Supabase
     try:

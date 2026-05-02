@@ -1,0 +1,13 @@
+{
+  "generated_at": "2026-05-02T12:17:16.151855+00:00",
+  "phase": "7-closeout",
+  "dupes_flagged": 2462,
+  "unique_index_exists": true,
+  "pos_duplicates_table_exists": true,
+  "pos_products_total": 715,
+  "pos_products_cup_drinks": 365,
+  "araneta_7d_cups": 2866,
+  "araneta_7d_gross_filtered": 603971.85,
+  "items_flagged": 4593,
+  "payments_flagged": 402
+}

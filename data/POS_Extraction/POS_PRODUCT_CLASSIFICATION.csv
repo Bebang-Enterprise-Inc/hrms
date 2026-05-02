@@ -1,0 +1,38 @@
+product_name,is_cup_drink,override_reason
+Presidential,1,confirmed cup drink (price 228)
+Special,1,confirmed cup drink (price 198)
+Buko Bliss,1,confirmed cup drink (price 228)
+So Corny,1,confirmed cup drink (price 228)
+The Mango Supreme,1,confirmed cup drink (price 228)
+Melon-ial,1,confirmed cup drink (price 218)
+Uberload,1,confirmed cup drink (price 228)
+Bananarific,1,confirmed cup drink (price 218)
+Brownie Overload,1,confirmed cup drink (price 228)
+Mango Delight,1,confirmed cup drink (price 208)
+Iskrambol,1,confirmed cup drink (price 228)
+Matcharap,1,confirmed cup drink (price 228)
+Fun-dan,1,confirmed cup drink (price 228)
+Berry Good (Strawberry),1,confirmed cup drink (price 218)
+Berry Good (Blueberry),1,confirmed cup drink (price 218)
+Cup 16 oz,0,packaging - empty cup container at 10 PHP
+Cup 22 oz,0,packaging
+Spoon,0,packaging - utensil
+Lid,0,packaging
+Straw,0,packaging
+Insulated Bag,0,packaging - carry bag at 80 PHP
+Paper Bag,0,packaging
+Plastic Bag,0,packaging
+Bottled Water,0,other beverage at 25 PHP - not a cup
+Water,0,other beverage
+Leche Flan,0,addon/topping at 30 PHP
+Ube Halaya,0,addon/topping at 20 PHP
+Macapuno,0,addon/topping at 20 PHP
+Nata,0,addon/topping at 20 PHP
+Mais,0,addon/topping at 20 PHP
+Brown Sugar Ball,0,addon/topping at 20 PHP
+Mango,0,addon/topping at 20 PHP (when standalone, NOT The Mango Supreme drink)
+Rice Crispies,0,addon/topping at 20 PHP
+Strawberry Fruit,0,addon/topping at 20 PHP
+Red Sago,0,addon/topping at 20 PHP
+Mini Mallows,0,addon/topping at 20 PHP
+Langka,0,addon/topping at 20 PHP

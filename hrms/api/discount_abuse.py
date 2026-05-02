@@ -1170,6 +1170,7 @@ def _query_paid_orders_for_range(
 		("business_date", f"lte.{end_day.isoformat()}"),
 		("location_id", f"in.({location_list})"),
 		("payment_status", "eq.PAID"),
+		("is_duplicate", "is.false"),  # S232: exclude pos_orders rows flagged as duplicates
 		("order", "business_date.asc,id.asc"),
 	]
 	return _supabase_get_all("pos_orders", params)
