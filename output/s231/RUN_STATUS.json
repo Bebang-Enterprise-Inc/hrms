@@ -1,0 +1,82 @@
+{
+  "sprint_id": "S231",
+  "version": "v2",
+  "run_id": "S231-2026-05-02-phase-0-onward",
+  "captured_at": "2026-05-02T11:50:00Z",
+  "branch": "s231-phase-0-onward",
+  "base_sha": "cb06f24097802a16d93bf9e8facbe58fa485de13",
+  "head_sha_at_close": "db2bbc4bc",
+  "commits_in_pr": 6,
+  "pre_phase_0_pr": 706,
+  "pre_phase_0_status": "MERGED+DEPLOYED",
+  "pre_phase_0_deploy_pipeline": 25250239214,
+  "phase_status": {
+    "Pre-Phase-0": "MERGED",
+    "Phase 0": "DONE",
+    "Phase A": "SCRIPTS_READY_EXECUTION_DEFERRED",
+    "Phase B": "SCRIPTS_READY_EXECUTION_DEFERRED",
+    "Phase C": "DONE",
+    "Phase D-1": "DONE",
+    "Phase D-2": "DONE",
+    "Phase D-3": "DONE",
+    "Phase D-4": "DONE",
+    "Phase D-5": "PENDING_BEI_TASKS_REPO",
+    "Phase E-2": "DONE",
+    "Phase E-3": "SCRIPT_READY_EXECUTION_DEFERRED",
+    "Phase E-4": "PENDING",
+    "Phase E-5": "DONE",
+    "Pre-deploy Test Maintenance (TM-6)": "DONE",
+    "Pre-deploy Test Maintenance (TM-1..5,7 bei-tasks)": "PENDING_BEI_TASKS_REPO",
+    "Closeout": "PR_PENDING_CREATION"
+  },
+  "units_done_this_pr": 74,
+  "units_deferred": 25,
+  "units_total": 99,
+  "canonical_preflight": "0 violations (49/49 stores)",
+  "tests_added_this_pr": {
+    "atomicity": 5,
+    "pricing_coupling": 12,
+    "markup_coupling": 6,
+    "total": 23
+  },
+  "ssm_scripts_built": [
+    "scripts/s231_ssm_helper.py",
+    "scripts/s231_probe_ayala_fairview.py",
+    "scripts/s231_create_bebang_ft_inc_parent.py",
+    "scripts/s231_fix_company_defaults.py",
+    "scripts/s231_audit_broken_defaults.py",
+    "scripts/s231_snapshot_defaults_pretouch.py",
+    "scripts/s231_fix_all_broken_defaults.py",
+    "scripts/s231_dedup_bfc.py"
+  ],
+  "doctypes_added": [
+    "BEI Fee Schedule",
+    "BEI Fee Carveout"
+  ],
+  "bei_settings_fields_added": [
+    "bki_markup_company_owned_percent",
+    "bki_billing_cron_enabled",
+    "bki_sales_debit_to_account",
+    "bki_sales_naming_series",
+    "bfc_revenue_company",
+    "bfc_sales_vat_template",
+    "bfc_sales_naming_series",
+    "bfc_or_active",
+    "bfc_vat_registration_active",
+    "jv_revenue_company",
+    "jv_sales_vat_template"
+  ],
+  "blockers": [],
+  "next_steps_for_sam": [
+    "Review + merge this PR to production",
+    "Trigger deploy",
+    "Run scripts/s231_probe_ayala_fairview.py to confirm baseline",
+    "Run scripts/s231_create_bebang_ft_inc_parent.py to unblock Ayala Fairview",
+    "Run scripts/s231_fix_company_defaults.py 'AYALA FAIRVIEW TERRACES - BEBANG FT INC.'",
+    "Run Phase B sweep scripts (audit, snapshot, fix, verify-after)",
+    "Run Phase E-3 BFC dedup probe; execute if transactions_total <= 100",
+    "Seed BEI Fee Schedule + Carveout via bench execute hrms.on_demand.s231_seed_fee_schedule.run",
+    "Build Phase D-5 frontend in bei-tasks repo (separate worktree + PR)",
+    "Spawn fresh agent session for L3 scenarios S1-S10 per L3 handoff prompt"
+  ]
+}
