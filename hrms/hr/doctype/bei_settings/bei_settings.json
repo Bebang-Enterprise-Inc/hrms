@@ -56,6 +56,7 @@
   "bki_markup_jv_percent",
   "bki_markup_managed_franchise_percent",
   "bki_markup_full_franchise_percent",
+  "bki_billing_cron_enabled",
   "bki_sales_vat_template",
   "bki_sales_income_account",
   "bki_default_incoterm",
@@ -379,6 +380,13 @@
    "default": "8.0",
    "precision": "4",
    "description": "Markup % applied to BKI\u2192Full Franchise store sales (ICT-002, BIL-005)."
+  },
+  {
+   "fieldname": "bki_billing_cron_enabled",
+   "fieldtype": "Check",
+   "label": "BKI Monthly Billing Cron Enabled",
+   "default": "0",
+   "description": "S231 Pre-Phase-0: kill-switch for `scheduled_monthly_billing` cron. Default 0 = cron is no-op. Finance flips to 1 only after ratifying dry-run output."
   },
   {
    "fieldname": "bki_sales_vat_template",
