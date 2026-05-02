@@ -1744,6 +1744,7 @@ def _get_channel_cups_from_mosaic(
 				("business_date", f"gte.{start_day.isoformat()}"),
 				("business_date", f"lte.{end_day.isoformat()}"),
 				("location_id", f"in.({_location_scope_key(location_ids)})"),
+				("is_duplicate", "is.false"),  # S232 followup: exclude flagged dupes from cup-by-channel count
 			]
 			return [int(r["id"]) for r in _supabase_get_all("pos_orders", p, page_size=1000) if r.get("id")]
 
@@ -1756,6 +1757,7 @@ def _get_channel_cups_from_mosaic(
 				p: list[tuple[str, Any]] = [
 					("select", "quantity"),
 					("order_id", f"in.({id_list})"),
+					("is_duplicate", "is.false"),  # S232 followup: skip cascaded-flagged item rows
 				]
 				rows_fb = _supabase_get_all("pos_order_items", p, page_size=1000)
 				total += sum(int(r.get("quantity") or 0) for r in rows_fb)

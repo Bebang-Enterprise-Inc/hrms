@@ -240,6 +240,7 @@ def fetch_pos_sales(since_date: str) -> list[dict]:
                 "select": "id,location_id",
                 "business_date": f"eq.{date_str}",
                 "payment_status": "eq.PAID",
+                "is_duplicate": "is.false",  # S232 followup: exclude flagged dupes
                 "limit": "5000",
             })
             if not orders:
@@ -254,6 +255,7 @@ def fetch_pos_sales(since_date: str) -> list[dict]:
                 items = _supabase_get("pos_order_items", {
                     "select": "order_id,product_name,quantity",
                     "order_id": f"in.({ids_str})",
+                    "is_duplicate": "is.false",  # S232 followup: skip cascade-flagged items
                     "limit": "10000",
                 })
                 for row in items:

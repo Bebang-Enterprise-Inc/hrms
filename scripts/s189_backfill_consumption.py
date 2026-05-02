@@ -75,6 +75,13 @@ def backfill_channel(channel, date_from, date_to, bom_lookup, dry_run=False):
 
     print(f"\nBackfilling {channel} from {date_from} to {date_to}...")
 
+    # S232 followup: filter is_duplicate when running for POS (web tables don't have the column).
+    # Reading flagged dupes here would consume BOM materials twice for the same physical sale.
+    pos_dupe_filter = (
+        "AND COALESCE(o.is_duplicate, false) = false AND COALESCE(i.is_duplicate, false) = false"
+        if channel == "POS" else ""
+    )
+
     # Query aggregated sales per product per day per location
     sql = f"""
     SELECT
@@ -86,6 +93,7 @@ def backfill_channel(channel, date_from, date_to, bom_lookup, dry_run=False):
     JOIN {orders_table} o ON o.id = i.order_id
     WHERE o.business_date >= '{date_from}'
       AND o.business_date <= '{date_to}'
+      {pos_dupe_filter}
     GROUP BY o.business_date, o.location_id, i.product_name
     ORDER BY o.business_date, i.product_name
     """

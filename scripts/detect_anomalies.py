@@ -168,6 +168,7 @@ def fetch_daily_actuals(key: str, business_date: str) -> dict:
         rows = supabase_get(key, "pos_orders", {
             "business_date": f"eq.{business_date}",
             "payment_status": "eq.PAID",
+            "is_duplicate": "is.false",  # S232 followup: anomaly counts must skip flagged dupes
             "select": "location_id,billed_at",
             "order": "location_id",
             "limit": str(page_size),
