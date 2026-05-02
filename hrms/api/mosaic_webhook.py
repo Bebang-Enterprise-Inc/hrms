@@ -204,9 +204,14 @@ def _handle_order_completed(data: dict) -> dict:
     2026-04-07 onwards — error log shows 2 real deliveries rejected that day).
     """
     set_backend_observability_context(
-        module="mosaic",
+        module="pos_ingest",
         action="handle_order_completed",
         mutation_type="create",
+        extras={
+            "order_id": data.get("id"),
+            "bill_number": data.get("bill_number"),
+            "service_channel_id": data.get("service_channel_id"),
+        },
     )
 
     order_id = data.get("id")
@@ -404,6 +409,8 @@ def _map_order_row(order: dict) -> dict:
         "business_date": order["business_date"],
         "bill_number": order.get("bill_number"),
         "receipt_number": order.get("receipt_number"),
+        "short_order_id": order.get("short_order_id"),  # S232: aggregator code
+        "webhook_received_at": datetime.now(timezone.utc).isoformat(),  # S232: arrival stamp
         "pax_count": order.get("pax_count"),
         "service_type_id": order.get("service_type_id"),
         "service_channel_id": order.get("service_channel_id"),
@@ -457,12 +464,18 @@ def _map_order_items(order: dict) -> list[dict]:
 def _upsert_completed_order(order: dict) -> None:
     """S189 T7.4/T7.5: idempotent upsert of order + items via PostgREST.
 
-    Uses PostgREST merge-duplicates Prefer header to deduplicate on primary key.
+    S232 (audit A3): adds bill_number twin pre-check via find_bill_number_twin.
+    If a non-duplicate twin exists for (location_id, business_date, bill_number),
+    route this payload to pos_duplicates instead of pos_orders. If PostgREST
+    returns 409 due to the unique partial index race condition, also route to
+    pos_duplicates with reason='race_409'.
+
     Safe under burst replays (store internet recovers after outage) because:
-      - pos_orders PK is id — duplicate INSERT merges
+      - The bill_number unique partial index rejects new ids for the same
+        physical transaction (Mosaic's API re-issues `id` for the same
+        bill_number across time during retries / aggregator re-syncs)
+      - pos_orders PK is id — duplicate INSERT merges (legacy path)
       - pos_order_items unique index on (order_id, product_id, line_number)
-      - Supabase triggers use ON CONFLICT ON CONSTRAINT idx_dmc_unique
-        + delta=0 short-circuit, preventing phantom consumption on re-delivery
     """
     key = get_service_key()
     headers = {
@@ -473,6 +486,22 @@ def _upsert_completed_order(order: dict) -> None:
     }
 
     order_row = _map_order_row(order)
+    bill_number = order_row.get("bill_number")
+
+    # S232: bill_number twin pre-check (Phase 1.5b — future-proofing for if
+    # order.completed webhook is re-registered with Mosaic vendor)
+    if bill_number is not None:
+        twin_id = _find_bill_number_twin(
+            order_row["location_id"],
+            order_row["business_date"],
+            bill_number,
+            headers,
+        )
+        if twin_id is not None and twin_id != order_row["id"]:
+            # Route to pos_duplicates instead of pos_orders
+            _write_pos_duplicate_webhook(order, twin_id, "bill_number_twin", headers)
+            return
+
     # S225 follow-up (Phase 6 Sentry): PostgREST returns 409 when
     # `Prefer: resolution=merge-duplicates` doesn't know which unique
     # constraint to use. Add explicit `on_conflict` query params so
@@ -483,6 +512,18 @@ def _upsert_completed_order(order: dict) -> None:
         json=[order_row],
         timeout=15,
     )
+    if r_order.status_code == 409 and bill_number is not None:
+        # S232: race against the unique partial index. Look up the kept twin
+        # and route this row to pos_duplicates with reason='race_409'.
+        twin_id = _find_bill_number_twin(
+            order_row["location_id"],
+            order_row["business_date"],
+            bill_number,
+            headers,
+        )
+        if twin_id is not None:
+            _write_pos_duplicate_webhook(order, twin_id, "race_409", headers)
+            return
     r_order.raise_for_status()
 
     item_rows = _map_order_items(order)
@@ -494,6 +535,65 @@ def _upsert_completed_order(order: dict) -> None:
             timeout=15,
         )
         r_items.raise_for_status()
+
+
+def _find_bill_number_twin(location_id: int, business_date: str, bill_number: int,
+                            headers: dict) -> int | None:
+    """S232: look up an existing non-duplicate pos_orders.id matching the natural key.
+
+    Returns the kept twin's id if one exists, else None. bill_number is None
+    fallback (cluster-window match) is NOT implemented in the webhook path —
+    NULL bill_number is rare on aggregator orders and the partial index handles
+    them by allowing multiple NULL-bill rows to coexist without unique violation.
+    """
+    if bill_number is None:
+        return None
+    try:
+        r = requests.get(
+            f"{SUPABASE_URL}/rest/v1/pos_orders",
+            params={
+                "select": "id",
+                "location_id": f"eq.{location_id}",
+                "business_date": f"eq.{business_date}",
+                "bill_number": f"eq.{bill_number}",
+                "is_duplicate": "is.false",
+                "limit": "1",
+            },
+            headers=headers,
+            timeout=10,
+        )
+        if r.status_code == 200 and r.json():
+            return int(r.json()[0]["id"])
+    except Exception:
+        pass
+    return None
+
+
+def _write_pos_duplicate_webhook(order: dict, kept_id: int, reason: str,
+                                  headers: dict) -> None:
+    """S232: insert a rejected duplicate to pos_duplicates audit table from webhook path."""
+    try:
+        body = {
+            "order_id": order["id"],
+            "kept_order_id": kept_id,
+            "location_id": order["location_id"],
+            "business_date": order["business_date"],
+            "bill_number": order.get("bill_number"),
+            "source": "webhook",
+            "payload": order,
+            "reason": reason,
+        }
+        requests.post(
+            f"{SUPABASE_URL}/rest/v1/pos_duplicates",
+            headers={**headers, "Prefer": "resolution=ignore-duplicates,return=minimal"},
+            json=body,
+            timeout=15,
+        )
+    except Exception as exc:
+        frappe.log_error(
+            title="S232: pos_duplicates webhook insert failed",
+            message=f"order_id={order.get('id')} kept_id={kept_id} reason={reason} error={exc}",
+        )
 
 
 def _find_credential(location_id) -> dict:
