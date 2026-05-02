@@ -1427,9 +1427,18 @@ def scheduled_monthly_billing():
 	"""Scheduled job: auto-generate monthly billing for the previous month.
 
 	Called by hooks.py cron (6 AM on 1st of each month).
+
+	S231 Pre-Phase-0: gated by `BEI Settings.bki_billing_cron_enabled`.
+	Default 0 = cron is no-op. Finance flips to 1 only after ratifying
+	dry-run output. Protects 2026-06-01 firing while remaining S231 work
+	(BEI Billing Schedule DocType migration, VAT template wiring, fee
+	schedule seeding) lands in subsequent PRs.
 	"""
 	from frappe.utils import add_months, getdate
 	from frappe.utils import today as frappe_today
+
+	if not frappe.db.get_single_value("BEI Settings", "bki_billing_cron_enabled"):
+		return
 
 	prev_month = add_months(frappe_today(), -1)
 	billing_period = getdate(prev_month).strftime("%Y-%m")
