@@ -581,6 +581,12 @@ def _fetch_channel_product_rows_via_rest(
 		("order.business_date", f"lte.{end_date.isoformat()}"),
 		(f"order.{order_status_field}", f"eq.{order_status_value}"),
 	]
+	# S232 followup: filter is_duplicate on pos_order_items + pos_orders.
+	# web_order_items / web_orders don't have the column (S232 was POS-only).
+	if resource == "pos_order_items":
+		params.append(("is_duplicate", "is.false"))
+	if order_resource == "pos_orders":
+		params.append(("order.is_duplicate", "is.false"))
 	rows = _supabase_get_all(resource, params)
 
 	normalized_rows: list[dict[str, Any]] = []
