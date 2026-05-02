@@ -1,0 +1,716 @@
+product_id,product_name,default_price,is_cup_drink,category
+174399,The Mango Supreme,232.00,True,cup_drink
+174402,Buko Bliss,231.47,True,cup_drink
+174413,Brownie Overload,231.26,True,cup_drink
+174401,Fun-dan,231.03,True,cup_drink
+174400,Uberload,230.17,True,cup_drink
+176179,Iskrambol,229.71,True,cup_drink
+174403,Matcharap,228.81,True,cup_drink
+169548,Brownie Overload,228.44,True,cup_drink
+169537,Buko Bliss,228.20,True,cup_drink
+169534,The Mango Supreme,228.13,True,cup_drink
+169535,Uberload,228.11,True,cup_drink
+169536,Fun-dan,228.07,True,cup_drink
+177763,Buko Bliss,228.00,True,cup_drink
+177916,Fun-dan,228.00,True,cup_drink
+177837,The Mango Supreme,228.00,True,cup_drink
+174398,Presidential,227.96,True,cup_drink
+175246,Iskrambol,226.85,True,cup_drink
+175253,Iskrambol,226.18,True,cup_drink
+175011,Iskrambol,225.87,True,cup_drink
+175126,Iskrambol,225.56,True,cup_drink
+175240,Iskrambol,225.37,True,cup_drink
+175250,Iskrambol,225.12,True,cup_drink
+175251,Iskrambol,223.92,True,cup_drink
+175245,Iskrambol,223.18,True,cup_drink
+175127,Iskrambol,223.00,True,cup_drink
+174409,Berry Good (Blueberry),221.98,True,cup_drink
+175242,Iskrambol,221.30,True,cup_drink
+169538,Matcharap,221.19,True,cup_drink
+174407,Melon-ial,220.79,True,cup_drink
+174408,Berry Good (Strawberry),220.63,True,cup_drink
+174410,Bananarific,219.76,True,cup_drink
+175125,Iskrambol,219.73,True,cup_drink
+175237,Iskrambol,218.53,True,cup_drink
+169542,Melon-ial,218.07,True,cup_drink
+177836,Bananarific,218.00,True,cup_drink
+169545,Bananarific,218.00,True,cup_drink
+177915,Berry Good (Blueberry),218.00,True,cup_drink
+177914,Berry Good (Strawberry),218.00,True,cup_drink
+169543,Berry Good (Strawberry),218.00,True,cup_drink
+174412,Cookie Crumble,218.00,True,cup_drink
+177770,Melon-ial,218.00,True,cup_drink
+169533,Presidential,216.39,True,cup_drink
+175212,Iskrambol,216.14,True,cup_drink
+167154,Matcharap,214.72,True,cup_drink
+174406,Mango Delight,210.03,True,cup_drink
+174405,So Corny,209.04,True,cup_drink
+169541,Mango Delight,208.15,True,cup_drink
+177845,Mango Delight,208.00,True,cup_drink
+175826,Matcharap,208.00,True,cup_drink
+175771,Iskrambol,207.19,True,cup_drink
+169852,Matcharap,207.08,True,cup_drink
+159873,Matcharap,206.34,True,cup_drink
+167149,Presidential,206.07,True,cup_drink
+139724,Choco Brownie,204.44,True,cup_drink
+169847,Presidential,204.30,True,cup_drink
+154072,Matcharap,204.15,True,cup_drink
+175871,Mango Graham Caramel,204.00,True,cup_drink
+175744,Presidential,203.96,True,cup_drink
+175747,Mango Graham Caramel,202.80,True,cup_drink
+139029,Matcharap,202.75,True,cup_drink
+139028,Buko Fruit Salad,202.65,True,cup_drink
+159868,Presidential,202.59,True,cup_drink
+175757,Halokay Ube,202.58,True,cup_drink
+175792,Matcharap,202.29,True,cup_drink
+175782,Buko Pandan,202.15,True,cup_drink
+139026,Halokay Ube,201.87,True,cup_drink
+160626,Matcharap,201.75,True,cup_drink
+154067,Presidential,201.56,True,cup_drink
+139024,Presidential,201.56,True,cup_drink
+175781,Choco Brownie,201.33,True,cup_drink
+139027,Buko Pandan,200.94,True,cup_drink
+163307,Matcharap,200.57,True,cup_drink
+153536,Matcharap,200.52,True,cup_drink
+139025,Mango Graham,200.41,True,cup_drink
+160232,Matcharap,200.02,True,cup_drink
+136606,Matcharap,199.82,True,cup_drink
+160227,Presidential,198.99,True,cup_drink
+175779,Buko Fruit,198.49,True,cup_drink
+175806,Presidential,198.37,True,cup_drink
+140422,Matcharap,198.29,True,cup_drink
+163302,Presidential,198.12,True,cup_drink
+153531,Presidential,198.07,True,cup_drink
+175878,Buko Fruit,198.00,True,cup_drink
+175942,Buko Fruit,198.00,True,cup_drink
+175810,Buko Fruit,198.00,True,cup_drink
+175901,Buko Fruit,198.00,True,cup_drink
+175849,Buko Fruit,198.00,True,cup_drink
+175830,Buko Pandan,198.00,True,cup_drink
+175855,Buko Pandan,198.00,True,cup_drink
+175882,Buko Pandan,198.00,True,cup_drink
+175775,Buko Pandan,198.00,True,cup_drink
+175881,Choco Brownie,198.00,True,cup_drink
+175865,Choco Brownie,198.00,True,cup_drink
+175787,Choco Brownie,198.00,True,cup_drink
+175862,Choco Brownie,198.00,True,cup_drink
+175821,Halokay Ube,198.00,True,cup_drink
+175897,Halokay Ube,198.00,True,cup_drink
+175823,Halokay Ube,198.00,True,cup_drink
+176061,Halokay Ube,198.00,True,cup_drink
+175774,Halokay Ube,198.00,True,cup_drink
+176059,Halokay Ube,198.00,True,cup_drink
+175790,Iskrambol,198.00,True,cup_drink
+175984,Iskrambol,198.00,True,cup_drink
+175777,Iskrambol,198.00,True,cup_drink
+175956,Iskrambol,198.00,True,cup_drink
+175822,Mango Graham Caramel,198.00,True,cup_drink
+175913,Mango Graham Caramel,198.00,True,cup_drink
+175842,Mango Graham Caramel,198.00,True,cup_drink
+175776,Mango Graham Caramel,198.00,True,cup_drink
+175947,Mango Graham Caramel,198.00,True,cup_drink
+175960,Mango Graham Caramel,198.00,True,cup_drink
+175952,Matcharap,198.00,True,cup_drink
+175893,Matcharap,198.00,True,cup_drink
+175788,Matcharap,198.00,True,cup_drink
+175861,Presidential,198.00,True,cup_drink
+175809,Presidential,198.00,True,cup_drink
+175760,Presidential,198.00,True,cup_drink
+175829,Presidential,198.00,True,cup_drink
+175817,Presidential,198.00,True,cup_drink
+175785,Presidential,198.00,True,cup_drink
+175845,Presidential,198.00,True,cup_drink
+160621,Presidential,197.78,True,cup_drink
+169540,So Corny,197.66,True,cup_drink
+136600,Presidential,197.08,True,cup_drink
+154033,Matcharap,196.83,True,cup_drink
+140417,Presidential,196.68,True,cup_drink
+174404,Special,196.12,True,cup_drink
+167151,Halokay Ube,194.90,True,cup_drink
+175746,Banana Cinnamon Con Yelo,194.88,True,cup_drink
+167152,Buko Pandan,194.69,True,cup_drink
+167150,Mango Graham,193.57,True,cup_drink
+154028,Presidential,193.45,True,cup_drink
+167164,Choco Brownie,193.06,True,cup_drink
+139035,Blueberry Pistachio,192.90,True,cup_drink
+154070,Buko Pandan,192.89,True,cup_drink
+169849,Halokay Ube,192.44,True,cup_drink
+175773,Blueberry Pistachio,192.32,True,cup_drink
+154068,Mango Graham,192.23,True,cup_drink
+169850,Buko Pandan,192.09,True,cup_drink
+169848,Mango Graham,192.09,True,cup_drink
+139033,Melon,192.08,True,cup_drink
+160231,Buko Fruit Salad,191.94,True,cup_drink
+169862,Choco Brownie,191.93,True,cup_drink
+159883,Choco Brownie,191.91,True,cup_drink
+160229,Halokay Ube,191.80,True,cup_drink
+159871,Buko Pandan,191.76,True,cup_drink
+159870,Halokay Ube,191.66,True,cup_drink
+160242,Choco Brownie,191.54,True,cup_drink
+139036,Banana Cinnamon Con Yelo,191.53,True,cup_drink
+154071,Buko Fruit Salad,191.50,True,cup_drink
+160228,Mango Graham,191.49,True,cup_drink
+169851,Buko Fruit Salad,191.47,True,cup_drink
+175948,Strawberry Pistachio,191.33,True,cup_drink
+154082,Choco Brownie,191.22,True,cup_drink
+175768,Melon,191.22,True,cup_drink
+139034,Strawberry Pistachio,191.13,True,cup_drink
+159869,Mango Graham,191.05,True,cup_drink
+160230,Buko Pandan,191.01,True,cup_drink
+167153,Buko Fruit Salad,191.00,True,cup_drink
+159872,Buko Fruit Salad,190.82,True,cup_drink
+160623,Halokay Ube,190.71,True,cup_drink
+136603,Halokay Ube,190.17,True,cup_drink
+140419,Halokay Ube,190.16,True,cup_drink
+140421,Buko Fruit Salad,190.09,True,cup_drink
+160636,Choco Brownie,190.05,True,cup_drink
+160622,Mango Graham,190.00,True,cup_drink
+136605,Buko Fruit Salad,189.94,True,cup_drink
+160624,Buko Pandan,189.92,True,cup_drink
+136601,Mango Graham,189.87,True,cup_drink
+160625,Buko Fruit Salad,189.85,True,cup_drink
+136604,Buko Pandan,189.83,True,cup_drink
+140418,Mango Graham,189.83,True,cup_drink
+140420,Buko Pandan,189.79,True,cup_drink
+140432,Choco Brownie,189.75,True,cup_drink
+139579,Choco Brownie,189.62,True,cup_drink
+175780,Strawberry Pistachio,189.19,True,cup_drink
+163304,Halokay Ube,189.08,True,cup_drink
+175769,Cookie Crumble,189.05,True,cup_drink
+163305,Buko Pandan,188.93,True,cup_drink
+153534,Buko Pandan,188.84,True,cup_drink
+163317,Choco Brownie,188.79,True,cup_drink
+153533,Halokay Ube,188.72,True,cup_drink
+154030,Halokay Ube,188.65,True,cup_drink
+153535,Buko Fruit Salad,188.55,True,cup_drink
+153532,Mango Graham,188.51,True,cup_drink
+154029,Mango Graham,188.49,True,cup_drink
+153546,Choco Brownie,188.44,True,cup_drink
+154031,Buko Pandan,188.38,True,cup_drink
+163303,Mango Graham,188.38,True,cup_drink
+154032,Buko Fruit Salad,188.30,True,cup_drink
+163306,Buko Fruit Salad,188.25,True,cup_drink
+154043,Choco Brownie,188.25,True,cup_drink
+167156,So Corny,188.21,True,cup_drink
+139038,Cookie Crumble,188.20,True,cup_drink
+175844,Banana Cinnamon Con Yelo,188.00,True,cup_drink
+175840,Banana Cinnamon Con Yelo,188.00,True,cup_drink
+175888,Banana Cinnamon Con Yelo,188.00,True,cup_drink
+175883,Banana Cinnamon Con Yelo,188.00,True,cup_drink
+175853,Banana Cinnamon Con Yelo,188.00,True,cup_drink
+175958,Banana Cinnamon Con Yelo,188.00,True,cup_drink
+175783,Blueberry Pistachio,188.00,True,cup_drink
+175954,Blueberry Pistachio,188.00,True,cup_drink
+175886,Blueberry Pistachio,188.00,True,cup_drink
+169544,Blueberry Pistachio,188.00,True,cup_drink
+176070,Buko Fruit,188.00,True,cup_drink
+175900,Buko Fruit,188.00,True,cup_drink
+175891,Buko Pandan,188.00,True,cup_drink
+176065,Buko Pandan,188.00,True,cup_drink
+175868,Buko Pandan,188.00,True,cup_drink
+139037,Choco Banana,188.00,True,cup_drink
+175834,Choco Brownie,188.00,True,cup_drink
+175867,Choco Brownie,188.00,True,cup_drink
+175896,Cookie Crumble,188.00,True,cup_drink
+169547,Cookie Crumble,188.00,True,cup_drink
+175839,Cookie Crumble,188.00,True,cup_drink
+175895,Halokay Ube,188.00,True,cup_drink
+154069,Halokay Ube,188.00,True,cup_drink
+175911,Halokay Ube,188.00,True,cup_drink
+175898,Halokay Ube,188.00,True,cup_drink
+175899,Iskrambol,188.00,True,cup_drink
+175870,Iskrambol,188.00,True,cup_drink
+176067,Mango Graham Caramel,188.00,True,cup_drink
+175835,Mango Graham Caramel,188.00,True,cup_drink
+175892,Matcharap,188.00,True,cup_drink
+175784,Melon,188.00,True,cup_drink
+175854,Melon,188.00,True,cup_drink
+176071,Melon,188.00,True,cup_drink
+175797,Melon,188.00,True,cup_drink
+175848,Melon,188.00,True,cup_drink
+175852,Presidential,188.00,True,cup_drink
+176068,Presidential,188.00,True,cup_drink
+175890,Presidential,188.00,True,cup_drink
+175786,Strawberry Pistachio,188.00,True,cup_drink
+175887,Strawberry Pistachio,188.00,True,cup_drink
+175761,Strawberry Pistachio,188.00,True,cup_drink
+169854,So Corny,187.38,True,cup_drink
+163316,Cookie Crumble,184.07,True,cup_drink
+167158,Melon,183.90,True,cup_drink
+167159,Strawberry Pistachio,183.75,True,cup_drink
+154074,So Corny,183.62,True,cup_drink
+154079,Banana Cinnamon Con Yelo,183.56,True,cup_drink
+159875,So Corny,183.54,True,cup_drink
+154078,Blueberry Pistachio,183.46,True,cup_drink
+140431,Cookie Crumble,183.20,True,cup_drink
+160635,Cookie Crumble,183.14,True,cup_drink
+139031,So Corny,183.00,True,cup_drink
+169856,Melon,182.95,True,cup_drink
+167161,Banana Cinnamon Con Yelo,182.88,True,cup_drink
+169859,Banana Cinnamon Con Yelo,182.79,True,cup_drink
+167160,Blueberry Pistachio,182.79,True,cup_drink
+160238,Blueberry Pistachio,182.63,True,cup_drink
+169857,Strawberry Pistachio,182.57,True,cup_drink
+154077,Strawberry Pistachio,182.44,True,cup_drink
+169858,Blueberry Pistachio,182.36,True,cup_drink
+160237,Strawberry Pistachio,182.13,True,cup_drink
+154076,Melon,182.11,True,cup_drink
+175743,Mango Classic,181.88,True,cup_drink
+175758,SO Corny!,181.86,True,cup_drink
+160236,Melon,181.68,True,cup_drink
+167163,Cookie Crumble,181.46,True,cup_drink
+160239,Banana Cinnamon Con Yelo,181.45,True,cup_drink
+169539,Special,181.45,True,cup_drink
+159879,Blueberry Pistachio,181.37,True,cup_drink
+159877,Melon,181.32,True,cup_drink
+159878,Strawberry Pistachio,181.20,True,cup_drink
+154081,Cookie Crumble,181.18,True,cup_drink
+139032,Mango Classic,181.15,True,cup_drink
+136617,Cookie Crumble,181.06,True,cup_drink
+154042,Cookie Crumble,181.00,True,cup_drink
+160234,So Corny,180.92,True,cup_drink
+160241,Cookie Crumble,180.81,True,cup_drink
+160631,Strawberry Pistachio,180.75,True,cup_drink
+169861,Cookie Crumble,180.53,True,cup_drink
+159880,Banana Cinnamon Con Yelo,180.50,True,cup_drink
+140428,Blueberry Pistachio,180.36,True,cup_drink
+160630,Melon,180.35,True,cup_drink
+160633,Banana Cinnamon Con Yelo,180.23,True,cup_drink
+153538,So Corny,180.22,True,cup_drink
+136614,Blueberry Pistachio,180.19,True,cup_drink
+140426,Melon,180.16,True,cup_drink
+136615,Banana Cinnamon Con Yelo,180.15,True,cup_drink
+136611,Melon,180.13,True,cup_drink
+140427,Strawberry Pistachio,180.11,True,cup_drink
+160632,Blueberry Pistachio,180.06,True,cup_drink
+140429,Banana Cinnamon Con Yelo,180.05,True,cup_drink
+136613,Strawberry Pistachio,180.04,True,cup_drink
+159882,Cookie Crumble,179.98,True,cup_drink
+163309,So Corny,179.81,True,cup_drink
+153545,Cookie Crumble,179.40,True,cup_drink
+136608,So Corny,179.36,True,cup_drink
+153540,Melon,179.05,True,cup_drink
+160628,So Corny,179.01,True,cup_drink
+163314,Banana Cinnamon Con Yelo,178.45,True,cup_drink
+163311,Melon,178.44,True,cup_drink
+154038,Strawberry Pistachio,178.43,True,cup_drink
+163312,Strawberry Pistachio,178.41,True,cup_drink
+163313,Blueberry Pistachio,178.38,True,cup_drink
+154040,Banana Cinnamon Con Yelo,178.36,True,cup_drink
+153542,Blueberry Pistachio,178.30,True,cup_drink
+154037,Melon,178.30,True,cup_drink
+153541,Strawberry Pistachio,178.30,True,cup_drink
+154039,Blueberry Pistachio,178.27,True,cup_drink
+153543,Banana Cinnamon Con Yelo,178.25,True,cup_drink
+175833,Banana Cinnamon Con Yelo,178.00,True,cup_drink
+175825,Banana Cinnamon Con Yelo,178.00,True,cup_drink
+175910,Banana Cinnamon Con Yelo,178.00,True,cup_drink
+175869,Blueberry Pistachio,178.00,True,cup_drink
+175894,Blueberry Pistachio,178.00,True,cup_drink
+159881,Choco Banana,178.00,True,cup_drink
+136616,Choco Banana,178.00,True,cup_drink
+163315,Choco Banana,178.00,True,cup_drink
+140430,Choco Banana,178.00,True,cup_drink
+160634,Choco Banana,178.00,True,cup_drink
+175808,Cookie Crumble,178.00,True,cup_drink
+176382,Ginataang Halo Halo,178.00,True,cup_drink
+175880,Mango Classic,178.00,True,cup_drink
+175850,Mango Classic,178.00,True,cup_drink
+175828,Mango Classic,178.00,True,cup_drink
+175791,Mango Classic,178.00,True,cup_drink
+175863,Mango Classic,178.00,True,cup_drink
+175872,Melon,178.00,True,cup_drink
+176064,Melon,178.00,True,cup_drink
+175858,SO Corny!,178.00,True,cup_drink
+175789,SO Corny!,178.00,True,cup_drink
+175778,SO Corny!,178.00,True,cup_drink
+175889,SO Corny!,178.00,True,cup_drink
+175843,SO Corny!,178.00,True,cup_drink
+175912,Strawberry Pistachio,178.00,True,cup_drink
+176069,Strawberry Pistachio,178.00,True,cup_drink
+140424,So Corny,177.37,True,cup_drink
+154075,Mango Classic,175.05,True,cup_drink
+154035,So Corny,174.15,True,cup_drink
+160235,Mango Classic,173.87,True,cup_drink
+169855,Mango Classic,173.59,True,cup_drink
+175770,Special,173.57,True,cup_drink
+167157,Mango Classic,172.56,True,cup_drink
+167155,Special,172.42,True,cup_drink
+159874,Special,172.38,True,cup_drink
+139030,Special,171.99,True,cup_drink
+159876,Mango Classic,171.82,True,cup_drink
+160629,Mango Classic,171.63,True,cup_drink
+136610,Mango Classic,170.94,True,cup_drink
+140425,Mango Classic,170.67,True,cup_drink
+169853,Special,170.43,True,cup_drink
+153539,Mango Classic,169.01,True,cup_drink
+154073,Special,168.92,True,cup_drink
+163310,Mango Classic,168.39,True,cup_drink
+154036,Mango Classic,168.32,True,cup_drink
+160233,Special,168.30,True,cup_drink
+163308,Special,168.02,True,cup_drink
+175811,Mango Classic,168.00,True,cup_drink
+175836,SO Corny!,168.00,True,cup_drink
+175820,SO Corny!,168.00,True,cup_drink
+175884,Special,168.00,True,cup_drink
+175827,Special,168.00,True,cup_drink
+175812,Special,168.00,True,cup_drink
+175851,Special,168.00,True,cup_drink
+175832,Special,168.00,True,cup_drink
+160627,Special,166.97,True,cup_drink
+136607,Special,165.89,True,cup_drink
+153537,Special,165.45,True,cup_drink
+140423,Special,163.83,True,cup_drink
+154034,Special,160.64,True,cup_drink
+176060,Special,158.00,True,cup_drink
+175866,Special,158.00,True,cup_drink
+167726,Choco Brownie (Tikim 118),118.00,False,other
+167721,Mango Graham (Tikim 118),118.00,False,other
+167719,Presidential (Tikim 118),118.00,False,other
+167729,Choco Brownie (Tikim 108),108.00,False,other
+167728,Mango Graham (Tikim 108),108.00,False,other
+167727,Presidential (Tikim 108),108.00,False,other
+174220,Pop Lamig,98.01,False,other
+136621,Cookie Crumble (Tikim),98.00,False,other
+136620,Mango Graham (Tikim),98.00,False,other
+136618,Presidential (Tikim),98.00,False,other
+139054,Insulated Bag,90.78,False,packaging
+136936,Insulated Bag,90.55,False,packaging
+140448,Insulated Bag,89.78,False,packaging
+160652,Insulated Bag,87.32,False,packaging
+160258,Insulated Bag,87.30,False,packaging
+154059,Insulated Bag,87.18,False,packaging
+154098,Insulated Bag,85.81,False,packaging
+159899,Insulated Bag,83.65,False,packaging
+169878,Insulated Bag,82.54,False,packaging
+153562,Insulated Bag,82.52,False,packaging
+163333,Insulated Bag,82.46,False,packaging
+167180,Insulated Bag,79.84,False,packaging
+174429,Insulated Bag,77.47,False,packaging
+169570,Insulated Bag,69.67,False,packaging
+175879,Insulated Bag,68.00,False,packaging
+175856,Insulated Bag,68.00,False,packaging
+175902,Insulated Bag,68.00,False,packaging
+175962,Insulated Bag,68.00,False,packaging
+175982,Insulated Bag,68.00,False,packaging
+175873,Insulated Bag,68.00,False,packaging
+175885,Insulated Bag,68.00,False,packaging
+175772,Insulated Bag,68.00,False,packaging
+175762,Insulated Bag,68.00,False,packaging
+175837,Insulated Bag,68.00,False,packaging
+139187,Bottled Water,50.00,False,packaging
+136726,Leche Flan,30.00,False,addon
+174417,Leche Flan,30.00,False,addon
+160640,Leche Flan,30.00,False,addon
+154047,Leche Flan,30.00,False,addon
+140436,Leche Flan,30.00,False,addon
+167168,Leche Flan,30.00,False,addon
+160246,Leche Flan,30.00,False,addon
+169558,Leche Flan,30.00,False,addon
+154086,Leche Flan,30.00,False,addon
+159887,Leche Flan,30.00,False,addon
+139042,Leche Flan,30.00,False,addon
+163321,Leche Flan,30.00,False,addon
+169866,Leche Flan,30.00,False,addon
+153550,Leche Flan,30.00,False,addon
+164210,Bottled Water,25.00,False,packaging
+140452,Banana Cinnamon,20.00,False,other
+139058,Banana Cinnamon,20.00,False,other
+153566,Banana Cinnamon(Adds Ons),20.00,False,other
+154063,Banana Cinnamon(Adds Ons),20.00,False,other
+167184,Banana Cinnamon(Adds Ons),20.00,False,other
+160262,Banana Cinnamon(Adds Ons),20.00,False,other
+174433,Banana Cinnamon(Adds Ons),20.00,False,other
+137246,Banana Cinnamon(Adds Ons),20.00,False,other
+160656,Banana Cinnamon(Adds Ons),20.00,False,other
+159903,Banana Cinnamon(Adds Ons),20.00,False,other
+169574,Banana Cinnamon(Adds Ons),20.00,False,other
+169882,Banana Cinnamon(Adds Ons),20.00,False,other
+154102,Banana Cinnamon(Adds Ons),20.00,False,other
+163337,Banana Cinnamon(Adds Ons),20.00,False,other
+169569,Blueberry Fruit,20.00,False,other
+169877,Blueberry Fruit,20.00,False,other
+153561,Blueberry Fruit,20.00,False,other
+160651,Blueberry Fruit,20.00,False,other
+160257,Blueberry Fruit,20.00,False,other
+139053,Blueberry Fruit,20.00,False,other
+140447,Blueberry Fruit,20.00,False,other
+167179,Blueberry Fruit,20.00,False,other
+154058,Blueberry Fruit,20.00,False,other
+174428,Blueberry Fruit,20.00,False,other
+136742,Blueberry Fruit,20.00,False,other
+163332,Blueberry Fruit,20.00,False,other
+154097,Blueberry Fruit,20.00,False,other
+159898,Blueberry Fruit,20.00,False,other
+167187,Brown Sugar Ball,20.00,False,addon
+139709,Brown Sugar Ball,20.00,False,addon
+153569,Brown Sugar Ball,20.00,False,addon
+154105,Brown Sugar Ball,20.00,False,addon
+163340,Brown Sugar Ball,20.00,False,addon
+139807,Brown Sugar Ball,20.00,False,addon
+140455,Brown Sugar Ball,20.00,False,addon
+174436,Brown Sugar Ball,20.00,False,addon
+160265,Brown Sugar Ball,20.00,False,addon
+154066,Brown Sugar Ball,20.00,False,addon
+169577,Brown Sugar Ball,20.00,False,addon
+159906,Brown Sugar Ball,20.00,False,addon
+169885,Brown Sugar Ball,20.00,False,addon
+160659,Brown Sugar Ball,20.00,False,addon
+139806,Choco Brownie,20.00,False,other
+160658,Choco Brownie (Adds Ons),20.00,False,other
+163339,Choco Brownie (Adds Ons),20.00,False,other
+159905,Choco Brownie (Adds Ons),20.00,False,other
+154065,Choco Brownie (Adds Ons),20.00,False,other
+160264,Choco Brownie (Adds Ons),20.00,False,other
+154104,Choco Brownie (Adds Ons),20.00,False,other
+174435,Choco Brownie (Adds Ons),20.00,False,other
+139708,Choco Brownie (Adds Ons),20.00,False,other
+153568,Choco Brownie (Adds Ons),20.00,False,other
+169884,Choco Brownie (Adds Ons),20.00,False,other
+140454,Choco Brownie (Adds Ons),20.00,False,other
+167186,Choco Brownie (Adds Ons),20.00,False,other
+169576,Choco Brownie (Adds Ons),20.00,False,other
+140441,Crushed Oreo,20.00,False,other
+169871,Crushed Oreo,20.00,False,other
+154091,Crushed Oreo,20.00,False,other
+159892,Crushed Oreo,20.00,False,other
+160251,Crushed Oreo,20.00,False,other
+154052,Crushed Oreo,20.00,False,other
+139047,Crushed Oreo,20.00,False,other
+163326,Crushed Oreo,20.00,False,other
+153555,Crushed Oreo,20.00,False,other
+167173,Crushed Oreo,20.00,False,other
+160645,Crushed Oreo,20.00,False,other
+169563,Crushed Oreo,20.00,False,other
+136736,Crushed Oreo,20.00,False,other
+174422,Crushed Oreo,20.00,False,other
+160771,Crystal Ball,20.00,False,other
+140437,Langka,20.00,False,addon
+139043,Langka,20.00,False,addon
+154087,Langka,20.00,False,addon
+174418,Langka,20.00,False,addon
+169559,Langka,20.00,False,addon
+167169,Langka,20.00,False,addon
+136727,Langka,20.00,False,addon
+154048,Langka,20.00,False,addon
+160247,Langka,20.00,False,addon
+153551,Langka,20.00,False,addon
+169867,Langka,20.00,False,addon
+160641,Langka,20.00,False,addon
+163322,Langka,20.00,False,addon
+159888,Langka,20.00,False,addon
+153554,Macapuno,20.00,False,addon
+154090,Macapuno,20.00,False,addon
+139046,Macapuno,20.00,False,addon
+154051,Macapuno,20.00,False,addon
+140440,Macapuno,20.00,False,addon
+160250,Macapuno,20.00,False,addon
+167172,Macapuno,20.00,False,addon
+159891,Macapuno,20.00,False,addon
+174421,Macapuno,20.00,False,addon
+169562,Macapuno,20.00,False,addon
+136735,Macapuno,20.00,False,addon
+160644,Macapuno,20.00,False,addon
+169870,Macapuno,20.00,False,addon
+163325,Macapuno,20.00,False,addon
+139057,Mais,20.00,False,addon
+159902,Mais,20.00,False,addon
+154101,Mais,20.00,False,addon
+174432,Mais,20.00,False,addon
+169573,Mais,20.00,False,addon
+167183,Mais,20.00,False,addon
+140451,Mais,20.00,False,addon
+163336,Mais,20.00,False,addon
+160261,Mais,20.00,False,addon
+160655,Mais,20.00,False,addon
+137245,Mais,20.00,False,addon
+169881,Mais,20.00,False,addon
+153565,Mais,20.00,False,addon
+154062,Mais,20.00,False,addon
+140444,Mango,20.00,False,other
+160254,Mango,20.00,False,other
+163329,Mango,20.00,False,other
+153558,Mango,20.00,False,other
+174425,Mango,20.00,False,other
+169566,Mango,20.00,False,other
+169874,Mango,20.00,False,other
+167176,Mango,20.00,False,other
+154055,Mango,20.00,False,other
+160648,Mango,20.00,False,other
+154094,Mango,20.00,False,other
+136739,Mango,20.00,False,other
+159895,Mango,20.00,False,other
+139050,Mango,20.00,False,other
+160657,Mini Mallows,20.00,False,addon
+140453,Mini Mallows,20.00,False,addon
+154064,Mini Mallows,20.00,False,addon
+153567,Mini Mallows,20.00,False,addon
+160263,Mini Mallows,20.00,False,addon
+139805,Mini Mallows,20.00,False,addon
+169883,Mini Mallows,20.00,False,addon
+159904,Mini Mallows,20.00,False,addon
+174434,Mini Mallows,20.00,False,addon
+139707,Mini Mallows,20.00,False,addon
+169575,Mini Mallows,20.00,False,addon
+154103,Mini Mallows,20.00,False,addon
+163338,Mini Mallows,20.00,False,addon
+167185,Mini Mallows,20.00,False,addon
+153553,Nata,20.00,False,addon
+136729,Nata,20.00,False,addon
+169561,Nata,20.00,False,addon
+140439,Nata,20.00,False,addon
+154089,Nata,20.00,False,addon
+160249,Nata,20.00,False,addon
+154050,Nata,20.00,False,addon
+163324,Nata,20.00,False,addon
+160643,Nata,20.00,False,addon
+169869,Nata,20.00,False,addon
+159890,Nata,20.00,False,addon
+167171,Nata,20.00,False,addon
+139045,Nata,20.00,False,addon
+174420,Nata,20.00,False,addon
+169565,Red Sago,20.00,False,addon
+160253,Red Sago,20.00,False,addon
+167175,Red Sago,20.00,False,addon
+174424,Red Sago,20.00,False,addon
+169873,Red Sago,20.00,False,addon
+136738,Red Sago,20.00,False,addon
+159894,Red Sago,20.00,False,addon
+163328,Red Sago,20.00,False,addon
+160647,Red Sago,20.00,False,addon
+154054,Red Sago,20.00,False,addon
+140443,Red Sago,20.00,False,addon
+154093,Red Sago,20.00,False,addon
+139049,Red Sago,20.00,False,addon
+153557,Red Sago,20.00,False,addon
+163330,Rice Crispies,20.00,False,addon
+153559,Rice Crispies,20.00,False,addon
+154095,Rice Crispies,20.00,False,addon
+169567,Rice Crispies,20.00,False,addon
+174426,Rice Crispies,20.00,False,addon
+140445,Rice Crispies,20.00,False,addon
+139051,Rice Crispies,20.00,False,addon
+160255,Rice Crispies,20.00,False,addon
+167177,Rice Crispies,20.00,False,addon
+169875,Rice Crispies,20.00,False,addon
+159896,Rice Crispies,20.00,False,addon
+160649,Rice Crispies,20.00,False,addon
+136740,Rice Crispies,20.00,False,addon
+154056,Rice Crispies,20.00,False,addon
+136741,Strawberry Fruit,20.00,False,addon
+174427,Strawberry Fruit,20.00,False,addon
+160650,Strawberry Fruit,20.00,False,addon
+160256,Strawberry Fruit,20.00,False,addon
+163331,Strawberry Fruit,20.00,False,addon
+159897,Strawberry Fruit,20.00,False,addon
+139052,Strawberry Fruit,20.00,False,addon
+169876,Strawberry Fruit,20.00,False,addon
+153560,Strawberry Fruit,20.00,False,addon
+154057,Strawberry Fruit,20.00,False,addon
+140446,Strawberry Fruit,20.00,False,addon
+154096,Strawberry Fruit,20.00,False,addon
+167178,Strawberry Fruit,20.00,False,addon
+169568,Strawberry Fruit,20.00,False,addon
+140442,Tapioca,20.00,False,other
+136737,Tapioca,20.00,False,other
+139048,Tapioca,20.00,False,other
+160248,Ube Halaya,20.00,False,addon
+154049,Ube Halaya,20.00,False,addon
+136728,Ube Halaya,20.00,False,addon
+154088,Ube Halaya,20.00,False,addon
+160642,Ube Halaya,20.00,False,addon
+159889,Ube Halaya,20.00,False,addon
+153552,Ube Halaya,20.00,False,addon
+169868,Ube Halaya,20.00,False,addon
+140438,Ube Halaya,20.00,False,addon
+167170,Ube Halaya,20.00,False,addon
+163323,Ube Halaya,20.00,False,addon
+169560,Ube Halaya,20.00,False,addon
+139044,Ube Halaya,20.00,False,addon
+174419,Ube Halaya,20.00,False,addon
+140450,Cup 16 oz,10.00,False,packaging
+139056,Cup 16 oz,10.00,False,packaging
+160654,Cup 16 oz,10.00,False,packaging
+159901,Cup 16 oz,10.00,False,packaging
+167182,Cup 16 oz,10.00,False,packaging
+136958,Cup 16 oz,10.00,False,packaging
+153564,Cup 16 oz,10.00,False,packaging
+154100,Cup 16 oz,10.00,False,packaging
+160260,Cup 16 oz,10.00,False,packaging
+163335,Cup 16 oz,10.00,False,packaging
+169880,Cup 16 oz,10.00,False,packaging
+154061,Cup 16 oz,10.00,False,packaging
+174431,Cup 16 oz,10.00,False,packaging
+169572,Cup 16 oz,10.00,False,packaging
+174831,Banana Cinnamon Con Yelo (Free),,False,other
+175024,Banana Cinnamon Con Yelo (Free),,False,other
+175230,Banana Cinnamon Con Yelo (Free),,False,other
+174815,Bananarific (Free),,False,other
+174814,Berry Good (Blueberry) (Free),,False,other
+174813,Berry Good (Strawberry) (Free),,False,other
+175023,Blueberry Pistachio (Free),,False,other
+175229,Blueberry Pistachio (Free),,False,other
+174944,Blueberry Pistachio (Free),,False,other
+174817,Brownie Overload (Free),,False,other
+176491,Buko Bliss (Free),,False,other
+174822,Buko Pandan (Free),,False,other
+174807,Buko Pandan (Free),,False,other
+154080,Choco Banana,,False,other
+175232,Choco Brownie (Free),,False,other
+174833,Choco Brownie (Free),,False,other
+174946,Cookie Crumble (Free),,False,other
+174871,Cookie Crumble (Free),,False,other
+174816,Cookie Crumble (Free),,False,other
+163341,Crystal Ball,,False,other
+174806,Halokay Ube (Free),,False,other
+176521,Insulated Bag (Free),,False,other
+175192,Insulated Bag (Free),,False,other
+175152,Insulated Bag (Free),,False,other
+175112,Insulated Bag (Free),,False,other
+175233,Insulated Bag (Free),,False,other
+177074,Insulated Bag (Free),,False,other
+175188,Insulated Bag (Free),,False,other
+176519,Iskrambol (Free),,False,other
+175249,Iskrambol (Free),,False,other
+177073,Iskrambol (Free),,False,other
+175238,Iskrambol (Free),,False,other
+175248,Iskrambol (Free),,False,other
+176526,Iskrambol (Free),,False,other
+176524,Iskrambol (Free),,False,other
+175244,Iskrambol (Free),,False,other
+174811,Mango Delight (Free),,False,other
+175014,Mango Graham (Free),,False,other
+174820,Mango Graham (Free),,False,other
+174860,Mango Graham(Free),,False,other
+174808,Matcharap (Free),,False,other
+175017,Matcharap (Free),,False,other
+174812,Melon-ial (Free),,False,other
+175013,Presidential (Free),,False,other
+174859,Presidential (Free),,False,other
+174819,Presidential (Free),,False,other
+175197,Presidential (Free),,False,other
+174873,Presidential (Free),,False,other
+175219,Presidential (Free),,False,other
+176181,Presidential (Free),,False,other
+174934,Presidential (Free),,False,other
+174801,Presidential (Free),,False,other
+174810,So Corny (Free),,False,other
+174826,So Corny (Free),,False,other
+174824,Special (Free),,False,other
+174809,Special (Free),,False,other
+154099,Spoon,,False,packaging
+154060,Spoon,,False,packaging
+153563,Spoon,,False,packaging
+176911,Spoon,,False,packaging
+160653,Spoon,,False,packaging
+160259,Spoon,,False,packaging
+167181,Spoon,,False,packaging
+139055,Spoon,,False,packaging
+169879,Spoon,,False,packaging
+159900,Spoon,,False,packaging
+136957,Spoon,,False,packaging
+174430,Spoon,,False,packaging
+163334,Spoon,,False,packaging
+169571,Spoon,,False,packaging
+140449,Spoon,,False,packaging
+174805,The Mango Supreme (Free),,False,other

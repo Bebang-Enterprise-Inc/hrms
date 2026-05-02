@@ -593,17 +593,58 @@ def map_order_items(order: dict) -> list[dict]:
     return rows
 
 
+def infer_payment_type(service_channel_id: int | None) -> str | None:
+    """S232 Phase 4 — infer payment type for aggregator orders missing payment_methods.
+
+    The Mosaic API returns payment_methods 250/250 in the API path, but the webhook
+    serializer drops them ~98% of the time for aggregator channels (resolved via
+    inference). This helper provides safety-net coverage for the ~2% of poll-path
+    orders that also arrive with empty payment_methods.
+
+    service_channel_id mapping (verified via 2026-05-01 live API probe):
+      1  → GrabFood     → 'GRAB ONLINE'
+      2  → FoodPanda    → 'FOODPANDA ONLINE'
+      None / other      → None (no inference)
+    """
+    if service_channel_id == 1:
+        return "GRAB ONLINE"
+    if service_channel_id == 2:
+        return "FOODPANDA ONLINE"
+    return None
+
+
 def map_order_payments(order: dict) -> list[dict]:
-    """Map Mosaic order payments to pos_order_payments rows."""
+    """Map Mosaic order payments to pos_order_payments rows.
+
+    S232 Phase 4: when payment_methods is empty/null AND the order is on an
+    aggregator service_channel (1=GrabFood, 2=FoodPanda), synthesize a single
+    inferred payment row with payment_type='GRAB ONLINE'/'FOODPANDA ONLINE'
+    and inferred=true (for traceability).
+    """
+    payments = order.get("payment_methods") or order.get("payments") or []
     rows = []
-    for idx, payment in enumerate(order.get("payment_methods") or order.get("payments") or []):
+    for idx, payment in enumerate(payments):
         rows.append({
             "order_id": order["id"],
             "line_number": idx,
             "payment_type": payment.get("payment_type"),
             "paid_amount": payment.get("paid_amount", 0),
             "returned_amount": payment.get("returned_amount", 0),
+            "inferred": False,
         })
+    # S232: aggregator inference fallback
+    if not rows:
+        inferred = infer_payment_type(order.get("service_channel_id"))
+        if inferred is not None:
+            pb = order.get("price_breakdown") or {}
+            rows.append({
+                "order_id": order["id"],
+                "line_number": 0,
+                "payment_type": inferred,
+                "paid_amount": pb.get("original_gross_sales") or pb.get("gross_sales") or 0,
+                "returned_amount": 0,
+                "inferred": True,
+            })
     return rows
 
 

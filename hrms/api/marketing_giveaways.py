@@ -1003,6 +1003,7 @@ def _query_probable_giveaway_leakage(start_day: date, end_day: date) -> list[dic
 		("business_date", f"lte.{end_day.isoformat()}"),
 		("payment_status", "eq.PAID"),
 		("total_discounts", "gt.0"),
+		("is_duplicate", "is.false"),  # S232: exclude pos_orders rows flagged as duplicates
 		("order", "business_date.desc,id.desc"),
 		("limit", str(LEAKAGE_CANDIDATE_ORDER_LIMIT)),
 	]
