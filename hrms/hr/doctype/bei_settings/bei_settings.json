@@ -56,12 +56,24 @@
   "bki_markup_jv_percent",
   "bki_markup_managed_franchise_percent",
   "bki_markup_full_franchise_percent",
+  "bki_markup_company_owned_percent",
   "bki_billing_cron_enabled",
   "bki_sales_vat_template",
   "bki_sales_income_account",
   "bki_default_incoterm",
   "bki_output_vat_account",
-  "bki_ewt_on_store_sales_enabled"
+  "bki_output_vat_account_break",
+  "bki_sales_debit_to_account",
+  "bki_sales_naming_series",
+  "bki_ewt_on_store_sales_enabled",
+  "section_break_bfc_jv_billing",
+  "bfc_revenue_company",
+  "bfc_sales_vat_template",
+  "bfc_sales_naming_series",
+  "bfc_or_active",
+  "bfc_vat_registration_active",
+  "jv_revenue_company",
+  "jv_sales_vat_template"
  ],
  "fields": [
   {
@@ -382,6 +394,14 @@
    "description": "Markup % applied to BKI\u2192Full Franchise store sales (ICT-002, BIL-005)."
   },
   {
+   "fieldname": "bki_markup_company_owned_percent",
+   "fieldtype": "Float",
+   "label": "BKI Markup % \u2014 Company Owned",
+   "default": "2.75",
+   "precision": "4",
+   "description": "S231 D-1: BKI intercompany markup applied to deliveries to Company-owned stores. Per CEO 2026-05-02: same rate as JV (2.75%) keeps BKI net taxable income \u2264 PHP 5M for 20% CIT eligibility."
+  },
+  {
    "fieldname": "bki_billing_cron_enabled",
    "fieldtype": "Check",
    "label": "BKI Monthly Billing Cron Enabled",
@@ -417,11 +437,85 @@
    "description": "Phase 1 / R1 Amendment 9 / ICT-009: Configurable Output VAT GL account for BKI\u2192store SIs. Default 2102205 OUTPUT VAT PAYABLE - BKI."
   },
   {
+   "fieldname": "bki_output_vat_account_break",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "bki_sales_debit_to_account",
+   "fieldtype": "Link",
+   "options": "Account",
+   "label": "BKI Sales Debit-To Account",
+   "description": "S231 D-1: Receivable account used as debit_to on BKI\u2192store SIs. Required so BKI Sales Invoices post to a single, configurable AR account instead of relying on Customer-default fallback (which can drift if a per-store Customer is rebuilt)."
+  },
+  {
+   "fieldname": "bki_sales_naming_series",
+   "fieldtype": "Data",
+   "label": "BKI Sales Invoice Naming Series",
+   "description": "S231 D-1: Naming series prefix for BKI\u2192store SIs (e.g. \"BKI-SI-.YYYY.-.####\"). Lets Finance keep BKI invoice numbering distinct from BEI/BFC series."
+  },
+  {
    "fieldname": "bki_ewt_on_store_sales_enabled",
    "fieldtype": "Check",
    "label": "Enable EWT on BKI\u2192Store Sales",
    "default": "0",
    "description": "Phase 13 / ICT-004: When checked, BKI\u2192store Sales Invoices include an EWT line using BEI Settings.default_ewt_rate and ewt_payable_account. Default OFF (BEI is not Top 20,000 taxpayer)."
+  },
+  {
+   "fieldname": "section_break_bfc_jv_billing",
+   "fieldtype": "Section Break",
+   "label": "BFC + JV Franchise Fee Billing (S231)",
+   "collapsible": 1,
+   "description": "S231 D-3 + D-4: monthly franchise fee billing to BFC (Royalty + Marketing + Management + E-com for MF/FF stores) and BEI (Marketing + E-com for JV stores). Cron is gated by bki_billing_cron_enabled (default 0); flip to 1 only after Finance ratifies dry-run."
+  },
+  {
+   "fieldname": "bfc_revenue_company",
+   "fieldtype": "Link",
+   "options": "Company",
+   "label": "BFC Revenue Company",
+   "default": "BEBANG FRANCHISE CORP.",
+   "description": "S231 D-4: SI.company target for franchise fees collected on behalf of BFC (Managed Franchise + Full Franchise stores: Royalty, Marketing, Management, E-com). Per CEO 2026-05-02 the canonical name is BEBANG FRANCHISE CORP. (uppercase, matches abbr=BFC). BEI acts as collection agent during interim per Collection Agent Letter."
+  },
+  {
+   "fieldname": "bfc_sales_vat_template",
+   "fieldtype": "Link",
+   "options": "Sales Taxes and Charges Template",
+   "label": "BFC Sales VAT Template",
+   "description": "S231 D-3: Tax template applied to franchise fee SIs issued under BFC. Must be a 12% Output VAT template registered to BFC."
+  },
+  {
+   "fieldname": "bfc_sales_naming_series",
+   "fieldtype": "Data",
+   "label": "BFC Sales Invoice Naming Series",
+   "description": "S231 D-3: Naming series for BFC franchise fee SIs (e.g. \"BFC-SI-.YYYY.-.####\"). Required by _assert_bfc_billing_ready precondition before any monthly billing run."
+  },
+  {
+   "fieldname": "bfc_or_active",
+   "fieldtype": "Check",
+   "label": "BFC OR Booklet Active",
+   "default": "0",
+   "description": "S231 D-3: kill-switch. When 0, _assert_bfc_billing_ready throws and no BFC franchise fee SIs can be created. Finance flips to 1 when the BFC OR booklet is procured from BIR."
+  },
+  {
+   "fieldname": "bfc_vat_registration_active",
+   "fieldtype": "Check",
+   "label": "BFC VAT Registration Active",
+   "default": "0",
+   "description": "S231 D-3: kill-switch. When 0, _assert_bfc_billing_ready throws. Finance flips to 1 when BFC VAT registration is confirmed by BIR."
+  },
+  {
+   "fieldname": "jv_revenue_company",
+   "fieldtype": "Link",
+   "options": "Company",
+   "label": "JV Revenue Company",
+   "default": "Bebang Enterprise Inc.",
+   "description": "S231 D-4: SI.company target for JV franchise fees (Marketing 5% gross + E-com 5% website only). Per CEO 2026-05-02 these go to BEI PERMANENTLY (NOT BFC), per Collection Agent Letter \u00a7\"What this letter does NOT cover\" item 4."
+  },
+  {
+   "fieldname": "jv_sales_vat_template",
+   "fieldtype": "Link",
+   "options": "Sales Taxes and Charges Template",
+   "label": "JV Sales VAT Template",
+   "description": "S231 D-3: Tax template applied to JV franchise fee SIs issued under BEI. Must be a 12% Output VAT template registered to BEI."
   }
  ],
  "index_web_pages_for_search": 1,

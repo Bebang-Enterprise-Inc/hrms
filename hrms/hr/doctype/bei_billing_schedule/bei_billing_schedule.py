@@ -87,7 +87,15 @@ class BEIBillingSchedule(Document):
 
 		Triggered when status changes to Approved (C-01 fix: use before_save
 		instead of on_submit since DocType is not submittable).
+
+		S231 D-3-7: gate to billing_type='Delivery' only. Monthly Fees /
+		Credit Note / Adjustment billings now post via the Sales Invoice
+		path in `hrms/api/billing.py::_create_fee_sales_invoice_for_billing`
+		— posting JEs from this hook AND SIs from the billing.py path
+		would double-book revenue.
 		"""
+		if self.billing_type != "Delivery":
+			return
 		je = frappe.new_doc("Journal Entry")
 		je.posting_date = nowdate()
 		je.voucher_type = "Journal Entry"
@@ -185,7 +193,21 @@ class BEIBillingSchedule(Document):
 			self.add_comment("Info", f"GL Entry created: {je.name}")
 
 	def calculate_fees(self):
-		"""Calculate all fees based on store type and billing type."""
+		"""Calculate all fees based on store type and billing type.
+
+		S231 D-3-5: rates now read from `BEI Fee Schedule` keyed by
+		(ownership_type, fee_type) with per-store overrides from
+		`BEI Fee Carveout`. Replaces the hardcoded 0.07 / 0.025 / 0.05 /
+		0.04 constants. The mystery 0.04 was inconsistent with the
+		franchise contracts (which all say 5%); see
+		`output/s231/diagnostics/mystery_004_investigation.md`.
+
+		S231 D-3-7: VAT marking removed. Monthly Fees billings post
+		via SI path (`_create_fee_sales_invoice_for_billing` extended
+		branch) which applies VAT via the recipient's Sales Taxes and
+		Charges Template. The DocType-level fee fields hold the
+		ex-VAT base × rate; the SI tax template stacks 12% on top.
+		"""
 		# Delivery, credit-note, and adjustment billings keep their manually supplied values.
 		if self.billing_type in {"Delivery", "Credit Note", "Adjustment"}:
 			return
@@ -203,27 +225,58 @@ class BEIBillingSchedule(Document):
 				frappe.db.get_value("BEI Store Type", {"store": self.store}, "store_type") or self.store_type
 			)
 
-		gross = flt(self.gross_sales)
+		# S231 D-3-5: zero all fee fields up-front so a row that previously
+		# carried a Royalty (e.g. ownership flipped MF→JV mid-month) doesn't
+		# leak the stale Royalty value through.
+		self.royalty_fee = 0
+		self.marketing_fee = 0
+		self.management_fee = 0
+		self.ecommerce_fee = 0
+
+		# Co-Owned has no franchise fees; BKI markup handles intercompany pricing.
+		if self.store_type == "Company Owned":
+			return
+
+		schedules = frappe.get_all(
+			"BEI Fee Schedule",
+			filters={"ownership_type": self.store_type},
+			fields=["fee_type", "rate", "base_field"],
+		)
+
+		# Maps fee_type → BEI Billing Schedule field name.
+		fee_field_map = {
+			"Royalty": "royalty_fee",
+			"Marketing": "marketing_fee",
+			"Management": "management_fee",
+			"E-commerce": "ecommerce_fee",
+		}
+
+		# Maps base_field → value source on this DocType.
+		# `net_sales_ex_vat` is derived from `net_sales` by stripping the 12% VAT
+		# (POS net_sales includes VAT). All other base_fields come straight off
+		# the DocType.
 		net = flt(self.net_sales)
-		web = flt(self.website_sales)
+		base_value_map = {
+			"gross_sales": flt(self.gross_sales),
+			"net_sales": net,
+			"net_sales_ex_vat": net / (1 + VAT_RATE) if net else 0,
+			"website_sales": flt(self.website_sales),
+			"online_sales": flt(self.online_sales),
+		}
 
-		# eCommerce fee: 4% of website sales (same for all store types)
-		self.ecommerce_fee = web * 0.04
-
-		if self.store_type == "JV":
-			self.royalty_fee = 0
-			self.management_fee = 0
-			self.marketing_fee = net * 0.05  # JV uses NET sales
-
-		elif self.store_type == "Managed Franchise":
-			self.royalty_fee = gross * 0.07 * (1 + VAT_RATE)
-			self.management_fee = gross * 0.025 * (1 + VAT_RATE)
-			self.marketing_fee = gross * 0.05
-
-		elif self.store_type == "Full Franchise":
-			self.royalty_fee = gross * 0.07 * (1 + VAT_RATE)
-			self.management_fee = 0
-			self.marketing_fee = gross * 0.05
+		for sched in schedules:
+			fee_field = fee_field_map.get(sched["fee_type"])
+			if not fee_field:
+				continue
+			# Per-store carveout overrides the schedule rate when present.
+			carveout_rate = frappe.db.get_value(
+				"BEI Fee Carveout",
+				{"store": self.store, "fee_type": sched["fee_type"]},
+				"rate_override",
+			)
+			rate = carveout_rate if carveout_rate is not None else sched["rate"]
+			base = base_value_map.get(sched["base_field"], 0)
+			self.set(fee_field, flt(base * rate, 2))
 
 	def calculate_line_items(self):
 		"""Update line item amounts."""

@@ -1,0 +1,21 @@
+{
+  "sprint_id": "S231",
+  "run_id": "S231-2026-05-02-phase-0-onward",
+  "agent": "claude-opus-4-7-1m",
+  "claimed_at": "2026-05-02T11:26:54.049743Z",
+  "released_at": null,
+  "branch": "s231-phase-0-onward",
+  "worktree": "F:/Dropbox/Projects/BEI-ERP-s231-phase-0-onward",
+  "phase_pointer": "Phase 0 (boot complete)",
+  "protected_files": [
+    "hrms/api/billing.py",
+    "hrms/api/company_master.py",
+    "hrms/api/commissary.py",
+    "hrms/overrides/company.py",
+    "hrms/hooks.py",
+    "hrms/utils/supply_chain_contracts.py",
+    "hrms/utils/sales_location_mapping.py",
+    "hrms/hr/doctype/bei_settings/bei_settings.json",
+    "hrms/hr/doctype/bei_billing_schedule/bei_billing_schedule.py"
+  ]
+}

@@ -1153,14 +1153,11 @@ def populate_s181_fields() -> dict:
 		if n:
 			adms_by_norm[_norm(n)] = row
 
-	# Non-store entity category map
-	non_store_categories: dict[str, str] = {
-		# S199: ALL CAPS Company names
-		"BEBANG ENTERPRISE INC.": "Head Office",
-		"BEBANG KITCHEN INC.": "Commissary",
-		"BEBANG FRANCHISE CORP.": "Franchisor",
-		"IRRESISTIBLE INFUSIONS INC.": "Holding Company",
-	}
+	# S231 E-5: reuse the module-level _NON_STORE_ENTITIES constant instead
+	# of redefining the same 4-row dict here. Prevents drift where a new
+	# entity gets added in one place but not the other (caught by S196 W-5
+	# audit which already runs against the module-level constant).
+	non_store_categories: dict[str, str] = _NON_STORE_ENTITIES
 
 	# Companies not in S037 that are Stores — Sam confirmed 2026-04-13.
 	# These get entity_category=Store + TIN/RDO directly.

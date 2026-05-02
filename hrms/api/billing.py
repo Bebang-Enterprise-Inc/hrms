@@ -522,12 +522,284 @@ def approve_billing(billing_name: str):
 	return {"success": True, "status": "Approved", "fee_sales_invoice": si_name}
 
 
+def _resolve_fee_recipient_company(ownership_type: str) -> str | None:
+	"""S231 D-4: per-ownership-type SI.company target for franchise fee SIs.
+
+	Reads from BEI Settings so Finance can rotate recipients without code
+	deploys. Per CEO 2026-05-02:
+	  - JV → BEI revenue PERMANENTLY (NOT BFC); per Collection Agent Letter
+	    §"What this letter does NOT cover" item 4.
+	  - Managed/Full Franchise → BFC revenue (collected by BEI as agent
+	    during interim, then remitted; ratified by Collection Agent Letter).
+	  - Company Owned → no franchise fees; returns None and caller skips.
+	"""
+	if ownership_type == "Company Owned":
+		return None
+	if ownership_type == "JV":
+		recipient = frappe.db.get_single_value("BEI Settings", "jv_revenue_company")
+		if not recipient:
+			frappe.throw(
+				_("S231 D-4: BEI Settings.jv_revenue_company is not set; cannot route JV fee SI.")
+			)
+		return recipient
+	if ownership_type in ("Managed Franchise", "Full Franchise"):
+		recipient = frappe.db.get_single_value("BEI Settings", "bfc_revenue_company")
+		if not recipient:
+			frappe.throw(
+				_(
+					"S231 D-4: BEI Settings.bfc_revenue_company is not set; cannot route "
+					"{0} fee SI."
+				).format(ownership_type)
+			)
+		return recipient
+	raise ValueError(f"S231 D-4: unknown ownership_type {ownership_type!r}")
+
+
+def _assert_bfc_billing_ready() -> None:
+	"""S231 D-3-10: precondition for BFC franchise SI creation.
+
+	Throws when ANY of the BFC operating prerequisites are not yet
+	configured. Defense against generating SIs before BFC has an OR
+	booklet, VAT registration, or naming series.
+	"""
+	if not frappe.db.get_single_value("BEI Settings", "bfc_or_active"):
+		frappe.throw(
+			_(
+				"S231 D-3-10: BFC OR booklet not active. Finance must flip "
+				"`BEI Settings.bfc_or_active` to 1 before BFC franchise fee SIs "
+				"can be created."
+			)
+		)
+	if not frappe.db.get_single_value("BEI Settings", "bfc_vat_registration_active"):
+		frappe.throw(
+			_(
+				"S231 D-3-10: BFC VAT registration not active. Finance must flip "
+				"`BEI Settings.bfc_vat_registration_active` to 1 once BIR confirms "
+				"BFC VAT registration."
+			)
+		)
+	if not frappe.db.get_single_value("BEI Settings", "bfc_sales_naming_series"):
+		frappe.throw(
+			_(
+				"S231 D-3-10: BFC sales naming series not set. Finance must set "
+				"`BEI Settings.bfc_sales_naming_series` (e.g. \"BFC-SI-.YYYY.-.####\")."
+			)
+		)
+
+
+def _create_monthly_fee_sales_invoice(billing) -> str | None:
+	"""S231 D-3-6: SI builder for `billing_type='Monthly Fees'` rows.
+
+	Routes to BEI vs BFC per `_resolve_fee_recipient_company`, applies
+	the recipient's VAT template, line-items each non-zero fee field,
+	and tacks on an EWT line if the franchisee Customer is flagged as a
+	Top 20,000 Corporation (BIR Form 2307 withholding agent).
+
+	Returns SI name on success, None when there's nothing billable
+	(zero fees) or recipient is None (Company Owned).
+	"""
+	ownership_type = getattr(billing, "store_type", None)
+	recipient = _resolve_fee_recipient_company(ownership_type)
+	if not recipient:
+		return None
+
+	is_bfc = recipient == frappe.db.get_single_value("BEI Settings", "bfc_revenue_company")
+	if is_bfc:
+		_assert_bfc_billing_ready()
+
+	# Aggregate fees that have a non-zero amount.
+	fee_fields = (
+		("royalty_fee", "Royalty"),
+		("marketing_fee", "Marketing"),
+		("management_fee", "Management"),
+		("ecommerce_fee", "E-commerce"),
+	)
+	non_zero = [
+		(field, label, flt(getattr(billing, field, 0) or 0))
+		for field, label in fee_fields
+		if flt(getattr(billing, field, 0) or 0) > 0
+	]
+	if not non_zero:
+		return None
+
+	# Resolve the franchisee Customer via the canonical resolver.
+	store_name = getattr(billing, "store", None)
+	if not store_name:
+		frappe.throw(
+			_("S231 D-3-6: Billing {0} has no store; cannot create Monthly Fees SI").format(billing.name)
+		)
+	entity_row = resolve_store_buyer_entity(warehouse_docname=store_name, store_name=store_name)
+	buyer_entity_name = (entity_row or {}).get("buyer_entity_name") or ""
+	if not buyer_entity_name:
+		frappe.throw(
+			_(
+				"S231 D-3-6: No buyer entity resolved for store {0}; cannot create "
+				"Monthly Fees SI. Check Warehouse.company canonical state."
+			).format(store_name)
+		)
+	customer = frappe.db.get_value("Customer", {"customer_name": buyer_entity_name}, "name")
+	if not customer:
+		frappe.throw(
+			_("S231 D-3-6: No Customer record for buyer entity '{0}' (store: {1}).").format(
+				buyer_entity_name, store_name
+			)
+		)
+
+	settings = frappe.get_single("BEI Settings")
+	vat_template = (
+		(getattr(settings, "bfc_sales_vat_template", "") or "").strip()
+		if is_bfc
+		else (getattr(settings, "jv_sales_vat_template", "") or "").strip()
+	)
+	if not vat_template:
+		recipient_field = "bfc_sales_vat_template" if is_bfc else "jv_sales_vat_template"
+		frappe.throw(
+			_(
+				"S231 D-3-6: BEI Settings.{0} not set. Cannot create Monthly Fees SI "
+				"without 12% VAT template."
+			).format(recipient_field)
+		)
+	naming_series = (
+		(getattr(settings, "bfc_sales_naming_series", "") or "").strip()
+		if is_bfc
+		else None
+	)
+
+	currency = frappe.db.get_value("Company", recipient, "default_currency") or "PHP"
+	cost_center = frappe.db.get_value("Company", recipient, "cost_center")
+
+	si = frappe.new_doc("Sales Invoice")
+	si.company = recipient
+	si.customer = customer
+	si.is_internal_customer = 0
+	si.posting_date = nowdate()
+	si.set_posting_time = 1
+	si.currency = currency
+	si.taxes_and_charges = vat_template
+	if naming_series:
+		si.naming_series = naming_series
+	si.custom_bei_store_billing = billing.name
+	si.remarks = (
+		f"S231 D-3-6: Monthly franchise fees for {store_name} "
+		f"(period {getattr(billing, 'billing_period', '') or ''}). "
+		f"Recipient={recipient}. Source: BEI Billing Schedule {billing.name}."
+	)
+
+	# Per-fee line items. The fee `label` becomes the description so the SI is
+	# self-documenting at print time without needing a separate Item per fee.
+	for field, label, amount in non_zero:
+		si.append(
+			"items",
+			{
+				"item_code": _resolve_fee_item_code(label),
+				"qty": 1,
+				"rate": amount,
+				"description": f"{label} fee — {store_name} ({billing.name})",
+				"cost_center": cost_center,
+			},
+		)
+
+	# Apply the VAT template's tax rows.
+	try:
+		from erpnext.controllers.accounts_controller import get_taxes_and_charges
+
+		taxes = get_taxes_and_charges("Sales Taxes and Charges Template", vat_template) or []
+		for tax in taxes:
+			si.append("taxes", tax)
+	except Exception:
+		frappe.log_error(
+			f"S231 D-3-6: failed to load taxes from template {vat_template}: {frappe.get_traceback()}",
+			"S231 Monthly Fee SI",
+		)
+		raise
+
+	# EWT line per BIR Form 2307 if franchisee is a Top 20,000 corporation
+	# (mandatory withholding agent). Defensive `has_field` guard so we don't
+	# break if the custom Customer field hasn't been provisioned yet.
+	customer_meta = frappe.get_meta("Customer")
+	is_top_20000 = False
+	for candidate in ("is_top_20000_corp", "custom_is_top_20000_corp"):
+		if customer_meta.has_field(candidate):
+			is_top_20000 = bool(frappe.db.get_value("Customer", customer, candidate))
+			break
+	if is_top_20000:
+		ewt_rate = flt(frappe.db.get_single_value("BEI Settings", "default_ewt_rate") or 0)
+		ewt_account = (
+			frappe.db.get_single_value("BEI Settings", "ewt_payable_account") or ""
+		).strip()
+		if ewt_rate > 0 and ewt_account:
+			si.append(
+				"taxes",
+				{
+					"charge_type": "Actual",
+					"account_head": ewt_account,
+					"description": f"EWT {ewt_rate}% (BIR Form 2307)",
+					"rate": -abs(ewt_rate),
+				},
+			)
+
+	si.insert(ignore_permissions=True)
+	si.submit()
+	return si.name
+
+
+def _resolve_fee_item_code(fee_label: str) -> str:
+	"""Pick the Item code for a Monthly Fees SI line. Falls back to a
+	configurable default Item if specific fee Items aren't provisioned.
+	"""
+	# Future enhancement: per-fee Items in BEI Settings (e.g.
+	# bfc_royalty_fee_item). For now reuse the generic logistics fee
+	# Item to avoid a brittle hard requirement at first deploy.
+	settings = frappe.get_single("BEI Settings")
+	candidate = (
+		getattr(settings, "bki_logistics_fee_item", None)
+		or getattr(settings, "logistics_fee_item", None)
+		or "LOGISTICS-FEE"
+	)
+	if frappe.db.exists("Item", candidate):
+		return candidate
+	alt = frappe.db.get_value(
+		"Item", {"item_name": ["like", "Logistics Fee%"], "disabled": 0}, "name"
+	)
+	if alt:
+		return alt
+	frappe.throw(
+		_(
+			"S231 D-3-6: No Item found for franchise fee SI line. Finance must "
+			"create a service Item before Monthly Fees billings can be approved."
+		)
+	)
+
+
 def _create_fee_sales_invoice_for_billing(billing) -> str | None:
 	"""Create + submit a VAT-applied Sales Invoice for delivery/logistics
 	fees on a BEI Billing Schedule. Returns SI name or None if nothing
 	billable. Mirrors hrms/api/commissary.py::build_bki_store_sale_invoice
 	but for service fees instead of goods. Per CFO Q1: 12% VAT MUST apply.
+
+	S231 D-3-6: Monthly Fees billings are routed to
+	`_create_monthly_fee_sales_invoice` which handles BFC/BEI recipient
+	splitting, the per-ownership-type fee schedule line items, EWT, and
+	the BFC operating-readiness precondition.
 	"""
+	# S231 D-3-11: tag SI creation runs for Sentry grouping.
+	set_backend_observability_context(
+		module="billing",
+		action="create_fee_si",
+		mutation_type="create",
+		extras={
+			"billing": getattr(billing, "name", None),
+			"billing_type": getattr(billing, "billing_type", None),
+			"store": getattr(billing, "store", None),
+		},
+	)
+
+	# S231 D-3-6: Monthly Fees branch — different recipient, fee structure,
+	# and tax template. Co-Owned billings end here too because
+	# `_resolve_fee_recipient_company` returns None for them.
+	if getattr(billing, "billing_type", None) == "Monthly Fees":
+		return _create_monthly_fee_sales_invoice(billing)
+
 	delivery_fee = flt(getattr(billing, "delivery_fee", 0) or 0)
 	logistics_fee = flt(getattr(billing, "logistics_fee", 0) or 0)
 	if delivery_fee <= 0 and logistics_fee <= 0:
@@ -1010,6 +1282,20 @@ def generate_monthly_billing(billing_period: str | None = None, store: str | Non
 
 	Returns:
 	    dict with generated count, skipped count, errors list
+
+	S231 D-3-8: per-store savepoint named `s231_bill_<store>` so a single
+	store's failure rolls back ONLY that store's BEI Billing Schedule
+	insert; the loop continues for the remaining 48 stores. Existing
+	`billing_<store>` savepoint pattern (preserved for backward compat
+	with logger searches) is now namespaced.
+
+	S231 D-3-9: Redis mutex `s231_billing_lock_<period>` prevents the
+	cron + a manual call from racing on the same period. TTL 1 hour;
+	released in finally.
+
+	S231 D-3-11: `set_backend_observability_context` tags every cron run
+	in Sentry with the period + scope so post-deploy errors are
+	groupable.
 	"""
 	if not billing_period:
 		frappe.throw(_("Missing required parameter: billing_period"), frappe.ValidationError)
@@ -1017,10 +1303,38 @@ def generate_monthly_billing(billing_period: str | None = None, store: str | Non
 	if not frappe.has_permission("BEI Billing Schedule", "create"):
 		frappe.throw(_("Insufficient permissions to generate billing"), frappe.PermissionError)
 
+	# S231 D-3-11: tag every monthly billing run for Sentry grouping.
+	set_backend_observability_context(
+		module="billing",
+		action="generate_monthly_billing",
+		mutation_type="create",
+		extras={"billing_period": billing_period, "store_scope": store or "all"},
+	)
+
+	# S231 D-3-9: Redis mutex prevents the `0 6 1 * *` cron + a manual
+	# `trigger_monthly_billing_service` invocation from racing on the same
+	# period (which would silently double-bill every store).
+	lock_key = f"s231_billing_lock_{billing_period}"
+	if not frappe.cache().setnx(lock_key, 1):
+		frappe.log_error(
+			f"S231 D-3-9: monthly billing already running for {billing_period}; this call skipped",
+			"S231 Monthly Billing Mutex",
+		)
+		return {
+			"success": False,
+			"skipped": True,
+			"reason": "concurrent_run",
+			"billing_period": billing_period,
+		}
+	# 1-hour TTL — much longer than a normal run but a safety net if a
+	# crash leaves the lock orphaned.
+	frappe.cache().expire(lock_key, 3600)
+
 	try:
 		period_start = get_first_day(billing_period + "-01")
 		period_end = get_last_day(billing_period + "-01")
 	except Exception:
+		frappe.cache().delete_value(lock_key)
 		frappe.throw(_("Invalid billing period format. Use YYYY-MM"))
 
 	store_filters = {"store": store} if store else {}
@@ -1037,7 +1351,9 @@ def generate_monthly_billing(billing_period: str | None = None, store: str | Non
 			legacy_store_type_category=_get_record_value(store_rec, "store_type_category"),
 		)
 
-		sp_name = "billing_" + re.sub(r"[^a-zA-Z0-9_]", "_", store_name)
+		# S231 D-3-8: namespaced savepoint so failure on one store doesn't
+		# affect the other 48.
+		sp_name = "s231_bill_" + re.sub(r"[^a-zA-Z0-9_]", "_", store_name)
 		frappe.db.savepoint(sp_name)
 		try:
 			# Duplicate check
@@ -1155,6 +1471,17 @@ def generate_monthly_billing(billing_period: str | None = None, store: str | Non
 		except Exception as e:
 			frappe.db.rollback(save_point=sp_name)
 			errors.append({"store": store_name, "error": str(e)})
+
+	# S231 D-3-9: release the period lock so the next run can proceed.
+	try:
+		frappe.cache().delete_value(lock_key)
+	except Exception:
+		# Cache failure shouldn't mask a successful billing run; the TTL
+		# will reap the lock within an hour.
+		frappe.log_error(
+			f"S231 D-3-9: failed to release billing lock {lock_key}",
+			"S231 Monthly Billing Mutex",
+		)
 
 	return {
 		"success": True,
