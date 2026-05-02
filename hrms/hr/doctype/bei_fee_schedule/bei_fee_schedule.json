@@ -1,0 +1,137 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "autoname": "format:{ownership_type}-{fee_type}",
+ "creation": "2026-05-02 12:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 0,
+ "engine": "InnoDB",
+ "field_order": [
+  "header_section",
+  "ownership_type",
+  "fee_type",
+  "column_break_header",
+  "rate",
+  "base_field",
+  "recipient_section",
+  "recipient_company",
+  "column_break_recipient",
+  "applies_to",
+  "notes_section",
+  "notes"
+ ],
+ "fields": [
+  {
+   "fieldname": "header_section",
+   "fieldtype": "Section Break",
+   "label": "Schedule Key"
+  },
+  {
+   "fieldname": "ownership_type",
+   "fieldtype": "Select",
+   "label": "Ownership Type",
+   "options": "JV\nManaged Franchise\nFull Franchise\nCompany Owned",
+   "reqd": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "description": "S231 D-3-2: matches Company.store_ownership_type. Schedule lookup is keyed by (ownership_type, fee_type)."
+  },
+  {
+   "fieldname": "fee_type",
+   "fieldtype": "Select",
+   "label": "Fee Type",
+   "options": "Royalty\nMarketing\nManagement\nE-commerce",
+   "reqd": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "description": "S231 D-3-2: maps to BEI Billing Schedule fields royalty_fee / marketing_fee / management_fee / ecommerce_fee."
+  },
+  {
+   "fieldname": "column_break_header",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "rate",
+   "fieldtype": "Float",
+   "label": "Rate (decimal)",
+   "precision": "4",
+   "reqd": 1,
+   "in_list_view": 1,
+   "description": "S231 D-3-2: decimal rate (e.g. 0.07 for 7% royalty). Per-store overrides go in BEI Fee Carveout, not here."
+  },
+  {
+   "fieldname": "base_field",
+   "fieldtype": "Select",
+   "label": "Base Field",
+   "options": "gross_sales\nnet_sales\nnet_sales_ex_vat\nwebsite_sales\nonline_sales",
+   "reqd": 1,
+   "in_list_view": 1,
+   "description": "S231 D-3-2: which BEI Billing Schedule field the rate multiplies. E-com MUST be `website_sales` (NOT `online_sales` which includes FoodPanda/Grab). Per CEO 2026-05-02."
+  },
+  {
+   "fieldname": "recipient_section",
+   "fieldtype": "Section Break",
+   "label": "Recipient + Routing"
+  },
+  {
+   "fieldname": "recipient_company",
+   "fieldtype": "Link",
+   "options": "Company",
+   "label": "Recipient Company",
+   "description": "S231 D-3-2 + D-4: SI.company target. JV fees → Bebang Enterprise Inc. (BEI). MF/FF fees → BEBANG FRANCHISE CORP. (BFC, collected by BEI as agent during interim)."
+  },
+  {
+   "fieldname": "column_break_recipient",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "applies_to",
+   "fieldtype": "Data",
+   "label": "Applies To (free-form)",
+   "description": "Optional human-readable scope (e.g. \"All MF stores 2026-05-onward\"). Not consumed by code."
+  },
+  {
+   "fieldname": "notes_section",
+   "fieldtype": "Section Break",
+   "label": "Notes"
+  },
+  {
+   "fieldname": "notes",
+   "fieldtype": "Small Text",
+   "label": "Notes",
+   "description": "Optional context (contract section reference, change reason, etc.)."
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-05-02 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "HR",
+ "name": "BEI Fee Schedule",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "Accounts Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "quick_entry": 0,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

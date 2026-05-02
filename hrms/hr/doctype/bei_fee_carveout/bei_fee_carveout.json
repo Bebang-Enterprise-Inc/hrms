@@ -1,0 +1,108 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "autoname": "format:{store}-{fee_type}",
+ "creation": "2026-05-02 12:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 0,
+ "engine": "InnoDB",
+ "field_order": [
+  "header_section",
+  "store",
+  "fee_type",
+  "column_break_header",
+  "rate_override",
+  "effective_from",
+  "notes_section",
+  "notes"
+ ],
+ "fields": [
+  {
+   "fieldname": "header_section",
+   "fieldtype": "Section Break",
+   "label": "Carveout Key"
+  },
+  {
+   "fieldname": "store",
+   "fieldtype": "Link",
+   "options": "Department",
+   "label": "Store",
+   "reqd": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "description": "S231 D-3-3: Department record matching the store. Carveout lookup is keyed by (store, fee_type)."
+  },
+  {
+   "fieldname": "fee_type",
+   "fieldtype": "Select",
+   "label": "Fee Type",
+   "options": "Royalty\nMarketing\nManagement\nE-commerce",
+   "reqd": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "column_break_header",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "rate_override",
+   "fieldtype": "Float",
+   "label": "Rate Override (decimal)",
+   "precision": "4",
+   "reqd": 1,
+   "in_list_view": 1,
+   "description": "S231 D-3-3: per-store decimal rate that REPLACES the BEI Fee Schedule rate for this (store, fee_type) pair. Example: Vista Mall Management = 0.02 (2%) instead of MF schedule's 0.025 (2.5%)."
+  },
+  {
+   "fieldname": "effective_from",
+   "fieldtype": "Date",
+   "label": "Effective From",
+   "description": "Optional cutover date. The current consumer (calculate_fees) treats the latest carveout as live; future enhancements may filter by billing_period."
+  },
+  {
+   "fieldname": "notes_section",
+   "fieldtype": "Section Break",
+   "label": "Audit Notes"
+  },
+  {
+   "fieldname": "notes",
+   "fieldtype": "Small Text",
+   "label": "Notes",
+   "description": "Reason for carveout (contract amendment reference, CEO directive, etc.). Required for audit trail in `data/_CLEANROOM/2026-04-09_franchise_agreements/05_Per_Store_Fee_Carveouts.md`.",
+   "reqd": 1
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-05-02 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "HR",
+ "name": "BEI Fee Carveout",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "Accounts Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "quick_entry": 0,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

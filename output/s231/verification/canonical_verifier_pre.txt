@@ -1,4 +1,4 @@
-CommandId: 57780ef9-3aba-4329-86eb-98814e959942
+CommandId: b0498460-f97d-4335-b5fd-04f6c985489b
 ======================================================================
 CANONICAL STRUCTURE VERIFICATION
 Stores checked: 49

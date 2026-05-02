@@ -1,0 +1,10 @@
+{
+  "captured_at": "2026-05-02T11:26:50.106023Z",
+  "hrms_branch": "production",
+  "hrms_head_sha": "cb06f24097802a16d93bf9e8facbe58fa485de13",
+  "bei_tasks_branch": "main",
+  "bei_tasks_head_sha": "a41d5db9043c9d17dba59d632fe3d7d45fe2779f",
+  "active_run_id": "S231-2026-05-02-phase-0-onward",
+  "pre_phase_0_pr": 706,
+  "pre_phase_0_merge_sha": "97e613f1e"
+}
