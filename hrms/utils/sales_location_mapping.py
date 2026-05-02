@@ -73,8 +73,16 @@ def _do_supabase_store_upsert(location_id: int, store_name: str, company_name: s
 		url = f"{SUPABASE_URL}/rest/v1/stores"
 		headers = supabase_headers(prefer="resolution=merge-duplicates,return=representation")
 
-		# Read Company fields for the upsert payload
-		ownership = frappe.db.get_value("Company", company_name, "store_ownership_type") or "Managed Franchise"
+		# Read Company fields for the upsert payload.
+		# S231 D-2 (N-8 fix): default empty ownership to "Company Owned" to
+		# match supply_chain_contracts.py:225 (the canonical default — N-8
+		# audit found the two readers of `store_ownership_type` defaulted
+		# differently, silently sending the same store to two different
+		# accounting buckets depending on which path read the field). The
+		# Phase D-2 validate hook on Company further rejects blank
+		# `store_ownership_type` at save time so this fallback should
+		# never fire for Store-category Companies in practice.
+		ownership = frappe.db.get_value("Company", company_name, "store_ownership_type") or "Company Owned"
 		store_type_map = {"JV": "Company-Owned", "Company Owned": "Company-Owned"}
 		store_type = store_type_map.get(ownership, "Managed Franchise")
 

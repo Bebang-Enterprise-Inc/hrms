@@ -160,6 +160,50 @@ def set_default_hr_accounts(doc, method=None):
 		doc.db_set("default_employee_advance_account", employe_advance_account)
 
 
+def validate_store_ownership_type(doc, method=None):
+	"""S231 D-2 (N-8 fix): reject empty `store_ownership_type` on
+	`entity_category == 'Store'` Companies.
+
+	N-8 audit found two readers of `store_ownership_type` defaulted
+	differently when the field was empty:
+	  - hrms/utils/supply_chain_contracts.py:225  → "Company Owned"
+	  - hrms/utils/sales_location_mapping.py:77   → "Managed Franchise"
+	A blank value sent the same store to two different accounting buckets
+	depending on which path read the field. D-2 reconciles the readers
+	to "Company Owned" AND requires explicit classification at save time
+	so the silent default never has to fire for production Stores.
+
+	Parent / holding / commissary Companies (entity_category != 'Store')
+	are exempt — they don't participate in store-ownership routing.
+	"""
+	# Skip during installs / migrations / imports — bulk seeders set
+	# fields out of order and shouldn't be tripped by this guard.
+	if frappe.flags.in_import or frappe.flags.in_migrate or frappe.flags.in_install:
+		return
+
+	# Skip if the Company hasn't been provisioned yet — Phase A's
+	# auto_provision_company sets entity_category mid-flow on fresh
+	# Companies; rejecting blank ownership before Step 10 would block
+	# legitimate orchestrator writes.
+	if not doc.get("first_provision_done"):
+		return
+
+	if not frappe.get_meta("Company").has_field("store_ownership_type"):
+		return
+	if not frappe.get_meta("Company").has_field("entity_category"):
+		return
+
+	if doc.get("entity_category") == "Store" and not doc.get("store_ownership_type"):
+		frappe.throw(
+			_(
+				"S231 D-2: Company {0} is entity_category=Store but has no "
+				"store_ownership_type. Pick one of JV / Managed Franchise / "
+				"Full Franchise / Company Owned — billing and BKI markup "
+				"resolution depend on it."
+			).format(frappe.bold(doc.name))
+		)
+
+
 def null_out_dead_default_refs(doc, method=None):
 	"""S231-C2: defense-in-depth validate hook.
 

@@ -187,6 +187,11 @@ doc_events = {
 			# `first_provision_done == 1` so it never clobbers a fresh
 			# Company mid-provisioning.
 			"hrms.overrides.company.null_out_dead_default_refs",
+			# S231 D-2 (N-8 fix) — reject empty store_ownership_type on
+			# entity_category=Store Companies; forces explicit
+			# classification so blank-default fallback in
+			# sales_location_mapping.py never has to fire in production.
+			"hrms.overrides.company.validate_store_ownership_type",
 			"hrms.overrides.company.validate_default_accounts",
 		],
 		"on_update": [
