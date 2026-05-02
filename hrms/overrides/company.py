@@ -11,6 +11,48 @@ from frappe import _
 from erpnext.accounts.doctype.account.account import get_account_currency
 
 
+# S231-C1 / S231-C2: the canonical list of Company default_* / round_off_* /
+# depreciation_* / capital_* / asset_* / stock_* / expenses_* fields that point
+# at Account or Cost Center records. When ERPNext's `create_default_accounts`
+# fails partway through, these fields are db_set to values that no longer
+# resolve to existing Accounts. Any future save then fails `_validate_links()`
+# with LinkValidationError. Phase C uses this list to:
+#   1. (C-1) capture pre_state before ERPNext seeding so a failure can restore
+#      the Company to a clean field-value state.
+#   2. (C-1) verify all field references exist post-seeding before flipping
+#      `first_provision_done`; clear any that don't.
+#   3. (C-2) at validate time, null any field whose target Account / Cost
+#      Center no longer exists (defense-in-depth for legacy Companies).
+#
+# Origin: 2026-05-02 CEO save of Ayala Fairview Terraces threw
+# LinkValidationError on 15 dead `- BFI2` Account references. See plan
+# `docs/plans/2026-05-02-sprint-231-pricing-coupling-and-defaults-defense.md`
+# Phase C and `data/_CLEANROOM/2026-04-09_franchise_agreements/06_CEO_Approvals_2026-05-02.md`.
+DEFAULT_FIELDS_TO_TRACK = [
+	"default_inventory_account",
+	"default_payable_account",
+	"default_receivable_account",
+	"default_payroll_payable_account",
+	"default_employee_advance_account",
+	"default_expense_account",
+	"default_income_account",
+	"round_off_account",
+	"round_off_cost_center",
+	"default_cash_account",
+	"exchange_gain_loss_account",
+	"accumulated_depreciation_account",
+	"depreciation_expense_account",
+	"expenses_included_in_asset_valuation",
+	"disposal_account",
+	"depreciation_cost_center",
+	"capital_work_in_progress_account",
+	"asset_received_but_not_billed",
+	"stock_adjustment_account",
+	"stock_received_but_not_billed",
+	"expenses_included_in_valuation",
+]
+
+
 def make_company_fixtures(doc, method=None):
 	if not frappe.flags.country_change:
 		return
@@ -116,6 +158,45 @@ def set_default_hr_accounts(doc, method=None):
 		)
 
 		doc.db_set("default_employee_advance_account", employe_advance_account)
+
+
+def null_out_dead_default_refs(doc, method=None):
+	"""S231-C2: defense-in-depth validate hook.
+
+	Null any field in DEFAULT_FIELDS_TO_TRACK whose referenced
+	Account / Cost Center no longer exists in the database. Runs at
+	`Company.validate` time BEFORE `validate_default_accounts` so the
+	downstream validator never trips on a dead ref.
+
+	Guard: only operates on Companies where `first_provision_done == 1`
+	so we do NOT clobber fields `auto_provision_company` is mid-setting
+	on a fresh save (the orchestrator depends on those values surviving
+	until Step 10 flips the sentinel).
+
+	Defense-in-depth — Phase C-1's atomicity wrapper prevents NEW Companies
+	from acquiring dead refs, but legacy Companies that ran the OLD
+	`auto_provision_company` (pre-S231) may already carry them. This hook
+	clears them lazily on every save attempt so a CEO who opens a Company
+	whose defaults rotted years ago can still save edits today without
+	hitting `LinkValidationError`.
+	"""
+	if not doc.get("first_provision_done"):
+		return
+
+	cleared = []
+	for field in DEFAULT_FIELDS_TO_TRACK:
+		value = doc.get(field)
+		if value:
+			target_dt = "Cost Center" if "cost_center" in field else "Account"
+			if not frappe.db.exists(target_dt, value):
+				doc.set(field, None)
+				cleared.append((field, value))
+
+	if cleared:
+		frappe.log_error(
+			title=f"S231-C2: cleared {len(cleared)} dead default refs on {doc.name}",
+			message=str(cleared),
+		)
 
 
 def validate_default_accounts(doc, method=None):
@@ -643,10 +724,23 @@ def auto_provision_company(doc, method=None):
 		# "Please add the account to root level Company".
 		frappe.local.flags.ignore_root_company_validation = True
 
+		# S231-C1: capture pre_state for every field ERPNext might db_set to a
+		# value that does not resolve to an Account / Cost Center. If
+		# `create_default_accounts` raises partway through, those db_set
+		# writes have already committed (ERPNext writes BEFORE creating the
+		# target Accounts). Without this snapshot the Company is left with
+		# dead refs that fail `_validate_links()` on every subsequent save —
+		# the exact LinkValidationError that bit the CEO on 2026-05-02
+		# (Ayala Fairview Terraces / 15 ghost `- BFI2` accounts).
+		pre_state = {
+			f: frappe.db.get_value("Company", doc.name, f) for f in DEFAULT_FIELDS_TO_TRACK
+		}
+
 		# Step 0: best-effort call of ERPNext's own default-seeding methods.
 		# When `on_update` fires, ERPNext has typically already run these,
 		# but calling them defensively covers edge cases (e.g. bench-console
 		# creation paths that bypass the Setup Wizard).
+		erpnext_succeeded = True
 		try:
 			if hasattr(doc, "create_default_accounts"):
 				doc.create_default_accounts()
@@ -655,12 +749,26 @@ def auto_provision_company(doc, method=None):
 			if hasattr(doc, "create_default_cost_center"):
 				doc.create_default_cost_center()
 		except Exception as erpnext_err:
-			# ERPNext defaults are best-effort; the S181 templates create the
-			# critical accounts regardless. Log and continue.
+			# S231-C1: ERPNext defaults are best-effort; the S181 templates
+			# create the critical accounts regardless. But if seeding
+			# failed PARTWAY, ERPNext has already db_set field values that
+			# do not resolve. Restore pre_state so the subsequent S181 work
+			# (and any future _validate_links call) sees a clean slate.
+			erpnext_succeeded = False
 			frappe.log_error(
-				title=f"S181 ERPNext default seeding non-fatal for {doc.name}",
+				title=f"S181 ERPNext default seeding failed for {doc.name} (S231-C1: rolling back field writes)",
 				message=str(erpnext_err),
 			)
+
+		if not erpnext_succeeded:
+			# S231-C1: restore pre_state so partial-failure does not leave
+			# any default_* field pointing at a ghost Account.
+			for field, original_value in pre_state.items():
+				current_value = frappe.db.get_value("Company", doc.name, field)
+				if current_value != original_value:
+					frappe.db.set_value(
+						"Company", doc.name, field, original_value, update_modified=False
+					)
 
 		# Step 1: S181 branch warehouse
 		_s181_ensure_warehouse(doc)
@@ -688,6 +796,28 @@ def auto_provision_company(doc, method=None):
 
 		# Step 9 (S184): Pull GPS from Superadmin API
 		_s184_pull_gps(doc)
+
+		# S231-C1: invariant before flipping sentinel — every default_*
+		# field must point at an existing Account / Cost Center. If
+		# anything still doesn't resolve (S181 templates didn't create it,
+		# or it was set to a foreign-Company account by a prior buggy
+		# code-path), null it. Better an empty default than a save-
+		# breaking dead ref.
+		invalid_after = []
+		for field in DEFAULT_FIELDS_TO_TRACK:
+			value = frappe.db.get_value("Company", doc.name, field)
+			if value:
+				target_dt = "Cost Center" if "cost_center" in field else "Account"
+				if not frappe.db.exists(target_dt, value):
+					invalid_after.append((field, value))
+					frappe.db.set_value(
+						"Company", doc.name, field, None, update_modified=False
+					)
+		if invalid_after:
+			frappe.log_error(
+				title=f"S231-C1 cleared {len(invalid_after)} dead defaults on {doc.name} after provision",
+				message=str(invalid_after),
+			)
 
 		# Step 10: flip the sentinel so this hook never re-runs for this company
 		frappe.db.set_value(

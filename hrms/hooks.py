@@ -179,7 +179,16 @@ doc_events = {
 		],
 	},
 	"Company": {
-		"validate": "hrms.overrides.company.validate_default_accounts",
+		"validate": [
+			# S231-C2 — defense-in-depth: null any default_* / round_off_* /
+			# depreciation_* / capital_* / asset_* / stock_* / expenses_*
+			# field whose target Account / Cost Center no longer exists,
+			# BEFORE validate_default_accounts runs. Guarded by
+			# `first_provision_done == 1` so it never clobbers a fresh
+			# Company mid-provisioning.
+			"hrms.overrides.company.null_out_dead_default_refs",
+			"hrms.overrides.company.validate_default_accounts",
+		],
 		"on_update": [
 			"hrms.overrides.company.make_company_fixtures",
 			"hrms.overrides.company.set_default_hr_accounts",
