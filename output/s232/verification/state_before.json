@@ -1,0 +1,46 @@
+{
+  "generated_at": "2026-05-02T11:54:37.270416+00:00",
+  "phase": "0",
+  "synthetic_store_check": "PASS",
+  "synthetic_store_hits_9999": 0,
+  "synthetic_store_hits_999999": 0,
+  "pos_orders_14d": {
+    "total_orders": 139692,
+    "unique_ids": 139692,
+    "unique_bills": 138724,
+    "gross_14d_sum": 74724150,
+    "net_14d_sum": 63346189.78,
+    "unique_locations": 46
+  },
+  "pos_orders_14d_dupes": {
+    "dupe_clusters": 897,
+    "extra_rows": 968
+  },
+  "pos_orders_alltime_dupes": {
+    "dupe_clusters": 2351,
+    "extra_rows": 2462
+  },
+  "ingestion_source_14d": [
+    {
+      "ingestion_source": "poll",
+      "rows": 139665
+    },
+    {
+      "ingestion_source": "webhook",
+      "rows": 77
+    }
+  ],
+  "pos_order_items_14d_count": 230753,
+  "pos_order_payments_14d_count": 138964,
+  "fp_grab_orders_no_payment_14d": 843,
+  "pos_orders_raw_14d_rows": 0,
+  "pos_orders_raw_14d_dupes": {
+    "dupe_clusters": "n/a (no bill_number col \u2014 forensics-only)",
+    "extra_rows": 0,
+    "decision": "FORENSICS_ONLY_NO_DEDUP"
+  },
+  "pos_orders_raw_consumers": [
+    "F:\\Dropbox\\Projects\\BEI-ERP-s232-pos-ingest-hardening-cup-counting\\scripts/s232_phase0_baseline.py",
+    "F:\\Dropbox\\Projects\\BEI-ERP-s232-pos-ingest-hardening-cup-counting\\scripts/sync_pos_to_supabase.py"
+  ]
+}

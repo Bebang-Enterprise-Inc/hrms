@@ -1,0 +1,10 @@
+{
+  "ran_at": "2026-05-02T11:59:37.335374+00:00",
+  "mode": "APPLY",
+  "clusters_flagged": 2351,
+  "rows_flagged_pos_orders": 2462,
+  "rows_flagged_pos_order_items": 4593,
+  "rows_flagged_pos_order_payments": 402,
+  "webhook_received_at_populated": 1663602,
+  "assertion_clusters_with_one_kept": "PASS"
+}
