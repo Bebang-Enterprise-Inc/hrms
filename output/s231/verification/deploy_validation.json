@@ -1,0 +1,153 @@
+{
+  "tables": {
+    "tabBEI Fee Schedule": true,
+    "tabBEI Fee Carveout": true,
+    "tabBEI Billing Schedule": true
+  },
+  "bei_settings_fields": [
+    {
+      "field": "bki_markup_company_owned_percent",
+      "exists": true,
+      "fieldtype": "Float",
+      "default": "2.75",
+      "type_match": true,
+      "default_match": true
+    },
+    {
+      "field": "bki_billing_cron_enabled",
+      "exists": true,
+      "fieldtype": "Check",
+      "default": "0",
+      "type_match": true,
+      "default_match": true
+    },
+    {
+      "field": "bki_sales_debit_to_account",
+      "exists": true,
+      "fieldtype": "Link",
+      "default": null,
+      "type_match": true,
+      "default_match": true
+    },
+    {
+      "field": "bki_sales_naming_series",
+      "exists": true,
+      "fieldtype": "Data",
+      "default": null,
+      "type_match": true,
+      "default_match": true
+    },
+    {
+      "field": "bfc_revenue_company",
+      "exists": true,
+      "fieldtype": "Link",
+      "default": "BEBANG FRANCHISE CORP.",
+      "type_match": true,
+      "default_match": true
+    },
+    {
+      "field": "bfc_sales_vat_template",
+      "exists": true,
+      "fieldtype": "Link",
+      "default": null,
+      "type_match": true,
+      "default_match": true
+    },
+    {
+      "field": "bfc_sales_naming_series",
+      "exists": true,
+      "fieldtype": "Data",
+      "default": null,
+      "type_match": true,
+      "default_match": true
+    },
+    {
+      "field": "bfc_or_active",
+      "exists": true,
+      "fieldtype": "Check",
+      "default": "0",
+      "type_match": true,
+      "default_match": true
+    },
+    {
+      "field": "bfc_vat_registration_active",
+      "exists": true,
+      "fieldtype": "Check",
+      "default": "0",
+      "type_match": true,
+      "default_match": true
+    },
+    {
+      "field": "jv_revenue_company",
+      "exists": true,
+      "fieldtype": "Link",
+      "default": "Bebang Enterprise Inc.",
+      "type_match": true,
+      "default_match": true
+    },
+    {
+      "field": "jv_sales_vat_template",
+      "exists": true,
+      "fieldtype": "Link",
+      "default": null,
+      "type_match": true,
+      "default_match": true
+    }
+  ],
+  "live_bei_settings": {
+    "bki_markup_company_owned_percent": 0.0,
+    "bki_billing_cron_enabled": 0,
+    "bki_sales_debit_to_account": "",
+    "bki_sales_naming_series": "",
+    "bfc_revenue_company": "",
+    "bfc_sales_vat_template": "",
+    "bfc_sales_naming_series": "",
+    "bfc_or_active": 0,
+    "bfc_vat_registration_active": 0,
+    "jv_revenue_company": "",
+    "jv_sales_vat_template": ""
+  },
+  "cron_gate_intact": true,
+  "company_validate_chain": [
+    "hrms.overrides.company.null_out_dead_default_refs",
+    "hrms.overrides.company.validate_store_ownership_type",
+    "hrms.overrides.company.validate_default_accounts"
+  ],
+  "null_out_before_validate_defaults": true,
+  "validate_store_ownership_type_wired": true,
+  "DEFAULT_FIELDS_TO_TRACK_count": 21,
+  "null_out_dead_default_refs_callable": true,
+  "validate_store_ownership_type_callable": true,
+  "_resolve_fee_recipient_company_callable": true,
+  "_assert_bfc_billing_ready_callable": true,
+  "_create_monthly_fee_sales_invoice_callable": true,
+  "_NON_STORE_ENTITIES_keys": [
+    "BEBANG ENTERPRISE INC.",
+    "BEBANG KITCHEN INC.",
+    "BEBANG FRANCHISE CORP.",
+    "IRRESISTIBLE INFUSIONS INC."
+  ],
+  "_NON_STORE_ENTITIES_count": 4,
+  "new_doctypes": {
+    "BEI Fee Schedule": {
+      "exists": true,
+      "field_count": 12,
+      "issingle": 0
+    },
+    "BEI Fee Carveout": {
+      "exists": true,
+      "field_count": 8,
+      "issingle": 0
+    }
+  },
+  "doctype_row_counts": {
+    "BEI Fee Schedule": 0,
+    "BEI Fee Carveout": 0
+  },
+  "canonical_bfc_check": {
+    "BEBANG FRANCHISE CORP._exists": true,
+    "Bebang Franchise Corp._exists": true,
+    "BEBANG FT INC._exists": false,
+    "Bebang Enterprise Inc._exists": true
+  }
+}

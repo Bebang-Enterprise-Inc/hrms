@@ -1,0 +1,7 @@
+=== STDOUT ===
+Testing is disabled for the site!
+You can enable tests by entering following command:
+bench --site hq.bebang.ph set-config allow_tests true
+
+
+=== STDERR ===

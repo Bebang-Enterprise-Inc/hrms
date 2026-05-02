@@ -1,0 +1,1072 @@
+company_name,abbr,store_ownership_type,parent_company,first_provision_done,field_name,current_value,target_doctype,ref_exists,action_recommended
+ARANETA GATEWAY - TUNGSTEN CAPITAL HOLDINGS OPC,ARGW,Managed Franchise,TUNGSTEN CAPITAL HOLDINGS OPC,1,default_inventory_account,,Account,,no_action
+ARANETA GATEWAY - TUNGSTEN CAPITAL HOLDINGS OPC,ARGW,Managed Franchise,TUNGSTEN CAPITAL HOLDINGS OPC,1,default_payable_account,Creditors - ARGW,Account,True,no_action
+ARANETA GATEWAY - TUNGSTEN CAPITAL HOLDINGS OPC,ARGW,Managed Franchise,TUNGSTEN CAPITAL HOLDINGS OPC,1,default_receivable_account,Debtors - ARGW,Account,True,no_action
+ARANETA GATEWAY - TUNGSTEN CAPITAL HOLDINGS OPC,ARGW,Managed Franchise,TUNGSTEN CAPITAL HOLDINGS OPC,1,default_payroll_payable_account,,Account,,no_action
+ARANETA GATEWAY - TUNGSTEN CAPITAL HOLDINGS OPC,ARGW,Managed Franchise,TUNGSTEN CAPITAL HOLDINGS OPC,1,default_employee_advance_account,,Account,,no_action
+ARANETA GATEWAY - TUNGSTEN CAPITAL HOLDINGS OPC,ARGW,Managed Franchise,TUNGSTEN CAPITAL HOLDINGS OPC,1,default_expense_account,Cost of Goods Sold - ARGW,Account,True,no_action
+ARANETA GATEWAY - TUNGSTEN CAPITAL HOLDINGS OPC,ARGW,Managed Franchise,TUNGSTEN CAPITAL HOLDINGS OPC,1,default_income_account,4000110 - IN-STORE SALES - ARGW,Account,True,no_action
+ARANETA GATEWAY - TUNGSTEN CAPITAL HOLDINGS OPC,ARGW,Managed Franchise,TUNGSTEN CAPITAL HOLDINGS OPC,1,round_off_account,Round Off - ARGW,Account,True,no_action
+ARANETA GATEWAY - TUNGSTEN CAPITAL HOLDINGS OPC,ARGW,Managed Franchise,TUNGSTEN CAPITAL HOLDINGS OPC,1,round_off_cost_center,,Cost Center,,no_action
+ARANETA GATEWAY - TUNGSTEN CAPITAL HOLDINGS OPC,ARGW,Managed Franchise,TUNGSTEN CAPITAL HOLDINGS OPC,1,default_cash_account,Cash - ARGW,Account,True,no_action
+ARANETA GATEWAY - TUNGSTEN CAPITAL HOLDINGS OPC,ARGW,Managed Franchise,TUNGSTEN CAPITAL HOLDINGS OPC,1,exchange_gain_loss_account,,Account,,no_action
+ARANETA GATEWAY - TUNGSTEN CAPITAL HOLDINGS OPC,ARGW,Managed Franchise,TUNGSTEN CAPITAL HOLDINGS OPC,1,accumulated_depreciation_account,,Account,,no_action
+ARANETA GATEWAY - TUNGSTEN CAPITAL HOLDINGS OPC,ARGW,Managed Franchise,TUNGSTEN CAPITAL HOLDINGS OPC,1,depreciation_expense_account,,Account,,no_action
+ARANETA GATEWAY - TUNGSTEN CAPITAL HOLDINGS OPC,ARGW,Managed Franchise,TUNGSTEN CAPITAL HOLDINGS OPC,1,expenses_included_in_asset_valuation,,Account,,no_action
+ARANETA GATEWAY - TUNGSTEN CAPITAL HOLDINGS OPC,ARGW,Managed Franchise,TUNGSTEN CAPITAL HOLDINGS OPC,1,disposal_account,,Account,,no_action
+ARANETA GATEWAY - TUNGSTEN CAPITAL HOLDINGS OPC,ARGW,Managed Franchise,TUNGSTEN CAPITAL HOLDINGS OPC,1,depreciation_cost_center,,Cost Center,,no_action
+ARANETA GATEWAY - TUNGSTEN CAPITAL HOLDINGS OPC,ARGW,Managed Franchise,TUNGSTEN CAPITAL HOLDINGS OPC,1,capital_work_in_progress_account,,Account,,no_action
+ARANETA GATEWAY - TUNGSTEN CAPITAL HOLDINGS OPC,ARGW,Managed Franchise,TUNGSTEN CAPITAL HOLDINGS OPC,1,asset_received_but_not_billed,,Account,,no_action
+ARANETA GATEWAY - TUNGSTEN CAPITAL HOLDINGS OPC,ARGW,Managed Franchise,TUNGSTEN CAPITAL HOLDINGS OPC,1,stock_adjustment_account,,Account,,no_action
+ARANETA GATEWAY - TUNGSTEN CAPITAL HOLDINGS OPC,ARGW,Managed Franchise,TUNGSTEN CAPITAL HOLDINGS OPC,1,stock_received_but_not_billed,,Account,,no_action
+ARANETA GATEWAY - TUNGSTEN CAPITAL HOLDINGS OPC,ARGW,Managed Franchise,TUNGSTEN CAPITAL HOLDINGS OPC,1,expenses_included_in_valuation,,Account,,no_action
+AYALA EVO CITY - BEBANG MEGA INC.,AYEVO,Managed Franchise,BEBANG MEGA INC.,1,default_inventory_account,,Account,,no_action
+AYALA EVO CITY - BEBANG MEGA INC.,AYEVO,Managed Franchise,BEBANG MEGA INC.,1,default_payable_account,Creditors - AYEVO,Account,True,no_action
+AYALA EVO CITY - BEBANG MEGA INC.,AYEVO,Managed Franchise,BEBANG MEGA INC.,1,default_receivable_account,Debtors - AYEVO,Account,True,no_action
+AYALA EVO CITY - BEBANG MEGA INC.,AYEVO,Managed Franchise,BEBANG MEGA INC.,1,default_payroll_payable_account,,Account,,no_action
+AYALA EVO CITY - BEBANG MEGA INC.,AYEVO,Managed Franchise,BEBANG MEGA INC.,1,default_employee_advance_account,,Account,,no_action
+AYALA EVO CITY - BEBANG MEGA INC.,AYEVO,Managed Franchise,BEBANG MEGA INC.,1,default_expense_account,Cost of Goods Sold - AYEVO,Account,True,no_action
+AYALA EVO CITY - BEBANG MEGA INC.,AYEVO,Managed Franchise,BEBANG MEGA INC.,1,default_income_account,4000110 - IN-STORE SALES - AYEVO,Account,True,no_action
+AYALA EVO CITY - BEBANG MEGA INC.,AYEVO,Managed Franchise,BEBANG MEGA INC.,1,round_off_account,Round Off - AYEVO,Account,True,no_action
+AYALA EVO CITY - BEBANG MEGA INC.,AYEVO,Managed Franchise,BEBANG MEGA INC.,1,round_off_cost_center,,Cost Center,,no_action
+AYALA EVO CITY - BEBANG MEGA INC.,AYEVO,Managed Franchise,BEBANG MEGA INC.,1,default_cash_account,Cash - AYEVO,Account,True,no_action
+AYALA EVO CITY - BEBANG MEGA INC.,AYEVO,Managed Franchise,BEBANG MEGA INC.,1,exchange_gain_loss_account,,Account,,no_action
+AYALA EVO CITY - BEBANG MEGA INC.,AYEVO,Managed Franchise,BEBANG MEGA INC.,1,accumulated_depreciation_account,,Account,,no_action
+AYALA EVO CITY - BEBANG MEGA INC.,AYEVO,Managed Franchise,BEBANG MEGA INC.,1,depreciation_expense_account,,Account,,no_action
+AYALA EVO CITY - BEBANG MEGA INC.,AYEVO,Managed Franchise,BEBANG MEGA INC.,1,expenses_included_in_asset_valuation,,Account,,no_action
+AYALA EVO CITY - BEBANG MEGA INC.,AYEVO,Managed Franchise,BEBANG MEGA INC.,1,disposal_account,,Account,,no_action
+AYALA EVO CITY - BEBANG MEGA INC.,AYEVO,Managed Franchise,BEBANG MEGA INC.,1,depreciation_cost_center,,Cost Center,,no_action
+AYALA EVO CITY - BEBANG MEGA INC.,AYEVO,Managed Franchise,BEBANG MEGA INC.,1,capital_work_in_progress_account,,Account,,no_action
+AYALA EVO CITY - BEBANG MEGA INC.,AYEVO,Managed Franchise,BEBANG MEGA INC.,1,asset_received_but_not_billed,,Account,,no_action
+AYALA EVO CITY - BEBANG MEGA INC.,AYEVO,Managed Franchise,BEBANG MEGA INC.,1,stock_adjustment_account,,Account,,no_action
+AYALA EVO CITY - BEBANG MEGA INC.,AYEVO,Managed Franchise,BEBANG MEGA INC.,1,stock_received_but_not_billed,,Account,,no_action
+AYALA EVO CITY - BEBANG MEGA INC.,AYEVO,Managed Franchise,BEBANG MEGA INC.,1,expenses_included_in_valuation,,Account,,no_action
+AYALA FAIRVIEW TERRACES - BEBANG FT INC.,AFT,Company Owned,BEBANG ENTERPRISE INC.,1,default_inventory_account,,Account,,no_action
+AYALA FAIRVIEW TERRACES - BEBANG FT INC.,AFT,Company Owned,BEBANG ENTERPRISE INC.,1,default_payable_account,Creditors - AFT,Account,True,no_action
+AYALA FAIRVIEW TERRACES - BEBANG FT INC.,AFT,Company Owned,BEBANG ENTERPRISE INC.,1,default_receivable_account,Debtors - AFT,Account,True,no_action
+AYALA FAIRVIEW TERRACES - BEBANG FT INC.,AFT,Company Owned,BEBANG ENTERPRISE INC.,1,default_payroll_payable_account,,Account,,no_action
+AYALA FAIRVIEW TERRACES - BEBANG FT INC.,AFT,Company Owned,BEBANG ENTERPRISE INC.,1,default_employee_advance_account,,Account,,no_action
+AYALA FAIRVIEW TERRACES - BEBANG FT INC.,AFT,Company Owned,BEBANG ENTERPRISE INC.,1,default_expense_account,Cost of Goods Sold - AFT,Account,True,no_action
+AYALA FAIRVIEW TERRACES - BEBANG FT INC.,AFT,Company Owned,BEBANG ENTERPRISE INC.,1,default_income_account,Sales - AFT,Account,True,no_action
+AYALA FAIRVIEW TERRACES - BEBANG FT INC.,AFT,Company Owned,BEBANG ENTERPRISE INC.,1,round_off_account,Round Off - AFT,Account,True,no_action
+AYALA FAIRVIEW TERRACES - BEBANG FT INC.,AFT,Company Owned,BEBANG ENTERPRISE INC.,1,round_off_cost_center,Main - BFI2,Cost Center,True,no_action
+AYALA FAIRVIEW TERRACES - BEBANG FT INC.,AFT,Company Owned,BEBANG ENTERPRISE INC.,1,default_cash_account,Cash - AFT,Account,True,no_action
+AYALA FAIRVIEW TERRACES - BEBANG FT INC.,AFT,Company Owned,BEBANG ENTERPRISE INC.,1,exchange_gain_loss_account,,Account,,no_action
+AYALA FAIRVIEW TERRACES - BEBANG FT INC.,AFT,Company Owned,BEBANG ENTERPRISE INC.,1,accumulated_depreciation_account,,Account,,no_action
+AYALA FAIRVIEW TERRACES - BEBANG FT INC.,AFT,Company Owned,BEBANG ENTERPRISE INC.,1,depreciation_expense_account,,Account,,no_action
+AYALA FAIRVIEW TERRACES - BEBANG FT INC.,AFT,Company Owned,BEBANG ENTERPRISE INC.,1,expenses_included_in_asset_valuation,,Account,,no_action
+AYALA FAIRVIEW TERRACES - BEBANG FT INC.,AFT,Company Owned,BEBANG ENTERPRISE INC.,1,disposal_account,,Account,,no_action
+AYALA FAIRVIEW TERRACES - BEBANG FT INC.,AFT,Company Owned,BEBANG ENTERPRISE INC.,1,depreciation_cost_center,Main - BFI2,Cost Center,True,no_action
+AYALA FAIRVIEW TERRACES - BEBANG FT INC.,AFT,Company Owned,BEBANG ENTERPRISE INC.,1,capital_work_in_progress_account,,Account,,no_action
+AYALA FAIRVIEW TERRACES - BEBANG FT INC.,AFT,Company Owned,BEBANG ENTERPRISE INC.,1,asset_received_but_not_billed,,Account,,no_action
+AYALA FAIRVIEW TERRACES - BEBANG FT INC.,AFT,Company Owned,BEBANG ENTERPRISE INC.,1,stock_adjustment_account,,Account,,no_action
+AYALA FAIRVIEW TERRACES - BEBANG FT INC.,AFT,Company Owned,BEBANG ENTERPRISE INC.,1,stock_received_but_not_billed,,Account,,no_action
+AYALA FAIRVIEW TERRACES - BEBANG FT INC.,AFT,Company Owned,BEBANG ENTERPRISE INC.,1,expenses_included_in_valuation,,Account,,no_action
+AYALA MARKET MARKET - BEBANG MARKET MARKET INC.,AMM,JV,BEBANG ENTERPRISE INC.,1,default_inventory_account,,Account,,no_action
+AYALA MARKET MARKET - BEBANG MARKET MARKET INC.,AMM,JV,BEBANG ENTERPRISE INC.,1,default_payable_account,Creditors - AMM,Account,True,no_action
+AYALA MARKET MARKET - BEBANG MARKET MARKET INC.,AMM,JV,BEBANG ENTERPRISE INC.,1,default_receivable_account,Debtors - AMM,Account,True,no_action
+AYALA MARKET MARKET - BEBANG MARKET MARKET INC.,AMM,JV,BEBANG ENTERPRISE INC.,1,default_payroll_payable_account,,Account,,no_action
+AYALA MARKET MARKET - BEBANG MARKET MARKET INC.,AMM,JV,BEBANG ENTERPRISE INC.,1,default_employee_advance_account,,Account,,no_action
+AYALA MARKET MARKET - BEBANG MARKET MARKET INC.,AMM,JV,BEBANG ENTERPRISE INC.,1,default_expense_account,Cost of Goods Sold - AMM,Account,True,no_action
+AYALA MARKET MARKET - BEBANG MARKET MARKET INC.,AMM,JV,BEBANG ENTERPRISE INC.,1,default_income_account,Sales - AMM,Account,True,no_action
+AYALA MARKET MARKET - BEBANG MARKET MARKET INC.,AMM,JV,BEBANG ENTERPRISE INC.,1,round_off_account,Round Off - AMM,Account,True,no_action
+AYALA MARKET MARKET - BEBANG MARKET MARKET INC.,AMM,JV,BEBANG ENTERPRISE INC.,1,round_off_cost_center,,Cost Center,,no_action
+AYALA MARKET MARKET - BEBANG MARKET MARKET INC.,AMM,JV,BEBANG ENTERPRISE INC.,1,default_cash_account,Cash - AMM,Account,True,no_action
+AYALA MARKET MARKET - BEBANG MARKET MARKET INC.,AMM,JV,BEBANG ENTERPRISE INC.,1,exchange_gain_loss_account,,Account,,no_action
+AYALA MARKET MARKET - BEBANG MARKET MARKET INC.,AMM,JV,BEBANG ENTERPRISE INC.,1,accumulated_depreciation_account,,Account,,no_action
+AYALA MARKET MARKET - BEBANG MARKET MARKET INC.,AMM,JV,BEBANG ENTERPRISE INC.,1,depreciation_expense_account,,Account,,no_action
+AYALA MARKET MARKET - BEBANG MARKET MARKET INC.,AMM,JV,BEBANG ENTERPRISE INC.,1,expenses_included_in_asset_valuation,,Account,,no_action
+AYALA MARKET MARKET - BEBANG MARKET MARKET INC.,AMM,JV,BEBANG ENTERPRISE INC.,1,disposal_account,,Account,,no_action
+AYALA MARKET MARKET - BEBANG MARKET MARKET INC.,AMM,JV,BEBANG ENTERPRISE INC.,1,depreciation_cost_center,,Cost Center,,no_action
+AYALA MARKET MARKET - BEBANG MARKET MARKET INC.,AMM,JV,BEBANG ENTERPRISE INC.,1,capital_work_in_progress_account,,Account,,no_action
+AYALA MARKET MARKET - BEBANG MARKET MARKET INC.,AMM,JV,BEBANG ENTERPRISE INC.,1,asset_received_but_not_billed,,Account,,no_action
+AYALA MARKET MARKET - BEBANG MARKET MARKET INC.,AMM,JV,BEBANG ENTERPRISE INC.,1,stock_adjustment_account,,Account,,no_action
+AYALA MARKET MARKET - BEBANG MARKET MARKET INC.,AMM,JV,BEBANG ENTERPRISE INC.,1,stock_received_but_not_billed,,Account,,no_action
+AYALA MARKET MARKET - BEBANG MARKET MARKET INC.,AMM,JV,BEBANG ENTERPRISE INC.,1,expenses_included_in_valuation,,Account,,no_action
+AYALA SOLENAD - HFFM SOLENAD FOOD SERVICES INC.,AYSOL,Managed Franchise,,1,default_inventory_account,,Account,,no_action
+AYALA SOLENAD - HFFM SOLENAD FOOD SERVICES INC.,AYSOL,Managed Franchise,,1,default_payable_account,Creditors - AYSOL,Account,True,no_action
+AYALA SOLENAD - HFFM SOLENAD FOOD SERVICES INC.,AYSOL,Managed Franchise,,1,default_receivable_account,Debtors - AYSOL,Account,True,no_action
+AYALA SOLENAD - HFFM SOLENAD FOOD SERVICES INC.,AYSOL,Managed Franchise,,1,default_payroll_payable_account,,Account,,no_action
+AYALA SOLENAD - HFFM SOLENAD FOOD SERVICES INC.,AYSOL,Managed Franchise,,1,default_employee_advance_account,,Account,,no_action
+AYALA SOLENAD - HFFM SOLENAD FOOD SERVICES INC.,AYSOL,Managed Franchise,,1,default_expense_account,Cost of Goods Sold - AYSOL,Account,True,no_action
+AYALA SOLENAD - HFFM SOLENAD FOOD SERVICES INC.,AYSOL,Managed Franchise,,1,default_income_account,Sales - AYSOL,Account,True,no_action
+AYALA SOLENAD - HFFM SOLENAD FOOD SERVICES INC.,AYSOL,Managed Franchise,,1,round_off_account,Round Off - AYSOL,Account,True,no_action
+AYALA SOLENAD - HFFM SOLENAD FOOD SERVICES INC.,AYSOL,Managed Franchise,,1,round_off_cost_center,,Cost Center,,no_action
+AYALA SOLENAD - HFFM SOLENAD FOOD SERVICES INC.,AYSOL,Managed Franchise,,1,default_cash_account,Cash - AYSOL,Account,True,no_action
+AYALA SOLENAD - HFFM SOLENAD FOOD SERVICES INC.,AYSOL,Managed Franchise,,1,exchange_gain_loss_account,,Account,,no_action
+AYALA SOLENAD - HFFM SOLENAD FOOD SERVICES INC.,AYSOL,Managed Franchise,,1,accumulated_depreciation_account,,Account,,no_action
+AYALA SOLENAD - HFFM SOLENAD FOOD SERVICES INC.,AYSOL,Managed Franchise,,1,depreciation_expense_account,,Account,,no_action
+AYALA SOLENAD - HFFM SOLENAD FOOD SERVICES INC.,AYSOL,Managed Franchise,,1,expenses_included_in_asset_valuation,,Account,,no_action
+AYALA SOLENAD - HFFM SOLENAD FOOD SERVICES INC.,AYSOL,Managed Franchise,,1,disposal_account,,Account,,no_action
+AYALA SOLENAD - HFFM SOLENAD FOOD SERVICES INC.,AYSOL,Managed Franchise,,1,depreciation_cost_center,,Cost Center,,no_action
+AYALA SOLENAD - HFFM SOLENAD FOOD SERVICES INC.,AYSOL,Managed Franchise,,1,capital_work_in_progress_account,,Account,,no_action
+AYALA SOLENAD - HFFM SOLENAD FOOD SERVICES INC.,AYSOL,Managed Franchise,,1,asset_received_but_not_billed,,Account,,no_action
+AYALA SOLENAD - HFFM SOLENAD FOOD SERVICES INC.,AYSOL,Managed Franchise,,1,stock_adjustment_account,,Account,,no_action
+AYALA SOLENAD - HFFM SOLENAD FOOD SERVICES INC.,AYSOL,Managed Franchise,,1,stock_received_but_not_billed,,Account,,no_action
+AYALA SOLENAD - HFFM SOLENAD FOOD SERVICES INC.,AYSOL,Managed Franchise,,1,expenses_included_in_valuation,,Account,,no_action
+AYALA UP TOWN CENTER - BEBANG UP TOWN CENTER INC.,UPTC,JV,BEBANG ENTERPRISE INC.,1,default_inventory_account,,Account,,no_action
+AYALA UP TOWN CENTER - BEBANG UP TOWN CENTER INC.,UPTC,JV,BEBANG ENTERPRISE INC.,1,default_payable_account,Creditors - UPTC,Account,True,no_action
+AYALA UP TOWN CENTER - BEBANG UP TOWN CENTER INC.,UPTC,JV,BEBANG ENTERPRISE INC.,1,default_receivable_account,Debtors - UPTC,Account,True,no_action
+AYALA UP TOWN CENTER - BEBANG UP TOWN CENTER INC.,UPTC,JV,BEBANG ENTERPRISE INC.,1,default_payroll_payable_account,,Account,,no_action
+AYALA UP TOWN CENTER - BEBANG UP TOWN CENTER INC.,UPTC,JV,BEBANG ENTERPRISE INC.,1,default_employee_advance_account,,Account,,no_action
+AYALA UP TOWN CENTER - BEBANG UP TOWN CENTER INC.,UPTC,JV,BEBANG ENTERPRISE INC.,1,default_expense_account,Cost of Goods Sold - UPTC,Account,True,no_action
+AYALA UP TOWN CENTER - BEBANG UP TOWN CENTER INC.,UPTC,JV,BEBANG ENTERPRISE INC.,1,default_income_account,Sales - UPTC,Account,True,no_action
+AYALA UP TOWN CENTER - BEBANG UP TOWN CENTER INC.,UPTC,JV,BEBANG ENTERPRISE INC.,1,round_off_account,Round Off - UPTC,Account,True,no_action
+AYALA UP TOWN CENTER - BEBANG UP TOWN CENTER INC.,UPTC,JV,BEBANG ENTERPRISE INC.,1,round_off_cost_center,,Cost Center,,no_action
+AYALA UP TOWN CENTER - BEBANG UP TOWN CENTER INC.,UPTC,JV,BEBANG ENTERPRISE INC.,1,default_cash_account,Cash - UPTC,Account,True,no_action
+AYALA UP TOWN CENTER - BEBANG UP TOWN CENTER INC.,UPTC,JV,BEBANG ENTERPRISE INC.,1,exchange_gain_loss_account,,Account,,no_action
+AYALA UP TOWN CENTER - BEBANG UP TOWN CENTER INC.,UPTC,JV,BEBANG ENTERPRISE INC.,1,accumulated_depreciation_account,,Account,,no_action
+AYALA UP TOWN CENTER - BEBANG UP TOWN CENTER INC.,UPTC,JV,BEBANG ENTERPRISE INC.,1,depreciation_expense_account,,Account,,no_action
+AYALA UP TOWN CENTER - BEBANG UP TOWN CENTER INC.,UPTC,JV,BEBANG ENTERPRISE INC.,1,expenses_included_in_asset_valuation,,Account,,no_action
+AYALA UP TOWN CENTER - BEBANG UP TOWN CENTER INC.,UPTC,JV,BEBANG ENTERPRISE INC.,1,disposal_account,,Account,,no_action
+AYALA UP TOWN CENTER - BEBANG UP TOWN CENTER INC.,UPTC,JV,BEBANG ENTERPRISE INC.,1,depreciation_cost_center,,Cost Center,,no_action
+AYALA UP TOWN CENTER - BEBANG UP TOWN CENTER INC.,UPTC,JV,BEBANG ENTERPRISE INC.,1,capital_work_in_progress_account,,Account,,no_action
+AYALA UP TOWN CENTER - BEBANG UP TOWN CENTER INC.,UPTC,JV,BEBANG ENTERPRISE INC.,1,asset_received_but_not_billed,,Account,,no_action
+AYALA UP TOWN CENTER - BEBANG UP TOWN CENTER INC.,UPTC,JV,BEBANG ENTERPRISE INC.,1,stock_adjustment_account,,Account,,no_action
+AYALA UP TOWN CENTER - BEBANG UP TOWN CENTER INC.,UPTC,JV,BEBANG ENTERPRISE INC.,1,stock_received_but_not_billed,,Account,,no_action
+AYALA UP TOWN CENTER - BEBANG UP TOWN CENTER INC.,UPTC,JV,BEBANG ENTERPRISE INC.,1,expenses_included_in_valuation,,Account,,no_action
+AYALA VERMOSA - BEBANG MEGA INC.,AYVER,Managed Franchise,BEBANG MEGA INC.,1,default_inventory_account,Stock In Hand - BMI2,Account,True,no_action
+AYALA VERMOSA - BEBANG MEGA INC.,AYVER,Managed Franchise,BEBANG MEGA INC.,1,default_payable_account,Creditors - AYVER,Account,True,no_action
+AYALA VERMOSA - BEBANG MEGA INC.,AYVER,Managed Franchise,BEBANG MEGA INC.,1,default_receivable_account,Debtors - AYVER,Account,True,no_action
+AYALA VERMOSA - BEBANG MEGA INC.,AYVER,Managed Franchise,BEBANG MEGA INC.,1,default_payroll_payable_account,,Account,,no_action
+AYALA VERMOSA - BEBANG MEGA INC.,AYVER,Managed Franchise,BEBANG MEGA INC.,1,default_employee_advance_account,,Account,,no_action
+AYALA VERMOSA - BEBANG MEGA INC.,AYVER,Managed Franchise,BEBANG MEGA INC.,1,default_expense_account,Cost of Goods Sold - AYVER,Account,True,no_action
+AYALA VERMOSA - BEBANG MEGA INC.,AYVER,Managed Franchise,BEBANG MEGA INC.,1,default_income_account,4000110 - IN-STORE SALES - AYVER,Account,True,no_action
+AYALA VERMOSA - BEBANG MEGA INC.,AYVER,Managed Franchise,BEBANG MEGA INC.,1,round_off_account,Round Off - AYVER,Account,True,no_action
+AYALA VERMOSA - BEBANG MEGA INC.,AYVER,Managed Franchise,BEBANG MEGA INC.,1,round_off_cost_center,,Cost Center,,no_action
+AYALA VERMOSA - BEBANG MEGA INC.,AYVER,Managed Franchise,BEBANG MEGA INC.,1,default_cash_account,Cash - AYVER,Account,True,no_action
+AYALA VERMOSA - BEBANG MEGA INC.,AYVER,Managed Franchise,BEBANG MEGA INC.,1,exchange_gain_loss_account,,Account,,no_action
+AYALA VERMOSA - BEBANG MEGA INC.,AYVER,Managed Franchise,BEBANG MEGA INC.,1,accumulated_depreciation_account,,Account,,no_action
+AYALA VERMOSA - BEBANG MEGA INC.,AYVER,Managed Franchise,BEBANG MEGA INC.,1,depreciation_expense_account,,Account,,no_action
+AYALA VERMOSA - BEBANG MEGA INC.,AYVER,Managed Franchise,BEBANG MEGA INC.,1,expenses_included_in_asset_valuation,,Account,,no_action
+AYALA VERMOSA - BEBANG MEGA INC.,AYVER,Managed Franchise,BEBANG MEGA INC.,1,disposal_account,,Account,,no_action
+AYALA VERMOSA - BEBANG MEGA INC.,AYVER,Managed Franchise,BEBANG MEGA INC.,1,depreciation_cost_center,,Cost Center,,no_action
+AYALA VERMOSA - BEBANG MEGA INC.,AYVER,Managed Franchise,BEBANG MEGA INC.,1,capital_work_in_progress_account,,Account,,no_action
+AYALA VERMOSA - BEBANG MEGA INC.,AYVER,Managed Franchise,BEBANG MEGA INC.,1,asset_received_but_not_billed,,Account,,no_action
+AYALA VERMOSA - BEBANG MEGA INC.,AYVER,Managed Franchise,BEBANG MEGA INC.,1,stock_adjustment_account,,Account,,no_action
+AYALA VERMOSA - BEBANG MEGA INC.,AYVER,Managed Franchise,BEBANG MEGA INC.,1,stock_received_but_not_billed,,Account,,no_action
+AYALA VERMOSA - BEBANG MEGA INC.,AYVER,Managed Franchise,BEBANG MEGA INC.,1,expenses_included_in_valuation,,Account,,no_action
+BEBANG FRANCHISE CORP.,BFC,,,0,default_inventory_account,,Account,,no_action
+BEBANG FRANCHISE CORP.,BFC,,,0,default_payable_account,,Account,,no_action
+BEBANG FRANCHISE CORP.,BFC,,,0,default_receivable_account,,Account,,no_action
+BEBANG FRANCHISE CORP.,BFC,,,0,default_payroll_payable_account,,Account,,no_action
+BEBANG FRANCHISE CORP.,BFC,,,0,default_employee_advance_account,,Account,,no_action
+BEBANG FRANCHISE CORP.,BFC,,,0,default_expense_account,,Account,,no_action
+BEBANG FRANCHISE CORP.,BFC,,,0,default_income_account,,Account,,no_action
+BEBANG FRANCHISE CORP.,BFC,,,0,round_off_account,,Account,,no_action
+BEBANG FRANCHISE CORP.,BFC,,,0,round_off_cost_center,Main - BFC,Cost Center,True,no_action
+BEBANG FRANCHISE CORP.,BFC,,,0,default_cash_account,,Account,,no_action
+BEBANG FRANCHISE CORP.,BFC,,,0,exchange_gain_loss_account,,Account,,no_action
+BEBANG FRANCHISE CORP.,BFC,,,0,accumulated_depreciation_account,,Account,,no_action
+BEBANG FRANCHISE CORP.,BFC,,,0,depreciation_expense_account,,Account,,no_action
+BEBANG FRANCHISE CORP.,BFC,,,0,expenses_included_in_asset_valuation,,Account,,no_action
+BEBANG FRANCHISE CORP.,BFC,,,0,disposal_account,,Account,,no_action
+BEBANG FRANCHISE CORP.,BFC,,,0,depreciation_cost_center,Main - BFC,Cost Center,True,no_action
+BEBANG FRANCHISE CORP.,BFC,,,0,capital_work_in_progress_account,,Account,,no_action
+BEBANG FRANCHISE CORP.,BFC,,,0,asset_received_but_not_billed,,Account,,no_action
+BEBANG FRANCHISE CORP.,BFC,,,0,stock_adjustment_account,,Account,,no_action
+BEBANG FRANCHISE CORP.,BFC,,,0,stock_received_but_not_billed,,Account,,no_action
+BEBANG FRANCHISE CORP.,BFC,,,0,expenses_included_in_valuation,,Account,,no_action
+BEBANG FT INC.,BFI2,,BEBANG ENTERPRISE INC.,0,default_inventory_account,,Account,,no_action
+BEBANG FT INC.,BFI2,,BEBANG ENTERPRISE INC.,0,default_payable_account,,Account,,no_action
+BEBANG FT INC.,BFI2,,BEBANG ENTERPRISE INC.,0,default_receivable_account,,Account,,no_action
+BEBANG FT INC.,BFI2,,BEBANG ENTERPRISE INC.,0,default_payroll_payable_account,,Account,,no_action
+BEBANG FT INC.,BFI2,,BEBANG ENTERPRISE INC.,0,default_employee_advance_account,,Account,,no_action
+BEBANG FT INC.,BFI2,,BEBANG ENTERPRISE INC.,0,default_expense_account,,Account,,no_action
+BEBANG FT INC.,BFI2,,BEBANG ENTERPRISE INC.,0,default_income_account,,Account,,no_action
+BEBANG FT INC.,BFI2,,BEBANG ENTERPRISE INC.,0,round_off_account,,Account,,no_action
+BEBANG FT INC.,BFI2,,BEBANG ENTERPRISE INC.,0,round_off_cost_center,Main - BFI2,Cost Center,True,no_action
+BEBANG FT INC.,BFI2,,BEBANG ENTERPRISE INC.,0,default_cash_account,,Account,,no_action
+BEBANG FT INC.,BFI2,,BEBANG ENTERPRISE INC.,0,exchange_gain_loss_account,,Account,,no_action
+BEBANG FT INC.,BFI2,,BEBANG ENTERPRISE INC.,0,accumulated_depreciation_account,,Account,,no_action
+BEBANG FT INC.,BFI2,,BEBANG ENTERPRISE INC.,0,depreciation_expense_account,,Account,,no_action
+BEBANG FT INC.,BFI2,,BEBANG ENTERPRISE INC.,0,expenses_included_in_asset_valuation,,Account,,no_action
+BEBANG FT INC.,BFI2,,BEBANG ENTERPRISE INC.,0,disposal_account,,Account,,no_action
+BEBANG FT INC.,BFI2,,BEBANG ENTERPRISE INC.,0,depreciation_cost_center,Main - BFI2,Cost Center,True,no_action
+BEBANG FT INC.,BFI2,,BEBANG ENTERPRISE INC.,0,capital_work_in_progress_account,,Account,,no_action
+BEBANG FT INC.,BFI2,,BEBANG ENTERPRISE INC.,0,asset_received_but_not_billed,,Account,,no_action
+BEBANG FT INC.,BFI2,,BEBANG ENTERPRISE INC.,0,stock_adjustment_account,,Account,,no_action
+BEBANG FT INC.,BFI2,,BEBANG ENTERPRISE INC.,0,stock_received_but_not_billed,,Account,,no_action
+BEBANG FT INC.,BFI2,,BEBANG ENTERPRISE INC.,0,expenses_included_in_valuation,,Account,,no_action
+BF HOMES - BEBANG BF HOMES INC.,BFH,JV,BEBANG ENTERPRISE INC.,1,default_inventory_account,,Account,,no_action
+BF HOMES - BEBANG BF HOMES INC.,BFH,JV,BEBANG ENTERPRISE INC.,1,default_payable_account,Creditors - BFH,Account,True,no_action
+BF HOMES - BEBANG BF HOMES INC.,BFH,JV,BEBANG ENTERPRISE INC.,1,default_receivable_account,Debtors - BFH,Account,True,no_action
+BF HOMES - BEBANG BF HOMES INC.,BFH,JV,BEBANG ENTERPRISE INC.,1,default_payroll_payable_account,,Account,,no_action
+BF HOMES - BEBANG BF HOMES INC.,BFH,JV,BEBANG ENTERPRISE INC.,1,default_employee_advance_account,,Account,,no_action
+BF HOMES - BEBANG BF HOMES INC.,BFH,JV,BEBANG ENTERPRISE INC.,1,default_expense_account,Cost of Goods Sold - BFH,Account,True,no_action
+BF HOMES - BEBANG BF HOMES INC.,BFH,JV,BEBANG ENTERPRISE INC.,1,default_income_account,Sales - BFH,Account,True,no_action
+BF HOMES - BEBANG BF HOMES INC.,BFH,JV,BEBANG ENTERPRISE INC.,1,round_off_account,Round Off - BFH,Account,True,no_action
+BF HOMES - BEBANG BF HOMES INC.,BFH,JV,BEBANG ENTERPRISE INC.,1,round_off_cost_center,,Cost Center,,no_action
+BF HOMES - BEBANG BF HOMES INC.,BFH,JV,BEBANG ENTERPRISE INC.,1,default_cash_account,Cash - BFH,Account,True,no_action
+BF HOMES - BEBANG BF HOMES INC.,BFH,JV,BEBANG ENTERPRISE INC.,1,exchange_gain_loss_account,,Account,,no_action
+BF HOMES - BEBANG BF HOMES INC.,BFH,JV,BEBANG ENTERPRISE INC.,1,accumulated_depreciation_account,,Account,,no_action
+BF HOMES - BEBANG BF HOMES INC.,BFH,JV,BEBANG ENTERPRISE INC.,1,depreciation_expense_account,,Account,,no_action
+BF HOMES - BEBANG BF HOMES INC.,BFH,JV,BEBANG ENTERPRISE INC.,1,expenses_included_in_asset_valuation,,Account,,no_action
+BF HOMES - BEBANG BF HOMES INC.,BFH,JV,BEBANG ENTERPRISE INC.,1,disposal_account,,Account,,no_action
+BF HOMES - BEBANG BF HOMES INC.,BFH,JV,BEBANG ENTERPRISE INC.,1,depreciation_cost_center,,Cost Center,,no_action
+BF HOMES - BEBANG BF HOMES INC.,BFH,JV,BEBANG ENTERPRISE INC.,1,capital_work_in_progress_account,,Account,,no_action
+BF HOMES - BEBANG BF HOMES INC.,BFH,JV,BEBANG ENTERPRISE INC.,1,asset_received_but_not_billed,,Account,,no_action
+BF HOMES - BEBANG BF HOMES INC.,BFH,JV,BEBANG ENTERPRISE INC.,1,stock_adjustment_account,,Account,,no_action
+BF HOMES - BEBANG BF HOMES INC.,BFH,JV,BEBANG ENTERPRISE INC.,1,stock_received_but_not_billed,,Account,,no_action
+BF HOMES - BEBANG BF HOMES INC.,BFH,JV,BEBANG ENTERPRISE INC.,1,expenses_included_in_valuation,,Account,,no_action
+CTTM TOMAS MORATO - B CUBED VENTURES CORP.,CTTM,Managed Franchise,,1,default_inventory_account,,Account,,no_action
+CTTM TOMAS MORATO - B CUBED VENTURES CORP.,CTTM,Managed Franchise,,1,default_payable_account,Creditors - CTTM,Account,True,no_action
+CTTM TOMAS MORATO - B CUBED VENTURES CORP.,CTTM,Managed Franchise,,1,default_receivable_account,Debtors - CTTM,Account,True,no_action
+CTTM TOMAS MORATO - B CUBED VENTURES CORP.,CTTM,Managed Franchise,,1,default_payroll_payable_account,,Account,,no_action
+CTTM TOMAS MORATO - B CUBED VENTURES CORP.,CTTM,Managed Franchise,,1,default_employee_advance_account,,Account,,no_action
+CTTM TOMAS MORATO - B CUBED VENTURES CORP.,CTTM,Managed Franchise,,1,default_expense_account,Cost of Goods Sold - CTTM,Account,True,no_action
+CTTM TOMAS MORATO - B CUBED VENTURES CORP.,CTTM,Managed Franchise,,1,default_income_account,Sales - CTTM,Account,True,no_action
+CTTM TOMAS MORATO - B CUBED VENTURES CORP.,CTTM,Managed Franchise,,1,round_off_account,Round Off - CTTM,Account,True,no_action
+CTTM TOMAS MORATO - B CUBED VENTURES CORP.,CTTM,Managed Franchise,,1,round_off_cost_center,,Cost Center,,no_action
+CTTM TOMAS MORATO - B CUBED VENTURES CORP.,CTTM,Managed Franchise,,1,default_cash_account,Cash - CTTM,Account,True,no_action
+CTTM TOMAS MORATO - B CUBED VENTURES CORP.,CTTM,Managed Franchise,,1,exchange_gain_loss_account,,Account,,no_action
+CTTM TOMAS MORATO - B CUBED VENTURES CORP.,CTTM,Managed Franchise,,1,accumulated_depreciation_account,,Account,,no_action
+CTTM TOMAS MORATO - B CUBED VENTURES CORP.,CTTM,Managed Franchise,,1,depreciation_expense_account,,Account,,no_action
+CTTM TOMAS MORATO - B CUBED VENTURES CORP.,CTTM,Managed Franchise,,1,expenses_included_in_asset_valuation,,Account,,no_action
+CTTM TOMAS MORATO - B CUBED VENTURES CORP.,CTTM,Managed Franchise,,1,disposal_account,,Account,,no_action
+CTTM TOMAS MORATO - B CUBED VENTURES CORP.,CTTM,Managed Franchise,,1,depreciation_cost_center,,Cost Center,,no_action
+CTTM TOMAS MORATO - B CUBED VENTURES CORP.,CTTM,Managed Franchise,,1,capital_work_in_progress_account,,Account,,no_action
+CTTM TOMAS MORATO - B CUBED VENTURES CORP.,CTTM,Managed Franchise,,1,asset_received_but_not_billed,,Account,,no_action
+CTTM TOMAS MORATO - B CUBED VENTURES CORP.,CTTM,Managed Franchise,,1,stock_adjustment_account,,Account,,no_action
+CTTM TOMAS MORATO - B CUBED VENTURES CORP.,CTTM,Managed Franchise,,1,stock_received_but_not_billed,,Account,,no_action
+CTTM TOMAS MORATO - B CUBED VENTURES CORP.,CTTM,Managed Franchise,,1,expenses_included_in_valuation,,Account,,no_action
+D'VERDE CALAMBA - TAJ FOOD CORP.,DVCAL,Managed Franchise,TAJ FOOD CORP.,1,default_inventory_account,,Account,,no_action
+D'VERDE CALAMBA - TAJ FOOD CORP.,DVCAL,Managed Franchise,TAJ FOOD CORP.,1,default_payable_account,Creditors - DVCAL,Account,True,no_action
+D'VERDE CALAMBA - TAJ FOOD CORP.,DVCAL,Managed Franchise,TAJ FOOD CORP.,1,default_receivable_account,Debtors - DVCAL,Account,True,no_action
+D'VERDE CALAMBA - TAJ FOOD CORP.,DVCAL,Managed Franchise,TAJ FOOD CORP.,1,default_payroll_payable_account,,Account,,no_action
+D'VERDE CALAMBA - TAJ FOOD CORP.,DVCAL,Managed Franchise,TAJ FOOD CORP.,1,default_employee_advance_account,,Account,,no_action
+D'VERDE CALAMBA - TAJ FOOD CORP.,DVCAL,Managed Franchise,TAJ FOOD CORP.,1,default_expense_account,Cost of Goods Sold - DVCAL,Account,True,no_action
+D'VERDE CALAMBA - TAJ FOOD CORP.,DVCAL,Managed Franchise,TAJ FOOD CORP.,1,default_income_account,4000110 - IN-STORE SALES - DVCAL,Account,True,no_action
+D'VERDE CALAMBA - TAJ FOOD CORP.,DVCAL,Managed Franchise,TAJ FOOD CORP.,1,round_off_account,Round Off - DVCAL,Account,True,no_action
+D'VERDE CALAMBA - TAJ FOOD CORP.,DVCAL,Managed Franchise,TAJ FOOD CORP.,1,round_off_cost_center,,Cost Center,,no_action
+D'VERDE CALAMBA - TAJ FOOD CORP.,DVCAL,Managed Franchise,TAJ FOOD CORP.,1,default_cash_account,Cash - DVCAL,Account,True,no_action
+D'VERDE CALAMBA - TAJ FOOD CORP.,DVCAL,Managed Franchise,TAJ FOOD CORP.,1,exchange_gain_loss_account,,Account,,no_action
+D'VERDE CALAMBA - TAJ FOOD CORP.,DVCAL,Managed Franchise,TAJ FOOD CORP.,1,accumulated_depreciation_account,,Account,,no_action
+D'VERDE CALAMBA - TAJ FOOD CORP.,DVCAL,Managed Franchise,TAJ FOOD CORP.,1,depreciation_expense_account,,Account,,no_action
+D'VERDE CALAMBA - TAJ FOOD CORP.,DVCAL,Managed Franchise,TAJ FOOD CORP.,1,expenses_included_in_asset_valuation,,Account,,no_action
+D'VERDE CALAMBA - TAJ FOOD CORP.,DVCAL,Managed Franchise,TAJ FOOD CORP.,1,disposal_account,,Account,,no_action
+D'VERDE CALAMBA - TAJ FOOD CORP.,DVCAL,Managed Franchise,TAJ FOOD CORP.,1,depreciation_cost_center,,Cost Center,,no_action
+D'VERDE CALAMBA - TAJ FOOD CORP.,DVCAL,Managed Franchise,TAJ FOOD CORP.,1,capital_work_in_progress_account,,Account,,no_action
+D'VERDE CALAMBA - TAJ FOOD CORP.,DVCAL,Managed Franchise,TAJ FOOD CORP.,1,asset_received_but_not_billed,,Account,,no_action
+D'VERDE CALAMBA - TAJ FOOD CORP.,DVCAL,Managed Franchise,TAJ FOOD CORP.,1,stock_adjustment_account,,Account,,no_action
+D'VERDE CALAMBA - TAJ FOOD CORP.,DVCAL,Managed Franchise,TAJ FOOD CORP.,1,stock_received_but_not_billed,,Account,,no_action
+D'VERDE CALAMBA - TAJ FOOD CORP.,DVCAL,Managed Franchise,TAJ FOOD CORP.,1,expenses_included_in_valuation,,Account,,no_action
+EVER COMMONWEALTH - DLS DESSERT CRAFT INC.,EGC,Full Franchise,,1,default_inventory_account,,Account,,no_action
+EVER COMMONWEALTH - DLS DESSERT CRAFT INC.,EGC,Full Franchise,,1,default_payable_account,Creditors - EGC,Account,True,no_action
+EVER COMMONWEALTH - DLS DESSERT CRAFT INC.,EGC,Full Franchise,,1,default_receivable_account,Debtors - EGC,Account,True,no_action
+EVER COMMONWEALTH - DLS DESSERT CRAFT INC.,EGC,Full Franchise,,1,default_payroll_payable_account,,Account,,no_action
+EVER COMMONWEALTH - DLS DESSERT CRAFT INC.,EGC,Full Franchise,,1,default_employee_advance_account,,Account,,no_action
+EVER COMMONWEALTH - DLS DESSERT CRAFT INC.,EGC,Full Franchise,,1,default_expense_account,Cost of Goods Sold - EGC,Account,True,no_action
+EVER COMMONWEALTH - DLS DESSERT CRAFT INC.,EGC,Full Franchise,,1,default_income_account,Sales - EGC,Account,True,no_action
+EVER COMMONWEALTH - DLS DESSERT CRAFT INC.,EGC,Full Franchise,,1,round_off_account,Round Off - EGC,Account,True,no_action
+EVER COMMONWEALTH - DLS DESSERT CRAFT INC.,EGC,Full Franchise,,1,round_off_cost_center,,Cost Center,,no_action
+EVER COMMONWEALTH - DLS DESSERT CRAFT INC.,EGC,Full Franchise,,1,default_cash_account,Cash - EGC,Account,True,no_action
+EVER COMMONWEALTH - DLS DESSERT CRAFT INC.,EGC,Full Franchise,,1,exchange_gain_loss_account,,Account,,no_action
+EVER COMMONWEALTH - DLS DESSERT CRAFT INC.,EGC,Full Franchise,,1,accumulated_depreciation_account,,Account,,no_action
+EVER COMMONWEALTH - DLS DESSERT CRAFT INC.,EGC,Full Franchise,,1,depreciation_expense_account,,Account,,no_action
+EVER COMMONWEALTH - DLS DESSERT CRAFT INC.,EGC,Full Franchise,,1,expenses_included_in_asset_valuation,,Account,,no_action
+EVER COMMONWEALTH - DLS DESSERT CRAFT INC.,EGC,Full Franchise,,1,disposal_account,,Account,,no_action
+EVER COMMONWEALTH - DLS DESSERT CRAFT INC.,EGC,Full Franchise,,1,depreciation_cost_center,,Cost Center,,no_action
+EVER COMMONWEALTH - DLS DESSERT CRAFT INC.,EGC,Full Franchise,,1,capital_work_in_progress_account,,Account,,no_action
+EVER COMMONWEALTH - DLS DESSERT CRAFT INC.,EGC,Full Franchise,,1,asset_received_but_not_billed,,Account,,no_action
+EVER COMMONWEALTH - DLS DESSERT CRAFT INC.,EGC,Full Franchise,,1,stock_adjustment_account,,Account,,no_action
+EVER COMMONWEALTH - DLS DESSERT CRAFT INC.,EGC,Full Franchise,,1,stock_received_but_not_billed,,Account,,no_action
+EVER COMMONWEALTH - DLS DESSERT CRAFT INC.,EGC,Full Franchise,,1,expenses_included_in_valuation,,Account,,no_action
+FESTIVAL MALL ALABANG - BEBANG FESTIVAL INC.,FMA,JV,BEBANG ENTERPRISE INC.,1,default_inventory_account,,Account,,no_action
+FESTIVAL MALL ALABANG - BEBANG FESTIVAL INC.,FMA,JV,BEBANG ENTERPRISE INC.,1,default_payable_account,Creditors - FMA,Account,True,no_action
+FESTIVAL MALL ALABANG - BEBANG FESTIVAL INC.,FMA,JV,BEBANG ENTERPRISE INC.,1,default_receivable_account,Debtors - FMA,Account,True,no_action
+FESTIVAL MALL ALABANG - BEBANG FESTIVAL INC.,FMA,JV,BEBANG ENTERPRISE INC.,1,default_payroll_payable_account,,Account,,no_action
+FESTIVAL MALL ALABANG - BEBANG FESTIVAL INC.,FMA,JV,BEBANG ENTERPRISE INC.,1,default_employee_advance_account,,Account,,no_action
+FESTIVAL MALL ALABANG - BEBANG FESTIVAL INC.,FMA,JV,BEBANG ENTERPRISE INC.,1,default_expense_account,Cost of Goods Sold - FMA,Account,True,no_action
+FESTIVAL MALL ALABANG - BEBANG FESTIVAL INC.,FMA,JV,BEBANG ENTERPRISE INC.,1,default_income_account,Sales - FMA,Account,True,no_action
+FESTIVAL MALL ALABANG - BEBANG FESTIVAL INC.,FMA,JV,BEBANG ENTERPRISE INC.,1,round_off_account,Round Off - FMA,Account,True,no_action
+FESTIVAL MALL ALABANG - BEBANG FESTIVAL INC.,FMA,JV,BEBANG ENTERPRISE INC.,1,round_off_cost_center,,Cost Center,,no_action
+FESTIVAL MALL ALABANG - BEBANG FESTIVAL INC.,FMA,JV,BEBANG ENTERPRISE INC.,1,default_cash_account,Cash - FMA,Account,True,no_action
+FESTIVAL MALL ALABANG - BEBANG FESTIVAL INC.,FMA,JV,BEBANG ENTERPRISE INC.,1,exchange_gain_loss_account,,Account,,no_action
+FESTIVAL MALL ALABANG - BEBANG FESTIVAL INC.,FMA,JV,BEBANG ENTERPRISE INC.,1,accumulated_depreciation_account,,Account,,no_action
+FESTIVAL MALL ALABANG - BEBANG FESTIVAL INC.,FMA,JV,BEBANG ENTERPRISE INC.,1,depreciation_expense_account,,Account,,no_action
+FESTIVAL MALL ALABANG - BEBANG FESTIVAL INC.,FMA,JV,BEBANG ENTERPRISE INC.,1,expenses_included_in_asset_valuation,,Account,,no_action
+FESTIVAL MALL ALABANG - BEBANG FESTIVAL INC.,FMA,JV,BEBANG ENTERPRISE INC.,1,disposal_account,,Account,,no_action
+FESTIVAL MALL ALABANG - BEBANG FESTIVAL INC.,FMA,JV,BEBANG ENTERPRISE INC.,1,depreciation_cost_center,,Cost Center,,no_action
+FESTIVAL MALL ALABANG - BEBANG FESTIVAL INC.,FMA,JV,BEBANG ENTERPRISE INC.,1,capital_work_in_progress_account,,Account,,no_action
+FESTIVAL MALL ALABANG - BEBANG FESTIVAL INC.,FMA,JV,BEBANG ENTERPRISE INC.,1,asset_received_but_not_billed,,Account,,no_action
+FESTIVAL MALL ALABANG - BEBANG FESTIVAL INC.,FMA,JV,BEBANG ENTERPRISE INC.,1,stock_adjustment_account,,Account,,no_action
+FESTIVAL MALL ALABANG - BEBANG FESTIVAL INC.,FMA,JV,BEBANG ENTERPRISE INC.,1,stock_received_but_not_billed,,Account,,no_action
+FESTIVAL MALL ALABANG - BEBANG FESTIVAL INC.,FMA,JV,BEBANG ENTERPRISE INC.,1,expenses_included_in_valuation,,Account,,no_action
+LUCKY CHINATOWN - BEBANG LCT INC.,LCT,JV,BEBANG ENTERPRISE INC.,1,default_inventory_account,,Account,,no_action
+LUCKY CHINATOWN - BEBANG LCT INC.,LCT,JV,BEBANG ENTERPRISE INC.,1,default_payable_account,Creditors - LCT,Account,True,no_action
+LUCKY CHINATOWN - BEBANG LCT INC.,LCT,JV,BEBANG ENTERPRISE INC.,1,default_receivable_account,Debtors - LCT,Account,True,no_action
+LUCKY CHINATOWN - BEBANG LCT INC.,LCT,JV,BEBANG ENTERPRISE INC.,1,default_payroll_payable_account,,Account,,no_action
+LUCKY CHINATOWN - BEBANG LCT INC.,LCT,JV,BEBANG ENTERPRISE INC.,1,default_employee_advance_account,,Account,,no_action
+LUCKY CHINATOWN - BEBANG LCT INC.,LCT,JV,BEBANG ENTERPRISE INC.,1,default_expense_account,Cost of Goods Sold - LCT,Account,True,no_action
+LUCKY CHINATOWN - BEBANG LCT INC.,LCT,JV,BEBANG ENTERPRISE INC.,1,default_income_account,Sales - LCT,Account,True,no_action
+LUCKY CHINATOWN - BEBANG LCT INC.,LCT,JV,BEBANG ENTERPRISE INC.,1,round_off_account,Round Off - LCT,Account,True,no_action
+LUCKY CHINATOWN - BEBANG LCT INC.,LCT,JV,BEBANG ENTERPRISE INC.,1,round_off_cost_center,,Cost Center,,no_action
+LUCKY CHINATOWN - BEBANG LCT INC.,LCT,JV,BEBANG ENTERPRISE INC.,1,default_cash_account,Cash - LCT,Account,True,no_action
+LUCKY CHINATOWN - BEBANG LCT INC.,LCT,JV,BEBANG ENTERPRISE INC.,1,exchange_gain_loss_account,,Account,,no_action
+LUCKY CHINATOWN - BEBANG LCT INC.,LCT,JV,BEBANG ENTERPRISE INC.,1,accumulated_depreciation_account,,Account,,no_action
+LUCKY CHINATOWN - BEBANG LCT INC.,LCT,JV,BEBANG ENTERPRISE INC.,1,depreciation_expense_account,,Account,,no_action
+LUCKY CHINATOWN - BEBANG LCT INC.,LCT,JV,BEBANG ENTERPRISE INC.,1,expenses_included_in_asset_valuation,,Account,,no_action
+LUCKY CHINATOWN - BEBANG LCT INC.,LCT,JV,BEBANG ENTERPRISE INC.,1,disposal_account,,Account,,no_action
+LUCKY CHINATOWN - BEBANG LCT INC.,LCT,JV,BEBANG ENTERPRISE INC.,1,depreciation_cost_center,,Cost Center,,no_action
+LUCKY CHINATOWN - BEBANG LCT INC.,LCT,JV,BEBANG ENTERPRISE INC.,1,capital_work_in_progress_account,,Account,,no_action
+LUCKY CHINATOWN - BEBANG LCT INC.,LCT,JV,BEBANG ENTERPRISE INC.,1,asset_received_but_not_billed,,Account,,no_action
+LUCKY CHINATOWN - BEBANG LCT INC.,LCT,JV,BEBANG ENTERPRISE INC.,1,stock_adjustment_account,,Account,,no_action
+LUCKY CHINATOWN - BEBANG LCT INC.,LCT,JV,BEBANG ENTERPRISE INC.,1,stock_received_but_not_billed,,Account,,no_action
+LUCKY CHINATOWN - BEBANG LCT INC.,LCT,JV,BEBANG ENTERPRISE INC.,1,expenses_included_in_valuation,,Account,,no_action
+MEGAWIDE PITX - BEBANG PITX INC.,PTX,JV,BEBANG ENTERPRISE INC.,1,default_inventory_account,,Account,,no_action
+MEGAWIDE PITX - BEBANG PITX INC.,PTX,JV,BEBANG ENTERPRISE INC.,1,default_payable_account,Creditors - PTX,Account,True,no_action
+MEGAWIDE PITX - BEBANG PITX INC.,PTX,JV,BEBANG ENTERPRISE INC.,1,default_receivable_account,Debtors - PTX,Account,True,no_action
+MEGAWIDE PITX - BEBANG PITX INC.,PTX,JV,BEBANG ENTERPRISE INC.,1,default_payroll_payable_account,,Account,,no_action
+MEGAWIDE PITX - BEBANG PITX INC.,PTX,JV,BEBANG ENTERPRISE INC.,1,default_employee_advance_account,,Account,,no_action
+MEGAWIDE PITX - BEBANG PITX INC.,PTX,JV,BEBANG ENTERPRISE INC.,1,default_expense_account,Cost of Goods Sold - PTX,Account,True,no_action
+MEGAWIDE PITX - BEBANG PITX INC.,PTX,JV,BEBANG ENTERPRISE INC.,1,default_income_account,Sales - PTX,Account,True,no_action
+MEGAWIDE PITX - BEBANG PITX INC.,PTX,JV,BEBANG ENTERPRISE INC.,1,round_off_account,Round Off - PTX,Account,True,no_action
+MEGAWIDE PITX - BEBANG PITX INC.,PTX,JV,BEBANG ENTERPRISE INC.,1,round_off_cost_center,,Cost Center,,no_action
+MEGAWIDE PITX - BEBANG PITX INC.,PTX,JV,BEBANG ENTERPRISE INC.,1,default_cash_account,Cash - PTX,Account,True,no_action
+MEGAWIDE PITX - BEBANG PITX INC.,PTX,JV,BEBANG ENTERPRISE INC.,1,exchange_gain_loss_account,,Account,,no_action
+MEGAWIDE PITX - BEBANG PITX INC.,PTX,JV,BEBANG ENTERPRISE INC.,1,accumulated_depreciation_account,,Account,,no_action
+MEGAWIDE PITX - BEBANG PITX INC.,PTX,JV,BEBANG ENTERPRISE INC.,1,depreciation_expense_account,,Account,,no_action
+MEGAWIDE PITX - BEBANG PITX INC.,PTX,JV,BEBANG ENTERPRISE INC.,1,expenses_included_in_asset_valuation,,Account,,no_action
+MEGAWIDE PITX - BEBANG PITX INC.,PTX,JV,BEBANG ENTERPRISE INC.,1,disposal_account,,Account,,no_action
+MEGAWIDE PITX - BEBANG PITX INC.,PTX,JV,BEBANG ENTERPRISE INC.,1,depreciation_cost_center,,Cost Center,,no_action
+MEGAWIDE PITX - BEBANG PITX INC.,PTX,JV,BEBANG ENTERPRISE INC.,1,capital_work_in_progress_account,,Account,,no_action
+MEGAWIDE PITX - BEBANG PITX INC.,PTX,JV,BEBANG ENTERPRISE INC.,1,asset_received_but_not_billed,,Account,,no_action
+MEGAWIDE PITX - BEBANG PITX INC.,PTX,JV,BEBANG ENTERPRISE INC.,1,stock_adjustment_account,,Account,,no_action
+MEGAWIDE PITX - BEBANG PITX INC.,PTX,JV,BEBANG ENTERPRISE INC.,1,stock_received_but_not_billed,,Account,,no_action
+MEGAWIDE PITX - BEBANG PITX INC.,PTX,JV,BEBANG ENTERPRISE INC.,1,expenses_included_in_valuation,,Account,,no_action
+MEGAWORLD PASEO CENTER - BEBANG PASEO INC.,MPD,JV,BEBANG ENTERPRISE INC.,1,default_inventory_account,,Account,,no_action
+MEGAWORLD PASEO CENTER - BEBANG PASEO INC.,MPD,JV,BEBANG ENTERPRISE INC.,1,default_payable_account,Creditors - MPD,Account,True,no_action
+MEGAWORLD PASEO CENTER - BEBANG PASEO INC.,MPD,JV,BEBANG ENTERPRISE INC.,1,default_receivable_account,Debtors - MPD,Account,True,no_action
+MEGAWORLD PASEO CENTER - BEBANG PASEO INC.,MPD,JV,BEBANG ENTERPRISE INC.,1,default_payroll_payable_account,,Account,,no_action
+MEGAWORLD PASEO CENTER - BEBANG PASEO INC.,MPD,JV,BEBANG ENTERPRISE INC.,1,default_employee_advance_account,,Account,,no_action
+MEGAWORLD PASEO CENTER - BEBANG PASEO INC.,MPD,JV,BEBANG ENTERPRISE INC.,1,default_expense_account,Cost of Goods Sold - MPD,Account,True,no_action
+MEGAWORLD PASEO CENTER - BEBANG PASEO INC.,MPD,JV,BEBANG ENTERPRISE INC.,1,default_income_account,Sales - MPD,Account,True,no_action
+MEGAWORLD PASEO CENTER - BEBANG PASEO INC.,MPD,JV,BEBANG ENTERPRISE INC.,1,round_off_account,Round Off - MPD,Account,True,no_action
+MEGAWORLD PASEO CENTER - BEBANG PASEO INC.,MPD,JV,BEBANG ENTERPRISE INC.,1,round_off_cost_center,,Cost Center,,no_action
+MEGAWORLD PASEO CENTER - BEBANG PASEO INC.,MPD,JV,BEBANG ENTERPRISE INC.,1,default_cash_account,Cash - MPD,Account,True,no_action
+MEGAWORLD PASEO CENTER - BEBANG PASEO INC.,MPD,JV,BEBANG ENTERPRISE INC.,1,exchange_gain_loss_account,,Account,,no_action
+MEGAWORLD PASEO CENTER - BEBANG PASEO INC.,MPD,JV,BEBANG ENTERPRISE INC.,1,accumulated_depreciation_account,,Account,,no_action
+MEGAWORLD PASEO CENTER - BEBANG PASEO INC.,MPD,JV,BEBANG ENTERPRISE INC.,1,depreciation_expense_account,,Account,,no_action
+MEGAWORLD PASEO CENTER - BEBANG PASEO INC.,MPD,JV,BEBANG ENTERPRISE INC.,1,expenses_included_in_asset_valuation,,Account,,no_action
+MEGAWORLD PASEO CENTER - BEBANG PASEO INC.,MPD,JV,BEBANG ENTERPRISE INC.,1,disposal_account,,Account,,no_action
+MEGAWORLD PASEO CENTER - BEBANG PASEO INC.,MPD,JV,BEBANG ENTERPRISE INC.,1,depreciation_cost_center,,Cost Center,,no_action
+MEGAWORLD PASEO CENTER - BEBANG PASEO INC.,MPD,JV,BEBANG ENTERPRISE INC.,1,capital_work_in_progress_account,,Account,,no_action
+MEGAWORLD PASEO CENTER - BEBANG PASEO INC.,MPD,JV,BEBANG ENTERPRISE INC.,1,asset_received_but_not_billed,,Account,,no_action
+MEGAWORLD PASEO CENTER - BEBANG PASEO INC.,MPD,JV,BEBANG ENTERPRISE INC.,1,stock_adjustment_account,,Account,,no_action
+MEGAWORLD PASEO CENTER - BEBANG PASEO INC.,MPD,JV,BEBANG ENTERPRISE INC.,1,stock_received_but_not_billed,,Account,,no_action
+MEGAWORLD PASEO CENTER - BEBANG PASEO INC.,MPD,JV,BEBANG ENTERPRISE INC.,1,expenses_included_in_valuation,,Account,,no_action
+MEGAWORLD VENICE GRAND CANAL - BEBANG VENICE GRAND CANAL INC.,VGC,JV,BEBANG ENTERPRISE INC.,1,default_inventory_account,,Account,,no_action
+MEGAWORLD VENICE GRAND CANAL - BEBANG VENICE GRAND CANAL INC.,VGC,JV,BEBANG ENTERPRISE INC.,1,default_payable_account,Creditors - VGC,Account,True,no_action
+MEGAWORLD VENICE GRAND CANAL - BEBANG VENICE GRAND CANAL INC.,VGC,JV,BEBANG ENTERPRISE INC.,1,default_receivable_account,Debtors - VGC,Account,True,no_action
+MEGAWORLD VENICE GRAND CANAL - BEBANG VENICE GRAND CANAL INC.,VGC,JV,BEBANG ENTERPRISE INC.,1,default_payroll_payable_account,,Account,,no_action
+MEGAWORLD VENICE GRAND CANAL - BEBANG VENICE GRAND CANAL INC.,VGC,JV,BEBANG ENTERPRISE INC.,1,default_employee_advance_account,,Account,,no_action
+MEGAWORLD VENICE GRAND CANAL - BEBANG VENICE GRAND CANAL INC.,VGC,JV,BEBANG ENTERPRISE INC.,1,default_expense_account,Cost of Goods Sold - VGC,Account,True,no_action
+MEGAWORLD VENICE GRAND CANAL - BEBANG VENICE GRAND CANAL INC.,VGC,JV,BEBANG ENTERPRISE INC.,1,default_income_account,Sales - VGC,Account,True,no_action
+MEGAWORLD VENICE GRAND CANAL - BEBANG VENICE GRAND CANAL INC.,VGC,JV,BEBANG ENTERPRISE INC.,1,round_off_account,Round Off - VGC,Account,True,no_action
+MEGAWORLD VENICE GRAND CANAL - BEBANG VENICE GRAND CANAL INC.,VGC,JV,BEBANG ENTERPRISE INC.,1,round_off_cost_center,,Cost Center,,no_action
+MEGAWORLD VENICE GRAND CANAL - BEBANG VENICE GRAND CANAL INC.,VGC,JV,BEBANG ENTERPRISE INC.,1,default_cash_account,Cash - VGC,Account,True,no_action
+MEGAWORLD VENICE GRAND CANAL - BEBANG VENICE GRAND CANAL INC.,VGC,JV,BEBANG ENTERPRISE INC.,1,exchange_gain_loss_account,,Account,,no_action
+MEGAWORLD VENICE GRAND CANAL - BEBANG VENICE GRAND CANAL INC.,VGC,JV,BEBANG ENTERPRISE INC.,1,accumulated_depreciation_account,,Account,,no_action
+MEGAWORLD VENICE GRAND CANAL - BEBANG VENICE GRAND CANAL INC.,VGC,JV,BEBANG ENTERPRISE INC.,1,depreciation_expense_account,,Account,,no_action
+MEGAWORLD VENICE GRAND CANAL - BEBANG VENICE GRAND CANAL INC.,VGC,JV,BEBANG ENTERPRISE INC.,1,expenses_included_in_asset_valuation,,Account,,no_action
+MEGAWORLD VENICE GRAND CANAL - BEBANG VENICE GRAND CANAL INC.,VGC,JV,BEBANG ENTERPRISE INC.,1,disposal_account,,Account,,no_action
+MEGAWORLD VENICE GRAND CANAL - BEBANG VENICE GRAND CANAL INC.,VGC,JV,BEBANG ENTERPRISE INC.,1,depreciation_cost_center,,Cost Center,,no_action
+MEGAWORLD VENICE GRAND CANAL - BEBANG VENICE GRAND CANAL INC.,VGC,JV,BEBANG ENTERPRISE INC.,1,capital_work_in_progress_account,,Account,,no_action
+MEGAWORLD VENICE GRAND CANAL - BEBANG VENICE GRAND CANAL INC.,VGC,JV,BEBANG ENTERPRISE INC.,1,asset_received_but_not_billed,,Account,,no_action
+MEGAWORLD VENICE GRAND CANAL - BEBANG VENICE GRAND CANAL INC.,VGC,JV,BEBANG ENTERPRISE INC.,1,stock_adjustment_account,,Account,,no_action
+MEGAWORLD VENICE GRAND CANAL - BEBANG VENICE GRAND CANAL INC.,VGC,JV,BEBANG ENTERPRISE INC.,1,stock_received_but_not_billed,,Account,,no_action
+MEGAWORLD VENICE GRAND CANAL - BEBANG VENICE GRAND CANAL INC.,VGC,JV,BEBANG ENTERPRISE INC.,1,expenses_included_in_valuation,,Account,,no_action
+NAIA T3 - HALO-HALO TERMINAL FOOD CORP.,NAIA,Managed Franchise,,1,default_inventory_account,,Account,,no_action
+NAIA T3 - HALO-HALO TERMINAL FOOD CORP.,NAIA,Managed Franchise,,1,default_payable_account,Creditors - NAIA,Account,True,no_action
+NAIA T3 - HALO-HALO TERMINAL FOOD CORP.,NAIA,Managed Franchise,,1,default_receivable_account,Debtors - NAIA,Account,True,no_action
+NAIA T3 - HALO-HALO TERMINAL FOOD CORP.,NAIA,Managed Franchise,,1,default_payroll_payable_account,,Account,,no_action
+NAIA T3 - HALO-HALO TERMINAL FOOD CORP.,NAIA,Managed Franchise,,1,default_employee_advance_account,,Account,,no_action
+NAIA T3 - HALO-HALO TERMINAL FOOD CORP.,NAIA,Managed Franchise,,1,default_expense_account,Cost of Goods Sold - NAIA,Account,True,no_action
+NAIA T3 - HALO-HALO TERMINAL FOOD CORP.,NAIA,Managed Franchise,,1,default_income_account,Sales - NAIA,Account,True,no_action
+NAIA T3 - HALO-HALO TERMINAL FOOD CORP.,NAIA,Managed Franchise,,1,round_off_account,Round Off - NAIA,Account,True,no_action
+NAIA T3 - HALO-HALO TERMINAL FOOD CORP.,NAIA,Managed Franchise,,1,round_off_cost_center,,Cost Center,,no_action
+NAIA T3 - HALO-HALO TERMINAL FOOD CORP.,NAIA,Managed Franchise,,1,default_cash_account,Cash - NAIA,Account,True,no_action
+NAIA T3 - HALO-HALO TERMINAL FOOD CORP.,NAIA,Managed Franchise,,1,exchange_gain_loss_account,,Account,,no_action
+NAIA T3 - HALO-HALO TERMINAL FOOD CORP.,NAIA,Managed Franchise,,1,accumulated_depreciation_account,,Account,,no_action
+NAIA T3 - HALO-HALO TERMINAL FOOD CORP.,NAIA,Managed Franchise,,1,depreciation_expense_account,,Account,,no_action
+NAIA T3 - HALO-HALO TERMINAL FOOD CORP.,NAIA,Managed Franchise,,1,expenses_included_in_asset_valuation,,Account,,no_action
+NAIA T3 - HALO-HALO TERMINAL FOOD CORP.,NAIA,Managed Franchise,,1,disposal_account,,Account,,no_action
+NAIA T3 - HALO-HALO TERMINAL FOOD CORP.,NAIA,Managed Franchise,,1,depreciation_cost_center,,Cost Center,,no_action
+NAIA T3 - HALO-HALO TERMINAL FOOD CORP.,NAIA,Managed Franchise,,1,capital_work_in_progress_account,,Account,,no_action
+NAIA T3 - HALO-HALO TERMINAL FOOD CORP.,NAIA,Managed Franchise,,1,asset_received_but_not_billed,,Account,,no_action
+NAIA T3 - HALO-HALO TERMINAL FOOD CORP.,NAIA,Managed Franchise,,1,stock_adjustment_account,,Account,,no_action
+NAIA T3 - HALO-HALO TERMINAL FOOD CORP.,NAIA,Managed Franchise,,1,stock_received_but_not_billed,,Account,,no_action
+NAIA T3 - HALO-HALO TERMINAL FOOD CORP.,NAIA,Managed Franchise,,1,expenses_included_in_valuation,,Account,,no_action
+ORTIGAS ESTANCIA - BB ESTANCIA FOOD CORP.,ESM,Managed Franchise,,1,default_inventory_account,,Account,,no_action
+ORTIGAS ESTANCIA - BB ESTANCIA FOOD CORP.,ESM,Managed Franchise,,1,default_payable_account,Creditors - ESM,Account,True,no_action
+ORTIGAS ESTANCIA - BB ESTANCIA FOOD CORP.,ESM,Managed Franchise,,1,default_receivable_account,Debtors - ESM,Account,True,no_action
+ORTIGAS ESTANCIA - BB ESTANCIA FOOD CORP.,ESM,Managed Franchise,,1,default_payroll_payable_account,,Account,,no_action
+ORTIGAS ESTANCIA - BB ESTANCIA FOOD CORP.,ESM,Managed Franchise,,1,default_employee_advance_account,,Account,,no_action
+ORTIGAS ESTANCIA - BB ESTANCIA FOOD CORP.,ESM,Managed Franchise,,1,default_expense_account,Cost of Goods Sold - ESM,Account,True,no_action
+ORTIGAS ESTANCIA - BB ESTANCIA FOOD CORP.,ESM,Managed Franchise,,1,default_income_account,Sales - ESM,Account,True,no_action
+ORTIGAS ESTANCIA - BB ESTANCIA FOOD CORP.,ESM,Managed Franchise,,1,round_off_account,Round Off - ESM,Account,True,no_action
+ORTIGAS ESTANCIA - BB ESTANCIA FOOD CORP.,ESM,Managed Franchise,,1,round_off_cost_center,,Cost Center,,no_action
+ORTIGAS ESTANCIA - BB ESTANCIA FOOD CORP.,ESM,Managed Franchise,,1,default_cash_account,Cash - ESM,Account,True,no_action
+ORTIGAS ESTANCIA - BB ESTANCIA FOOD CORP.,ESM,Managed Franchise,,1,exchange_gain_loss_account,,Account,,no_action
+ORTIGAS ESTANCIA - BB ESTANCIA FOOD CORP.,ESM,Managed Franchise,,1,accumulated_depreciation_account,,Account,,no_action
+ORTIGAS ESTANCIA - BB ESTANCIA FOOD CORP.,ESM,Managed Franchise,,1,depreciation_expense_account,,Account,,no_action
+ORTIGAS ESTANCIA - BB ESTANCIA FOOD CORP.,ESM,Managed Franchise,,1,expenses_included_in_asset_valuation,,Account,,no_action
+ORTIGAS ESTANCIA - BB ESTANCIA FOOD CORP.,ESM,Managed Franchise,,1,disposal_account,,Account,,no_action
+ORTIGAS ESTANCIA - BB ESTANCIA FOOD CORP.,ESM,Managed Franchise,,1,depreciation_cost_center,,Cost Center,,no_action
+ORTIGAS ESTANCIA - BB ESTANCIA FOOD CORP.,ESM,Managed Franchise,,1,capital_work_in_progress_account,,Account,,no_action
+ORTIGAS ESTANCIA - BB ESTANCIA FOOD CORP.,ESM,Managed Franchise,,1,asset_received_but_not_billed,,Account,,no_action
+ORTIGAS ESTANCIA - BB ESTANCIA FOOD CORP.,ESM,Managed Franchise,,1,stock_adjustment_account,,Account,,no_action
+ORTIGAS ESTANCIA - BB ESTANCIA FOOD CORP.,ESM,Managed Franchise,,1,stock_received_but_not_billed,,Account,,no_action
+ORTIGAS ESTANCIA - BB ESTANCIA FOOD CORP.,ESM,Managed Franchise,,1,expenses_included_in_valuation,,Account,,no_action
+ORTIGAS GREENHILLS - BEIFRANCHISE FOOD OPC,GHO,Managed Franchise,,1,default_inventory_account,Stock In Hand - GHO,Account,True,no_action
+ORTIGAS GREENHILLS - BEIFRANCHISE FOOD OPC,GHO,Managed Franchise,,1,default_payable_account,Creditors - GHO,Account,True,no_action
+ORTIGAS GREENHILLS - BEIFRANCHISE FOOD OPC,GHO,Managed Franchise,,1,default_receivable_account,Debtors - GHO,Account,True,no_action
+ORTIGAS GREENHILLS - BEIFRANCHISE FOOD OPC,GHO,Managed Franchise,,1,default_payroll_payable_account,Payroll Payable - GHO,Account,True,no_action
+ORTIGAS GREENHILLS - BEIFRANCHISE FOOD OPC,GHO,Managed Franchise,,1,default_employee_advance_account,Employee Advances - GHO,Account,True,no_action
+ORTIGAS GREENHILLS - BEIFRANCHISE FOOD OPC,GHO,Managed Franchise,,1,default_expense_account,Cost of Goods Sold - GHO,Account,True,no_action
+ORTIGAS GREENHILLS - BEIFRANCHISE FOOD OPC,GHO,Managed Franchise,,1,default_income_account,Sales - GHO,Account,True,no_action
+ORTIGAS GREENHILLS - BEIFRANCHISE FOOD OPC,GHO,Managed Franchise,,1,round_off_account,Round Off - GHO,Account,True,no_action
+ORTIGAS GREENHILLS - BEIFRANCHISE FOOD OPC,GHO,Managed Franchise,,1,round_off_cost_center,Main - GHO,Cost Center,True,no_action
+ORTIGAS GREENHILLS - BEIFRANCHISE FOOD OPC,GHO,Managed Franchise,,1,default_cash_account,Cash - GHO,Account,True,no_action
+ORTIGAS GREENHILLS - BEIFRANCHISE FOOD OPC,GHO,Managed Franchise,,1,exchange_gain_loss_account,Exchange Gain/Loss - GHO,Account,True,no_action
+ORTIGAS GREENHILLS - BEIFRANCHISE FOOD OPC,GHO,Managed Franchise,,1,accumulated_depreciation_account,Accumulated Depreciation - GHO,Account,True,no_action
+ORTIGAS GREENHILLS - BEIFRANCHISE FOOD OPC,GHO,Managed Franchise,,1,depreciation_expense_account,Depreciation - GHO,Account,True,no_action
+ORTIGAS GREENHILLS - BEIFRANCHISE FOOD OPC,GHO,Managed Franchise,,1,expenses_included_in_asset_valuation,Expenses Included In Asset Valuation - GHO,Account,True,no_action
+ORTIGAS GREENHILLS - BEIFRANCHISE FOOD OPC,GHO,Managed Franchise,,1,disposal_account,Gain/Loss on Asset Disposal - GHO,Account,True,no_action
+ORTIGAS GREENHILLS - BEIFRANCHISE FOOD OPC,GHO,Managed Franchise,,1,depreciation_cost_center,Main - GHO,Cost Center,True,no_action
+ORTIGAS GREENHILLS - BEIFRANCHISE FOOD OPC,GHO,Managed Franchise,,1,capital_work_in_progress_account,CWIP Account - GHO,Account,True,no_action
+ORTIGAS GREENHILLS - BEIFRANCHISE FOOD OPC,GHO,Managed Franchise,,1,asset_received_but_not_billed,Asset Received But Not Billed - GHO,Account,True,no_action
+ORTIGAS GREENHILLS - BEIFRANCHISE FOOD OPC,GHO,Managed Franchise,,1,stock_adjustment_account,Stock Adjustment - GHO,Account,True,no_action
+ORTIGAS GREENHILLS - BEIFRANCHISE FOOD OPC,GHO,Managed Franchise,,1,stock_received_but_not_billed,Stock Received But Not Billed - GHO,Account,True,no_action
+ORTIGAS GREENHILLS - BEIFRANCHISE FOOD OPC,GHO,Managed Franchise,,1,expenses_included_in_valuation,Expenses Included In Valuation - GHO,Account,True,no_action
+ROBINSONS ANTIPOLO - BEBANG ENTERPRISE INC.,ROA,JV,BEBANG ENTERPRISE INC.,1,default_inventory_account,,Account,,no_action
+ROBINSONS ANTIPOLO - BEBANG ENTERPRISE INC.,ROA,JV,BEBANG ENTERPRISE INC.,1,default_payable_account,,Account,,no_action
+ROBINSONS ANTIPOLO - BEBANG ENTERPRISE INC.,ROA,JV,BEBANG ENTERPRISE INC.,1,default_receivable_account,,Account,,no_action
+ROBINSONS ANTIPOLO - BEBANG ENTERPRISE INC.,ROA,JV,BEBANG ENTERPRISE INC.,1,default_payroll_payable_account,,Account,,no_action
+ROBINSONS ANTIPOLO - BEBANG ENTERPRISE INC.,ROA,JV,BEBANG ENTERPRISE INC.,1,default_employee_advance_account,,Account,,no_action
+ROBINSONS ANTIPOLO - BEBANG ENTERPRISE INC.,ROA,JV,BEBANG ENTERPRISE INC.,1,default_expense_account,,Account,,no_action
+ROBINSONS ANTIPOLO - BEBANG ENTERPRISE INC.,ROA,JV,BEBANG ENTERPRISE INC.,1,default_income_account,,Account,,no_action
+ROBINSONS ANTIPOLO - BEBANG ENTERPRISE INC.,ROA,JV,BEBANG ENTERPRISE INC.,1,round_off_account,,Account,,no_action
+ROBINSONS ANTIPOLO - BEBANG ENTERPRISE INC.,ROA,JV,BEBANG ENTERPRISE INC.,1,round_off_cost_center,,Cost Center,,no_action
+ROBINSONS ANTIPOLO - BEBANG ENTERPRISE INC.,ROA,JV,BEBANG ENTERPRISE INC.,1,default_cash_account,,Account,,no_action
+ROBINSONS ANTIPOLO - BEBANG ENTERPRISE INC.,ROA,JV,BEBANG ENTERPRISE INC.,1,exchange_gain_loss_account,,Account,,no_action
+ROBINSONS ANTIPOLO - BEBANG ENTERPRISE INC.,ROA,JV,BEBANG ENTERPRISE INC.,1,accumulated_depreciation_account,,Account,,no_action
+ROBINSONS ANTIPOLO - BEBANG ENTERPRISE INC.,ROA,JV,BEBANG ENTERPRISE INC.,1,depreciation_expense_account,,Account,,no_action
+ROBINSONS ANTIPOLO - BEBANG ENTERPRISE INC.,ROA,JV,BEBANG ENTERPRISE INC.,1,expenses_included_in_asset_valuation,,Account,,no_action
+ROBINSONS ANTIPOLO - BEBANG ENTERPRISE INC.,ROA,JV,BEBANG ENTERPRISE INC.,1,disposal_account,,Account,,no_action
+ROBINSONS ANTIPOLO - BEBANG ENTERPRISE INC.,ROA,JV,BEBANG ENTERPRISE INC.,1,depreciation_cost_center,,Cost Center,,no_action
+ROBINSONS ANTIPOLO - BEBANG ENTERPRISE INC.,ROA,JV,BEBANG ENTERPRISE INC.,1,capital_work_in_progress_account,,Account,,no_action
+ROBINSONS ANTIPOLO - BEBANG ENTERPRISE INC.,ROA,JV,BEBANG ENTERPRISE INC.,1,asset_received_but_not_billed,,Account,,no_action
+ROBINSONS ANTIPOLO - BEBANG ENTERPRISE INC.,ROA,JV,BEBANG ENTERPRISE INC.,1,stock_adjustment_account,,Account,,no_action
+ROBINSONS ANTIPOLO - BEBANG ENTERPRISE INC.,ROA,JV,BEBANG ENTERPRISE INC.,1,stock_received_but_not_billed,,Account,,no_action
+ROBINSONS ANTIPOLO - BEBANG ENTERPRISE INC.,ROA,JV,BEBANG ENTERPRISE INC.,1,expenses_included_in_valuation,,Account,,no_action
+ROBINSONS GALLERIA SOUTH - TUNGSTEN CAPITAL HOLDINGS OPC,ROBGS,Managed Franchise,TUNGSTEN CAPITAL HOLDINGS OPC,1,default_inventory_account,,Account,,no_action
+ROBINSONS GALLERIA SOUTH - TUNGSTEN CAPITAL HOLDINGS OPC,ROBGS,Managed Franchise,TUNGSTEN CAPITAL HOLDINGS OPC,1,default_payable_account,Creditors - ROBGS,Account,True,no_action
+ROBINSONS GALLERIA SOUTH - TUNGSTEN CAPITAL HOLDINGS OPC,ROBGS,Managed Franchise,TUNGSTEN CAPITAL HOLDINGS OPC,1,default_receivable_account,Debtors - ROBGS,Account,True,no_action
+ROBINSONS GALLERIA SOUTH - TUNGSTEN CAPITAL HOLDINGS OPC,ROBGS,Managed Franchise,TUNGSTEN CAPITAL HOLDINGS OPC,1,default_payroll_payable_account,,Account,,no_action
+ROBINSONS GALLERIA SOUTH - TUNGSTEN CAPITAL HOLDINGS OPC,ROBGS,Managed Franchise,TUNGSTEN CAPITAL HOLDINGS OPC,1,default_employee_advance_account,,Account,,no_action
+ROBINSONS GALLERIA SOUTH - TUNGSTEN CAPITAL HOLDINGS OPC,ROBGS,Managed Franchise,TUNGSTEN CAPITAL HOLDINGS OPC,1,default_expense_account,Cost of Goods Sold - ROBGS,Account,True,no_action
+ROBINSONS GALLERIA SOUTH - TUNGSTEN CAPITAL HOLDINGS OPC,ROBGS,Managed Franchise,TUNGSTEN CAPITAL HOLDINGS OPC,1,default_income_account,4000110 - IN-STORE SALES - ROBGS,Account,True,no_action
+ROBINSONS GALLERIA SOUTH - TUNGSTEN CAPITAL HOLDINGS OPC,ROBGS,Managed Franchise,TUNGSTEN CAPITAL HOLDINGS OPC,1,round_off_account,Round Off - ROBGS,Account,True,no_action
+ROBINSONS GALLERIA SOUTH - TUNGSTEN CAPITAL HOLDINGS OPC,ROBGS,Managed Franchise,TUNGSTEN CAPITAL HOLDINGS OPC,1,round_off_cost_center,,Cost Center,,no_action
+ROBINSONS GALLERIA SOUTH - TUNGSTEN CAPITAL HOLDINGS OPC,ROBGS,Managed Franchise,TUNGSTEN CAPITAL HOLDINGS OPC,1,default_cash_account,Cash - ROBGS,Account,True,no_action
+ROBINSONS GALLERIA SOUTH - TUNGSTEN CAPITAL HOLDINGS OPC,ROBGS,Managed Franchise,TUNGSTEN CAPITAL HOLDINGS OPC,1,exchange_gain_loss_account,,Account,,no_action
+ROBINSONS GALLERIA SOUTH - TUNGSTEN CAPITAL HOLDINGS OPC,ROBGS,Managed Franchise,TUNGSTEN CAPITAL HOLDINGS OPC,1,accumulated_depreciation_account,,Account,,no_action
+ROBINSONS GALLERIA SOUTH - TUNGSTEN CAPITAL HOLDINGS OPC,ROBGS,Managed Franchise,TUNGSTEN CAPITAL HOLDINGS OPC,1,depreciation_expense_account,,Account,,no_action
+ROBINSONS GALLERIA SOUTH - TUNGSTEN CAPITAL HOLDINGS OPC,ROBGS,Managed Franchise,TUNGSTEN CAPITAL HOLDINGS OPC,1,expenses_included_in_asset_valuation,,Account,,no_action
+ROBINSONS GALLERIA SOUTH - TUNGSTEN CAPITAL HOLDINGS OPC,ROBGS,Managed Franchise,TUNGSTEN CAPITAL HOLDINGS OPC,1,disposal_account,,Account,,no_action
+ROBINSONS GALLERIA SOUTH - TUNGSTEN CAPITAL HOLDINGS OPC,ROBGS,Managed Franchise,TUNGSTEN CAPITAL HOLDINGS OPC,1,depreciation_cost_center,,Cost Center,,no_action
+ROBINSONS GALLERIA SOUTH - TUNGSTEN CAPITAL HOLDINGS OPC,ROBGS,Managed Franchise,TUNGSTEN CAPITAL HOLDINGS OPC,1,capital_work_in_progress_account,,Account,,no_action
+ROBINSONS GALLERIA SOUTH - TUNGSTEN CAPITAL HOLDINGS OPC,ROBGS,Managed Franchise,TUNGSTEN CAPITAL HOLDINGS OPC,1,asset_received_but_not_billed,,Account,,no_action
+ROBINSONS GALLERIA SOUTH - TUNGSTEN CAPITAL HOLDINGS OPC,ROBGS,Managed Franchise,TUNGSTEN CAPITAL HOLDINGS OPC,1,stock_adjustment_account,,Account,,no_action
+ROBINSONS GALLERIA SOUTH - TUNGSTEN CAPITAL HOLDINGS OPC,ROBGS,Managed Franchise,TUNGSTEN CAPITAL HOLDINGS OPC,1,stock_received_but_not_billed,,Account,,no_action
+ROBINSONS GALLERIA SOUTH - TUNGSTEN CAPITAL HOLDINGS OPC,ROBGS,Managed Franchise,TUNGSTEN CAPITAL HOLDINGS OPC,1,expenses_included_in_valuation,,Account,,no_action
+ROBINSONS GENERAL TRIAS - BEBANG MEGA INC.,ROBGT,Managed Franchise,BEBANG MEGA INC.,1,default_inventory_account,,Account,,no_action
+ROBINSONS GENERAL TRIAS - BEBANG MEGA INC.,ROBGT,Managed Franchise,BEBANG MEGA INC.,1,default_payable_account,Creditors - ROBGT,Account,True,no_action
+ROBINSONS GENERAL TRIAS - BEBANG MEGA INC.,ROBGT,Managed Franchise,BEBANG MEGA INC.,1,default_receivable_account,Debtors - ROBGT,Account,True,no_action
+ROBINSONS GENERAL TRIAS - BEBANG MEGA INC.,ROBGT,Managed Franchise,BEBANG MEGA INC.,1,default_payroll_payable_account,,Account,,no_action
+ROBINSONS GENERAL TRIAS - BEBANG MEGA INC.,ROBGT,Managed Franchise,BEBANG MEGA INC.,1,default_employee_advance_account,,Account,,no_action
+ROBINSONS GENERAL TRIAS - BEBANG MEGA INC.,ROBGT,Managed Franchise,BEBANG MEGA INC.,1,default_expense_account,Cost of Goods Sold - ROBGT,Account,True,no_action
+ROBINSONS GENERAL TRIAS - BEBANG MEGA INC.,ROBGT,Managed Franchise,BEBANG MEGA INC.,1,default_income_account,4000110 - IN-STORE SALES - ROBGT,Account,True,no_action
+ROBINSONS GENERAL TRIAS - BEBANG MEGA INC.,ROBGT,Managed Franchise,BEBANG MEGA INC.,1,round_off_account,Round Off - ROBGT,Account,True,no_action
+ROBINSONS GENERAL TRIAS - BEBANG MEGA INC.,ROBGT,Managed Franchise,BEBANG MEGA INC.,1,round_off_cost_center,,Cost Center,,no_action
+ROBINSONS GENERAL TRIAS - BEBANG MEGA INC.,ROBGT,Managed Franchise,BEBANG MEGA INC.,1,default_cash_account,Cash - ROBGT,Account,True,no_action
+ROBINSONS GENERAL TRIAS - BEBANG MEGA INC.,ROBGT,Managed Franchise,BEBANG MEGA INC.,1,exchange_gain_loss_account,,Account,,no_action
+ROBINSONS GENERAL TRIAS - BEBANG MEGA INC.,ROBGT,Managed Franchise,BEBANG MEGA INC.,1,accumulated_depreciation_account,,Account,,no_action
+ROBINSONS GENERAL TRIAS - BEBANG MEGA INC.,ROBGT,Managed Franchise,BEBANG MEGA INC.,1,depreciation_expense_account,,Account,,no_action
+ROBINSONS GENERAL TRIAS - BEBANG MEGA INC.,ROBGT,Managed Franchise,BEBANG MEGA INC.,1,expenses_included_in_asset_valuation,,Account,,no_action
+ROBINSONS GENERAL TRIAS - BEBANG MEGA INC.,ROBGT,Managed Franchise,BEBANG MEGA INC.,1,disposal_account,,Account,,no_action
+ROBINSONS GENERAL TRIAS - BEBANG MEGA INC.,ROBGT,Managed Franchise,BEBANG MEGA INC.,1,depreciation_cost_center,,Cost Center,,no_action
+ROBINSONS GENERAL TRIAS - BEBANG MEGA INC.,ROBGT,Managed Franchise,BEBANG MEGA INC.,1,capital_work_in_progress_account,,Account,,no_action
+ROBINSONS GENERAL TRIAS - BEBANG MEGA INC.,ROBGT,Managed Franchise,BEBANG MEGA INC.,1,asset_received_but_not_billed,,Account,,no_action
+ROBINSONS GENERAL TRIAS - BEBANG MEGA INC.,ROBGT,Managed Franchise,BEBANG MEGA INC.,1,stock_adjustment_account,,Account,,no_action
+ROBINSONS GENERAL TRIAS - BEBANG MEGA INC.,ROBGT,Managed Franchise,BEBANG MEGA INC.,1,stock_received_but_not_billed,,Account,,no_action
+ROBINSONS GENERAL TRIAS - BEBANG MEGA INC.,ROBGT,Managed Franchise,BEBANG MEGA INC.,1,expenses_included_in_valuation,,Account,,no_action
+ROBINSONS IMUS - BEBANG MEGA INC.,ROBIM,Managed Franchise,BEBANG MEGA INC.,1,default_inventory_account,,Account,,no_action
+ROBINSONS IMUS - BEBANG MEGA INC.,ROBIM,Managed Franchise,BEBANG MEGA INC.,1,default_payable_account,Creditors - ROBIM,Account,True,no_action
+ROBINSONS IMUS - BEBANG MEGA INC.,ROBIM,Managed Franchise,BEBANG MEGA INC.,1,default_receivable_account,Debtors - ROBIM,Account,True,no_action
+ROBINSONS IMUS - BEBANG MEGA INC.,ROBIM,Managed Franchise,BEBANG MEGA INC.,1,default_payroll_payable_account,,Account,,no_action
+ROBINSONS IMUS - BEBANG MEGA INC.,ROBIM,Managed Franchise,BEBANG MEGA INC.,1,default_employee_advance_account,,Account,,no_action
+ROBINSONS IMUS - BEBANG MEGA INC.,ROBIM,Managed Franchise,BEBANG MEGA INC.,1,default_expense_account,Cost of Goods Sold - ROBIM,Account,True,no_action
+ROBINSONS IMUS - BEBANG MEGA INC.,ROBIM,Managed Franchise,BEBANG MEGA INC.,1,default_income_account,4000110 - IN-STORE SALES - ROBIM,Account,True,no_action
+ROBINSONS IMUS - BEBANG MEGA INC.,ROBIM,Managed Franchise,BEBANG MEGA INC.,1,round_off_account,Round Off - ROBIM,Account,True,no_action
+ROBINSONS IMUS - BEBANG MEGA INC.,ROBIM,Managed Franchise,BEBANG MEGA INC.,1,round_off_cost_center,,Cost Center,,no_action
+ROBINSONS IMUS - BEBANG MEGA INC.,ROBIM,Managed Franchise,BEBANG MEGA INC.,1,default_cash_account,Cash - ROBIM,Account,True,no_action
+ROBINSONS IMUS - BEBANG MEGA INC.,ROBIM,Managed Franchise,BEBANG MEGA INC.,1,exchange_gain_loss_account,,Account,,no_action
+ROBINSONS IMUS - BEBANG MEGA INC.,ROBIM,Managed Franchise,BEBANG MEGA INC.,1,accumulated_depreciation_account,,Account,,no_action
+ROBINSONS IMUS - BEBANG MEGA INC.,ROBIM,Managed Franchise,BEBANG MEGA INC.,1,depreciation_expense_account,,Account,,no_action
+ROBINSONS IMUS - BEBANG MEGA INC.,ROBIM,Managed Franchise,BEBANG MEGA INC.,1,expenses_included_in_asset_valuation,,Account,,no_action
+ROBINSONS IMUS - BEBANG MEGA INC.,ROBIM,Managed Franchise,BEBANG MEGA INC.,1,disposal_account,,Account,,no_action
+ROBINSONS IMUS - BEBANG MEGA INC.,ROBIM,Managed Franchise,BEBANG MEGA INC.,1,depreciation_cost_center,,Cost Center,,no_action
+ROBINSONS IMUS - BEBANG MEGA INC.,ROBIM,Managed Franchise,BEBANG MEGA INC.,1,capital_work_in_progress_account,,Account,,no_action
+ROBINSONS IMUS - BEBANG MEGA INC.,ROBIM,Managed Franchise,BEBANG MEGA INC.,1,asset_received_but_not_billed,,Account,,no_action
+ROBINSONS IMUS - BEBANG MEGA INC.,ROBIM,Managed Franchise,BEBANG MEGA INC.,1,stock_adjustment_account,,Account,,no_action
+ROBINSONS IMUS - BEBANG MEGA INC.,ROBIM,Managed Franchise,BEBANG MEGA INC.,1,stock_received_but_not_billed,,Account,,no_action
+ROBINSONS IMUS - BEBANG MEGA INC.,ROBIM,Managed Franchise,BEBANG MEGA INC.,1,expenses_included_in_valuation,,Account,,no_action
+ROBINSONS PLACE DASMARINAS - FREEZE DELIGHT INC.,ROBDA,Managed Franchise,,1,default_inventory_account,,Account,,no_action
+ROBINSONS PLACE DASMARINAS - FREEZE DELIGHT INC.,ROBDA,Managed Franchise,,1,default_payable_account,2110100 - Creditors - ROBDA,Account,True,no_action
+ROBINSONS PLACE DASMARINAS - FREEZE DELIGHT INC.,ROBDA,Managed Franchise,,1,default_receivable_account,1120100 - Debtors - ROBDA,Account,True,no_action
+ROBINSONS PLACE DASMARINAS - FREEZE DELIGHT INC.,ROBDA,Managed Franchise,,1,default_payroll_payable_account,,Account,,no_action
+ROBINSONS PLACE DASMARINAS - FREEZE DELIGHT INC.,ROBDA,Managed Franchise,,1,default_employee_advance_account,,Account,,no_action
+ROBINSONS PLACE DASMARINAS - FREEZE DELIGHT INC.,ROBDA,Managed Franchise,,1,default_expense_account,5100100 - Cost of Goods Sold - ROBDA,Account,True,no_action
+ROBINSONS PLACE DASMARINAS - FREEZE DELIGHT INC.,ROBDA,Managed Franchise,,1,default_income_account,4000110 - IN-STORE SALES - ROBDA,Account,True,no_action
+ROBINSONS PLACE DASMARINAS - FREEZE DELIGHT INC.,ROBDA,Managed Franchise,,1,round_off_account,2120000 - ROUND OFF - ROBDA,Account,True,no_action
+ROBINSONS PLACE DASMARINAS - FREEZE DELIGHT INC.,ROBDA,Managed Franchise,,1,round_off_cost_center,,Cost Center,,no_action
+ROBINSONS PLACE DASMARINAS - FREEZE DELIGHT INC.,ROBDA,Managed Franchise,,1,default_cash_account,1110100 - CASH ON HAND - ROBDA,Account,True,no_action
+ROBINSONS PLACE DASMARINAS - FREEZE DELIGHT INC.,ROBDA,Managed Franchise,,1,exchange_gain_loss_account,,Account,,no_action
+ROBINSONS PLACE DASMARINAS - FREEZE DELIGHT INC.,ROBDA,Managed Franchise,,1,accumulated_depreciation_account,,Account,,no_action
+ROBINSONS PLACE DASMARINAS - FREEZE DELIGHT INC.,ROBDA,Managed Franchise,,1,depreciation_expense_account,,Account,,no_action
+ROBINSONS PLACE DASMARINAS - FREEZE DELIGHT INC.,ROBDA,Managed Franchise,,1,expenses_included_in_asset_valuation,,Account,,no_action
+ROBINSONS PLACE DASMARINAS - FREEZE DELIGHT INC.,ROBDA,Managed Franchise,,1,disposal_account,,Account,,no_action
+ROBINSONS PLACE DASMARINAS - FREEZE DELIGHT INC.,ROBDA,Managed Franchise,,1,depreciation_cost_center,,Cost Center,,no_action
+ROBINSONS PLACE DASMARINAS - FREEZE DELIGHT INC.,ROBDA,Managed Franchise,,1,capital_work_in_progress_account,,Account,,no_action
+ROBINSONS PLACE DASMARINAS - FREEZE DELIGHT INC.,ROBDA,Managed Franchise,,1,asset_received_but_not_billed,,Account,,no_action
+ROBINSONS PLACE DASMARINAS - FREEZE DELIGHT INC.,ROBDA,Managed Franchise,,1,stock_adjustment_account,,Account,,no_action
+ROBINSONS PLACE DASMARINAS - FREEZE DELIGHT INC.,ROBDA,Managed Franchise,,1,stock_received_but_not_billed,,Account,,no_action
+ROBINSONS PLACE DASMARINAS - FREEZE DELIGHT INC.,ROBDA,Managed Franchise,,1,expenses_included_in_valuation,,Account,,no_action
+SM BICUTAN - BEBANG SM BICUTAN INC.,SMBIC,JV,BEBANG ENTERPRISE INC.,1,default_inventory_account,,Account,,no_action
+SM BICUTAN - BEBANG SM BICUTAN INC.,SMBIC,JV,BEBANG ENTERPRISE INC.,1,default_payable_account,Creditors - SMBIC,Account,True,no_action
+SM BICUTAN - BEBANG SM BICUTAN INC.,SMBIC,JV,BEBANG ENTERPRISE INC.,1,default_receivable_account,Debtors - SMBIC,Account,True,no_action
+SM BICUTAN - BEBANG SM BICUTAN INC.,SMBIC,JV,BEBANG ENTERPRISE INC.,1,default_payroll_payable_account,,Account,,no_action
+SM BICUTAN - BEBANG SM BICUTAN INC.,SMBIC,JV,BEBANG ENTERPRISE INC.,1,default_employee_advance_account,,Account,,no_action
+SM BICUTAN - BEBANG SM BICUTAN INC.,SMBIC,JV,BEBANG ENTERPRISE INC.,1,default_expense_account,Cost of Goods Sold - SMBIC,Account,True,no_action
+SM BICUTAN - BEBANG SM BICUTAN INC.,SMBIC,JV,BEBANG ENTERPRISE INC.,1,default_income_account,Sales - SMBIC,Account,True,no_action
+SM BICUTAN - BEBANG SM BICUTAN INC.,SMBIC,JV,BEBANG ENTERPRISE INC.,1,round_off_account,Round Off - SMBIC,Account,True,no_action
+SM BICUTAN - BEBANG SM BICUTAN INC.,SMBIC,JV,BEBANG ENTERPRISE INC.,1,round_off_cost_center,,Cost Center,,no_action
+SM BICUTAN - BEBANG SM BICUTAN INC.,SMBIC,JV,BEBANG ENTERPRISE INC.,1,default_cash_account,Cash - SMBIC,Account,True,no_action
+SM BICUTAN - BEBANG SM BICUTAN INC.,SMBIC,JV,BEBANG ENTERPRISE INC.,1,exchange_gain_loss_account,,Account,,no_action
+SM BICUTAN - BEBANG SM BICUTAN INC.,SMBIC,JV,BEBANG ENTERPRISE INC.,1,accumulated_depreciation_account,,Account,,no_action
+SM BICUTAN - BEBANG SM BICUTAN INC.,SMBIC,JV,BEBANG ENTERPRISE INC.,1,depreciation_expense_account,,Account,,no_action
+SM BICUTAN - BEBANG SM BICUTAN INC.,SMBIC,JV,BEBANG ENTERPRISE INC.,1,expenses_included_in_asset_valuation,,Account,,no_action
+SM BICUTAN - BEBANG SM BICUTAN INC.,SMBIC,JV,BEBANG ENTERPRISE INC.,1,disposal_account,,Account,,no_action
+SM BICUTAN - BEBANG SM BICUTAN INC.,SMBIC,JV,BEBANG ENTERPRISE INC.,1,depreciation_cost_center,,Cost Center,,no_action
+SM BICUTAN - BEBANG SM BICUTAN INC.,SMBIC,JV,BEBANG ENTERPRISE INC.,1,capital_work_in_progress_account,,Account,,no_action
+SM BICUTAN - BEBANG SM BICUTAN INC.,SMBIC,JV,BEBANG ENTERPRISE INC.,1,asset_received_but_not_billed,,Account,,no_action
+SM BICUTAN - BEBANG SM BICUTAN INC.,SMBIC,JV,BEBANG ENTERPRISE INC.,1,stock_adjustment_account,,Account,,no_action
+SM BICUTAN - BEBANG SM BICUTAN INC.,SMBIC,JV,BEBANG ENTERPRISE INC.,1,stock_received_but_not_billed,,Account,,no_action
+SM BICUTAN - BEBANG SM BICUTAN INC.,SMBIC,JV,BEBANG ENTERPRISE INC.,1,expenses_included_in_valuation,,Account,,no_action
+SM CALOOCAN - TAJ FOOD CORP.,SMCAL,Managed Franchise,TAJ FOOD CORP.,1,default_inventory_account,,Account,,no_action
+SM CALOOCAN - TAJ FOOD CORP.,SMCAL,Managed Franchise,TAJ FOOD CORP.,1,default_payable_account,Creditors - SMCAL,Account,True,no_action
+SM CALOOCAN - TAJ FOOD CORP.,SMCAL,Managed Franchise,TAJ FOOD CORP.,1,default_receivable_account,Debtors - SMCAL,Account,True,no_action
+SM CALOOCAN - TAJ FOOD CORP.,SMCAL,Managed Franchise,TAJ FOOD CORP.,1,default_payroll_payable_account,,Account,,no_action
+SM CALOOCAN - TAJ FOOD CORP.,SMCAL,Managed Franchise,TAJ FOOD CORP.,1,default_employee_advance_account,,Account,,no_action
+SM CALOOCAN - TAJ FOOD CORP.,SMCAL,Managed Franchise,TAJ FOOD CORP.,1,default_expense_account,Cost of Goods Sold - SMCAL,Account,True,no_action
+SM CALOOCAN - TAJ FOOD CORP.,SMCAL,Managed Franchise,TAJ FOOD CORP.,1,default_income_account,4000110 - IN-STORE SALES - SMCAL,Account,True,no_action
+SM CALOOCAN - TAJ FOOD CORP.,SMCAL,Managed Franchise,TAJ FOOD CORP.,1,round_off_account,Round Off - SMCAL,Account,True,no_action
+SM CALOOCAN - TAJ FOOD CORP.,SMCAL,Managed Franchise,TAJ FOOD CORP.,1,round_off_cost_center,,Cost Center,,no_action
+SM CALOOCAN - TAJ FOOD CORP.,SMCAL,Managed Franchise,TAJ FOOD CORP.,1,default_cash_account,Cash - SMCAL,Account,True,no_action
+SM CALOOCAN - TAJ FOOD CORP.,SMCAL,Managed Franchise,TAJ FOOD CORP.,1,exchange_gain_loss_account,,Account,,no_action
+SM CALOOCAN - TAJ FOOD CORP.,SMCAL,Managed Franchise,TAJ FOOD CORP.,1,accumulated_depreciation_account,,Account,,no_action
+SM CALOOCAN - TAJ FOOD CORP.,SMCAL,Managed Franchise,TAJ FOOD CORP.,1,depreciation_expense_account,,Account,,no_action
+SM CALOOCAN - TAJ FOOD CORP.,SMCAL,Managed Franchise,TAJ FOOD CORP.,1,expenses_included_in_asset_valuation,,Account,,no_action
+SM CALOOCAN - TAJ FOOD CORP.,SMCAL,Managed Franchise,TAJ FOOD CORP.,1,disposal_account,,Account,,no_action
+SM CALOOCAN - TAJ FOOD CORP.,SMCAL,Managed Franchise,TAJ FOOD CORP.,1,depreciation_cost_center,,Cost Center,,no_action
+SM CALOOCAN - TAJ FOOD CORP.,SMCAL,Managed Franchise,TAJ FOOD CORP.,1,capital_work_in_progress_account,,Account,,no_action
+SM CALOOCAN - TAJ FOOD CORP.,SMCAL,Managed Franchise,TAJ FOOD CORP.,1,asset_received_but_not_billed,,Account,,no_action
+SM CALOOCAN - TAJ FOOD CORP.,SMCAL,Managed Franchise,TAJ FOOD CORP.,1,stock_adjustment_account,,Account,,no_action
+SM CALOOCAN - TAJ FOOD CORP.,SMCAL,Managed Franchise,TAJ FOOD CORP.,1,stock_received_but_not_billed,,Account,,no_action
+SM CALOOCAN - TAJ FOOD CORP.,SMCAL,Managed Franchise,TAJ FOOD CORP.,1,expenses_included_in_valuation,,Account,,no_action
+SM CLARK - RED TALDAWA FOODS OPC,SMCLK,Managed Franchise,,1,default_inventory_account,,Account,,no_action
+SM CLARK - RED TALDAWA FOODS OPC,SMCLK,Managed Franchise,,1,default_payable_account,Creditors - SMCLK,Account,True,no_action
+SM CLARK - RED TALDAWA FOODS OPC,SMCLK,Managed Franchise,,1,default_receivable_account,Debtors - SMCLK,Account,True,no_action
+SM CLARK - RED TALDAWA FOODS OPC,SMCLK,Managed Franchise,,1,default_payroll_payable_account,,Account,,no_action
+SM CLARK - RED TALDAWA FOODS OPC,SMCLK,Managed Franchise,,1,default_employee_advance_account,,Account,,no_action
+SM CLARK - RED TALDAWA FOODS OPC,SMCLK,Managed Franchise,,1,default_expense_account,Cost of Goods Sold - SMCLK,Account,True,no_action
+SM CLARK - RED TALDAWA FOODS OPC,SMCLK,Managed Franchise,,1,default_income_account,Sales - SMCLK,Account,True,no_action
+SM CLARK - RED TALDAWA FOODS OPC,SMCLK,Managed Franchise,,1,round_off_account,Round Off - SMCLK,Account,True,no_action
+SM CLARK - RED TALDAWA FOODS OPC,SMCLK,Managed Franchise,,1,round_off_cost_center,,Cost Center,,no_action
+SM CLARK - RED TALDAWA FOODS OPC,SMCLK,Managed Franchise,,1,default_cash_account,Cash - SMCLK,Account,True,no_action
+SM CLARK - RED TALDAWA FOODS OPC,SMCLK,Managed Franchise,,1,exchange_gain_loss_account,,Account,,no_action
+SM CLARK - RED TALDAWA FOODS OPC,SMCLK,Managed Franchise,,1,accumulated_depreciation_account,,Account,,no_action
+SM CLARK - RED TALDAWA FOODS OPC,SMCLK,Managed Franchise,,1,depreciation_expense_account,,Account,,no_action
+SM CLARK - RED TALDAWA FOODS OPC,SMCLK,Managed Franchise,,1,expenses_included_in_asset_valuation,,Account,,no_action
+SM CLARK - RED TALDAWA FOODS OPC,SMCLK,Managed Franchise,,1,disposal_account,,Account,,no_action
+SM CLARK - RED TALDAWA FOODS OPC,SMCLK,Managed Franchise,,1,depreciation_cost_center,,Cost Center,,no_action
+SM CLARK - RED TALDAWA FOODS OPC,SMCLK,Managed Franchise,,1,capital_work_in_progress_account,,Account,,no_action
+SM CLARK - RED TALDAWA FOODS OPC,SMCLK,Managed Franchise,,1,asset_received_but_not_billed,,Account,,no_action
+SM CLARK - RED TALDAWA FOODS OPC,SMCLK,Managed Franchise,,1,stock_adjustment_account,,Account,,no_action
+SM CLARK - RED TALDAWA FOODS OPC,SMCLK,Managed Franchise,,1,stock_received_but_not_billed,,Account,,no_action
+SM CLARK - RED TALDAWA FOODS OPC,SMCLK,Managed Franchise,,1,expenses_included_in_valuation,,Account,,no_action
+SM EAST ORTIGAS - BEBANG SMEO INC.,SMEO,JV,BEBANG ENTERPRISE INC.,1,default_inventory_account,,Account,,no_action
+SM EAST ORTIGAS - BEBANG SMEO INC.,SMEO,JV,BEBANG ENTERPRISE INC.,1,default_payable_account,Creditors - SMEO,Account,True,no_action
+SM EAST ORTIGAS - BEBANG SMEO INC.,SMEO,JV,BEBANG ENTERPRISE INC.,1,default_receivable_account,Debtors - SMEO,Account,True,no_action
+SM EAST ORTIGAS - BEBANG SMEO INC.,SMEO,JV,BEBANG ENTERPRISE INC.,1,default_payroll_payable_account,,Account,,no_action
+SM EAST ORTIGAS - BEBANG SMEO INC.,SMEO,JV,BEBANG ENTERPRISE INC.,1,default_employee_advance_account,,Account,,no_action
+SM EAST ORTIGAS - BEBANG SMEO INC.,SMEO,JV,BEBANG ENTERPRISE INC.,1,default_expense_account,Cost of Goods Sold - SMEO,Account,True,no_action
+SM EAST ORTIGAS - BEBANG SMEO INC.,SMEO,JV,BEBANG ENTERPRISE INC.,1,default_income_account,Sales - SMEO,Account,True,no_action
+SM EAST ORTIGAS - BEBANG SMEO INC.,SMEO,JV,BEBANG ENTERPRISE INC.,1,round_off_account,Round Off - SMEO,Account,True,no_action
+SM EAST ORTIGAS - BEBANG SMEO INC.,SMEO,JV,BEBANG ENTERPRISE INC.,1,round_off_cost_center,,Cost Center,,no_action
+SM EAST ORTIGAS - BEBANG SMEO INC.,SMEO,JV,BEBANG ENTERPRISE INC.,1,default_cash_account,Cash - SMEO,Account,True,no_action
+SM EAST ORTIGAS - BEBANG SMEO INC.,SMEO,JV,BEBANG ENTERPRISE INC.,1,exchange_gain_loss_account,,Account,,no_action
+SM EAST ORTIGAS - BEBANG SMEO INC.,SMEO,JV,BEBANG ENTERPRISE INC.,1,accumulated_depreciation_account,,Account,,no_action
+SM EAST ORTIGAS - BEBANG SMEO INC.,SMEO,JV,BEBANG ENTERPRISE INC.,1,depreciation_expense_account,,Account,,no_action
+SM EAST ORTIGAS - BEBANG SMEO INC.,SMEO,JV,BEBANG ENTERPRISE INC.,1,expenses_included_in_asset_valuation,,Account,,no_action
+SM EAST ORTIGAS - BEBANG SMEO INC.,SMEO,JV,BEBANG ENTERPRISE INC.,1,disposal_account,,Account,,no_action
+SM EAST ORTIGAS - BEBANG SMEO INC.,SMEO,JV,BEBANG ENTERPRISE INC.,1,depreciation_cost_center,,Cost Center,,no_action
+SM EAST ORTIGAS - BEBANG SMEO INC.,SMEO,JV,BEBANG ENTERPRISE INC.,1,capital_work_in_progress_account,,Account,,no_action
+SM EAST ORTIGAS - BEBANG SMEO INC.,SMEO,JV,BEBANG ENTERPRISE INC.,1,asset_received_but_not_billed,,Account,,no_action
+SM EAST ORTIGAS - BEBANG SMEO INC.,SMEO,JV,BEBANG ENTERPRISE INC.,1,stock_adjustment_account,,Account,,no_action
+SM EAST ORTIGAS - BEBANG SMEO INC.,SMEO,JV,BEBANG ENTERPRISE INC.,1,stock_received_but_not_billed,,Account,,no_action
+SM EAST ORTIGAS - BEBANG SMEO INC.,SMEO,JV,BEBANG ENTERPRISE INC.,1,expenses_included_in_valuation,,Account,,no_action
+SM GRAND CENTRAL - BEBANG GRAND CENTRAL INC.,SMGC,JV,BEBANG ENTERPRISE INC.,1,default_inventory_account,,Account,,no_action
+SM GRAND CENTRAL - BEBANG GRAND CENTRAL INC.,SMGC,JV,BEBANG ENTERPRISE INC.,1,default_payable_account,Creditors - SMGC,Account,True,no_action
+SM GRAND CENTRAL - BEBANG GRAND CENTRAL INC.,SMGC,JV,BEBANG ENTERPRISE INC.,1,default_receivable_account,Debtors - SMGC,Account,True,no_action
+SM GRAND CENTRAL - BEBANG GRAND CENTRAL INC.,SMGC,JV,BEBANG ENTERPRISE INC.,1,default_payroll_payable_account,,Account,,no_action
+SM GRAND CENTRAL - BEBANG GRAND CENTRAL INC.,SMGC,JV,BEBANG ENTERPRISE INC.,1,default_employee_advance_account,,Account,,no_action
+SM GRAND CENTRAL - BEBANG GRAND CENTRAL INC.,SMGC,JV,BEBANG ENTERPRISE INC.,1,default_expense_account,Cost of Goods Sold - SMGC,Account,True,no_action
+SM GRAND CENTRAL - BEBANG GRAND CENTRAL INC.,SMGC,JV,BEBANG ENTERPRISE INC.,1,default_income_account,Sales - SMGC,Account,True,no_action
+SM GRAND CENTRAL - BEBANG GRAND CENTRAL INC.,SMGC,JV,BEBANG ENTERPRISE INC.,1,round_off_account,Round Off - SMGC,Account,True,no_action
+SM GRAND CENTRAL - BEBANG GRAND CENTRAL INC.,SMGC,JV,BEBANG ENTERPRISE INC.,1,round_off_cost_center,,Cost Center,,no_action
+SM GRAND CENTRAL - BEBANG GRAND CENTRAL INC.,SMGC,JV,BEBANG ENTERPRISE INC.,1,default_cash_account,Cash - SMGC,Account,True,no_action
+SM GRAND CENTRAL - BEBANG GRAND CENTRAL INC.,SMGC,JV,BEBANG ENTERPRISE INC.,1,exchange_gain_loss_account,,Account,,no_action
+SM GRAND CENTRAL - BEBANG GRAND CENTRAL INC.,SMGC,JV,BEBANG ENTERPRISE INC.,1,accumulated_depreciation_account,,Account,,no_action
+SM GRAND CENTRAL - BEBANG GRAND CENTRAL INC.,SMGC,JV,BEBANG ENTERPRISE INC.,1,depreciation_expense_account,,Account,,no_action
+SM GRAND CENTRAL - BEBANG GRAND CENTRAL INC.,SMGC,JV,BEBANG ENTERPRISE INC.,1,expenses_included_in_asset_valuation,,Account,,no_action
+SM GRAND CENTRAL - BEBANG GRAND CENTRAL INC.,SMGC,JV,BEBANG ENTERPRISE INC.,1,disposal_account,,Account,,no_action
+SM GRAND CENTRAL - BEBANG GRAND CENTRAL INC.,SMGC,JV,BEBANG ENTERPRISE INC.,1,depreciation_cost_center,,Cost Center,,no_action
+SM GRAND CENTRAL - BEBANG GRAND CENTRAL INC.,SMGC,JV,BEBANG ENTERPRISE INC.,1,capital_work_in_progress_account,,Account,,no_action
+SM GRAND CENTRAL - BEBANG GRAND CENTRAL INC.,SMGC,JV,BEBANG ENTERPRISE INC.,1,asset_received_but_not_billed,,Account,,no_action
+SM GRAND CENTRAL - BEBANG GRAND CENTRAL INC.,SMGC,JV,BEBANG ENTERPRISE INC.,1,stock_adjustment_account,,Account,,no_action
+SM GRAND CENTRAL - BEBANG GRAND CENTRAL INC.,SMGC,JV,BEBANG ENTERPRISE INC.,1,stock_received_but_not_billed,,Account,,no_action
+SM GRAND CENTRAL - BEBANG GRAND CENTRAL INC.,SMGC,JV,BEBANG ENTERPRISE INC.,1,expenses_included_in_valuation,,Account,,no_action
+SM MALL OF ASIA - BEBANG SMOA INC.,SMMOA,JV,BEBANG ENTERPRISE INC.,1,default_inventory_account,,Account,,no_action
+SM MALL OF ASIA - BEBANG SMOA INC.,SMMOA,JV,BEBANG ENTERPRISE INC.,1,default_payable_account,Creditors - SMMOA,Account,True,no_action
+SM MALL OF ASIA - BEBANG SMOA INC.,SMMOA,JV,BEBANG ENTERPRISE INC.,1,default_receivable_account,Debtors - SMMOA,Account,True,no_action
+SM MALL OF ASIA - BEBANG SMOA INC.,SMMOA,JV,BEBANG ENTERPRISE INC.,1,default_payroll_payable_account,,Account,,no_action
+SM MALL OF ASIA - BEBANG SMOA INC.,SMMOA,JV,BEBANG ENTERPRISE INC.,1,default_employee_advance_account,,Account,,no_action
+SM MALL OF ASIA - BEBANG SMOA INC.,SMMOA,JV,BEBANG ENTERPRISE INC.,1,default_expense_account,Cost of Goods Sold - SMMOA,Account,True,no_action
+SM MALL OF ASIA - BEBANG SMOA INC.,SMMOA,JV,BEBANG ENTERPRISE INC.,1,default_income_account,Sales - SMMOA,Account,True,no_action
+SM MALL OF ASIA - BEBANG SMOA INC.,SMMOA,JV,BEBANG ENTERPRISE INC.,1,round_off_account,Round Off - SMMOA,Account,True,no_action
+SM MALL OF ASIA - BEBANG SMOA INC.,SMMOA,JV,BEBANG ENTERPRISE INC.,1,round_off_cost_center,,Cost Center,,no_action
+SM MALL OF ASIA - BEBANG SMOA INC.,SMMOA,JV,BEBANG ENTERPRISE INC.,1,default_cash_account,Cash - SMMOA,Account,True,no_action
+SM MALL OF ASIA - BEBANG SMOA INC.,SMMOA,JV,BEBANG ENTERPRISE INC.,1,exchange_gain_loss_account,,Account,,no_action
+SM MALL OF ASIA - BEBANG SMOA INC.,SMMOA,JV,BEBANG ENTERPRISE INC.,1,accumulated_depreciation_account,,Account,,no_action
+SM MALL OF ASIA - BEBANG SMOA INC.,SMMOA,JV,BEBANG ENTERPRISE INC.,1,depreciation_expense_account,,Account,,no_action
+SM MALL OF ASIA - BEBANG SMOA INC.,SMMOA,JV,BEBANG ENTERPRISE INC.,1,expenses_included_in_asset_valuation,,Account,,no_action
+SM MALL OF ASIA - BEBANG SMOA INC.,SMMOA,JV,BEBANG ENTERPRISE INC.,1,disposal_account,,Account,,no_action
+SM MALL OF ASIA - BEBANG SMOA INC.,SMMOA,JV,BEBANG ENTERPRISE INC.,1,depreciation_cost_center,,Cost Center,,no_action
+SM MALL OF ASIA - BEBANG SMOA INC.,SMMOA,JV,BEBANG ENTERPRISE INC.,1,capital_work_in_progress_account,,Account,,no_action
+SM MALL OF ASIA - BEBANG SMOA INC.,SMMOA,JV,BEBANG ENTERPRISE INC.,1,asset_received_but_not_billed,,Account,,no_action
+SM MALL OF ASIA - BEBANG SMOA INC.,SMMOA,JV,BEBANG ENTERPRISE INC.,1,stock_adjustment_account,,Account,,no_action
+SM MALL OF ASIA - BEBANG SMOA INC.,SMMOA,JV,BEBANG ENTERPRISE INC.,1,stock_received_but_not_billed,,Account,,no_action
+SM MALL OF ASIA - BEBANG SMOA INC.,SMMOA,JV,BEBANG ENTERPRISE INC.,1,expenses_included_in_valuation,,Account,,no_action
+SM MANILA - BEBANG ENTERPRISE INC.,SMM,JV,BEBANG ENTERPRISE INC.,1,default_inventory_account,,Account,,no_action
+SM MANILA - BEBANG ENTERPRISE INC.,SMM,JV,BEBANG ENTERPRISE INC.,1,default_payable_account,,Account,,no_action
+SM MANILA - BEBANG ENTERPRISE INC.,SMM,JV,BEBANG ENTERPRISE INC.,1,default_receivable_account,,Account,,no_action
+SM MANILA - BEBANG ENTERPRISE INC.,SMM,JV,BEBANG ENTERPRISE INC.,1,default_payroll_payable_account,,Account,,no_action
+SM MANILA - BEBANG ENTERPRISE INC.,SMM,JV,BEBANG ENTERPRISE INC.,1,default_employee_advance_account,,Account,,no_action
+SM MANILA - BEBANG ENTERPRISE INC.,SMM,JV,BEBANG ENTERPRISE INC.,1,default_expense_account,,Account,,no_action
+SM MANILA - BEBANG ENTERPRISE INC.,SMM,JV,BEBANG ENTERPRISE INC.,1,default_income_account,,Account,,no_action
+SM MANILA - BEBANG ENTERPRISE INC.,SMM,JV,BEBANG ENTERPRISE INC.,1,round_off_account,,Account,,no_action
+SM MANILA - BEBANG ENTERPRISE INC.,SMM,JV,BEBANG ENTERPRISE INC.,1,round_off_cost_center,,Cost Center,,no_action
+SM MANILA - BEBANG ENTERPRISE INC.,SMM,JV,BEBANG ENTERPRISE INC.,1,default_cash_account,,Account,,no_action
+SM MANILA - BEBANG ENTERPRISE INC.,SMM,JV,BEBANG ENTERPRISE INC.,1,exchange_gain_loss_account,,Account,,no_action
+SM MANILA - BEBANG ENTERPRISE INC.,SMM,JV,BEBANG ENTERPRISE INC.,1,accumulated_depreciation_account,,Account,,no_action
+SM MANILA - BEBANG ENTERPRISE INC.,SMM,JV,BEBANG ENTERPRISE INC.,1,depreciation_expense_account,,Account,,no_action
+SM MANILA - BEBANG ENTERPRISE INC.,SMM,JV,BEBANG ENTERPRISE INC.,1,expenses_included_in_asset_valuation,,Account,,no_action
+SM MANILA - BEBANG ENTERPRISE INC.,SMM,JV,BEBANG ENTERPRISE INC.,1,disposal_account,,Account,,no_action
+SM MANILA - BEBANG ENTERPRISE INC.,SMM,JV,BEBANG ENTERPRISE INC.,1,depreciation_cost_center,,Cost Center,,no_action
+SM MANILA - BEBANG ENTERPRISE INC.,SMM,JV,BEBANG ENTERPRISE INC.,1,capital_work_in_progress_account,,Account,,no_action
+SM MANILA - BEBANG ENTERPRISE INC.,SMM,JV,BEBANG ENTERPRISE INC.,1,asset_received_but_not_billed,,Account,,no_action
+SM MANILA - BEBANG ENTERPRISE INC.,SMM,JV,BEBANG ENTERPRISE INC.,1,stock_adjustment_account,,Account,,no_action
+SM MANILA - BEBANG ENTERPRISE INC.,SMM,JV,BEBANG ENTERPRISE INC.,1,stock_received_but_not_billed,,Account,,no_action
+SM MANILA - BEBANG ENTERPRISE INC.,SMM,JV,BEBANG ENTERPRISE INC.,1,expenses_included_in_valuation,,Account,,no_action
+SM MARIKINA - BEBANG SM MARIKINA INC.,SMK,JV,BEBANG ENTERPRISE INC.,1,default_inventory_account,Stock In Hand - SMK,Account,True,no_action
+SM MARIKINA - BEBANG SM MARIKINA INC.,SMK,JV,BEBANG ENTERPRISE INC.,1,default_payable_account,Creditors - SMK,Account,True,no_action
+SM MARIKINA - BEBANG SM MARIKINA INC.,SMK,JV,BEBANG ENTERPRISE INC.,1,default_receivable_account,Debtors - SMK,Account,True,no_action
+SM MARIKINA - BEBANG SM MARIKINA INC.,SMK,JV,BEBANG ENTERPRISE INC.,1,default_payroll_payable_account,,Account,,no_action
+SM MARIKINA - BEBANG SM MARIKINA INC.,SMK,JV,BEBANG ENTERPRISE INC.,1,default_employee_advance_account,,Account,,no_action
+SM MARIKINA - BEBANG SM MARIKINA INC.,SMK,JV,BEBANG ENTERPRISE INC.,1,default_expense_account,Cost of Goods Sold - SMK,Account,True,no_action
+SM MARIKINA - BEBANG SM MARIKINA INC.,SMK,JV,BEBANG ENTERPRISE INC.,1,default_income_account,Sales - SMK,Account,True,no_action
+SM MARIKINA - BEBANG SM MARIKINA INC.,SMK,JV,BEBANG ENTERPRISE INC.,1,round_off_account,Round Off - SMK,Account,True,no_action
+SM MARIKINA - BEBANG SM MARIKINA INC.,SMK,JV,BEBANG ENTERPRISE INC.,1,round_off_cost_center,Main - SMK,Cost Center,True,no_action
+SM MARIKINA - BEBANG SM MARIKINA INC.,SMK,JV,BEBANG ENTERPRISE INC.,1,default_cash_account,Cash - SMK,Account,True,no_action
+SM MARIKINA - BEBANG SM MARIKINA INC.,SMK,JV,BEBANG ENTERPRISE INC.,1,exchange_gain_loss_account,,Account,,no_action
+SM MARIKINA - BEBANG SM MARIKINA INC.,SMK,JV,BEBANG ENTERPRISE INC.,1,accumulated_depreciation_account,,Account,,no_action
+SM MARIKINA - BEBANG SM MARIKINA INC.,SMK,JV,BEBANG ENTERPRISE INC.,1,depreciation_expense_account,,Account,,no_action
+SM MARIKINA - BEBANG SM MARIKINA INC.,SMK,JV,BEBANG ENTERPRISE INC.,1,expenses_included_in_asset_valuation,,Account,,no_action
+SM MARIKINA - BEBANG SM MARIKINA INC.,SMK,JV,BEBANG ENTERPRISE INC.,1,disposal_account,,Account,,no_action
+SM MARIKINA - BEBANG SM MARIKINA INC.,SMK,JV,BEBANG ENTERPRISE INC.,1,depreciation_cost_center,,Cost Center,,no_action
+SM MARIKINA - BEBANG SM MARIKINA INC.,SMK,JV,BEBANG ENTERPRISE INC.,1,capital_work_in_progress_account,,Account,,no_action
+SM MARIKINA - BEBANG SM MARIKINA INC.,SMK,JV,BEBANG ENTERPRISE INC.,1,asset_received_but_not_billed,,Account,,no_action
+SM MARIKINA - BEBANG SM MARIKINA INC.,SMK,JV,BEBANG ENTERPRISE INC.,1,stock_adjustment_account,Stock Adjustment - SMK,Account,True,no_action
+SM MARIKINA - BEBANG SM MARIKINA INC.,SMK,JV,BEBANG ENTERPRISE INC.,1,stock_received_but_not_billed,Stock Received But Not Billed - BEI,Account,True,no_action
+SM MARIKINA - BEBANG SM MARIKINA INC.,SMK,JV,BEBANG ENTERPRISE INC.,1,expenses_included_in_valuation,Expenses Included In Valuation - SMK,Account,True,no_action
+SM MARILAO - BEBANG MARILAO INC.,SMMAR,JV,BEBANG ENTERPRISE INC.,1,default_inventory_account,,Account,,no_action
+SM MARILAO - BEBANG MARILAO INC.,SMMAR,JV,BEBANG ENTERPRISE INC.,1,default_payable_account,Creditors - SMMAR,Account,True,no_action
+SM MARILAO - BEBANG MARILAO INC.,SMMAR,JV,BEBANG ENTERPRISE INC.,1,default_receivable_account,Debtors - SMMAR,Account,True,no_action
+SM MARILAO - BEBANG MARILAO INC.,SMMAR,JV,BEBANG ENTERPRISE INC.,1,default_payroll_payable_account,,Account,,no_action
+SM MARILAO - BEBANG MARILAO INC.,SMMAR,JV,BEBANG ENTERPRISE INC.,1,default_employee_advance_account,,Account,,no_action
+SM MARILAO - BEBANG MARILAO INC.,SMMAR,JV,BEBANG ENTERPRISE INC.,1,default_expense_account,Cost of Goods Sold - SMMAR,Account,True,no_action
+SM MARILAO - BEBANG MARILAO INC.,SMMAR,JV,BEBANG ENTERPRISE INC.,1,default_income_account,Sales - SMMAR,Account,True,no_action
+SM MARILAO - BEBANG MARILAO INC.,SMMAR,JV,BEBANG ENTERPRISE INC.,1,round_off_account,Round Off - SMMAR,Account,True,no_action
+SM MARILAO - BEBANG MARILAO INC.,SMMAR,JV,BEBANG ENTERPRISE INC.,1,round_off_cost_center,,Cost Center,,no_action
+SM MARILAO - BEBANG MARILAO INC.,SMMAR,JV,BEBANG ENTERPRISE INC.,1,default_cash_account,Cash - SMMAR,Account,True,no_action
+SM MARILAO - BEBANG MARILAO INC.,SMMAR,JV,BEBANG ENTERPRISE INC.,1,exchange_gain_loss_account,,Account,,no_action
+SM MARILAO - BEBANG MARILAO INC.,SMMAR,JV,BEBANG ENTERPRISE INC.,1,accumulated_depreciation_account,,Account,,no_action
+SM MARILAO - BEBANG MARILAO INC.,SMMAR,JV,BEBANG ENTERPRISE INC.,1,depreciation_expense_account,,Account,,no_action
+SM MARILAO - BEBANG MARILAO INC.,SMMAR,JV,BEBANG ENTERPRISE INC.,1,expenses_included_in_asset_valuation,,Account,,no_action
+SM MARILAO - BEBANG MARILAO INC.,SMMAR,JV,BEBANG ENTERPRISE INC.,1,disposal_account,,Account,,no_action
+SM MARILAO - BEBANG MARILAO INC.,SMMAR,JV,BEBANG ENTERPRISE INC.,1,depreciation_cost_center,,Cost Center,,no_action
+SM MARILAO - BEBANG MARILAO INC.,SMMAR,JV,BEBANG ENTERPRISE INC.,1,capital_work_in_progress_account,,Account,,no_action
+SM MARILAO - BEBANG MARILAO INC.,SMMAR,JV,BEBANG ENTERPRISE INC.,1,asset_received_but_not_billed,,Account,,no_action
+SM MARILAO - BEBANG MARILAO INC.,SMMAR,JV,BEBANG ENTERPRISE INC.,1,stock_adjustment_account,,Account,,no_action
+SM MARILAO - BEBANG MARILAO INC.,SMMAR,JV,BEBANG ENTERPRISE INC.,1,stock_received_but_not_billed,,Account,,no_action
+SM MARILAO - BEBANG MARILAO INC.,SMMAR,JV,BEBANG ENTERPRISE INC.,1,expenses_included_in_valuation,,Account,,no_action
+SM MEGAMALL - BEBANG ENTERPRISE INC.,SMMM,JV,BEBANG ENTERPRISE INC.,1,default_inventory_account,,Account,,no_action
+SM MEGAMALL - BEBANG ENTERPRISE INC.,SMMM,JV,BEBANG ENTERPRISE INC.,1,default_payable_account,,Account,,no_action
+SM MEGAMALL - BEBANG ENTERPRISE INC.,SMMM,JV,BEBANG ENTERPRISE INC.,1,default_receivable_account,,Account,,no_action
+SM MEGAMALL - BEBANG ENTERPRISE INC.,SMMM,JV,BEBANG ENTERPRISE INC.,1,default_payroll_payable_account,,Account,,no_action
+SM MEGAMALL - BEBANG ENTERPRISE INC.,SMMM,JV,BEBANG ENTERPRISE INC.,1,default_employee_advance_account,,Account,,no_action
+SM MEGAMALL - BEBANG ENTERPRISE INC.,SMMM,JV,BEBANG ENTERPRISE INC.,1,default_expense_account,,Account,,no_action
+SM MEGAMALL - BEBANG ENTERPRISE INC.,SMMM,JV,BEBANG ENTERPRISE INC.,1,default_income_account,,Account,,no_action
+SM MEGAMALL - BEBANG ENTERPRISE INC.,SMMM,JV,BEBANG ENTERPRISE INC.,1,round_off_account,,Account,,no_action
+SM MEGAMALL - BEBANG ENTERPRISE INC.,SMMM,JV,BEBANG ENTERPRISE INC.,1,round_off_cost_center,,Cost Center,,no_action
+SM MEGAMALL - BEBANG ENTERPRISE INC.,SMMM,JV,BEBANG ENTERPRISE INC.,1,default_cash_account,,Account,,no_action
+SM MEGAMALL - BEBANG ENTERPRISE INC.,SMMM,JV,BEBANG ENTERPRISE INC.,1,exchange_gain_loss_account,,Account,,no_action
+SM MEGAMALL - BEBANG ENTERPRISE INC.,SMMM,JV,BEBANG ENTERPRISE INC.,1,accumulated_depreciation_account,,Account,,no_action
+SM MEGAMALL - BEBANG ENTERPRISE INC.,SMMM,JV,BEBANG ENTERPRISE INC.,1,depreciation_expense_account,,Account,,no_action
+SM MEGAMALL - BEBANG ENTERPRISE INC.,SMMM,JV,BEBANG ENTERPRISE INC.,1,expenses_included_in_asset_valuation,,Account,,no_action
+SM MEGAMALL - BEBANG ENTERPRISE INC.,SMMM,JV,BEBANG ENTERPRISE INC.,1,disposal_account,,Account,,no_action
+SM MEGAMALL - BEBANG ENTERPRISE INC.,SMMM,JV,BEBANG ENTERPRISE INC.,1,depreciation_cost_center,,Cost Center,,no_action
+SM MEGAMALL - BEBANG ENTERPRISE INC.,SMMM,JV,BEBANG ENTERPRISE INC.,1,capital_work_in_progress_account,,Account,,no_action
+SM MEGAMALL - BEBANG ENTERPRISE INC.,SMMM,JV,BEBANG ENTERPRISE INC.,1,asset_received_but_not_billed,,Account,,no_action
+SM MEGAMALL - BEBANG ENTERPRISE INC.,SMMM,JV,BEBANG ENTERPRISE INC.,1,stock_adjustment_account,,Account,,no_action
+SM MEGAMALL - BEBANG ENTERPRISE INC.,SMMM,JV,BEBANG ENTERPRISE INC.,1,stock_received_but_not_billed,,Account,,no_action
+SM MEGAMALL - BEBANG ENTERPRISE INC.,SMMM,JV,BEBANG ENTERPRISE INC.,1,expenses_included_in_valuation,,Account,,no_action
+SM NORTH EDSA - BEBANG NORTH EDSA INC.,SMNE,JV,BEBANG ENTERPRISE INC.,1,default_inventory_account,,Account,,no_action
+SM NORTH EDSA - BEBANG NORTH EDSA INC.,SMNE,JV,BEBANG ENTERPRISE INC.,1,default_payable_account,Creditors - SMNE,Account,True,no_action
+SM NORTH EDSA - BEBANG NORTH EDSA INC.,SMNE,JV,BEBANG ENTERPRISE INC.,1,default_receivable_account,Debtors - SMNE,Account,True,no_action
+SM NORTH EDSA - BEBANG NORTH EDSA INC.,SMNE,JV,BEBANG ENTERPRISE INC.,1,default_payroll_payable_account,,Account,,no_action
+SM NORTH EDSA - BEBANG NORTH EDSA INC.,SMNE,JV,BEBANG ENTERPRISE INC.,1,default_employee_advance_account,,Account,,no_action
+SM NORTH EDSA - BEBANG NORTH EDSA INC.,SMNE,JV,BEBANG ENTERPRISE INC.,1,default_expense_account,Cost of Goods Sold - SMNE,Account,True,no_action
+SM NORTH EDSA - BEBANG NORTH EDSA INC.,SMNE,JV,BEBANG ENTERPRISE INC.,1,default_income_account,Sales - SMNE,Account,True,no_action
+SM NORTH EDSA - BEBANG NORTH EDSA INC.,SMNE,JV,BEBANG ENTERPRISE INC.,1,round_off_account,Round Off - SMNE,Account,True,no_action
+SM NORTH EDSA - BEBANG NORTH EDSA INC.,SMNE,JV,BEBANG ENTERPRISE INC.,1,round_off_cost_center,,Cost Center,,no_action
+SM NORTH EDSA - BEBANG NORTH EDSA INC.,SMNE,JV,BEBANG ENTERPRISE INC.,1,default_cash_account,Cash - SMNE,Account,True,no_action
+SM NORTH EDSA - BEBANG NORTH EDSA INC.,SMNE,JV,BEBANG ENTERPRISE INC.,1,exchange_gain_loss_account,,Account,,no_action
+SM NORTH EDSA - BEBANG NORTH EDSA INC.,SMNE,JV,BEBANG ENTERPRISE INC.,1,accumulated_depreciation_account,,Account,,no_action
+SM NORTH EDSA - BEBANG NORTH EDSA INC.,SMNE,JV,BEBANG ENTERPRISE INC.,1,depreciation_expense_account,,Account,,no_action
+SM NORTH EDSA - BEBANG NORTH EDSA INC.,SMNE,JV,BEBANG ENTERPRISE INC.,1,expenses_included_in_asset_valuation,,Account,,no_action
+SM NORTH EDSA - BEBANG NORTH EDSA INC.,SMNE,JV,BEBANG ENTERPRISE INC.,1,disposal_account,,Account,,no_action
+SM NORTH EDSA - BEBANG NORTH EDSA INC.,SMNE,JV,BEBANG ENTERPRISE INC.,1,depreciation_cost_center,,Cost Center,,no_action
+SM NORTH EDSA - BEBANG NORTH EDSA INC.,SMNE,JV,BEBANG ENTERPRISE INC.,1,capital_work_in_progress_account,,Account,,no_action
+SM NORTH EDSA - BEBANG NORTH EDSA INC.,SMNE,JV,BEBANG ENTERPRISE INC.,1,asset_received_but_not_billed,,Account,,no_action
+SM NORTH EDSA - BEBANG NORTH EDSA INC.,SMNE,JV,BEBANG ENTERPRISE INC.,1,stock_adjustment_account,,Account,,no_action
+SM NORTH EDSA - BEBANG NORTH EDSA INC.,SMNE,JV,BEBANG ENTERPRISE INC.,1,stock_received_but_not_billed,,Account,,no_action
+SM NORTH EDSA - BEBANG NORTH EDSA INC.,SMNE,JV,BEBANG ENTERPRISE INC.,1,expenses_included_in_valuation,,Account,,no_action
+SM PULILAN - BEBANG SMM INC.,SMPUL,Managed Franchise,BEBANG ENTERPRISE INC.,1,default_inventory_account,,Account,,no_action
+SM PULILAN - BEBANG SMM INC.,SMPUL,Managed Franchise,BEBANG ENTERPRISE INC.,1,default_payable_account,Creditors - SMPUL,Account,True,no_action
+SM PULILAN - BEBANG SMM INC.,SMPUL,Managed Franchise,BEBANG ENTERPRISE INC.,1,default_receivable_account,Debtors - SMPUL,Account,True,no_action
+SM PULILAN - BEBANG SMM INC.,SMPUL,Managed Franchise,BEBANG ENTERPRISE INC.,1,default_payroll_payable_account,,Account,,no_action
+SM PULILAN - BEBANG SMM INC.,SMPUL,Managed Franchise,BEBANG ENTERPRISE INC.,1,default_employee_advance_account,,Account,,no_action
+SM PULILAN - BEBANG SMM INC.,SMPUL,Managed Franchise,BEBANG ENTERPRISE INC.,1,default_expense_account,Cost of Goods Sold - SMPUL,Account,True,no_action
+SM PULILAN - BEBANG SMM INC.,SMPUL,Managed Franchise,BEBANG ENTERPRISE INC.,1,default_income_account,Sales - SMPUL,Account,True,no_action
+SM PULILAN - BEBANG SMM INC.,SMPUL,Managed Franchise,BEBANG ENTERPRISE INC.,1,round_off_account,Round Off - SMPUL,Account,True,no_action
+SM PULILAN - BEBANG SMM INC.,SMPUL,Managed Franchise,BEBANG ENTERPRISE INC.,1,round_off_cost_center,,Cost Center,,no_action
+SM PULILAN - BEBANG SMM INC.,SMPUL,Managed Franchise,BEBANG ENTERPRISE INC.,1,default_cash_account,Cash - SMPUL,Account,True,no_action
+SM PULILAN - BEBANG SMM INC.,SMPUL,Managed Franchise,BEBANG ENTERPRISE INC.,1,exchange_gain_loss_account,,Account,,no_action
+SM PULILAN - BEBANG SMM INC.,SMPUL,Managed Franchise,BEBANG ENTERPRISE INC.,1,accumulated_depreciation_account,,Account,,no_action
+SM PULILAN - BEBANG SMM INC.,SMPUL,Managed Franchise,BEBANG ENTERPRISE INC.,1,depreciation_expense_account,,Account,,no_action
+SM PULILAN - BEBANG SMM INC.,SMPUL,Managed Franchise,BEBANG ENTERPRISE INC.,1,expenses_included_in_asset_valuation,,Account,,no_action
+SM PULILAN - BEBANG SMM INC.,SMPUL,Managed Franchise,BEBANG ENTERPRISE INC.,1,disposal_account,,Account,,no_action
+SM PULILAN - BEBANG SMM INC.,SMPUL,Managed Franchise,BEBANG ENTERPRISE INC.,1,depreciation_cost_center,,Cost Center,,no_action
+SM PULILAN - BEBANG SMM INC.,SMPUL,Managed Franchise,BEBANG ENTERPRISE INC.,1,capital_work_in_progress_account,,Account,,no_action
+SM PULILAN - BEBANG SMM INC.,SMPUL,Managed Franchise,BEBANG ENTERPRISE INC.,1,asset_received_but_not_billed,,Account,,no_action
+SM PULILAN - BEBANG SMM INC.,SMPUL,Managed Franchise,BEBANG ENTERPRISE INC.,1,stock_adjustment_account,,Account,,no_action
+SM PULILAN - BEBANG SMM INC.,SMPUL,Managed Franchise,BEBANG ENTERPRISE INC.,1,stock_received_but_not_billed,,Account,,no_action
+SM PULILAN - BEBANG SMM INC.,SMPUL,Managed Franchise,BEBANG ENTERPRISE INC.,1,expenses_included_in_valuation,,Account,,no_action
+SM SAN JOSE DEL MONTE - JL TRADE OPC,SJDM,Company Owned,,1,default_inventory_account,,Account,,no_action
+SM SAN JOSE DEL MONTE - JL TRADE OPC,SJDM,Company Owned,,1,default_payable_account,Creditors - SJDM,Account,True,no_action
+SM SAN JOSE DEL MONTE - JL TRADE OPC,SJDM,Company Owned,,1,default_receivable_account,Debtors - SJDM,Account,True,no_action
+SM SAN JOSE DEL MONTE - JL TRADE OPC,SJDM,Company Owned,,1,default_payroll_payable_account,,Account,,no_action
+SM SAN JOSE DEL MONTE - JL TRADE OPC,SJDM,Company Owned,,1,default_employee_advance_account,,Account,,no_action
+SM SAN JOSE DEL MONTE - JL TRADE OPC,SJDM,Company Owned,,1,default_expense_account,Cost of Goods Sold - SJDM,Account,True,no_action
+SM SAN JOSE DEL MONTE - JL TRADE OPC,SJDM,Company Owned,,1,default_income_account,Sales - SJDM,Account,True,no_action
+SM SAN JOSE DEL MONTE - JL TRADE OPC,SJDM,Company Owned,,1,round_off_account,Round Off - SJDM,Account,True,no_action
+SM SAN JOSE DEL MONTE - JL TRADE OPC,SJDM,Company Owned,,1,round_off_cost_center,,Cost Center,,no_action
+SM SAN JOSE DEL MONTE - JL TRADE OPC,SJDM,Company Owned,,1,default_cash_account,Cash - SJDM,Account,True,no_action
+SM SAN JOSE DEL MONTE - JL TRADE OPC,SJDM,Company Owned,,1,exchange_gain_loss_account,,Account,,no_action
+SM SAN JOSE DEL MONTE - JL TRADE OPC,SJDM,Company Owned,,1,accumulated_depreciation_account,,Account,,no_action
+SM SAN JOSE DEL MONTE - JL TRADE OPC,SJDM,Company Owned,,1,depreciation_expense_account,,Account,,no_action
+SM SAN JOSE DEL MONTE - JL TRADE OPC,SJDM,Company Owned,,1,expenses_included_in_asset_valuation,,Account,,no_action
+SM SAN JOSE DEL MONTE - JL TRADE OPC,SJDM,Company Owned,,1,disposal_account,,Account,,no_action
+SM SAN JOSE DEL MONTE - JL TRADE OPC,SJDM,Company Owned,,1,depreciation_cost_center,,Cost Center,,no_action
+SM SAN JOSE DEL MONTE - JL TRADE OPC,SJDM,Company Owned,,1,capital_work_in_progress_account,,Account,,no_action
+SM SAN JOSE DEL MONTE - JL TRADE OPC,SJDM,Company Owned,,1,asset_received_but_not_billed,,Account,,no_action
+SM SAN JOSE DEL MONTE - JL TRADE OPC,SJDM,Company Owned,,1,stock_adjustment_account,,Account,,no_action
+SM SAN JOSE DEL MONTE - JL TRADE OPC,SJDM,Company Owned,,1,stock_received_but_not_billed,,Account,,no_action
+SM SAN JOSE DEL MONTE - JL TRADE OPC,SJDM,Company Owned,,1,expenses_included_in_valuation,,Account,,no_action
+SM SANGANDAAN - TUNGSTEN CAPITAL HOLDINGS OPC,SMSDN,Managed Franchise,TUNGSTEN CAPITAL HOLDINGS OPC,1,default_inventory_account,,Account,,no_action
+SM SANGANDAAN - TUNGSTEN CAPITAL HOLDINGS OPC,SMSDN,Managed Franchise,TUNGSTEN CAPITAL HOLDINGS OPC,1,default_payable_account,Creditors - SMSDN,Account,True,no_action
+SM SANGANDAAN - TUNGSTEN CAPITAL HOLDINGS OPC,SMSDN,Managed Franchise,TUNGSTEN CAPITAL HOLDINGS OPC,1,default_receivable_account,Debtors - SMSDN,Account,True,no_action
+SM SANGANDAAN - TUNGSTEN CAPITAL HOLDINGS OPC,SMSDN,Managed Franchise,TUNGSTEN CAPITAL HOLDINGS OPC,1,default_payroll_payable_account,,Account,,no_action
+SM SANGANDAAN - TUNGSTEN CAPITAL HOLDINGS OPC,SMSDN,Managed Franchise,TUNGSTEN CAPITAL HOLDINGS OPC,1,default_employee_advance_account,,Account,,no_action
+SM SANGANDAAN - TUNGSTEN CAPITAL HOLDINGS OPC,SMSDN,Managed Franchise,TUNGSTEN CAPITAL HOLDINGS OPC,1,default_expense_account,Cost of Goods Sold - SMSDN,Account,True,no_action
+SM SANGANDAAN - TUNGSTEN CAPITAL HOLDINGS OPC,SMSDN,Managed Franchise,TUNGSTEN CAPITAL HOLDINGS OPC,1,default_income_account,4000110 - IN-STORE SALES - SMSDN,Account,True,no_action
+SM SANGANDAAN - TUNGSTEN CAPITAL HOLDINGS OPC,SMSDN,Managed Franchise,TUNGSTEN CAPITAL HOLDINGS OPC,1,round_off_account,Round Off - SMSDN,Account,True,no_action
+SM SANGANDAAN - TUNGSTEN CAPITAL HOLDINGS OPC,SMSDN,Managed Franchise,TUNGSTEN CAPITAL HOLDINGS OPC,1,round_off_cost_center,,Cost Center,,no_action
+SM SANGANDAAN - TUNGSTEN CAPITAL HOLDINGS OPC,SMSDN,Managed Franchise,TUNGSTEN CAPITAL HOLDINGS OPC,1,default_cash_account,Cash - SMSDN,Account,True,no_action
+SM SANGANDAAN - TUNGSTEN CAPITAL HOLDINGS OPC,SMSDN,Managed Franchise,TUNGSTEN CAPITAL HOLDINGS OPC,1,exchange_gain_loss_account,,Account,,no_action
+SM SANGANDAAN - TUNGSTEN CAPITAL HOLDINGS OPC,SMSDN,Managed Franchise,TUNGSTEN CAPITAL HOLDINGS OPC,1,accumulated_depreciation_account,,Account,,no_action
+SM SANGANDAAN - TUNGSTEN CAPITAL HOLDINGS OPC,SMSDN,Managed Franchise,TUNGSTEN CAPITAL HOLDINGS OPC,1,depreciation_expense_account,,Account,,no_action
+SM SANGANDAAN - TUNGSTEN CAPITAL HOLDINGS OPC,SMSDN,Managed Franchise,TUNGSTEN CAPITAL HOLDINGS OPC,1,expenses_included_in_asset_valuation,,Account,,no_action
+SM SANGANDAAN - TUNGSTEN CAPITAL HOLDINGS OPC,SMSDN,Managed Franchise,TUNGSTEN CAPITAL HOLDINGS OPC,1,disposal_account,,Account,,no_action
+SM SANGANDAAN - TUNGSTEN CAPITAL HOLDINGS OPC,SMSDN,Managed Franchise,TUNGSTEN CAPITAL HOLDINGS OPC,1,depreciation_cost_center,,Cost Center,,no_action
+SM SANGANDAAN - TUNGSTEN CAPITAL HOLDINGS OPC,SMSDN,Managed Franchise,TUNGSTEN CAPITAL HOLDINGS OPC,1,capital_work_in_progress_account,,Account,,no_action
+SM SANGANDAAN - TUNGSTEN CAPITAL HOLDINGS OPC,SMSDN,Managed Franchise,TUNGSTEN CAPITAL HOLDINGS OPC,1,asset_received_but_not_billed,,Account,,no_action
+SM SANGANDAAN - TUNGSTEN CAPITAL HOLDINGS OPC,SMSDN,Managed Franchise,TUNGSTEN CAPITAL HOLDINGS OPC,1,stock_adjustment_account,,Account,,no_action
+SM SANGANDAAN - TUNGSTEN CAPITAL HOLDINGS OPC,SMSDN,Managed Franchise,TUNGSTEN CAPITAL HOLDINGS OPC,1,stock_received_but_not_billed,,Account,,no_action
+SM SANGANDAAN - TUNGSTEN CAPITAL HOLDINGS OPC,SMSDN,Managed Franchise,TUNGSTEN CAPITAL HOLDINGS OPC,1,expenses_included_in_valuation,,Account,,no_action
+SM SOUTHMALL - BEBANG ENTERPRISE INC.,SMS,JV,BEBANG ENTERPRISE INC.,1,default_inventory_account,,Account,,no_action
+SM SOUTHMALL - BEBANG ENTERPRISE INC.,SMS,JV,BEBANG ENTERPRISE INC.,1,default_payable_account,,Account,,no_action
+SM SOUTHMALL - BEBANG ENTERPRISE INC.,SMS,JV,BEBANG ENTERPRISE INC.,1,default_receivable_account,,Account,,no_action
+SM SOUTHMALL - BEBANG ENTERPRISE INC.,SMS,JV,BEBANG ENTERPRISE INC.,1,default_payroll_payable_account,,Account,,no_action
+SM SOUTHMALL - BEBANG ENTERPRISE INC.,SMS,JV,BEBANG ENTERPRISE INC.,1,default_employee_advance_account,,Account,,no_action
+SM SOUTHMALL - BEBANG ENTERPRISE INC.,SMS,JV,BEBANG ENTERPRISE INC.,1,default_expense_account,,Account,,no_action
+SM SOUTHMALL - BEBANG ENTERPRISE INC.,SMS,JV,BEBANG ENTERPRISE INC.,1,default_income_account,,Account,,no_action
+SM SOUTHMALL - BEBANG ENTERPRISE INC.,SMS,JV,BEBANG ENTERPRISE INC.,1,round_off_account,,Account,,no_action
+SM SOUTHMALL - BEBANG ENTERPRISE INC.,SMS,JV,BEBANG ENTERPRISE INC.,1,round_off_cost_center,,Cost Center,,no_action
+SM SOUTHMALL - BEBANG ENTERPRISE INC.,SMS,JV,BEBANG ENTERPRISE INC.,1,default_cash_account,,Account,,no_action
+SM SOUTHMALL - BEBANG ENTERPRISE INC.,SMS,JV,BEBANG ENTERPRISE INC.,1,exchange_gain_loss_account,,Account,,no_action
+SM SOUTHMALL - BEBANG ENTERPRISE INC.,SMS,JV,BEBANG ENTERPRISE INC.,1,accumulated_depreciation_account,,Account,,no_action
+SM SOUTHMALL - BEBANG ENTERPRISE INC.,SMS,JV,BEBANG ENTERPRISE INC.,1,depreciation_expense_account,,Account,,no_action
+SM SOUTHMALL - BEBANG ENTERPRISE INC.,SMS,JV,BEBANG ENTERPRISE INC.,1,expenses_included_in_asset_valuation,,Account,,no_action
+SM SOUTHMALL - BEBANG ENTERPRISE INC.,SMS,JV,BEBANG ENTERPRISE INC.,1,disposal_account,,Account,,no_action
+SM SOUTHMALL - BEBANG ENTERPRISE INC.,SMS,JV,BEBANG ENTERPRISE INC.,1,depreciation_cost_center,,Cost Center,,no_action
+SM SOUTHMALL - BEBANG ENTERPRISE INC.,SMS,JV,BEBANG ENTERPRISE INC.,1,capital_work_in_progress_account,,Account,,no_action
+SM SOUTHMALL - BEBANG ENTERPRISE INC.,SMS,JV,BEBANG ENTERPRISE INC.,1,asset_received_but_not_billed,,Account,,no_action
+SM SOUTHMALL - BEBANG ENTERPRISE INC.,SMS,JV,BEBANG ENTERPRISE INC.,1,stock_adjustment_account,,Account,,no_action
+SM SOUTHMALL - BEBANG ENTERPRISE INC.,SMS,JV,BEBANG ENTERPRISE INC.,1,stock_received_but_not_billed,,Account,,no_action
+SM SOUTHMALL - BEBANG ENTERPRISE INC.,SMS,JV,BEBANG ENTERPRISE INC.,1,expenses_included_in_valuation,,Account,,no_action
+SM STA. ROSA - SWEET HARMONY FOOD CORP.,SMSTR,Managed Franchise,,1,default_inventory_account,,Account,,no_action
+SM STA. ROSA - SWEET HARMONY FOOD CORP.,SMSTR,Managed Franchise,,1,default_payable_account,Creditors - SMSTR,Account,True,no_action
+SM STA. ROSA - SWEET HARMONY FOOD CORP.,SMSTR,Managed Franchise,,1,default_receivable_account,Debtors - SMSTR,Account,True,no_action
+SM STA. ROSA - SWEET HARMONY FOOD CORP.,SMSTR,Managed Franchise,,1,default_payroll_payable_account,,Account,,no_action
+SM STA. ROSA - SWEET HARMONY FOOD CORP.,SMSTR,Managed Franchise,,1,default_employee_advance_account,,Account,,no_action
+SM STA. ROSA - SWEET HARMONY FOOD CORP.,SMSTR,Managed Franchise,,1,default_expense_account,Cost of Goods Sold - SMSTR,Account,True,no_action
+SM STA. ROSA - SWEET HARMONY FOOD CORP.,SMSTR,Managed Franchise,,1,default_income_account,Sales - SMSTR,Account,True,no_action
+SM STA. ROSA - SWEET HARMONY FOOD CORP.,SMSTR,Managed Franchise,,1,round_off_account,Round Off - SMSTR,Account,True,no_action
+SM STA. ROSA - SWEET HARMONY FOOD CORP.,SMSTR,Managed Franchise,,1,round_off_cost_center,,Cost Center,,no_action
+SM STA. ROSA - SWEET HARMONY FOOD CORP.,SMSTR,Managed Franchise,,1,default_cash_account,Cash - SMSTR,Account,True,no_action
+SM STA. ROSA - SWEET HARMONY FOOD CORP.,SMSTR,Managed Franchise,,1,exchange_gain_loss_account,,Account,,no_action
+SM STA. ROSA - SWEET HARMONY FOOD CORP.,SMSTR,Managed Franchise,,1,accumulated_depreciation_account,,Account,,no_action
+SM STA. ROSA - SWEET HARMONY FOOD CORP.,SMSTR,Managed Franchise,,1,depreciation_expense_account,,Account,,no_action
+SM STA. ROSA - SWEET HARMONY FOOD CORP.,SMSTR,Managed Franchise,,1,expenses_included_in_asset_valuation,,Account,,no_action
+SM STA. ROSA - SWEET HARMONY FOOD CORP.,SMSTR,Managed Franchise,,1,disposal_account,,Account,,no_action
+SM STA. ROSA - SWEET HARMONY FOOD CORP.,SMSTR,Managed Franchise,,1,depreciation_cost_center,,Cost Center,,no_action
+SM STA. ROSA - SWEET HARMONY FOOD CORP.,SMSTR,Managed Franchise,,1,capital_work_in_progress_account,,Account,,no_action
+SM STA. ROSA - SWEET HARMONY FOOD CORP.,SMSTR,Managed Franchise,,1,asset_received_but_not_billed,,Account,,no_action
+SM STA. ROSA - SWEET HARMONY FOOD CORP.,SMSTR,Managed Franchise,,1,stock_adjustment_account,,Account,,no_action
+SM STA. ROSA - SWEET HARMONY FOOD CORP.,SMSTR,Managed Franchise,,1,stock_received_but_not_billed,,Account,,no_action
+SM STA. ROSA - SWEET HARMONY FOOD CORP.,SMSTR,Managed Franchise,,1,expenses_included_in_valuation,,Account,,no_action
+SM TANZA - BEBANG MEGA INC.,SMTZ,Managed Franchise,BEBANG MEGA INC.,1,default_inventory_account,,Account,,no_action
+SM TANZA - BEBANG MEGA INC.,SMTZ,Managed Franchise,BEBANG MEGA INC.,1,default_payable_account,Creditors - SMTZ,Account,True,no_action
+SM TANZA - BEBANG MEGA INC.,SMTZ,Managed Franchise,BEBANG MEGA INC.,1,default_receivable_account,Debtors - SMTZ,Account,True,no_action
+SM TANZA - BEBANG MEGA INC.,SMTZ,Managed Franchise,BEBANG MEGA INC.,1,default_payroll_payable_account,,Account,,no_action
+SM TANZA - BEBANG MEGA INC.,SMTZ,Managed Franchise,BEBANG MEGA INC.,1,default_employee_advance_account,,Account,,no_action
+SM TANZA - BEBANG MEGA INC.,SMTZ,Managed Franchise,BEBANG MEGA INC.,1,default_expense_account,Cost of Goods Sold - SMTZ,Account,True,no_action
+SM TANZA - BEBANG MEGA INC.,SMTZ,Managed Franchise,BEBANG MEGA INC.,1,default_income_account,4000110 - IN-STORE SALES - SMTZ,Account,True,no_action
+SM TANZA - BEBANG MEGA INC.,SMTZ,Managed Franchise,BEBANG MEGA INC.,1,round_off_account,Round Off - SMTZ,Account,True,no_action
+SM TANZA - BEBANG MEGA INC.,SMTZ,Managed Franchise,BEBANG MEGA INC.,1,round_off_cost_center,,Cost Center,,no_action
+SM TANZA - BEBANG MEGA INC.,SMTZ,Managed Franchise,BEBANG MEGA INC.,1,default_cash_account,Cash - SMTZ,Account,True,no_action
+SM TANZA - BEBANG MEGA INC.,SMTZ,Managed Franchise,BEBANG MEGA INC.,1,exchange_gain_loss_account,,Account,,no_action
+SM TANZA - BEBANG MEGA INC.,SMTZ,Managed Franchise,BEBANG MEGA INC.,1,accumulated_depreciation_account,,Account,,no_action
+SM TANZA - BEBANG MEGA INC.,SMTZ,Managed Franchise,BEBANG MEGA INC.,1,depreciation_expense_account,,Account,,no_action
+SM TANZA - BEBANG MEGA INC.,SMTZ,Managed Franchise,BEBANG MEGA INC.,1,expenses_included_in_asset_valuation,,Account,,no_action
+SM TANZA - BEBANG MEGA INC.,SMTZ,Managed Franchise,BEBANG MEGA INC.,1,disposal_account,,Account,,no_action
+SM TANZA - BEBANG MEGA INC.,SMTZ,Managed Franchise,BEBANG MEGA INC.,1,depreciation_cost_center,,Cost Center,,no_action
+SM TANZA - BEBANG MEGA INC.,SMTZ,Managed Franchise,BEBANG MEGA INC.,1,capital_work_in_progress_account,,Account,,no_action
+SM TANZA - BEBANG MEGA INC.,SMTZ,Managed Franchise,BEBANG MEGA INC.,1,asset_received_but_not_billed,,Account,,no_action
+SM TANZA - BEBANG MEGA INC.,SMTZ,Managed Franchise,BEBANG MEGA INC.,1,stock_adjustment_account,,Account,,no_action
+SM TANZA - BEBANG MEGA INC.,SMTZ,Managed Franchise,BEBANG MEGA INC.,1,stock_received_but_not_billed,,Account,,no_action
+SM TANZA - BEBANG MEGA INC.,SMTZ,Managed Franchise,BEBANG MEGA INC.,1,expenses_included_in_valuation,,Account,,no_action
+SM TAYTAY - DAY ONES FOOD AND DRINK ESTABLISHMENTS CORP.,SMTAY,Managed Franchise,,1,default_inventory_account,,Account,,no_action
+SM TAYTAY - DAY ONES FOOD AND DRINK ESTABLISHMENTS CORP.,SMTAY,Managed Franchise,,1,default_payable_account,Creditors - SMTAY,Account,True,no_action
+SM TAYTAY - DAY ONES FOOD AND DRINK ESTABLISHMENTS CORP.,SMTAY,Managed Franchise,,1,default_receivable_account,Debtors - SMTAY,Account,True,no_action
+SM TAYTAY - DAY ONES FOOD AND DRINK ESTABLISHMENTS CORP.,SMTAY,Managed Franchise,,1,default_payroll_payable_account,,Account,,no_action
+SM TAYTAY - DAY ONES FOOD AND DRINK ESTABLISHMENTS CORP.,SMTAY,Managed Franchise,,1,default_employee_advance_account,,Account,,no_action
+SM TAYTAY - DAY ONES FOOD AND DRINK ESTABLISHMENTS CORP.,SMTAY,Managed Franchise,,1,default_expense_account,Cost of Goods Sold - SMTAY,Account,True,no_action
+SM TAYTAY - DAY ONES FOOD AND DRINK ESTABLISHMENTS CORP.,SMTAY,Managed Franchise,,1,default_income_account,Sales - SMTAY,Account,True,no_action
+SM TAYTAY - DAY ONES FOOD AND DRINK ESTABLISHMENTS CORP.,SMTAY,Managed Franchise,,1,round_off_account,Round Off - SMTAY,Account,True,no_action
+SM TAYTAY - DAY ONES FOOD AND DRINK ESTABLISHMENTS CORP.,SMTAY,Managed Franchise,,1,round_off_cost_center,,Cost Center,,no_action
+SM TAYTAY - DAY ONES FOOD AND DRINK ESTABLISHMENTS CORP.,SMTAY,Managed Franchise,,1,default_cash_account,Cash - SMTAY,Account,True,no_action
+SM TAYTAY - DAY ONES FOOD AND DRINK ESTABLISHMENTS CORP.,SMTAY,Managed Franchise,,1,exchange_gain_loss_account,,Account,,no_action
+SM TAYTAY - DAY ONES FOOD AND DRINK ESTABLISHMENTS CORP.,SMTAY,Managed Franchise,,1,accumulated_depreciation_account,,Account,,no_action
+SM TAYTAY - DAY ONES FOOD AND DRINK ESTABLISHMENTS CORP.,SMTAY,Managed Franchise,,1,depreciation_expense_account,,Account,,no_action
+SM TAYTAY - DAY ONES FOOD AND DRINK ESTABLISHMENTS CORP.,SMTAY,Managed Franchise,,1,expenses_included_in_asset_valuation,,Account,,no_action
+SM TAYTAY - DAY ONES FOOD AND DRINK ESTABLISHMENTS CORP.,SMTAY,Managed Franchise,,1,disposal_account,,Account,,no_action
+SM TAYTAY - DAY ONES FOOD AND DRINK ESTABLISHMENTS CORP.,SMTAY,Managed Franchise,,1,depreciation_cost_center,,Cost Center,,no_action
+SM TAYTAY - DAY ONES FOOD AND DRINK ESTABLISHMENTS CORP.,SMTAY,Managed Franchise,,1,capital_work_in_progress_account,,Account,,no_action
+SM TAYTAY - DAY ONES FOOD AND DRINK ESTABLISHMENTS CORP.,SMTAY,Managed Franchise,,1,asset_received_but_not_billed,,Account,,no_action
+SM TAYTAY - DAY ONES FOOD AND DRINK ESTABLISHMENTS CORP.,SMTAY,Managed Franchise,,1,stock_adjustment_account,,Account,,no_action
+SM TAYTAY - DAY ONES FOOD AND DRINK ESTABLISHMENTS CORP.,SMTAY,Managed Franchise,,1,stock_received_but_not_billed,,Account,,no_action
+SM TAYTAY - DAY ONES FOOD AND DRINK ESTABLISHMENTS CORP.,SMTAY,Managed Franchise,,1,expenses_included_in_valuation,,Account,,no_action
+SM VALENZUELA - BEBANG SMV INC.,SMV,JV,BEBANG ENTERPRISE INC.,1,default_inventory_account,,Account,,no_action
+SM VALENZUELA - BEBANG SMV INC.,SMV,JV,BEBANG ENTERPRISE INC.,1,default_payable_account,Creditors - SMV,Account,True,no_action
+SM VALENZUELA - BEBANG SMV INC.,SMV,JV,BEBANG ENTERPRISE INC.,1,default_receivable_account,Debtors - SMV,Account,True,no_action
+SM VALENZUELA - BEBANG SMV INC.,SMV,JV,BEBANG ENTERPRISE INC.,1,default_payroll_payable_account,,Account,,no_action
+SM VALENZUELA - BEBANG SMV INC.,SMV,JV,BEBANG ENTERPRISE INC.,1,default_employee_advance_account,,Account,,no_action
+SM VALENZUELA - BEBANG SMV INC.,SMV,JV,BEBANG ENTERPRISE INC.,1,default_expense_account,Cost of Goods Sold - SMV,Account,True,no_action
+SM VALENZUELA - BEBANG SMV INC.,SMV,JV,BEBANG ENTERPRISE INC.,1,default_income_account,Sales - SMV,Account,True,no_action
+SM VALENZUELA - BEBANG SMV INC.,SMV,JV,BEBANG ENTERPRISE INC.,1,round_off_account,Round Off - SMV,Account,True,no_action
+SM VALENZUELA - BEBANG SMV INC.,SMV,JV,BEBANG ENTERPRISE INC.,1,round_off_cost_center,,Cost Center,,no_action
+SM VALENZUELA - BEBANG SMV INC.,SMV,JV,BEBANG ENTERPRISE INC.,1,default_cash_account,Cash - SMV,Account,True,no_action
+SM VALENZUELA - BEBANG SMV INC.,SMV,JV,BEBANG ENTERPRISE INC.,1,exchange_gain_loss_account,,Account,,no_action
+SM VALENZUELA - BEBANG SMV INC.,SMV,JV,BEBANG ENTERPRISE INC.,1,accumulated_depreciation_account,,Account,,no_action
+SM VALENZUELA - BEBANG SMV INC.,SMV,JV,BEBANG ENTERPRISE INC.,1,depreciation_expense_account,,Account,,no_action
+SM VALENZUELA - BEBANG SMV INC.,SMV,JV,BEBANG ENTERPRISE INC.,1,expenses_included_in_asset_valuation,,Account,,no_action
+SM VALENZUELA - BEBANG SMV INC.,SMV,JV,BEBANG ENTERPRISE INC.,1,disposal_account,,Account,,no_action
+SM VALENZUELA - BEBANG SMV INC.,SMV,JV,BEBANG ENTERPRISE INC.,1,depreciation_cost_center,,Cost Center,,no_action
+SM VALENZUELA - BEBANG SMV INC.,SMV,JV,BEBANG ENTERPRISE INC.,1,capital_work_in_progress_account,,Account,,no_action
+SM VALENZUELA - BEBANG SMV INC.,SMV,JV,BEBANG ENTERPRISE INC.,1,asset_received_but_not_billed,,Account,,no_action
+SM VALENZUELA - BEBANG SMV INC.,SMV,JV,BEBANG ENTERPRISE INC.,1,stock_adjustment_account,,Account,,no_action
+SM VALENZUELA - BEBANG SMV INC.,SMV,JV,BEBANG ENTERPRISE INC.,1,stock_received_but_not_billed,,Account,,no_action
+SM VALENZUELA - BEBANG SMV INC.,SMV,JV,BEBANG ENTERPRISE INC.,1,expenses_included_in_valuation,,Account,,no_action
+STA. LUCIA EAST GRAND MALL - BEBANG SM MARIKINA INC.,SLGM,JV,SM MARIKINA - BEBANG SM MARIKINA INC.,1,default_inventory_account,,Account,,no_action
+STA. LUCIA EAST GRAND MALL - BEBANG SM MARIKINA INC.,SLGM,JV,SM MARIKINA - BEBANG SM MARIKINA INC.,1,default_payable_account,Creditors - SLGM,Account,True,no_action
+STA. LUCIA EAST GRAND MALL - BEBANG SM MARIKINA INC.,SLGM,JV,SM MARIKINA - BEBANG SM MARIKINA INC.,1,default_receivable_account,Debtors - SLGM,Account,True,no_action
+STA. LUCIA EAST GRAND MALL - BEBANG SM MARIKINA INC.,SLGM,JV,SM MARIKINA - BEBANG SM MARIKINA INC.,1,default_payroll_payable_account,,Account,,no_action
+STA. LUCIA EAST GRAND MALL - BEBANG SM MARIKINA INC.,SLGM,JV,SM MARIKINA - BEBANG SM MARIKINA INC.,1,default_employee_advance_account,,Account,,no_action
+STA. LUCIA EAST GRAND MALL - BEBANG SM MARIKINA INC.,SLGM,JV,SM MARIKINA - BEBANG SM MARIKINA INC.,1,default_expense_account,Cost of Goods Sold - SLGM,Account,True,no_action
+STA. LUCIA EAST GRAND MALL - BEBANG SM MARIKINA INC.,SLGM,JV,SM MARIKINA - BEBANG SM MARIKINA INC.,1,default_income_account,4000110 - IN-STORE SALES - SLGM,Account,True,no_action
+STA. LUCIA EAST GRAND MALL - BEBANG SM MARIKINA INC.,SLGM,JV,SM MARIKINA - BEBANG SM MARIKINA INC.,1,round_off_account,Round Off - SLGM,Account,True,no_action
+STA. LUCIA EAST GRAND MALL - BEBANG SM MARIKINA INC.,SLGM,JV,SM MARIKINA - BEBANG SM MARIKINA INC.,1,round_off_cost_center,,Cost Center,,no_action
+STA. LUCIA EAST GRAND MALL - BEBANG SM MARIKINA INC.,SLGM,JV,SM MARIKINA - BEBANG SM MARIKINA INC.,1,default_cash_account,Cash - SLGM,Account,True,no_action
+STA. LUCIA EAST GRAND MALL - BEBANG SM MARIKINA INC.,SLGM,JV,SM MARIKINA - BEBANG SM MARIKINA INC.,1,exchange_gain_loss_account,,Account,,no_action
+STA. LUCIA EAST GRAND MALL - BEBANG SM MARIKINA INC.,SLGM,JV,SM MARIKINA - BEBANG SM MARIKINA INC.,1,accumulated_depreciation_account,,Account,,no_action
+STA. LUCIA EAST GRAND MALL - BEBANG SM MARIKINA INC.,SLGM,JV,SM MARIKINA - BEBANG SM MARIKINA INC.,1,depreciation_expense_account,,Account,,no_action
+STA. LUCIA EAST GRAND MALL - BEBANG SM MARIKINA INC.,SLGM,JV,SM MARIKINA - BEBANG SM MARIKINA INC.,1,expenses_included_in_asset_valuation,,Account,,no_action
+STA. LUCIA EAST GRAND MALL - BEBANG SM MARIKINA INC.,SLGM,JV,SM MARIKINA - BEBANG SM MARIKINA INC.,1,disposal_account,,Account,,no_action
+STA. LUCIA EAST GRAND MALL - BEBANG SM MARIKINA INC.,SLGM,JV,SM MARIKINA - BEBANG SM MARIKINA INC.,1,depreciation_cost_center,,Cost Center,,no_action
+STA. LUCIA EAST GRAND MALL - BEBANG SM MARIKINA INC.,SLGM,JV,SM MARIKINA - BEBANG SM MARIKINA INC.,1,capital_work_in_progress_account,,Account,,no_action
+STA. LUCIA EAST GRAND MALL - BEBANG SM MARIKINA INC.,SLGM,JV,SM MARIKINA - BEBANG SM MARIKINA INC.,1,asset_received_but_not_billed,,Account,,no_action
+STA. LUCIA EAST GRAND MALL - BEBANG SM MARIKINA INC.,SLGM,JV,SM MARIKINA - BEBANG SM MARIKINA INC.,1,stock_adjustment_account,,Account,,no_action
+STA. LUCIA EAST GRAND MALL - BEBANG SM MARIKINA INC.,SLGM,JV,SM MARIKINA - BEBANG SM MARIKINA INC.,1,stock_received_but_not_billed,,Account,,no_action
+STA. LUCIA EAST GRAND MALL - BEBANG SM MARIKINA INC.,SLGM,JV,SM MARIKINA - BEBANG SM MARIKINA INC.,1,expenses_included_in_valuation,,Account,,no_action
+THE GRID ROCKWELL - TASTECARTEL CORP.,TGR,Full Franchise,,1,default_inventory_account,,Account,,no_action
+THE GRID ROCKWELL - TASTECARTEL CORP.,TGR,Full Franchise,,1,default_payable_account,Creditors - TGR,Account,True,no_action
+THE GRID ROCKWELL - TASTECARTEL CORP.,TGR,Full Franchise,,1,default_receivable_account,Debtors - TGR,Account,True,no_action
+THE GRID ROCKWELL - TASTECARTEL CORP.,TGR,Full Franchise,,1,default_payroll_payable_account,,Account,,no_action
+THE GRID ROCKWELL - TASTECARTEL CORP.,TGR,Full Franchise,,1,default_employee_advance_account,,Account,,no_action
+THE GRID ROCKWELL - TASTECARTEL CORP.,TGR,Full Franchise,,1,default_expense_account,Cost of Goods Sold - TGR,Account,True,no_action
+THE GRID ROCKWELL - TASTECARTEL CORP.,TGR,Full Franchise,,1,default_income_account,Sales - TGR,Account,True,no_action
+THE GRID ROCKWELL - TASTECARTEL CORP.,TGR,Full Franchise,,1,round_off_account,Round Off - TGR,Account,True,no_action
+THE GRID ROCKWELL - TASTECARTEL CORP.,TGR,Full Franchise,,1,round_off_cost_center,,Cost Center,,no_action
+THE GRID ROCKWELL - TASTECARTEL CORP.,TGR,Full Franchise,,1,default_cash_account,Cash - TGR,Account,True,no_action
+THE GRID ROCKWELL - TASTECARTEL CORP.,TGR,Full Franchise,,1,exchange_gain_loss_account,,Account,,no_action
+THE GRID ROCKWELL - TASTECARTEL CORP.,TGR,Full Franchise,,1,accumulated_depreciation_account,,Account,,no_action
+THE GRID ROCKWELL - TASTECARTEL CORP.,TGR,Full Franchise,,1,depreciation_expense_account,,Account,,no_action
+THE GRID ROCKWELL - TASTECARTEL CORP.,TGR,Full Franchise,,1,expenses_included_in_asset_valuation,,Account,,no_action
+THE GRID ROCKWELL - TASTECARTEL CORP.,TGR,Full Franchise,,1,disposal_account,,Account,,no_action
+THE GRID ROCKWELL - TASTECARTEL CORP.,TGR,Full Franchise,,1,depreciation_cost_center,,Cost Center,,no_action
+THE GRID ROCKWELL - TASTECARTEL CORP.,TGR,Full Franchise,,1,capital_work_in_progress_account,,Account,,no_action
+THE GRID ROCKWELL - TASTECARTEL CORP.,TGR,Full Franchise,,1,asset_received_but_not_billed,,Account,,no_action
+THE GRID ROCKWELL - TASTECARTEL CORP.,TGR,Full Franchise,,1,stock_adjustment_account,,Account,,no_action
+THE GRID ROCKWELL - TASTECARTEL CORP.,TGR,Full Franchise,,1,stock_received_but_not_billed,,Account,,no_action
+THE GRID ROCKWELL - TASTECARTEL CORP.,TGR,Full Franchise,,1,expenses_included_in_valuation,,Account,,no_action
+THE TERMINAL - BEBANG STARMALL ALABANG INC.,TTA,JV,BEBANG ENTERPRISE INC.,1,default_inventory_account,,Account,,no_action
+THE TERMINAL - BEBANG STARMALL ALABANG INC.,TTA,JV,BEBANG ENTERPRISE INC.,1,default_payable_account,Creditors - TTA,Account,True,no_action
+THE TERMINAL - BEBANG STARMALL ALABANG INC.,TTA,JV,BEBANG ENTERPRISE INC.,1,default_receivable_account,Debtors - TTA,Account,True,no_action
+THE TERMINAL - BEBANG STARMALL ALABANG INC.,TTA,JV,BEBANG ENTERPRISE INC.,1,default_payroll_payable_account,,Account,,no_action
+THE TERMINAL - BEBANG STARMALL ALABANG INC.,TTA,JV,BEBANG ENTERPRISE INC.,1,default_employee_advance_account,,Account,,no_action
+THE TERMINAL - BEBANG STARMALL ALABANG INC.,TTA,JV,BEBANG ENTERPRISE INC.,1,default_expense_account,Cost of Goods Sold - TTA,Account,True,no_action
+THE TERMINAL - BEBANG STARMALL ALABANG INC.,TTA,JV,BEBANG ENTERPRISE INC.,1,default_income_account,Sales - TTA,Account,True,no_action
+THE TERMINAL - BEBANG STARMALL ALABANG INC.,TTA,JV,BEBANG ENTERPRISE INC.,1,round_off_account,Round Off - TTA,Account,True,no_action
+THE TERMINAL - BEBANG STARMALL ALABANG INC.,TTA,JV,BEBANG ENTERPRISE INC.,1,round_off_cost_center,,Cost Center,,no_action
+THE TERMINAL - BEBANG STARMALL ALABANG INC.,TTA,JV,BEBANG ENTERPRISE INC.,1,default_cash_account,Cash - TTA,Account,True,no_action
+THE TERMINAL - BEBANG STARMALL ALABANG INC.,TTA,JV,BEBANG ENTERPRISE INC.,1,exchange_gain_loss_account,,Account,,no_action
+THE TERMINAL - BEBANG STARMALL ALABANG INC.,TTA,JV,BEBANG ENTERPRISE INC.,1,accumulated_depreciation_account,,Account,,no_action
+THE TERMINAL - BEBANG STARMALL ALABANG INC.,TTA,JV,BEBANG ENTERPRISE INC.,1,depreciation_expense_account,,Account,,no_action
+THE TERMINAL - BEBANG STARMALL ALABANG INC.,TTA,JV,BEBANG ENTERPRISE INC.,1,expenses_included_in_asset_valuation,,Account,,no_action
+THE TERMINAL - BEBANG STARMALL ALABANG INC.,TTA,JV,BEBANG ENTERPRISE INC.,1,disposal_account,,Account,,no_action
+THE TERMINAL - BEBANG STARMALL ALABANG INC.,TTA,JV,BEBANG ENTERPRISE INC.,1,depreciation_cost_center,,Cost Center,,no_action
+THE TERMINAL - BEBANG STARMALL ALABANG INC.,TTA,JV,BEBANG ENTERPRISE INC.,1,capital_work_in_progress_account,,Account,,no_action
+THE TERMINAL - BEBANG STARMALL ALABANG INC.,TTA,JV,BEBANG ENTERPRISE INC.,1,asset_received_but_not_billed,,Account,,no_action
+THE TERMINAL - BEBANG STARMALL ALABANG INC.,TTA,JV,BEBANG ENTERPRISE INC.,1,stock_adjustment_account,,Account,,no_action
+THE TERMINAL - BEBANG STARMALL ALABANG INC.,TTA,JV,BEBANG ENTERPRISE INC.,1,stock_received_but_not_billed,,Account,,no_action
+THE TERMINAL - BEBANG STARMALL ALABANG INC.,TTA,JV,BEBANG ENTERPRISE INC.,1,expenses_included_in_valuation,,Account,,no_action
+UP TOWN MALL BGC - DMD HOLDINGS INC.,UMBGC,Managed Franchise,,1,default_inventory_account,,Account,,no_action
+UP TOWN MALL BGC - DMD HOLDINGS INC.,UMBGC,Managed Franchise,,1,default_payable_account,Creditors - UMBGC,Account,True,no_action
+UP TOWN MALL BGC - DMD HOLDINGS INC.,UMBGC,Managed Franchise,,1,default_receivable_account,Debtors - UMBGC,Account,True,no_action
+UP TOWN MALL BGC - DMD HOLDINGS INC.,UMBGC,Managed Franchise,,1,default_payroll_payable_account,,Account,,no_action
+UP TOWN MALL BGC - DMD HOLDINGS INC.,UMBGC,Managed Franchise,,1,default_employee_advance_account,,Account,,no_action
+UP TOWN MALL BGC - DMD HOLDINGS INC.,UMBGC,Managed Franchise,,1,default_expense_account,Cost of Goods Sold - UMBGC,Account,True,no_action
+UP TOWN MALL BGC - DMD HOLDINGS INC.,UMBGC,Managed Franchise,,1,default_income_account,Sales - UMBGC,Account,True,no_action
+UP TOWN MALL BGC - DMD HOLDINGS INC.,UMBGC,Managed Franchise,,1,round_off_account,Round Off - UMBGC,Account,True,no_action
+UP TOWN MALL BGC - DMD HOLDINGS INC.,UMBGC,Managed Franchise,,1,round_off_cost_center,,Cost Center,,no_action
+UP TOWN MALL BGC - DMD HOLDINGS INC.,UMBGC,Managed Franchise,,1,default_cash_account,Cash - UMBGC,Account,True,no_action
+UP TOWN MALL BGC - DMD HOLDINGS INC.,UMBGC,Managed Franchise,,1,exchange_gain_loss_account,,Account,,no_action
+UP TOWN MALL BGC - DMD HOLDINGS INC.,UMBGC,Managed Franchise,,1,accumulated_depreciation_account,,Account,,no_action
+UP TOWN MALL BGC - DMD HOLDINGS INC.,UMBGC,Managed Franchise,,1,depreciation_expense_account,,Account,,no_action
+UP TOWN MALL BGC - DMD HOLDINGS INC.,UMBGC,Managed Franchise,,1,expenses_included_in_asset_valuation,,Account,,no_action
+UP TOWN MALL BGC - DMD HOLDINGS INC.,UMBGC,Managed Franchise,,1,disposal_account,,Account,,no_action
+UP TOWN MALL BGC - DMD HOLDINGS INC.,UMBGC,Managed Franchise,,1,depreciation_cost_center,,Cost Center,,no_action
+UP TOWN MALL BGC - DMD HOLDINGS INC.,UMBGC,Managed Franchise,,1,capital_work_in_progress_account,,Account,,no_action
+UP TOWN MALL BGC - DMD HOLDINGS INC.,UMBGC,Managed Franchise,,1,asset_received_but_not_billed,,Account,,no_action
+UP TOWN MALL BGC - DMD HOLDINGS INC.,UMBGC,Managed Franchise,,1,stock_adjustment_account,,Account,,no_action
+UP TOWN MALL BGC - DMD HOLDINGS INC.,UMBGC,Managed Franchise,,1,stock_received_but_not_billed,,Account,,no_action
+UP TOWN MALL BGC - DMD HOLDINGS INC.,UMBGC,Managed Franchise,,1,expenses_included_in_valuation,,Account,,no_action
+VISTA MALL TAGUIG - TRICERN FOOD CORP.,VMTAG,Managed Franchise,,1,default_inventory_account,,Account,,no_action
+VISTA MALL TAGUIG - TRICERN FOOD CORP.,VMTAG,Managed Franchise,,1,default_payable_account,Creditors - VMTAG,Account,True,no_action
+VISTA MALL TAGUIG - TRICERN FOOD CORP.,VMTAG,Managed Franchise,,1,default_receivable_account,Debtors - VMTAG,Account,True,no_action
+VISTA MALL TAGUIG - TRICERN FOOD CORP.,VMTAG,Managed Franchise,,1,default_payroll_payable_account,,Account,,no_action
+VISTA MALL TAGUIG - TRICERN FOOD CORP.,VMTAG,Managed Franchise,,1,default_employee_advance_account,,Account,,no_action
+VISTA MALL TAGUIG - TRICERN FOOD CORP.,VMTAG,Managed Franchise,,1,default_expense_account,Cost of Goods Sold - VMTAG,Account,True,no_action
+VISTA MALL TAGUIG - TRICERN FOOD CORP.,VMTAG,Managed Franchise,,1,default_income_account,Sales - VMTAG,Account,True,no_action
+VISTA MALL TAGUIG - TRICERN FOOD CORP.,VMTAG,Managed Franchise,,1,round_off_account,Round Off - VMTAG,Account,True,no_action
+VISTA MALL TAGUIG - TRICERN FOOD CORP.,VMTAG,Managed Franchise,,1,round_off_cost_center,,Cost Center,,no_action
+VISTA MALL TAGUIG - TRICERN FOOD CORP.,VMTAG,Managed Franchise,,1,default_cash_account,Cash - VMTAG,Account,True,no_action
+VISTA MALL TAGUIG - TRICERN FOOD CORP.,VMTAG,Managed Franchise,,1,exchange_gain_loss_account,,Account,,no_action
+VISTA MALL TAGUIG - TRICERN FOOD CORP.,VMTAG,Managed Franchise,,1,accumulated_depreciation_account,,Account,,no_action
+VISTA MALL TAGUIG - TRICERN FOOD CORP.,VMTAG,Managed Franchise,,1,depreciation_expense_account,,Account,,no_action
+VISTA MALL TAGUIG - TRICERN FOOD CORP.,VMTAG,Managed Franchise,,1,expenses_included_in_asset_valuation,,Account,,no_action
+VISTA MALL TAGUIG - TRICERN FOOD CORP.,VMTAG,Managed Franchise,,1,disposal_account,,Account,,no_action
+VISTA MALL TAGUIG - TRICERN FOOD CORP.,VMTAG,Managed Franchise,,1,depreciation_cost_center,,Cost Center,,no_action
+VISTA MALL TAGUIG - TRICERN FOOD CORP.,VMTAG,Managed Franchise,,1,capital_work_in_progress_account,,Account,,no_action
+VISTA MALL TAGUIG - TRICERN FOOD CORP.,VMTAG,Managed Franchise,,1,asset_received_but_not_billed,,Account,,no_action
+VISTA MALL TAGUIG - TRICERN FOOD CORP.,VMTAG,Managed Franchise,,1,stock_adjustment_account,,Account,,no_action
+VISTA MALL TAGUIG - TRICERN FOOD CORP.,VMTAG,Managed Franchise,,1,stock_received_but_not_billed,,Account,,no_action
+VISTA MALL TAGUIG - TRICERN FOOD CORP.,VMTAG,Managed Franchise,,1,expenses_included_in_valuation,,Account,,no_action
+XENTROMALL MONTALBAN - PERPETUAL FOOD CORP.,XMM,Managed Franchise,,1,default_inventory_account,,Account,,no_action
+XENTROMALL MONTALBAN - PERPETUAL FOOD CORP.,XMM,Managed Franchise,,1,default_payable_account,2110100 - Creditors - XMM,Account,True,no_action
+XENTROMALL MONTALBAN - PERPETUAL FOOD CORP.,XMM,Managed Franchise,,1,default_receivable_account,1120100 - Debtors - XMM,Account,True,no_action
+XENTROMALL MONTALBAN - PERPETUAL FOOD CORP.,XMM,Managed Franchise,,1,default_payroll_payable_account,,Account,,no_action
+XENTROMALL MONTALBAN - PERPETUAL FOOD CORP.,XMM,Managed Franchise,,1,default_employee_advance_account,,Account,,no_action
+XENTROMALL MONTALBAN - PERPETUAL FOOD CORP.,XMM,Managed Franchise,,1,default_expense_account,5100100 - Cost of Goods Sold - XMM,Account,True,no_action
+XENTROMALL MONTALBAN - PERPETUAL FOOD CORP.,XMM,Managed Franchise,,1,default_income_account,4000110 - IN-STORE SALES - XMM,Account,True,no_action
+XENTROMALL MONTALBAN - PERPETUAL FOOD CORP.,XMM,Managed Franchise,,1,round_off_account,2120000 - ROUND OFF - XMM,Account,True,no_action
+XENTROMALL MONTALBAN - PERPETUAL FOOD CORP.,XMM,Managed Franchise,,1,round_off_cost_center,,Cost Center,,no_action
+XENTROMALL MONTALBAN - PERPETUAL FOOD CORP.,XMM,Managed Franchise,,1,default_cash_account,1110100 - CASH ON HAND - XMM,Account,True,no_action
+XENTROMALL MONTALBAN - PERPETUAL FOOD CORP.,XMM,Managed Franchise,,1,exchange_gain_loss_account,,Account,,no_action
+XENTROMALL MONTALBAN - PERPETUAL FOOD CORP.,XMM,Managed Franchise,,1,accumulated_depreciation_account,,Account,,no_action
+XENTROMALL MONTALBAN - PERPETUAL FOOD CORP.,XMM,Managed Franchise,,1,depreciation_expense_account,,Account,,no_action
+XENTROMALL MONTALBAN - PERPETUAL FOOD CORP.,XMM,Managed Franchise,,1,expenses_included_in_asset_valuation,,Account,,no_action
+XENTROMALL MONTALBAN - PERPETUAL FOOD CORP.,XMM,Managed Franchise,,1,disposal_account,,Account,,no_action
+XENTROMALL MONTALBAN - PERPETUAL FOOD CORP.,XMM,Managed Franchise,,1,depreciation_cost_center,,Cost Center,,no_action
+XENTROMALL MONTALBAN - PERPETUAL FOOD CORP.,XMM,Managed Franchise,,1,capital_work_in_progress_account,,Account,,no_action
+XENTROMALL MONTALBAN - PERPETUAL FOOD CORP.,XMM,Managed Franchise,,1,asset_received_but_not_billed,,Account,,no_action
+XENTROMALL MONTALBAN - PERPETUAL FOOD CORP.,XMM,Managed Franchise,,1,stock_adjustment_account,,Account,,no_action
+XENTROMALL MONTALBAN - PERPETUAL FOOD CORP.,XMM,Managed Franchise,,1,stock_received_but_not_billed,,Account,,no_action
+XENTROMALL MONTALBAN - PERPETUAL FOOD CORP.,XMM,Managed Franchise,,1,expenses_included_in_valuation,,Account,,no_action

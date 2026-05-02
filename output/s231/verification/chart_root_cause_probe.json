@@ -1,0 +1,43 @@
+{
+  "standard_problem_keys_count": 45,
+  "standard_top_keys": [
+    "Application of Funds (Assets)",
+    "Expenses",
+    "Income",
+    "Source of Funds (Liabilities)",
+    "Equity"
+  ],
+  "with_existing_BEI_top_keys": [
+    "INTERCOMPANY PAYABLES",
+    "ACCOUNTING FEES",
+    "AIRCON/CHILLED",
+    "ASSETS",
+    "AUDIT FEES",
+    "BANK CHARGES",
+    "BASIC RENTALS",
+    "BASIC RENTALS - FIXED",
+    "BONUSES",
+    "BUSINESS DEVELOPMENT",
+    "BUSINESS PERMITS & LICENSES",
+    "CAR PLAN",
+    "CAR REGISTRATION FEE",
+    "CELLPHONE",
+    "COMMON STOCK",
+    "COMPETETIVE CHECK",
+    "CONTROLLABLES",
+    "COST OF SALES",
+    "CREW/STAFF SALARIES",
+    "CREW/STAFF SALARIES-13TH MONTH PAY"
+  ],
+  "6020602_in_BEI_clone": [],
+  "ACCOUNTING_FEES_in_BEI_clone": [
+    {
+      "path": "ACCOUNTING FEES",
+      "is_group": null,
+      "has_children": true
+    }
+  ],
+  "existing_company_field_default": null,
+  "existing_company_field_options": "Company",
+  "test_company_existing_company_default": null
+}

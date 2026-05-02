@@ -1,0 +1,41 @@
+{
+  "before": {
+    "exists": true,
+    "first_provision_done": 0,
+    "bfi2_accounts_count": 0,
+    "bfi2_warehouses_count": 0,
+    "bfi2_cost_centers_count": 2
+  },
+  "retry_succeeded": false,
+  "retry_error": "(1305, 'SAVEPOINT s181_auto_provision does not exist')",
+  "retry_traceback": "Traceback (most recent call last):\n  File \"/home/frappe/frappe-bench/apps/hrms/hrms/overrides/company.py\", line 871, in auto_provision_company\n    frappe.db.release_savepoint(\"s181_auto_provision\")\n  File \"/home/frappe/frappe-bench/apps/frappe/frappe/database/database.py\", line 1211, in release_savepoint\n    self.sql(f\"release savepoint {save_point}\")\n  File \"/home/frappe/frappe-bench/apps/frappe/frappe/database/database.py\", line 230, in sql\n    self._cursor.execute(query, values)\n  File \"/home/frappe/frappe-bench/env/lib/python3.11/site-packages/pymysql/cursors.py\", line 153, in execute\n    result = self._query(query)\n             ^^^^^^^^^^^^^^^^^^\n  File \"/home/frappe/frappe-bench/env/lib/python3.11/site-packages/pymysql/cursors.py\", line 322, in _query\n    conn.query(q)\n  File \"/home/frappe/frappe-bench/env/lib/python3.11/site-packages/pymysql/connections.py\", line 563, in query\n    self._affected_rows = self._read_query_result(unbuffered=unbuffered)\n                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/frappe/frappe-bench/env/lib/python3.11/site-packages/pymysql/connections.py\", line 825, in _read_query_result\n    result.read()\n  File \"/home/frappe/frappe-bench/env/lib/python3.11/site-packages/pymysql/connections.py\", line 1199, in read\n    first_packet = self.connection._read_packet()\n                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/frappe/frappe-bench/env/lib/python3.11/site-packages/pymysql/connections.py\", line 775, in _read_packet\n    packet.raise_for_error()\n  File \"/home/frappe/frappe-bench/env/lib/python3.11/site-packages/pymysql/protocol.py\", line 219, in raise_for_error\n    err.raise_mysql_exception(self._data)\n  File \"/home/frappe/frappe-bench/env/lib/python3.11/site-packages/pymysql/err.py\", line 150, in raise_mysql_exception\n    raise errorclass(errno, errval)\npymysql.err.OperationalError: (1305, 'SAVEPOINT s181_auto_provision does not exist')\n\nDuring handling of the above exception, another exception occurred:\n\nTraceback (most recent call last):\n  File \"/tmp/s231_payload.py\", line 45, in <module>\n    out = retry_provision_company(company_name=\"BEBANG FT INC.\")\n          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/frappe/frappe-bench/apps/frappe/frappe/utils/typing_validations.py\", line 32, in wrapper\n    return func(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/frappe/frappe-bench/apps/hrms/hrms/overrides/company.py\", line 1328, in retry_provision_company\n    auto_provision_company(doc)\n  File \"/home/frappe/frappe-bench/apps/hrms/hrms/overrides/company.py\", line 884, in auto_provision_company\n    frappe.db.rollback(save_point=\"s181_auto_provision\")\n  File \"/home/frappe/frappe-bench/apps/frappe/frappe/database/database.py\", line 1186, in rollback\n    self.sql(f\"rollback to savepoint {save_point}\")\n  File \"/home/frappe/frappe-bench/apps/frappe/frappe/database/database.py\", line 230, in sql\n    self._cursor.execute(query, values)\n  File \"/home/frappe/frappe-bench/env/lib/python3.11/site-packages/pymysql/cursors.py\", line 153, in execute\n    result = self._query(query)\n             ^^^^^^^^^^^^^^^^^^\n  File \"/home/frappe/frappe-bench/env/lib/python3.11/site-packages/pymysql/cursors.py\", line 322, in _query\n    conn.query(q)\n  File \"/home/frappe/frappe-bench/env/lib/python3.11/site-packages/pymysql/connections.py\", line 563, in query\n    self._affected_rows = self._read_query_result(unbuffered=unbuffered)\n                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/frappe/frappe-bench/env/lib/python3.11/site-packages/pymysql/connections.py\", line 825, in _read_query_result\n    result.read()\n  File \"/home/frappe/frappe-bench/env/lib/python3.11/site-packages/pymysql/connections.py\", line 1199, in read\n    first_packet = self.connection._read_packet()\n                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/frappe/frappe-bench/env/lib/python3.11/site-packages/pymysql/connections.py\", line 775, in _read_packet\n    packet.raise_for_error()\n  File \"/home/frappe/frappe-bench/env/lib/python3.11/site-packages/pymysql/protocol.py\", line 219, in raise_for_error\n    err.raise_mysql_exception(self._data)\n  File \"/home/frappe/frappe-bench/env/lib/python3.11/site-packages/pymysql/err.py\", line 150, in raise_mysql_exception\n    raise errorclass(errno, errval)\npymysql.err.OperationalError: (1305, 'SAVEPOINT s181_auto_provision does not exist')\n",
+  "after": {
+    "exists": true,
+    "first_provision_done": 0,
+    "bfi2_accounts_count": 0,
+    "bfi2_warehouses_count": 0,
+    "bfi2_cost_centers_count": 2
+  },
+  "sample_bfi2_accounts": [],
+  "required_accounts": [
+    "Stock In Hand - BFI2",
+    "Payroll Payable - BFI2",
+    "Employee Advances - BFI2",
+    "Cash on Hand - BFI2",
+    "Debtors - BFI2",
+    "Creditors - BFI2",
+    "Cost of Goods Sold - BFI2",
+    "Round Off - BFI2"
+  ],
+  "required_accounts_present": [],
+  "required_accounts_missing": [
+    "Stock In Hand - BFI2",
+    "Payroll Payable - BFI2",
+    "Employee Advances - BFI2",
+    "Cash on Hand - BFI2",
+    "Debtors - BFI2",
+    "Creditors - BFI2",
+    "Cost of Goods Sold - BFI2",
+    "Round Off - BFI2"
+  ]
+}

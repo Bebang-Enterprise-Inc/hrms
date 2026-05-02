@@ -1,0 +1,97 @@
+{
+  "hrms.on_demand.s231_seed_fee_schedule": {
+    "created": 9,
+    "updated": 0,
+    "total_rows": 9,
+    "errors": []
+  },
+  "hrms.on_demand.s231_seed_fee_carveouts": {
+    "created": 0,
+    "updated": 0,
+    "skipped_no_store": 1,
+    "total_rows": 1,
+    "errors": [
+      {
+        "store": "Vista Mall",
+        "error": "Department not found"
+      }
+    ]
+  },
+  "fee_schedule_count": 9,
+  "fee_schedule_sample": [
+    {
+      "name": "Full Franchise-E-commerce",
+      "ownership_type": "Full Franchise",
+      "fee_type": "E-commerce",
+      "rate": 0.05,
+      "base_field": "website_sales",
+      "recipient_company": "BEBANG FRANCHISE CORP."
+    },
+    {
+      "name": "Full Franchise-Marketing",
+      "ownership_type": "Full Franchise",
+      "fee_type": "Marketing",
+      "rate": 0.05,
+      "base_field": "net_sales_ex_vat",
+      "recipient_company": "BEBANG FRANCHISE CORP."
+    },
+    {
+      "name": "Full Franchise-Royalty",
+      "ownership_type": "Full Franchise",
+      "fee_type": "Royalty",
+      "rate": 0.07,
+      "base_field": "net_sales_ex_vat",
+      "recipient_company": "BEBANG FRANCHISE CORP."
+    },
+    {
+      "name": "JV-E-commerce",
+      "ownership_type": "JV",
+      "fee_type": "E-commerce",
+      "rate": 0.05,
+      "base_field": "website_sales",
+      "recipient_company": "BEBANG ENTERPRISE INC."
+    },
+    {
+      "name": "JV-Marketing",
+      "ownership_type": "JV",
+      "fee_type": "Marketing",
+      "rate": 0.05,
+      "base_field": "gross_sales",
+      "recipient_company": "BEBANG ENTERPRISE INC."
+    },
+    {
+      "name": "Managed Franchise-E-commerce",
+      "ownership_type": "Managed Franchise",
+      "fee_type": "E-commerce",
+      "rate": 0.05,
+      "base_field": "website_sales",
+      "recipient_company": "BEBANG FRANCHISE CORP."
+    },
+    {
+      "name": "Managed Franchise-Management",
+      "ownership_type": "Managed Franchise",
+      "fee_type": "Management",
+      "rate": 0.025,
+      "base_field": "gross_sales",
+      "recipient_company": "BEBANG FRANCHISE CORP."
+    },
+    {
+      "name": "Managed Franchise-Marketing",
+      "ownership_type": "Managed Franchise",
+      "fee_type": "Marketing",
+      "rate": 0.05,
+      "base_field": "net_sales_ex_vat",
+      "recipient_company": "BEBANG FRANCHISE CORP."
+    },
+    {
+      "name": "Managed Franchise-Royalty",
+      "ownership_type": "Managed Franchise",
+      "fee_type": "Royalty",
+      "rate": 0.07,
+      "base_field": "net_sales_ex_vat",
+      "recipient_company": "BEBANG FRANCHISE CORP."
+    }
+  ],
+  "fee_carveout_count": 0,
+  "fee_carveout_sample": []
+}

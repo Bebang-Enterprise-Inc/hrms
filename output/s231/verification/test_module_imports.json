@@ -1,0 +1,71 @@
+{
+  "hrms.tests.test_s231_atomicity": {
+    "imported": true,
+    "test_class_count": 1,
+    "test_classes": [
+      "TestS231Atomicity"
+    ],
+    "test_method_count": 5,
+    "test_methods": [
+      "TestS231Atomicity.test_default_fields_to_track_constant_is_complete",
+      "TestS231Atomicity.test_invalid_after_check_clears_dead_refs",
+      "TestS231Atomicity.test_partial_create_default_accounts_failure_rolls_back_field_writes",
+      "TestS231Atomicity.test_validate_hook_clears_dead_refs_on_save",
+      "TestS231Atomicity.test_validate_hook_skips_when_first_provision_pending"
+    ]
+  },
+  "hrms.tests.test_s231_pricing_coupling": {
+    "imported": true,
+    "test_class_count": 6,
+    "test_classes": [
+      "TestS231BfcBillingReady",
+      "TestS231Carveouts",
+      "TestS231Idempotency",
+      "TestS231MonthlyFeeMath",
+      "TestS231Mystery004",
+      "TestS231RecipientRouting"
+    ],
+    "test_method_count": 17,
+    "test_methods": [
+      "TestS231BfcBillingReady.test_bfc_billing_ready_passes_when_all_set",
+      "TestS231BfcBillingReady.test_bfc_billing_ready_throws_when_naming_series_missing",
+      "TestS231BfcBillingReady.test_bfc_billing_ready_throws_when_or_inactive",
+      "TestS231BfcBillingReady.test_bfc_billing_ready_throws_when_vat_inactive",
+      "TestS231Carveouts.test_no_carveout_uses_schedule_rate",
+      "TestS231Carveouts.test_vista_mall_carveout_2pct_management",
+      "TestS231Idempotency.test_monthly_billing_idempotent_per_period",
+      "TestS231MonthlyFeeMath.test_monthly_billing_co_owned_skipped",
+      "TestS231MonthlyFeeMath.test_monthly_billing_ff_no_management_fee",
+      "TestS231MonthlyFeeMath.test_monthly_billing_jv_marketing_5pct",
+      "TestS231MonthlyFeeMath.test_monthly_billing_mf_full_fee_set",
+      "TestS231Mystery004.test_ecom_fee_uses_website_sales_only",
+      "TestS231Mystery004.test_mystery_004_replaced_by_seed_005",
+      "TestS231RecipientRouting.test_recipient_routing_company_owned_returns_none",
+      "TestS231RecipientRouting.test_recipient_routing_jv_to_bei",
+      "TestS231RecipientRouting.test_recipient_routing_mf_to_bfc",
+      "TestS231RecipientRouting.test_recipient_routing_unknown_type_raises"
+    ]
+  },
+  "hrms.tests.test_s231_markup_coupling": {
+    "imported": true,
+    "test_class_count": 2,
+    "test_classes": [
+      "TestS231MarkupFieldsExist",
+      "TestS231OwnershipTypeReconciliation"
+    ],
+    "test_method_count": 6,
+    "test_methods": [
+      "TestS231MarkupFieldsExist.test_markup_coupling_company_owned",
+      "TestS231MarkupFieldsExist.test_markup_coupling_full_franchise",
+      "TestS231MarkupFieldsExist.test_markup_coupling_jv",
+      "TestS231MarkupFieldsExist.test_markup_coupling_managed_franchise",
+      "TestS231MarkupFieldsExist.test_markup_field_order_grouped_in_bki_section",
+      "TestS231OwnershipTypeReconciliation.test_sales_location_mapping_default_matches_canonical"
+    ]
+  },
+  "_summary": {
+    "expected_total": 23,
+    "actual_total": 28,
+    "all_modules_imported": true
+  }
+}

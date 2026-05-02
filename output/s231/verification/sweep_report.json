@@ -1,0 +1,24 @@
+{
+  "scanned_companies": 51,
+  "broken_companies_before": 43,
+  "broken_companies_after": 0,
+  "broken_companies_with_active_payroll_count": 0,
+  "broken_companies_with_active_payroll": [],
+  "fields_cleared": 0,
+  "accounts_created": 0,
+  "manual_review_required": 0,
+  "samples_before": [
+    "ARANETA GATEWAY - TUNGSTEN CAPITAL HOLDINGS OPC",
+    "AYALA EVO CITY - BEBANG MEGA INC.",
+    "AYALA MARKET MARKET - BEBANG MARKET MARKET INC.",
+    "AYALA SOLENAD - HFFM SOLENAD FOOD SERVICES INC.",
+    "AYALA UP TOWN CENTER - BEBANG UP TOWN CENTER INC.",
+    "AYALA VERMOSA - BEBANG MEGA INC.",
+    "BF HOMES - BEBANG BF HOMES INC.",
+    "CTTM TOMAS MORATO - B CUBED VENTURES CORP.",
+    "D'VERDE CALAMBA - TAJ FOOD CORP.",
+    "EVER COMMONWEALTH - DLS DESSERT CRAFT INC."
+  ],
+  "scanned_companies_after": 51,
+  "samples_after": []
+}
