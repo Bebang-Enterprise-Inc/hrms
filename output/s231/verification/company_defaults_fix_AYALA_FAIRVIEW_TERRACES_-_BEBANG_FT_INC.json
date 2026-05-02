@@ -1,0 +1,82 @@
+{
+  "company_name": "AYALA FAIRVIEW TERRACES - BEBANG FT INC.",
+  "fields_cleared": 13,
+  "cleared": [
+    {
+      "field": "default_inventory_account",
+      "old_value": "Stock In Hand - BFI2"
+    },
+    {
+      "field": "default_payroll_payable_account",
+      "old_value": "Payroll Payable - BFI2"
+    },
+    {
+      "field": "default_employee_advance_account",
+      "old_value": "Employee Advances - BFI2"
+    },
+    {
+      "field": "exchange_gain_loss_account",
+      "old_value": "Exchange Gain/Loss - BFI2"
+    },
+    {
+      "field": "accumulated_depreciation_account",
+      "old_value": "Accumulated Depreciation - BFI2"
+    },
+    {
+      "field": "depreciation_expense_account",
+      "old_value": "Depreciation - BFI2"
+    },
+    {
+      "field": "expenses_included_in_asset_valuation",
+      "old_value": "Expenses Included In Asset Valuation - BFI2"
+    },
+    {
+      "field": "disposal_account",
+      "old_value": "Gain/Loss on Asset Disposal - BFI2"
+    },
+    {
+      "field": "capital_work_in_progress_account",
+      "old_value": "CWIP Account - BFI2"
+    },
+    {
+      "field": "asset_received_but_not_billed",
+      "old_value": "Asset Received But Not Billed - BFI2"
+    },
+    {
+      "field": "stock_adjustment_account",
+      "old_value": "Stock Adjustment - BFI2"
+    },
+    {
+      "field": "stock_received_but_not_billed",
+      "old_value": "Stock Received But Not Billed - BFI2"
+    },
+    {
+      "field": "expenses_included_in_valuation",
+      "old_value": "Expenses Included In Valuation - BFI2"
+    }
+  ],
+  "after": {
+    "default_inventory_account": null,
+    "default_payable_account": "Creditors - AFT",
+    "default_receivable_account": "Debtors - AFT",
+    "default_payroll_payable_account": null,
+    "default_employee_advance_account": null,
+    "default_expense_account": "Cost of Goods Sold - AFT",
+    "default_income_account": "Sales - AFT",
+    "round_off_account": "Round Off - AFT",
+    "round_off_cost_center": "Main - BFI2",
+    "default_cash_account": "Cash - AFT",
+    "exchange_gain_loss_account": null,
+    "accumulated_depreciation_account": null,
+    "depreciation_expense_account": null,
+    "expenses_included_in_asset_valuation": null,
+    "disposal_account": null,
+    "depreciation_cost_center": "Main - BFI2",
+    "capital_work_in_progress_account": null,
+    "asset_received_but_not_billed": null,
+    "stock_adjustment_account": null,
+    "stock_received_but_not_billed": null,
+    "expenses_included_in_valuation": null
+  },
+  "timestamp": "2026-05-02 21:49:38.618408"
+}

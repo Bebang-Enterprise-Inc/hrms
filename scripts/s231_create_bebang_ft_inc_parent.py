@@ -49,20 +49,83 @@ log = {
 }
 
 if not already_exists:
-    co = frappe.new_doc("Company")
-    co.company_name = "BEBANG FT INC."
-    co.abbr = "BFI2"
-    co.country = "Philippines"
-    co.default_currency = "PHP"
-    co.tax_id = "663-440-106-00000"
-    # parent_company set after insert if the parent exists; some
-    # ERPNext versions reject parent_company at insert for top-level
-    # Companies. Set defensively post-insert.
-    if frappe.db.exists("Company", "Bebang Enterprise Inc."):
-        co.parent_company = "Bebang Enterprise Inc."
-    co.flags.ignore_permissions = True
-    co.insert()
-    frappe.db.commit()
+    # Skip auto_provision_company on first insert because S181's
+    # _s181_apply_balance_sheet_template hits a chart-of-accounts
+    # structural error on fresh BFI2 ("6020602 - ACCOUNTING FEES - BFI2
+    # must be a group"). The C-1 atomicity wrapper rolls back the
+    # savepoint cleanly when this happens, but the doc.insert call
+    # still propagates the error. We use the in_install flag (which
+    # auto_provision_company at company.py:742 honors as a skip
+    # condition) to bypass the hook on first save, create the
+    # Company shell, then call retry_provision_company manually
+    # AFTER. If S181 still fails, the wrapper rolls back its own
+    # savepoint but the Company shell is preserved.
+    # ERPNext's Company.on_update calls self.create_default_accounts()
+    # unless either frappe.flags.in_install_app is True OR self.flags.
+    # country_change is True. We use country_change because it scopes
+    # to this single doc and doesn't require setting global flags.
+    # BEI's auto_provision_company is also skipped because we set
+    # frappe.flags.in_install too (it checks in_install/in_migrate/
+    # in_import at line 742).
+    # ERPNext's Company.on_update calls create_default_accounts UNLESS
+    # `frappe.local.flags.ignore_chart_of_accounts` is True (verified by
+    # reading the ERPNext source on the live container). The chart
+    # import path fails because BEI's existing Companies have malformed
+    # root-level non-group accounts (e.g. "6020602 - ACCOUNTING FEES")
+    # that get cloned into BFI2 and trip Account.validate_root_details.
+    # We set ignore_chart_of_accounts=True to skip ERPNext's CoA
+    # seeding entirely, create the Company shell, then run BEI's S181
+    # templates manually via retry_provision_company AFTER.
+    #
+    # frappe.flags.in_install also skips BEI's auto_provision_company
+    # (it short-circuits at company.py:742 when in_install is set).
+    frappe.local.flags.ignore_chart_of_accounts = True
+    frappe.flags.in_install = True
+    try:
+        co = frappe.new_doc("Company")
+        co.company_name = "BEBANG FT INC."
+        co.abbr = "BFI2"
+        co.country = "Philippines"
+        co.default_currency = "PHP"
+        co.tax_id = "663-440-106-00000"
+        if frappe.db.exists("Company", "Bebang Enterprise Inc."):
+            co.parent_company = "Bebang Enterprise Inc."
+        co.flags.ignore_permissions = True
+        try:
+            co.insert()
+            frappe.db.commit()
+            log["shell_created"] = True
+        except Exception as ex:
+            import traceback as _tb
+            log["insert_failed"] = True
+            log["insert_error"] = str(ex)[:1000]
+            log["insert_traceback"] = _tb.format_exc()[:5000]
+            try:
+                frappe.db.rollback()
+            except Exception:
+                pass
+    finally:
+        frappe.local.flags.ignore_chart_of_accounts = False
+        frappe.flags.in_install = False
+
+    # Now attempt full provisioning. retry_provision_company resets
+    # first_provision_done to 0 and re-fires auto_provision_company.
+    # If it raises, the C-1 wrapper rolls back its own savepoint —
+    # but the Company shell, which was committed BEFORE the retry,
+    # survives. We catch + log + continue.
+    try:
+        from hrms.overrides.company import retry_provision_company
+        retry_provision_company(company_name="BEBANG FT INC.")
+        log["retry_provision_attempted"] = True
+        log["retry_provision_succeeded"] = True
+    except Exception as e:
+        log["retry_provision_attempted"] = True
+        log["retry_provision_succeeded"] = False
+        log["retry_provision_error"] = str(e)[:500]
+        try:
+            frappe.db.rollback()
+        except Exception:
+            pass
     log["created"] = True
 else:
     log["created"] = False

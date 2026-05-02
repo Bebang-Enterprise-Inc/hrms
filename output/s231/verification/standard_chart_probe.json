@@ -1,0 +1,55 @@
+{
+  "standard_chart_top_keys": [
+    "Application of Funds (Assets)",
+    "Expenses",
+    "Income",
+    "Source of Funds (Liabilities)",
+    "Equity"
+  ],
+  "standard_6020602": [],
+  "std_with_numbers_top_keys": [
+    "Application of Funds (Assets)",
+    "Expenses",
+    "Income",
+    "Source of Funds (Liabilities)",
+    "Equity"
+  ],
+  "std_with_numbers_6020602": [],
+  "default_chart_returned_anything": false,
+  "chart_files": {
+    "verified": [
+      "__init__.py",
+      "__pycache__",
+      "ae_uae_chart_template_standard.json",
+      "ar_chart_of_accounts.json",
+      "au_standard_chart_of_accounts.json",
+      "bf_plan_comptable.json",
+      "bf_plan_comptable_avec_code.json",
+      "bj_plan_comptable.json",
+      "bj_plan_comptable_avec_code.json",
+      "br_planilha_de_contas.json",
+      "ca_plan_comptable_pour_les_provinces_francophones.json",
+      "cd_plan_comptable.json",
+      "cd_plan_comptable_avec_code.json",
+      "cf_plan_comptable.json",
+      "cf_plan_comptable_avec_code.json",
+      "cg_plan_comptable.json",
+      "cg_plan_comptable_avec_code.json",
+      "ch_240812_schulkontenrahmen_veb_de.json",
+      "ci_plan_comptable.json",
+      "ci_plan_comptable_avec_code.json",
+      "cm_plan_comptable.json",
+      "cm_plan_comptable_avec_code.json",
+      "co_plan_unico_de_cuentas.json",
+      "co_plan_unico_de_cuentas_simple.json",
+      "de_kontenplan_SKR03_gnucash.json",
+      "de_kontenplan_SKR04.json",
+      "de_kontenplan_SKR04_with_account_number.json",
+      "el_salvador_standard.json",
+      "fr_plan2025_comptable_general_avec_code.json",
+      "fr_plan2025_comptable_general_ex_agricole.json"
+    ]
+  },
+  "files_with_6020602_or_ACCOUNTING_FEES": [],
+  "grep_error": "Command '['grep', '-rln', '6020602', '/home/frappe/frappe-bench/apps/']' timed out after 30 seconds"
+}

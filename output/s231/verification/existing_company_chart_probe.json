@@ -1,0 +1,85 @@
+{
+  "bfc_company": {
+    "existing_company": null,
+    "chart_of_accounts": "Standard"
+  },
+  "bei_company": {
+    "existing_company": "IRRESISTIBLE INFUSIONS INC.",
+    "chart_of_accounts": null
+  },
+  "accounting_fees_accounts": [
+    {
+      "name": "ACCOUNTING FEES - Bebang Enterprise Inc.",
+      "account_number": "6020602",
+      "company": "BEBANG ENTERPRISE INC.",
+      "parent_account": null,
+      "is_group": 0,
+      "root_type": "Expense"
+    },
+    {
+      "name": "ACCOUNTING FEES - BKI",
+      "account_number": "6020602",
+      "company": "BEBANG KITCHEN INC.",
+      "parent_account": null,
+      "is_group": 0,
+      "root_type": "Expense"
+    },
+    {
+      "name": "ACCOUNTING FEES - III",
+      "account_number": "6020602",
+      "company": "IRRESISTIBLE INFUSIONS INC.",
+      "parent_account": null,
+      "is_group": 0,
+      "root_type": "Expense"
+    }
+  ],
+  "bfc_root_accounts": [
+    {
+      "name": "4000000 - SALES - BFC",
+      "account_number": "4000000",
+      "is_group": 1,
+      "parent_account": null,
+      "root_type": "Income"
+    },
+    {
+      "name": "Application of Funds (Assets) - BFC",
+      "account_number": "",
+      "is_group": 1,
+      "parent_account": null,
+      "root_type": "Asset"
+    },
+    {
+      "name": "Equity - BFC",
+      "account_number": "",
+      "is_group": 1,
+      "parent_account": null,
+      "root_type": "Equity"
+    },
+    {
+      "name": "Expenses - BFC",
+      "account_number": "",
+      "is_group": 1,
+      "parent_account": null,
+      "root_type": "Expense"
+    },
+    {
+      "name": "Income - BFC",
+      "account_number": "",
+      "is_group": 1,
+      "parent_account": null,
+      "root_type": "Income"
+    },
+    {
+      "name": "Source of Funds (Liabilities) - BFC",
+      "account_number": "",
+      "is_group": 1,
+      "parent_account": null,
+      "root_type": "Liability"
+    }
+  ],
+  "create_charts_signature": "(company, chart_template=None, existing_company=None, custom_chart=None, from_coa_importer=None)",
+  "bfc_6020602": [],
+  "hooks_for_account": {
+    "doc_events_Account": null
+  }
+}

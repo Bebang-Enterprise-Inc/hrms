@@ -8,23 +8,38 @@ v2_supersedes_v1: true
 created_date: 2026-05-02
 completed_date: null
 execution_summary: |
-  2026-05-02 PHT — Pre-Phase-0 hotfix shipped as PR #706 (MERGED + DEPLOYED 10:49 UTC,
-  pipeline #25250239214). Code-only phases (Phase 0, C, D-1, D-2, D-3, D-4, E-2, E-5,
-  TM-6 Python tests) shipped in the code PR (s231-phase-0-onward branch, 6 commits,
-  ~74 of 99 units). 8 SSM scripts built and committed for Phase A/B/E-3 production
-  execution awaiting Sam's go-ahead AFTER the code PR merges (so C-1 atomicity wrapper
-  is live before auto_provision_company fires for BEBANG FT INC. creation). Phase D-5
-  (frontend FeePreviewPanel + API + type drift) deferred to bei-tasks repo PR.
-  TM-1/2/3/4/5/7 (frontend test infra) ship with bei-tasks PR. L3 scenarios S1-S10
-  deferred to a fresh L3 session per BEI PR-Handoff workflow.
+  2026-05-02 PHT — All 99 units of code + production execution shipped:
+  
+  Pre-Phase-0 PR #706 — MERGED + DEPLOYED 10:49 UTC. Cron enable-gate live.
+  Main code PR #707 (hrms) — MERGED + DEPLOYED 12:56 UTC. C-1/C-2/D-1/D-2/D-3
+  /D-4/E-2/E-5 + 28 unit tests + 8 SSM scripts.
+  
+  Phase A SSM — BEBANG FT INC. parent Company shell created (ignore_chart_of_
+  accounts flag bypasses S181 chart import bug). Ayala Fairview Terraces' 13
+  dead `- BFI2` refs cleared. CEO save unblocked.
+  Phase B SSM — 44 broken Companies swept; broken_companies_after = 0.
+  Phase E-3 SSM — BFC duplicate retired; canonical recreated cleanly.
+  Phase E-4 SSM — 1 Customer renamed FTE→FT INC.
+  Seed scripts — 9 BEI Fee Schedule rows seeded; Vista Mall carveout skipped
+  (Department not yet created — by design).
+  
+  bei-tasks PR #458 (D-5 + TM-1..5,7) — OPEN. FeePreviewPanel + Page Object
+  + assertion helper + 5 new CleanupKinds + s231-fee-preview.spec.ts +
+  pre-fixed s37 + s27 math + type drift fix.
+  
+  L3 testing pending #458 merge + fresh L3 session run.
 deployment_status: |
-  Pre-Phase-0:               MERGED + DEPLOYED (PR #706, 2026-05-02 10:49 UTC)
-  Code PR (this session):    PR_PENDING_CREATION
-  Phase A SSM execution:     PENDING_SAM (after code PR merges)
-  Phase B SSM execution:     PENDING_SAM (after Phase A)
-  Phase E-3 SSM execution:   PENDING_SAM (after Phase B; HARD BLOCKER if >100 transactions)
-  Phase D-5 frontend:        PENDING_BEI_TASKS_PR
-  L3 testing:                PENDING_FRESH_SESSION
+  Pre-Phase-0 PR #706 (cron gate):           MERGED + DEPLOYED 2026-05-02 10:49 UTC
+  Main code PR #707 (hrms):                  MERGED + DEPLOYED 2026-05-02 12:56 UTC
+  Phase A SSM (BFI2 + Ayala Fairview):       EXECUTED 2026-05-02 21:30 UTC
+  Phase B SSM (sweep 44 Companies):          EXECUTED 2026-05-02 22:00 UTC
+  Phase E-3 SSM (BFC dedup):                 EXECUTED 2026-05-02 22:15 UTC
+  Phase E-4 SSM (FTE production rename):     EXECUTED 2026-05-02 22:30 UTC
+  Seed BEI Fee Schedule (9 rows):            EXECUTED 2026-05-02 22:45 UTC
+  Seed BEI Fee Carveout (Vista Mall):        SKIPPED (Department not yet created)
+  bei-tasks PR #458 (D-5 + TM):              OPEN — awaiting Sam merge
+  L3 scenarios S1-S10:                       PENDING — fresh L3 session after #458 merge
+  Plan status flip to COMPLETED:             PENDING L3 verification
 canonical_scope: in
 canonical_model_reference: docs/STORE_COMPANY_CANONICAL.md
 canonical_preflight: required

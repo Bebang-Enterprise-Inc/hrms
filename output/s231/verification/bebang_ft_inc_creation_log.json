@@ -1,0 +1,38 @@
+{
+  "company": "BEBANG FT INC.",
+  "abbr": "BFI2",
+  "tax_id": "663-440-106-00000",
+  "country": "Philippines",
+  "default_currency": "PHP",
+  "parent_company": "Bebang Enterprise Inc.",
+  "already_existed": false,
+  "shell_created": true,
+  "retry_provision_attempted": true,
+  "retry_provision_succeeded": false,
+  "retry_provision_error": "(1305, 'SAVEPOINT s181_auto_provision does not exist')",
+  "created": true,
+  "exists_after": true,
+  "first_provision_done": 0,
+  "required_accounts": [
+    "Stock In Hand - BFI2",
+    "Payroll Payable - BFI2",
+    "Employee Advances - BFI2",
+    "Cash on Hand - BFI2",
+    "Debtors - BFI2",
+    "Creditors - BFI2",
+    "Cost of Goods Sold - BFI2",
+    "Round Off - BFI2"
+  ],
+  "missing_accounts": [
+    "Stock In Hand - BFI2",
+    "Payroll Payable - BFI2",
+    "Employee Advances - BFI2",
+    "Cash on Hand - BFI2",
+    "Debtors - BFI2",
+    "Creditors - BFI2",
+    "Cost of Goods Sold - BFI2",
+    "Round Off - BFI2"
+  ],
+  "existing_bfi2_accounts_count": 0,
+  "existing_bfi2_accounts_sample": []
+}

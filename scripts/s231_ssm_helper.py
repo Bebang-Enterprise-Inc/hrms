@@ -80,8 +80,23 @@ def decode_output(stdout: str) -> Any:
 
 # Standard preamble injected at the top of every payload — initialises Frappe
 # and sets the user. Caller appends the actual logic + an emit call.
+#
+# Step 0 (mandatory per /frappe-bulk-edits skill): create log directories
+# BEFORE `import frappe`. Frappe's logger crashes on missing log dirs in
+# the container.
 PAYLOAD_PREAMBLE = f"""\
-import json, base64, gzip
+import os, sys, json, base64, gzip
+for _d in [
+    "/home/frappe/logs",
+    "/home/frappe/frappe-bench/logs",
+    "/home/frappe/frappe-bench/hq.bebang.ph/logs",
+    "/home/frappe/frappe-bench/sites/hq.bebang.ph/logs",
+]:
+    try:
+        os.makedirs(_d, exist_ok=True)
+    except Exception:
+        pass
+
 import frappe
 
 frappe.init(site="{SITE}", sites_path="{SITES_PATH}")

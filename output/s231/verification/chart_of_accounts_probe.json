@@ -1,0 +1,45 @@
+{
+  "Bebang Enterprise Inc.": {
+    "abbr": "BEI",
+    "chart_of_accounts": null,
+    "country": "Philippines",
+    "default_currency": "PHP",
+    "parent_company": "IRRESISTIBLE INFUSIONS INC.",
+    "tax_id": "647-243-690-00000",
+    "is_group": 1
+  },
+  "BEBANG FRANCHISE CORP.": {
+    "abbr": "BFC",
+    "chart_of_accounts": "Standard",
+    "country": "Philippines",
+    "default_currency": "PHP",
+    "parent_company": null,
+    "tax_id": "672-618-804-00000",
+    "is_group": 0
+  },
+  "BEBANG KITCHEN INC.": {
+    "abbr": "BKI",
+    "chart_of_accounts": null,
+    "country": "Philippines",
+    "default_currency": "PHP",
+    "parent_company": "IRRESISTIBLE INFUSIONS INC.",
+    "tax_id": "010-880-681-00001",
+    "is_group": 0
+  },
+  "BEBANG MEGA INC.": {
+    "abbr": "BMI2",
+    "chart_of_accounts": null,
+    "country": "Philippines",
+    "default_currency": "PHP",
+    "parent_company": "BEBANG ENTERPRISE INC.",
+    "tax_id": "010-885-436-00000",
+    "is_group": 1
+  },
+  "philippine_charts_available": [
+    "/home/frappe/frappe-bench/apps/erpnext/erpnext/accounts/doctype/account/chart_of_accounts/verified/ca_plan_comptable_pour_les_provinces_francophones.json"
+  ],
+  "charts_for_philippines": [
+    "Standard",
+    "Standard with Numbers"
+  ]
+}

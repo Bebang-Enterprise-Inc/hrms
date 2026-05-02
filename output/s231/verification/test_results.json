@@ -1,0 +1,29 @@
+{
+  "test_s231_atomicity": {
+    "ran": null,
+    "ok": false,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "ssm_status": "Success",
+    "raw_log": "F:\\Dropbox\\Projects\\BEI-ERP-s231-validate\\output\\s231\\verification\\test_test_s231_atomicity.txt"
+  },
+  "test_s231_pricing_coupling": {
+    "ran": null,
+    "ok": false,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "ssm_status": "Success",
+    "raw_log": "F:\\Dropbox\\Projects\\BEI-ERP-s231-validate\\output\\s231\\verification\\test_test_s231_pricing_coupling.txt"
+  },
+  "test_s231_markup_coupling": {
+    "ran": null,
+    "ok": false,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "ssm_status": "Success",
+    "raw_log": "F:\\Dropbox\\Projects\\BEI-ERP-s231-validate\\output\\s231\\verification\\test_test_s231_markup_coupling.txt"
+  }
+}
