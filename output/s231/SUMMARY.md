@@ -3,10 +3,11 @@
 **Sprint:** S231 v2 (combined per CEO directive 2026-05-02; 99-unit ceiling override)
 **Branch:** `s231-phase-0-onward`
 **Base SHA:** `cb06f24097802a16d93bf9e8facbe58fa485de13` (origin/production with PR #706 merged)
-**HEAD SHA:** `db2bbc4bc` (6 commits ahead of base)
+**HEAD SHA:** `db2bbc4bc` (7 commits ahead of base; closeout commit added after)
 **Plan:** `docs/plans/2026-05-02-sprint-231-pricing-coupling-and-defaults-defense.md`
 **Hard deadline:** 2026-05-30
 **Pre-Phase-0 hotfix:** PR #706 — MERGED + DEPLOYED 2026-05-02 10:49 UTC
+**Code PR:** PR #707 — OPEN, awaiting Sam review/merge
 
 ---
 
