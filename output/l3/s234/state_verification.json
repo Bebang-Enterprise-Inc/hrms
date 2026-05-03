@@ -1,0 +1,28 @@
+{
+  "sprint": "S234",
+  "sweep_type": "read-only",
+  "mutations": [],
+  "attested_by": "agent",
+  "timestamp": "2026-05-03T13:55:08Z",
+  "lanes": {
+    "A": "code-only (hrms/api/store.py defaults dict synthesizes add_days dates)",
+    "B": "doc-only (.claude/skills/merge-bei-erp/SKILL.md smoke probe; gitignored — local-only edit)",
+    "C": "scripts-only (no production seeder execution; cron DISABLED)"
+  },
+  "production_writes": "none",
+  "deployment": {
+    "merged_pr": 716,
+    "merge_sha": "29a1b5857",
+    "deployed_at": "2026-05-03T13:55:08Z",
+    "production_head_pre": "71e77d706363bc8bd9576acbe5737bc01cece19f",
+    "production_head_post": "29a1b5857"
+  },
+  "post_deploy_validation": {
+    "smoke_3_cycle": "PASS — output/l3/s234/smoke_3_cycle_log.txt",
+    "estancia_probe": "PASS (next_cold=2026-05-05, next_dry=2026-05-06, schedule_source=default)",
+    "araneta_probe": "PASS (next_cold=2026-05-04, next_dry=2026-05-04, schedule_source=fallback_last_week)",
+    "all_49_stores": "47 default + 2 fallback_last_week + 0 null — output/s234/verification/state_after.json",
+    "canonical_postcheck": "PASS — 0 violations across 49 stores"
+  },
+  "rollback_plan": "git revert 327e9b11f cfe967ae5 + redeploy; no data restore needed"
+}

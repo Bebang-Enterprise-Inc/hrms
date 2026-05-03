@@ -2,25 +2,43 @@
 sprint_id: S234
 sprint_title: Ordering Schedule Defaults Defense + Smoke Test Repoint + Data Foundation
 plan_branch: s234-ordering-schedule-defaults-and-data
-status: BUILD_COMPLETE_AWAITING_MERGE
+status: COMPLETED
 version: 2
 created_date: 2026-05-03
 audited_date: 2026-05-03
 build_completed_date: 2026-05-03
-completed_date:
+completed_date: 2026-05-03
 backend_pr: 716
+merge_sha: 29a1b5857
+l3_result: N/A (read-only API change; no L3 scenarios)
 execution_summary: |
-  Phase 0 PASS (canonical preflight 0 violations; state_before captured: Estancia=null,
-  ARANETA=ISO via fallback_last_week; SHAs hrms 71e77d706 / bei-tasks d3c663a58).
-  Lane A committed 327e9b11f — synthesized add_days defaults; cold_interval/dry_interval
-  deliberately omitted to prevent REC-ENGINE-DRIFT.
-  Lane B applied to local mirrors (.claude/.agent/.agents) — SKILL.md is gitignored;
-  live smoke proof: PASS cold=2026-05-04 dry=2026-05-04 schedule_source=fallback_last_week.
-  Lane C committed cfe967ae5 — seeder (savepoint+dry-run-default), cron skeleton
+  All phases PASS. PR #716 merged (29a1b5857) and deployed.
+
+  Phase 0: canonical preflight 0 violations; state_before — Estancia=null
+  (defaults branch confirmed failing), ARANETA=ISO via fallback_last_week.
+  SHAs captured: hrms 71e77d706 / bei-tasks d3c663a58.
+
+  Lane A (327e9b11f): synthesized add_days(today, 2/3) in defaults dict.
+  cold_interval/dry_interval deliberately omitted (REC-ENGINE-DRIFT defense
+  from v2 audit).
+
+  Lane B: local-only edit to .claude/skills/merge-bei-erp/SKILL.md (gitignored).
+  Mirrors synced to .agent/.agents. Live smoke proof captured.
+
+  Lane C (cfe967ae5): seeder (savepoint+dry-run-default), cron skeleton
   (DISABLED_BY_DEFAULT), CSV template, runbook, doctype_schema.json.
-  PR #716 opened against production. Awaiting Sam merge + deploy. Phase D
-  (smoke 3-cycle, state_after probe, state_verification, canonical postcheck,
-  plan COMPLETED, registry update, worktree removal) runs post-deploy.
+
+  Phase D post-deploy validation:
+  - 3-cycle ARANETA smoke: 3/3 PASS (cold=2026-05-04, dry=2026-05-04, schedule_source=fallback_last_week)
+  - Estancia post-deploy: PASS (cold=2026-05-05, dry=2026-05-06, schedule_source=default)
+  - 49-store state_after: 47 default + 2 fallback_last_week + 0 null
+  - Canonical postcheck: 0 violations across 49 stores (preflight parity)
+
+  Outcome: 47 default-stores no longer return null for next_cold_delivery /
+  next_dry_delivery. Smoke probe now actually canaries the schedule pipeline
+  (was always-failing on Estancia which has no entries). Recommendation
+  engine math UNCHANGED for all 49 stores (cold_interval/dry_interval guards
+  in place).
 canonical_scope: in
 canonical_model_reference: docs/STORE_COMPANY_CANONICAL.md
 canonical_preflight: required

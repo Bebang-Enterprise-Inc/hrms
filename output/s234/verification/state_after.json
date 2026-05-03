@@ -1,0 +1,454 @@
+{
+  "probed_at": "2026-05-03T13:54:17.325669+00:00",
+  "store_count": 49,
+  "stores": [
+    {
+      "store": "ARANETA GATEWAY - TUNGSTEN CAPITAL HOLDINGS OPC",
+      "status": 200,
+      "next_cold_delivery": "2026-05-04",
+      "next_dry_delivery": "2026-05-04",
+      "days_to_cold": 1,
+      "days_to_dry": 1,
+      "schedule_source": "fallback_last_week"
+    },
+    {
+      "store": "AYALA EVO CITY - BEBANG MEGA INC.",
+      "status": 200,
+      "next_cold_delivery": "2026-05-05",
+      "next_dry_delivery": "2026-05-06",
+      "days_to_cold": 2,
+      "days_to_dry": 3,
+      "schedule_source": "default"
+    },
+    {
+      "store": "AYALA FAIRVIEW TERRACES - BEBANG FT INC.",
+      "status": 200,
+      "next_cold_delivery": "2026-05-05",
+      "next_dry_delivery": "2026-05-06",
+      "days_to_cold": 2,
+      "days_to_dry": 3,
+      "schedule_source": "default"
+    },
+    {
+      "store": "AYALA MARKET MARKET - BEBANG MARKET MARKET INC.",
+      "status": 200,
+      "next_cold_delivery": "2026-05-05",
+      "next_dry_delivery": "2026-05-06",
+      "days_to_cold": 2,
+      "days_to_dry": 3,
+      "schedule_source": "default"
+    },
+    {
+      "store": "AYALA SOLENAD - HFFM SOLENAD FOOD SERVICES INC.",
+      "status": 200,
+      "next_cold_delivery": "2026-05-05",
+      "next_dry_delivery": "2026-05-06",
+      "days_to_cold": 2,
+      "days_to_dry": 3,
+      "schedule_source": "default"
+    },
+    {
+      "store": "AYALA UP TOWN CENTER - BEBANG UP TOWN CENTER INC.",
+      "status": 200,
+      "next_cold_delivery": "2026-05-07",
+      "next_dry_delivery": "2026-05-07",
+      "days_to_cold": 4,
+      "days_to_dry": 4,
+      "schedule_source": "fallback_last_week"
+    },
+    {
+      "store": "AYALA VERMOSA - BEBANG MEGA INC.",
+      "status": 200,
+      "next_cold_delivery": "2026-05-05",
+      "next_dry_delivery": "2026-05-06",
+      "days_to_cold": 2,
+      "days_to_dry": 3,
+      "schedule_source": "default"
+    },
+    {
+      "store": "BF HOMES - BEBANG BF HOMES INC.",
+      "status": 200,
+      "next_cold_delivery": "2026-05-05",
+      "next_dry_delivery": "2026-05-06",
+      "days_to_cold": 2,
+      "days_to_dry": 3,
+      "schedule_source": "default"
+    },
+    {
+      "store": "CTTM TOMAS MORATO - B CUBED VENTURES CORP.",
+      "status": 200,
+      "next_cold_delivery": "2026-05-05",
+      "next_dry_delivery": "2026-05-06",
+      "days_to_cold": 2,
+      "days_to_dry": 3,
+      "schedule_source": "default"
+    },
+    {
+      "store": "D'VERDE CALAMBA - TAJ FOOD CORP.",
+      "status": 200,
+      "next_cold_delivery": "2026-05-05",
+      "next_dry_delivery": "2026-05-06",
+      "days_to_cold": 2,
+      "days_to_dry": 3,
+      "schedule_source": "default"
+    },
+    {
+      "store": "EVER COMMONWEALTH - DLS DESSERT CRAFT INC.",
+      "status": 200,
+      "next_cold_delivery": "2026-05-05",
+      "next_dry_delivery": "2026-05-06",
+      "days_to_cold": 2,
+      "days_to_dry": 3,
+      "schedule_source": "default"
+    },
+    {
+      "store": "FESTIVAL MALL ALABANG - BEBANG FESTIVAL INC.",
+      "status": 200,
+      "next_cold_delivery": "2026-05-05",
+      "next_dry_delivery": "2026-05-06",
+      "days_to_cold": 2,
+      "days_to_dry": 3,
+      "schedule_source": "default"
+    },
+    {
+      "store": "LUCKY CHINATOWN - BEBANG LCT INC.",
+      "status": 200,
+      "next_cold_delivery": "2026-05-05",
+      "next_dry_delivery": "2026-05-06",
+      "days_to_cold": 2,
+      "days_to_dry": 3,
+      "schedule_source": "default"
+    },
+    {
+      "store": "MEGAWIDE PITX - BEBANG PITX INC.",
+      "status": 200,
+      "next_cold_delivery": "2026-05-05",
+      "next_dry_delivery": "2026-05-06",
+      "days_to_cold": 2,
+      "days_to_dry": 3,
+      "schedule_source": "default"
+    },
+    {
+      "store": "MEGAWORLD PASEO CENTER - BEBANG PASEO INC.",
+      "status": 200,
+      "next_cold_delivery": "2026-05-05",
+      "next_dry_delivery": "2026-05-06",
+      "days_to_cold": 2,
+      "days_to_dry": 3,
+      "schedule_source": "default"
+    },
+    {
+      "store": "MEGAWORLD VENICE GRAND CANAL - BEBANG VENICE GRAND CANAL INC.",
+      "status": 200,
+      "next_cold_delivery": "2026-05-05",
+      "next_dry_delivery": "2026-05-06",
+      "days_to_cold": 2,
+      "days_to_dry": 3,
+      "schedule_source": "default"
+    },
+    {
+      "store": "NAIA T3 - HALO-HALO TERMINAL FOOD CORP.",
+      "status": 200,
+      "next_cold_delivery": "2026-05-05",
+      "next_dry_delivery": "2026-05-06",
+      "days_to_cold": 2,
+      "days_to_dry": 3,
+      "schedule_source": "default"
+    },
+    {
+      "store": "ORTIGAS ESTANCIA - BB ESTANCIA FOOD CORP.",
+      "status": 200,
+      "next_cold_delivery": "2026-05-05",
+      "next_dry_delivery": "2026-05-06",
+      "days_to_cold": 2,
+      "days_to_dry": 3,
+      "schedule_source": "default"
+    },
+    {
+      "store": "ORTIGAS GREENHILLS - BEIFRANCHISE FOOD OPC",
+      "status": 200,
+      "next_cold_delivery": "2026-05-05",
+      "next_dry_delivery": "2026-05-06",
+      "days_to_cold": 2,
+      "days_to_dry": 3,
+      "schedule_source": "default"
+    },
+    {
+      "store": "ROBINSONS ANTIPOLO - BEBANG ENTERPRISE INC.",
+      "status": 200,
+      "next_cold_delivery": "2026-05-05",
+      "next_dry_delivery": "2026-05-06",
+      "days_to_cold": 2,
+      "days_to_dry": 3,
+      "schedule_source": "default"
+    },
+    {
+      "store": "ROBINSONS GALLERIA SOUTH - TUNGSTEN CAPITAL HOLDINGS OPC",
+      "status": 200,
+      "next_cold_delivery": "2026-05-05",
+      "next_dry_delivery": "2026-05-06",
+      "days_to_cold": 2,
+      "days_to_dry": 3,
+      "schedule_source": "default"
+    },
+    {
+      "store": "ROBINSONS GENERAL TRIAS - BEBANG MEGA INC.",
+      "status": 200,
+      "next_cold_delivery": "2026-05-05",
+      "next_dry_delivery": "2026-05-06",
+      "days_to_cold": 2,
+      "days_to_dry": 3,
+      "schedule_source": "default"
+    },
+    {
+      "store": "ROBINSONS IMUS - BEBANG MEGA INC.",
+      "status": 200,
+      "next_cold_delivery": "2026-05-05",
+      "next_dry_delivery": "2026-05-06",
+      "days_to_cold": 2,
+      "days_to_dry": 3,
+      "schedule_source": "default"
+    },
+    {
+      "store": "ROBINSONS PLACE DASMARINAS - FREEZE DELIGHT INC.",
+      "status": 200,
+      "next_cold_delivery": "2026-05-05",
+      "next_dry_delivery": "2026-05-06",
+      "days_to_cold": 2,
+      "days_to_dry": 3,
+      "schedule_source": "default"
+    },
+    {
+      "store": "SM BICUTAN - BEBANG SM BICUTAN INC.",
+      "status": 200,
+      "next_cold_delivery": "2026-05-05",
+      "next_dry_delivery": "2026-05-06",
+      "days_to_cold": 2,
+      "days_to_dry": 3,
+      "schedule_source": "default"
+    },
+    {
+      "store": "SM CALOOCAN - TAJ FOOD CORP.",
+      "status": 200,
+      "next_cold_delivery": "2026-05-05",
+      "next_dry_delivery": "2026-05-06",
+      "days_to_cold": 2,
+      "days_to_dry": 3,
+      "schedule_source": "default"
+    },
+    {
+      "store": "SM CLARK - RED TALDAWA FOODS OPC",
+      "status": 200,
+      "next_cold_delivery": "2026-05-05",
+      "next_dry_delivery": "2026-05-06",
+      "days_to_cold": 2,
+      "days_to_dry": 3,
+      "schedule_source": "default"
+    },
+    {
+      "store": "SM EAST ORTIGAS - BEBANG SMEO INC.",
+      "status": 200,
+      "next_cold_delivery": "2026-05-05",
+      "next_dry_delivery": "2026-05-06",
+      "days_to_cold": 2,
+      "days_to_dry": 3,
+      "schedule_source": "default"
+    },
+    {
+      "store": "SM GRAND CENTRAL - BEBANG GRAND CENTRAL INC.",
+      "status": 200,
+      "next_cold_delivery": "2026-05-05",
+      "next_dry_delivery": "2026-05-06",
+      "days_to_cold": 2,
+      "days_to_dry": 3,
+      "schedule_source": "default"
+    },
+    {
+      "store": "SM MALL OF ASIA - BEBANG SMOA INC.",
+      "status": 200,
+      "next_cold_delivery": "2026-05-05",
+      "next_dry_delivery": "2026-05-06",
+      "days_to_cold": 2,
+      "days_to_dry": 3,
+      "schedule_source": "default"
+    },
+    {
+      "store": "SM MANILA - BEBANG ENTERPRISE INC.",
+      "status": 200,
+      "next_cold_delivery": "2026-05-05",
+      "next_dry_delivery": "2026-05-06",
+      "days_to_cold": 2,
+      "days_to_dry": 3,
+      "schedule_source": "default"
+    },
+    {
+      "store": "SM MARIKINA - BEBANG SM MARIKINA INC.",
+      "status": 200,
+      "next_cold_delivery": "2026-05-05",
+      "next_dry_delivery": "2026-05-06",
+      "days_to_cold": 2,
+      "days_to_dry": 3,
+      "schedule_source": "default"
+    },
+    {
+      "store": "SM MARILAO - BEBANG MARILAO INC.",
+      "status": 200,
+      "next_cold_delivery": "2026-05-05",
+      "next_dry_delivery": "2026-05-06",
+      "days_to_cold": 2,
+      "days_to_dry": 3,
+      "schedule_source": "default"
+    },
+    {
+      "store": "SM MEGAMALL - BEBANG ENTERPRISE INC.",
+      "status": 200,
+      "next_cold_delivery": "2026-05-05",
+      "next_dry_delivery": "2026-05-06",
+      "days_to_cold": 2,
+      "days_to_dry": 3,
+      "schedule_source": "default"
+    },
+    {
+      "store": "SM NORTH EDSA - BEBANG NORTH EDSA INC.",
+      "status": 200,
+      "next_cold_delivery": "2026-05-05",
+      "next_dry_delivery": "2026-05-06",
+      "days_to_cold": 2,
+      "days_to_dry": 3,
+      "schedule_source": "default"
+    },
+    {
+      "store": "SM PULILAN - BEBANG SMM INC.",
+      "status": 200,
+      "next_cold_delivery": "2026-05-05",
+      "next_dry_delivery": "2026-05-06",
+      "days_to_cold": 2,
+      "days_to_dry": 3,
+      "schedule_source": "default"
+    },
+    {
+      "store": "SM SAN JOSE DEL MONTE - JL TRADE OPC",
+      "status": 200,
+      "next_cold_delivery": "2026-05-05",
+      "next_dry_delivery": "2026-05-06",
+      "days_to_cold": 2,
+      "days_to_dry": 3,
+      "schedule_source": "default"
+    },
+    {
+      "store": "SM SANGANDAAN - TUNGSTEN CAPITAL HOLDINGS OPC",
+      "status": 200,
+      "next_cold_delivery": "2026-05-05",
+      "next_dry_delivery": "2026-05-06",
+      "days_to_cold": 2,
+      "days_to_dry": 3,
+      "schedule_source": "default"
+    },
+    {
+      "store": "SM SOUTHMALL - BEBANG ENTERPRISE INC.",
+      "status": 200,
+      "next_cold_delivery": "2026-05-05",
+      "next_dry_delivery": "2026-05-06",
+      "days_to_cold": 2,
+      "days_to_dry": 3,
+      "schedule_source": "default"
+    },
+    {
+      "store": "SM STA. ROSA - SWEET HARMONY FOOD CORP.",
+      "status": 200,
+      "next_cold_delivery": "2026-05-05",
+      "next_dry_delivery": "2026-05-06",
+      "days_to_cold": 2,
+      "days_to_dry": 3,
+      "schedule_source": "default"
+    },
+    {
+      "store": "SM TANZA - BEBANG MEGA INC.",
+      "status": 200,
+      "next_cold_delivery": "2026-05-05",
+      "next_dry_delivery": "2026-05-06",
+      "days_to_cold": 2,
+      "days_to_dry": 3,
+      "schedule_source": "default"
+    },
+    {
+      "store": "SM TAYTAY - DAY ONES FOOD AND DRINK ESTABLISHMENTS CORP.",
+      "status": 200,
+      "next_cold_delivery": "2026-05-05",
+      "next_dry_delivery": "2026-05-06",
+      "days_to_cold": 2,
+      "days_to_dry": 3,
+      "schedule_source": "default"
+    },
+    {
+      "store": "SM VALENZUELA - BEBANG SMV INC.",
+      "status": 200,
+      "next_cold_delivery": "2026-05-05",
+      "next_dry_delivery": "2026-05-06",
+      "days_to_cold": 2,
+      "days_to_dry": 3,
+      "schedule_source": "default"
+    },
+    {
+      "store": "STA. LUCIA EAST GRAND MALL - BEBANG SM MARIKINA INC.",
+      "status": 200,
+      "next_cold_delivery": "2026-05-05",
+      "next_dry_delivery": "2026-05-06",
+      "days_to_cold": 2,
+      "days_to_dry": 3,
+      "schedule_source": "default"
+    },
+    {
+      "store": "THE GRID ROCKWELL - TASTECARTEL CORP.",
+      "status": 200,
+      "next_cold_delivery": "2026-05-05",
+      "next_dry_delivery": "2026-05-06",
+      "days_to_cold": 2,
+      "days_to_dry": 3,
+      "schedule_source": "default"
+    },
+    {
+      "store": "THE TERMINAL - BEBANG STARMALL ALABANG INC.",
+      "status": 200,
+      "next_cold_delivery": "2026-05-05",
+      "next_dry_delivery": "2026-05-06",
+      "days_to_cold": 2,
+      "days_to_dry": 3,
+      "schedule_source": "default"
+    },
+    {
+      "store": "UP TOWN MALL BGC - DMD HOLDINGS INC.",
+      "status": 200,
+      "next_cold_delivery": "2026-05-05",
+      "next_dry_delivery": "2026-05-06",
+      "days_to_cold": 2,
+      "days_to_dry": 3,
+      "schedule_source": "default"
+    },
+    {
+      "store": "VISTA MALL TAGUIG - TRICERN FOOD CORP.",
+      "status": 200,
+      "next_cold_delivery": "2026-05-05",
+      "next_dry_delivery": "2026-05-06",
+      "days_to_cold": 2,
+      "days_to_dry": 3,
+      "schedule_source": "default"
+    },
+    {
+      "store": "XENTROMALL MONTALBAN - PERPETUAL FOOD CORP.",
+      "status": 200,
+      "next_cold_delivery": "2026-05-05",
+      "next_dry_delivery": "2026-05-06",
+      "days_to_cold": 2,
+      "days_to_dry": 3,
+      "schedule_source": "default"
+    }
+  ],
+  "summary": {
+    "by_schedule_source": {
+      "fallback_last_week": 2,
+      "default": 47
+    },
+    "stores_with_null_dates": []
+  }
+}
