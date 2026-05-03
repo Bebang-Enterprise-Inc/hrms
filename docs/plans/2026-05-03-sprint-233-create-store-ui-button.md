@@ -3,32 +3,39 @@ sprint_id: S233
 display: Sprint 233
 title: Add "Create Store" UI button on Company Master + canonical create_new_store helper
 status: PLANNED
-version: v1
+version: v2
 created_date: 2026-05-03
+amended_date: 2026-05-03
 completed_date: null
 execution_summary: null
 canonical_scope: in
 canonical_model_reference: docs/STORE_COMPANY_CANONICAL.md
 canonical_preflight: required
-branch: s233-create-store-ui-button
+branch: s233-plan-v2-amendments
+v1_branch: s233-create-store-ui-button (MERGED via PR #713 — DO NOT push to)
 target_repos:
   - hrms (Bebang-Enterprise-Inc/hrms)
   - bei-tasks (Bebang-Enterprise-Inc/BEI-Tasks)
 base_branch: production (hrms) / main (bei-tasks)
 pr_url: null
+v1_pr_url: https://github.com/Bebang-Enterprise-Inc/hrms/pull/713 (MERGED)
+audit_pr_url: TBD (this v2 amendments PR)
+audit_artifact: output/plan-audit/s233-create-store-ui-button/verified_blockers.md
 depends_on:
   - PR #707 (S231 C-1 atomicity wrapper) — DEPLOYED
   - PR #711 (S231 D-5-1 get_fee_schedule endpoint) — DEPLOYED
   - s231_fix_bfi2_is_group.py — APPLIED (BFI2 is now is_group=1)
   - bki_markup_company_owned_percent set live to 2.75 — APPLIED
-unit_budget: 45
+unit_budget: 46
 unit_budget_rationale: |
-  Six phases, all under 12u (largest: Phase 3 frontend at 10u). Total
-  45u is well under the 80-unit S089 ceiling. Single-session execution
-  feasible. No CEO override required.
+  Six phases plus a Phase 0.5 (constant extraction for B-08 fix; +1u).
+  Largest phase is Phase 3 frontend at 10u. Total 46u is well under
+  the 80-unit S089 ceiling. Single-session execution feasible.
+  No CEO override required. v1 was 45u; v2 adds 1u for B-08.
 phase_unit_budget:
   Phase 0 — Boot, baselines, library audit: 4
-  Phase 1 — Backend canonical helper script: 8
+  Phase 0.5 — Extract _S037_RELPATH to bei_config.py (B-08 fix): 1
+  Phase 1 — Backend canonical helper script (now in hrms/api/): 8
   Phase 2 — Backend whitelisted API + RBAC: 5
   Phase 3 — Frontend dialog + button + hook: 10
   Phase 4 — Test library extensions (Page Object, fixture kind, mutation patterns): 6
@@ -67,6 +74,41 @@ hard_deadline_rationale: |
 
 # Sprint 233 — Add "Create Store" UI button on Company Master
 
+---
+
+## ⚠️ v2 Amendment Log (2026-05-03)
+
+This plan was amended after `/audit-plan-bei-erp` produced 7 CRITICAL + 2 WARNING + 2 INFO blockers (all independently verified by adversarial fact-check against actual source). v2 fixes every CRITICAL blocker. Audit report: `output/plan-audit/s233-create-store-ui-button/verified_blockers.md`.
+
+### Amendments applied
+
+| # | Blocker | v1 (broken) | v2 (fixed) | Affected sections |
+|---|---|---|---|---|
+| **A1** | B-01 import path | `from scripts.canonical.create_new_store import create_new_store` would throw `ModuleNotFoundError` (HOTFIX4 at `company_master.py:939–941` documents this trap) | Helper file moves to `hrms/api/create_new_store.py`. Endpoint imports `from hrms.api.create_new_store import create_new_store`. | Phase 1 file path, Phase 2 import, MUST_MODIFY paths, verify_phase scripts, Library Audit table |
+| **A2** | B-02 savepoint order | `frappe.db.commit()` BEFORE `frappe.db.release_savepoint(sp)` defeats rollback | Remove `frappe.db.commit()` from inside savepoint. Let Frappe HTTP cycle commit. `release_savepoint` runs inside try; on exception, `rollback(save_point=sp)` is reachable. | Phase 1-3 code block |
+| **A3** | B-03 CSV split-brain | `_append_s037_row()` (filesystem) called INSIDE savepoint try, before commit | Move CSV write to AFTER savepoint released, accept DB-atomic + CSV-best-effort. Add post-write verification step. | Phase 1-3 code block |
+| **A4** | B-04 missing Customer fields | Both Customer inserts omit `customer_group`, `territory`, `customer_type` → `MandatoryError` | Both inserts now set `customer_type="Company"`, `customer_group="BKI Store"`, `territory="Philippines"` | Phase 1-3 code block |
+| **A5** | B-05 RBAC role mismatch | Backend `allowed_roles` includes nonexistent `"BD User"` and lacks `"Business Development"`/`"HQ User"`/`"Accounts Manager"` (frontend-permitted) | Backend now matches frontend `MODULE_ACCESS[MODULES.COMPANY_MASTER]`: `{"Business Development", "BD Manager", "Accounts Manager", "HQ User", "System Manager", "Administrator"}`. Frontend RBAC guard wraps `add-store-button` on the same role union. | Phase 2-1 code, Phase 3-3 button guard, Phase 3-4 RBAC spec |
+| **A6** | B-06 Ellipsis placeholder | `("rbac_guard_on_button", ...)` always-truthy via Python Ellipsis | Replaced with concrete grep-based check on the new `hasCompanyMasterRole` constant in page.tsx | Phase 3 verification script (verify_phase3.py) |
+| **A7** | B-08 circular import | Helper top-level `from hrms.api.company_master import _S037_RELPATH` causes circular import after A1 fix | NEW Phase 0.5 (1u): extract `_S037_RELPATH` to `hrms/utils/bei_config.py`; both `company_master.py` and the new helper import from `bei_config`. No cycle. | YAML phase budget, NEW Phase 0.5, Phase 1 import |
+| **A8** | B-09 S8 atomicity test | "test Company name=blank" rejected by precondition before savepoint entered | S8 induces failure inside the 4-record sequence: pass `customer_group="NONEXISTENT_GROUP_S233"` so the SECOND Customer insert raises a Customer.validate exception → savepoint rollback exercised → all 4 records absent verified | Phase 5 L3 scenario S8 spec |
+| **A9** | B-10 split truncation | `companyName.split(" - ")[0]` truncates multi-hyphen labels | Replaced with `companyName.slice(0, companyName.lastIndexOf(" - "))` | Phase 3-3 page.tsx onCreated handler |
+| **A10** | NG2 narrative error | Plan line 92 cited nonexistent `retire_warehouse_duplicate.py` | Removed the false reference; only `migrate_49_stores.py` cited | Triggering Incident section |
+| **B-07** | Demoted | "Plan/registry not on production" framed as CRITICAL | DEMOTED to INFO — standard PR-Handoff workflow; v1 was merged via PR #713 | n/a |
+
+### Net unit budget change
+- v1: 45u across 6 phases
+- v2: 46u across 7 phases (added Phase 0.5 = 1u for B-08 fix)
+- Still well under S089 80-unit ceiling
+
+### Where to find the audit evidence
+- `output/plan-audit/s233-create-store-ui-button/verified_blockers.md` — final blocker list (7 CRITICAL + 2 WARNING)
+- `output/plan-audit/s233-create-store-ui-button/code_verification.md` — source-grounded evidence per blocker
+- `output/plan-audit/s233-create-store-ui-button/fact_check_verification.md` — adversarial review (8 SUPPORTED, 1 PARTIAL, 1 CONTRADICTED)
+- 7 `*_findings.md` files — per-domain detail
+
+---
+
 ## Sprint Registry Lock Evidence
 
 Row added to `docs/plans/SPRINT_REGISTRY.md` 2026-05-03:
@@ -89,7 +131,7 @@ That SSM-only path surfaced 4 defect classes during S231 Phase A:
 3. **Operational Status enum case mismatch** — payload `Pre-opening` rejected; must be `Pre-Opening`.
 4. **`bki_markup_company_owned_percent` JSON default 2.75 didn't apply** to the pre-existing BEI Settings Single doc; live value stayed at `0.0` until `s231_set_co_owned_markup.py` set it manually.
 
-Every BD user who tries to onboard a new store today must either (a) write a custom SSM script and rediscover these traps, or (b) ask an engineer to do it. The canonical model doc references `scripts/canonical/create_new_store.py` (line 92) but the script doesn't exist — only `migrate_49_stores.py` and `retire_warehouse_duplicate.py` are in `scripts/canonical/`.
+Every BD user who tries to onboard a new store today must either (a) write a custom SSM script and rediscover these traps, or (b) ask an engineer to do it. The canonical model doc references `scripts/canonical/create_new_store.py` (line 92) but the script doesn't exist — only `migrate_49_stores.py` is in `scripts/canonical/`. Per v2 amendment A1, the new helper ships in `hrms/api/create_new_store.py` (NOT `scripts/`) so it imports cleanly from the Frappe HTTP request handler — `scripts/` is not on Frappe's `sys.path` (HOTFIX4 at `hrms/api/company_master.py:939–941` documents this trap).
 
 ---
 
@@ -178,7 +220,8 @@ Per QA test library discipline (`.claude/docs/qa-test-library-discipline.md`), t
 
 | New asset | Path | Reusable for |
 |---|---|---|
-| `scripts/canonical/create_new_store.py` | NEW | All future programmatic store onboarding (replaces ad-hoc SSM patterns) |
+| `hrms/api/create_new_store.py` (v2 A1: was `scripts/canonical/`) | NEW | All future programmatic store onboarding (replaces ad-hoc SSM patterns). Located in `hrms/api/` so it's importable from Frappe HTTP context — `scripts/` is not on Frappe's `sys.path` per HOTFIX4 at `company_master.py:939`. |
+| `hrms/utils/bei_config.py::S037_REGISTER_RELPATH` (v2 A7: NEW constant) | EXTEND | Shared between `company_master.py` and `create_new_store.py` to prevent the circular import that would emerge from cross-module import of `_S037_RELPATH`. |
 | `hrms/api/company_master.py::create_store_company` | EXTEND | The whitelisted endpoint (UI + future BD scripts) |
 | `hrms/api/company_master.py::list_eligible_parent_companies` | NEW | Returns Companies with `is_group=1` AND `entity_category in ("Head Office","Holding Company")` for parent picker |
 | `bei-tasks/lib/queries/company-master.ts::useCreateStoreCompany` | NEW | TanStack mutation hook with cache invalidation (CompanyList + CompanyDetail) |
@@ -211,7 +254,7 @@ Per QA test library discipline (`.claude/docs/qa-test-library-discipline.md`), t
 | S5 | sam@bebang.ph | Open "+ Add Store" → leave Parent Company blank → click Submit | Form blocks submission; "Parent Legal Entity is required" inline validation; submit button disabled or click rejected | Required-field validation not wired |
 | S6 | system (cleanup teardown) | Run `python scripts/s233_l3_teardown_test_store.py` | Test Company + Warehouse + 2 Customers + S037 row deleted; `frappe.db.exists("Company", "L3 Test Store 233 - BEBANG FT INC.") == False` | Teardown helper doesn't fully reverse the canonical creation |
 | S7 | test.bd@bebang.ph (BD Manager — non-System Manager) | If BD Manager role has create permission per RBAC: open "+ Add Store" → form opens; If not: button is hidden/disabled with tooltip "Requires BD Manager role" | RBAC enforced consistently UI + backend | RBAC mismatch (UI shows but backend rejects, or vice versa) |
-| S8 | system (negative cleanup) | Mid-test interrupt — savepoint rollback verification: trigger Company.insert exception via test Company name=blank, verify NO records persist | All 4 records absent OR all 4 present (atomicity invariant) | Savepoint ordering broken — partial create leaves orphan records |
+| S8 (v2 A8) | system (negative cleanup) | Savepoint atomicity test: invoke `create_store_company` with a payload that intentionally fails inside the 4-record sequence — set `customer_group="NONEXISTENT_GROUP_S233"` so the SECOND Customer.insert (billing customer) raises `frappe.LinkValidationError` AFTER the Company + Warehouse have been inserted but BEFORE all 4 are committed. Verify all 4 records absent post-failure (savepoint rolled back the Company + Warehouse + 1st Customer). Also verify NO row was added to the S037 register CSV (since CSV write happens AFTER savepoint per A3). | All 4 records absent (atomicity invariant) AND `s037_row_added=False` AND error message names `customer_group` | Savepoint ordering broken — partial create leaves orphan records OR CSV write fired despite DB rollback |
 
 ---
 
@@ -271,7 +314,7 @@ Reference skill: `/frappe-bulk-edits` for SSM seeding/teardown.
 
 | Element | Artifact | Rule |
 |---|---|---|
-| ownership_matrix | `output/s233/SURFACE_OWNERSHIP_MATRIX.csv` | This sprint owns: `hrms/api/company_master.py` (EXTEND with `create_store_company` + `list_eligible_parent_companies`), `scripts/canonical/create_new_store.py` (NEW), `hrms/data_seed/store_entity_mapping_<latest>.csv` (APPEND — read-modify-write contract per row), `bei-tasks/app/dashboard/bd/companies/page.tsx` (EXTEND with header button), `bei-tasks/components/company-master/create-store-dialog.tsx` (NEW), `bei-tasks/lib/queries/company-master.ts` (EXTEND with 2 new hooks), `bei-tasks/tests/e2e/pages/CreateStoreDialog.ts` (NEW), `bei-tasks/tests/e2e/specs/s233-create-store-ui.spec.ts` (NEW). |
+| ownership_matrix | `output/s233/SURFACE_OWNERSHIP_MATRIX.csv` | This sprint owns (v2 paths): `hrms/api/company_master.py` (EXTEND with `create_store_company` + `list_eligible_parent_companies`; v2 A7 also alters `_S037_RELPATH` to import from `bei_config`), `hrms/api/create_new_store.py` (NEW — v2 A1: was `scripts/canonical/`), `hrms/utils/bei_config.py` (EXTEND with `S037_REGISTER_RELPATH` — v2 A7), `hrms/data_seed/store_entity_mapping_<latest>.csv` (APPEND — read-modify-write contract per row), `bei-tasks/app/dashboard/bd/companies/page.tsx` (EXTEND with header button + RBAC guard + lastIndexOf split — v2 A5/A9), `bei-tasks/components/company-master/create-store-dialog.tsx` (NEW), `bei-tasks/lib/queries/company-master.ts` (EXTEND with 2 new hooks), `bei-tasks/tests/e2e/pages/CreateStoreDialog.ts` (NEW), `bei-tasks/tests/e2e/specs/s233-create-store-ui.spec.ts` (NEW). |
 | protected_surfaces | `output/s233/PROTECTED_SURFACE_REGISTRY.csv` | Do NOT modify: `update_company_section` whitelist (S231 owned), `EDITABLE_SECTIONS` constant, existing detail dialog sections (BIR, Operations, etc.), `auto_provision_company` (S181/S231 owned), C-1 atomicity wrapper, `null_out_dead_default_refs` hook, `validate_store_ownership_type` hook. |
 | remote_truth_baseline | `output/s233/REMOTE_TRUTH_BASELINE.json` | Capture at Phase 0: `{repo: hrms, branch: production, head_sha: <git rev-parse origin/production>, capture_time: <ISO>}` and same for bei-tasks. |
 | touched_file_routing | `output/s233/TOUCHED_FILE_ROUTING.csv` | Each touched file → required L3 scenario(s) it must satisfy + canonical verifier pass post-change. |
@@ -411,14 +454,59 @@ exit(0 if not fail else 1)
 
 ---
 
-### Phase 1 — Backend canonical helper script (8 units)
+### Phase 0.5 — Extract _S037_RELPATH to bei_config.py (1 unit) — v2 A7
 
-**Goal:** ship `scripts/canonical/create_new_store.py` — the missing canonical creation script referenced in `docs/STORE_COMPANY_CANONICAL.md` line 92.
+**Goal:** prevent the circular import that would emerge from Phase 1 if `create_new_store.py` (in `hrms/api/`) imported `_S037_RELPATH` from `company_master.py` while `company_master.py`'s endpoint imports from the helper.
+
+#### 0.5-1. Add constant to bei_config.py
+
+Append to `hrms/utils/bei_config.py`:
+```python
+# ── S037 store/entity register CSV ─────────────────────────────────────
+# Extracted from hrms/api/company_master.py to break the circular import
+# that would emerge when hrms/api/create_new_store.py needed to read it.
+S037_REGISTER_RELPATH = ("data_seed", "store_entity_mapping_2026-04-13.csv")
+```
+
+#### 0.5-2. Update existing consumer in company_master.py
+
+In `hrms/api/company_master.py`:
+- Replace line 499 `_S037_RELPATH = ("data_seed", "store_entity_mapping_2026-04-13.csv")` with:
+  ```python
+  from hrms.utils.bei_config import S037_REGISTER_RELPATH as _S037_RELPATH  # back-compat alias
+  ```
+- All existing references to `_S037_RELPATH` in `company_master.py` continue to work (alias preserved). After this sprint, follow-up tasks may rename the alias away.
+
+#### 0.5-3. Verification
+
+```python
+# output/s233/verify_phase0_5.py
+src_bei = open("hrms/utils/bei_config.py").read()
+src_cm = open("hrms/api/company_master.py").read()
+checks = [
+    ("constant_in_bei_config", "S037_REGISTER_RELPATH" in src_bei),
+    ("path_unchanged", "store_entity_mapping_2026-04-13.csv" in src_bei),
+    ("company_master_imports_from_bei_config", "from hrms.utils.bei_config import S037_REGISTER_RELPATH" in src_cm),
+    ("no_dup_constant", src_cm.count('_S037_RELPATH = ("data_seed"') == 0),
+]
+fail = [c for c, ok in checks if not ok]
+print("PASS" if not fail else f"FAIL: {fail}")
+exit(0 if not fail else 1)
+```
+
+**MUST_MODIFY:** `hrms/utils/bei_config.py`, `hrms/api/company_master.py`
+**MUST_CONTAIN:** `S037_REGISTER_RELPATH = ("data_seed", "store_entity_mapping_2026-04-13.csv")` in bei_config.py; `from hrms.utils.bei_config import S037_REGISTER_RELPATH` in company_master.py
+
+---
+
+### Phase 1 — Backend canonical helper script (8 units) — v2 A1
+
+**Goal:** ship `hrms/api/create_new_store.py` (v2: relocated from `scripts/canonical/`) — the missing canonical creation script referenced in `docs/STORE_COMPANY_CANONICAL.md` line 92. Located in `hrms/api/` so it's importable from Frappe HTTP runtime; `scripts/` is not on Frappe's `sys.path` per HOTFIX4 in `company_master.py:939`.
 
 #### 1-1. Helper signature + idempotency contract (1 unit)
 
 ```python
-# scripts/canonical/create_new_store.py
+# hrms/api/create_new_store.py  (v2 A1: was scripts/canonical/create_new_store.py)
 def create_new_store(
     store_label: str,           # "SM Tanza" — human-readable
     parent_company: str,         # "BEBANG MEGA INC." — must be is_group=1
@@ -443,7 +531,7 @@ def create_new_store(
     """
 ```
 
-**MUST_MODIFY:** `scripts/canonical/create_new_store.py` (NEW file)
+**MUST_MODIFY:** `hrms/api/create_new_store.py` (NEW file — v2 A1: relocated from scripts/canonical/)
 **MUST_CONTAIN:** `def create_new_store(`, `parent_company: str`, all 4 record-name keys in return dict
 
 #### 1-2. Precondition validation (1 unit)
@@ -460,7 +548,7 @@ If any precondition fails, raise `frappe.ValidationError` with a specific messag
 
 **MUST_CONTAIN:** `_validate_preconditions(`, `frappe.ValidationError`, `is_group=1` check, abbr-uniqueness check
 
-#### 1-3. Atomic 4-record creation in one savepoint (4 units)
+#### 1-3. Atomic 4-record creation in one savepoint (4 units) — v2 A2 + A3 + A4
 
 ```python
 def create_new_store(...):
@@ -468,6 +556,7 @@ def create_new_store(...):
     company_name = f"{store_label} - {parent_company}"
     sp = "create_new_store_" + abbr.lower()
     frappe.db.savepoint(sp)
+    s037_row_added = False  # CSV write happens AFTER savepoint per v2 A3
     try:
         # 1. Per-store Company (with all defect handling)
         frappe.local.flags.ignore_chart_of_accounts = True
@@ -505,9 +594,12 @@ def create_new_store(...):
         if wh.name != company_name:
             frappe.rename_doc("Warehouse", wh.name, company_name, force=True)
 
-        # 3. Billing Customer
+        # 3. Billing Customer (v2 A4: customer_type + customer_group + territory mandatory)
         bc = frappe.new_doc("Customer")
         bc.customer_name = company_name
+        bc.customer_type = "Company"
+        bc.customer_group = "BKI Store"   # canonical pattern from company.py:574
+        bc.territory = "Philippines"      # canonical pattern from company.py:575
         bc.tax_id = co.tax_id  # same as Company's tax_id (inherited from parent if not given)
         bc.is_internal_customer = 0
         bc.flags.ignore_permissions = True
@@ -515,16 +607,35 @@ def create_new_store(...):
         if bc.name != company_name:
             frappe.rename_doc("Customer", bc.name, company_name, force=True)
 
-        # 4. Internal Customer (S206 labor cost-sharing)
+        # 4. Internal Customer (S206 labor cost-sharing) — v2 A4: same mandatory fields
         ic = frappe.new_doc("Customer")
         ic.customer_name = f"{store_label} (Internal)"
+        ic.customer_type = "Company"
+        ic.customer_group = "BKI Store"   # v2 A4 — same as billing customer
+        ic.territory = "Philippines"      # v2 A4
         ic.represents_company = company_name
         ic.is_internal_customer = 1
         ic.tax_id = None  # internal — no TIN
         ic.flags.ignore_permissions = True
         ic.insert()
 
-        # 5. Append to S037 register CSV (atomic write)
+        # v2 A2: release savepoint INSIDE try, BEFORE returning. Do NOT call
+        # frappe.db.commit() here — Frappe's HTTP request handler commits on
+        # successful return. Calling commit() here would end the transaction
+        # before release_savepoint() and make the except-block rollback ineffective.
+        # Pattern matches procurement.py:6607, billing.py:501,511, company.py:697.
+        frappe.db.release_savepoint(sp)
+    except Exception:
+        # v2 A2: rollback is reachable because we did NOT manually commit
+        frappe.db.rollback(save_point=sp)
+        raise
+
+    # v2 A3: CSV write happens AFTER savepoint released. Filesystem I/O is
+    # non-transactional — keeping it inside the savepoint creates a DB↔file
+    # split-brain on commit failure. Accept DB-atomic + CSV-best-effort:
+    # if CSV write fails here, raise (caller sees clear error) — DB is already
+    # consistent. Operator can retry _append_s037_row idempotently.
+    try:
         _append_s037_row(
             store_name=store_label,
             buyer_entity=parent_company,
@@ -533,37 +644,54 @@ def create_new_store(...):
             billing_policy="BKI_TO_STORE_INTERCOMPANY",
             active_status="active",
         )
-
-        frappe.db.commit()
-        frappe.db.release_savepoint(sp)
-    except Exception:
-        frappe.db.rollback(save_point=sp)
+        s037_row_added = True
+    except Exception as csv_exc:
+        # Surface the failure but don't roll back DB (canonical 4 records exist).
+        # Operator must run scripts/canonical/repair_s037_for_company.py post-hoc.
+        frappe.log_error(
+            f"S233: Company {company_name} created in DB but S037 CSV append failed",
+            f"create_new_store_csv_post_commit_failure: {csv_exc}",
+        )
         raise
+
     return {
         "company": company_name,
         "warehouse": company_name,
         "billing_customer": company_name,
         "internal_customer": f"{store_label} (Internal)",
-        "s037_row_added": True,
+        "s037_row_added": s037_row_added,
         "first_provision_done": 0,
     }
 ```
 
-**MUST_MODIFY:** `scripts/canonical/create_new_store.py`
-**MUST_CONTAIN:** `frappe.db.savepoint(`, `ignore_chart_of_accounts = True`, `frappe.flags.in_install = True`, `co.is_group = 0`, all 4 `frappe.new_doc(` calls (Company / Warehouse / Customer ×2), `_append_s037_row(`, `frappe.db.rollback(save_point=`
+**MUST_MODIFY:** `hrms/api/create_new_store.py` (v2 A1)
+**MUST_CONTAIN:**
+- `frappe.db.savepoint(`
+- `ignore_chart_of_accounts = True`
+- `frappe.flags.in_install = True`
+- `co.is_group = 0`
+- All 4 `frappe.new_doc(` calls (Company / Warehouse / Customer ×2)
+- `_append_s037_row(` (NOTE: must appear AFTER `release_savepoint`, NOT inside try block — v2 A3)
+- Both Customer inserts must contain `customer_type = "Company"`, `customer_group = "BKI Store"`, `territory = "Philippines"` (v2 A4)
+- `frappe.db.release_savepoint(sp)` INSIDE try, no `frappe.db.commit()` inside try (v2 A2)
+- `frappe.db.rollback(save_point=`
 
-#### 1-4. S037 register atomic-write helper (1 unit)
+**MUST_NOT_CONTAIN:**
+- `frappe.db.commit()` anywhere inside the savepoint try block (v2 A2)
+- `_append_s037_row(` inside the savepoint try block (v2 A3)
+
+#### 1-4. S037 register atomic-write helper (1 unit) — v2 A7
 
 ```python
 def _append_s037_row(store_name, buyer_entity, store_type, frappe_warehouse_name, billing_policy, active_status):
     """Append a row to the latest store_entity_mapping CSV. Atomic via temp + rename.
 
-    The "latest" CSV is the one referenced by company_master._S037_RELPATH —
-    update both that constant AND this helper if the file rotates.
+    v2 A7: imports the constant from hrms/utils/bei_config (Phase 0.5)
+    instead of from hrms/api/company_master to avoid circular import.
     """
     import csv, os, tempfile
-    from hrms.api.company_master import _S037_RELPATH
-    s037_path = os.path.normpath(os.path.join(frappe.get_app_path("hrms"), *_S037_RELPATH))
+    from hrms.utils.bei_config import S037_REGISTER_RELPATH  # v2 A7 — was: hrms.api.company_master._S037_RELPATH
+    s037_path = os.path.normpath(os.path.join(frappe.get_app_path("hrms"), *S037_REGISTER_RELPATH))
     with open(s037_path, encoding="utf-8-sig", newline="") as f:
         rows = list(csv.reader(f))
     rows.append([store_name, buyer_entity, store_type, frappe_warehouse_name, billing_policy, active_status])
@@ -574,7 +702,8 @@ def _append_s037_row(store_name, buyer_entity, store_type, frappe_warehouse_name
     os.replace(tmp_path, s037_path)  # atomic on POSIX + NTFS
 ```
 
-**MUST_CONTAIN:** `_append_s037_row(`, `tempfile.mkstemp`, `os.replace(tmp_path, s037_path)`
+**MUST_CONTAIN:** `_append_s037_row(`, `tempfile.mkstemp`, `os.replace(tmp_path, s037_path)`, `from hrms.utils.bei_config import S037_REGISTER_RELPATH` (v2 A7)
+**MUST_NOT_CONTAIN:** `from hrms.api.company_master import _S037_RELPATH` (v2 A7 — circular import trap)
 
 #### 1-5. CLI wrapper for SSM use (1 unit)
 
@@ -608,12 +737,16 @@ if __name__ == "__main__":
 
 **MUST_CONTAIN:** `if __name__ == "__main__":`, `argparse`, all 4 ownership choices in `choices=`
 
-**Verification (`output/s233/verify_phase1.py`):**
+**Verification (`output/s233/verify_phase1.py`) — v2 A1 + A2 + A3 + A4 + A7:**
 ```python
-import os, subprocess
+import os
 checks = []
-src = open("scripts/canonical/create_new_store.py").read()
-checks.append(("file_exists", os.path.exists("scripts/canonical/create_new_store.py")))
+HELPER_PATH = "hrms/api/create_new_store.py"  # v2 A1: was scripts/canonical/
+src = open(HELPER_PATH).read()
+
+# A1 — file path
+checks.append(("v2_a1_file_in_hrms_api", os.path.exists(HELPER_PATH)))
+checks.append(("v2_a1_no_old_path", not os.path.exists("scripts/canonical/create_new_store.py")))
 checks.append(("create_new_store_def", "def create_new_store(" in src))
 checks.append(("preconditions", "_validate_preconditions(" in src))
 checks.append(("savepoint", "frappe.db.savepoint(" in src))
@@ -624,6 +757,27 @@ checks.append(("s037_helper", "_append_s037_row(" in src))
 checks.append(("atomic_csv_write", "os.replace(tmp_path" in src))
 checks.append(("rollback_savepoint", "frappe.db.rollback(save_point=" in src))
 checks.append(("cli_wrapper", "if __name__ ==" in src and "argparse" in src))
+
+# A2 — savepoint must be released INSIDE try, no commit() inside try block
+try_block_lines = src[src.index("frappe.db.savepoint("):src.index("except Exception:")]
+checks.append(("v2_a2_release_savepoint_in_try", "frappe.db.release_savepoint(sp)" in try_block_lines))
+checks.append(("v2_a2_no_manual_commit_in_try", "frappe.db.commit()" not in try_block_lines))
+
+# A3 — CSV write must be AFTER except block, NOT inside try
+post_except = src[src.index("raise"):]  # after except: ... raise
+checks.append(("v2_a3_csv_after_savepoint", "_append_s037_row(" in post_except))
+checks.append(("v2_a3_csv_not_in_try", src[:src.index("except Exception:")].count("_append_s037_row(") == 0))
+
+# A4 — both Customer inserts must set customer_type, customer_group, territory
+customer_block_count = src.count('customer_type = "Company"')
+checks.append(("v2_a4_two_customer_type_assignments", customer_block_count >= 2))
+checks.append(("v2_a4_two_customer_group_assignments", src.count('customer_group = "BKI Store"') >= 2))
+checks.append(("v2_a4_two_territory_assignments", src.count('territory = "Philippines"') >= 2))
+
+# A7 — bei_config import (no circular import from company_master)
+checks.append(("v2_a7_imports_from_bei_config", "from hrms.utils.bei_config import S037_REGISTER_RELPATH" in src))
+checks.append(("v2_a7_no_circular_import", "from hrms.api.company_master import _S037_RELPATH" not in src))
+
 fail = [c for c, ok in checks if not ok]
 print("PASS" if not fail else f"FAIL: {fail}")
 exit(0 if not fail else 1)
@@ -672,14 +826,27 @@ def create_store_company(
     if not frappe.has_permission("Company", "create"):
         frappe.throw(_("Not permitted to create Company"))
 
-    allowed_roles = {"BD Manager", "BD User", "System Manager", "Administrator"}
+    # v2 A5: RBAC roles MUST match bei-tasks/lib/roles.ts MODULE_ACCESS[MODULES.COMPANY_MASTER].
+    # Removed nonexistent "BD User" (zero occurrences in repo). Added "Business Development",
+    # "Accounts Manager", "HQ User" to mirror the frontend grant list. Keep both ends in sync;
+    # divergence creates false-affordance dead-CTA bugs (S233 audit Blocker B-05).
+    allowed_roles = {
+        "Business Development",
+        "BD Manager",
+        "Accounts Manager",
+        "HQ User",
+        "System Manager",
+        "Administrator",
+    }
     user_roles = set(frappe.get_roles())
     if not (allowed_roles & user_roles):
         frappe.throw(_(
             "S233: create_store_company requires one of: {0}. You have: {1}"
         ).format(", ".join(sorted(allowed_roles)), ", ".join(sorted(user_roles))))
 
-    from scripts.canonical.create_new_store import create_new_store
+    # v2 A1: helper now lives in hrms/api/ (importable from Frappe HTTP context).
+    # `scripts/` is not on Frappe's sys.path — see HOTFIX4 at company_master.py:939.
+    from hrms.api.create_new_store import create_new_store
     return create_new_store(
         store_label=store_label,
         parent_company=parent_company,
@@ -693,7 +860,15 @@ def create_store_company(
 ```
 
 **MUST_MODIFY:** `hrms/api/company_master.py`
-**MUST_CONTAIN:** `def create_store_company(`, `set_backend_observability_context(module="company"`, `frappe.has_permission("Company", "create")`, `allowed_roles = {"BD Manager"`, `from scripts.canonical.create_new_store import create_new_store`
+**MUST_CONTAIN (v2 A1 + A5):**
+- `def create_store_company(`
+- `set_backend_observability_context(module="company"`
+- `frappe.has_permission("Company", "create")`
+- `"Business Development"` AND `"BD Manager"` AND `"Accounts Manager"` AND `"HQ User"` AND `"System Manager"` AND `"Administrator"` in the `allowed_roles` set (v2 A5)
+- `from hrms.api.create_new_store import create_new_store` (v2 A1)
+**MUST_NOT_CONTAIN:**
+- `"BD User"` (does not exist in BEI role taxonomy — v2 A5)
+- `from scripts.canonical.create_new_store import` (v2 A1 trap)
 
 #### 2-2. Eligible parents endpoint (1 unit)
 
@@ -1009,57 +1184,98 @@ export function CreateStoreDialog({ open, onClose, onCreated }: CreateStoreDialo
 **MUST_MODIFY:** `bei-tasks/components/company-master/create-store-dialog.tsx` (NEW)
 **MUST_CONTAIN:** `data-testid="create-store-dialog"`, `data-testid="store-label-input"`, `data-testid="parent-company-select"`, `data-testid="abbr-input"`, `data-testid="ownership-type-select"`, `data-testid="tax-id-input"`, `data-testid="submit-create-store-button"`, `useCreateStoreCompany`, `useEligibleParents`
 
-#### 3-3. Wire button into BD page header (2 units)
+#### 3-3. Wire button into BD page header (2 units) — v2 A5 + A9
 
 ```tsx
 // bei-tasks/app/dashboard/bd/companies/page.tsx — add import + state + button + dialog mount
 
 import { CreateStoreDialog } from "@/components/company-master/create-store-dialog";
 import { Plus } from "lucide-react";
+import { useUserRoles } from "@/hooks/use-user-roles"; // existing hook
+import { MODULES, MODULE_ACCESS } from "@/lib/roles";
 
 // Inside the page component:
 const [createStoreOpen, setCreateStoreOpen] = useState(false);
 
+// v2 A5: Guard variable — must match backend allowed_roles (Phase 2-1).
+// Source of truth: bei-tasks/lib/roles.ts MODULE_ACCESS[MODULES.COMPANY_MASTER].
+// If divergence creeps in, the backend will silently 403 grant-only-frontend roles.
+const userRoles = useUserRoles();
+const hasCompanyMasterRole = MODULE_ACCESS[MODULES.COMPANY_MASTER].some(
+  (role) => userRoles.includes(role)
+);
+
 // In the header area near the title, add:
-<Button
-  data-testid="add-store-button"
-  size="sm"
-  onClick={() => setCreateStoreOpen(true)}
->
-  <Plus className="h-4 w-4 mr-1" /> Add Store
-</Button>
+{hasCompanyMasterRole && (
+  <Button
+    data-testid="add-store-button"
+    size="sm"
+    onClick={() => setCreateStoreOpen(true)}
+  >
+    <Plus className="h-4 w-4 mr-1" /> Add Store
+  </Button>
+)}
 
 // At the end of the component, mount the dialog:
 <CreateStoreDialog
   open={createStoreOpen}
   onClose={() => setCreateStoreOpen(false)}
   onCreated={(companyName) => {
-    // Optional: open the new Company's detail dialog automatically
-    setSelected({ company: companyName, storeName: companyName.split(" - ")[0] });
+    // v2 A9: use lastIndexOf so multi-hyphen store labels survive
+    // (e.g., "SM North - Annex - BEBANG MEGA INC." → store label "SM North - Annex").
+    // The server precondition forbids " - " in store_label today, but defense
+    // in depth costs nothing.
+    const lastSepIdx = companyName.lastIndexOf(" - ");
+    const storeName = lastSepIdx > 0 ? companyName.slice(0, lastSepIdx) : companyName;
+    setSelected({ company: companyName, storeName });
   }}
 />
 ```
 
-RBAC: the button visibility is gated by user role. Use the existing `MODULES.COMPANY_MASTER` check from `bei-tasks/lib/roles.ts` — only show button when user has BD Manager / BD User / System Manager / Admin role.
-
 **MUST_MODIFY:** `bei-tasks/app/dashboard/bd/companies/page.tsx`
-**MUST_CONTAIN:** `data-testid="add-store-button"`, `<CreateStoreDialog`, `setCreateStoreOpen`, `import { CreateStoreDialog }`
+**MUST_CONTAIN (v2 A5 + A9):**
+- `data-testid="add-store-button"`
+- `<CreateStoreDialog`
+- `setCreateStoreOpen`
+- `import { CreateStoreDialog }`
+- `hasCompanyMasterRole` (the v2 A5 guard variable name — also referenced by verify_phase3.py)
+- `MODULE_ACCESS[MODULES.COMPANY_MASTER]` import + usage (v2 A5)
+- `companyName.lastIndexOf(" - ")` (v2 A9)
+**MUST_NOT_CONTAIN:**
+- `companyName.split(" - ")[0]` (v2 A9 truncation bug)
 
-#### 3-4. RBAC role check + button visibility (1 unit)
+#### 3-4. RBAC role check + button visibility (1 unit) — v2 A5
 
-Confirm `bei-tasks/lib/roles.ts` already exposes BD Manager check; if not, add helper. Button is hidden for non-BD users.
+`bei-tasks/lib/roles.ts` already exposes `MODULE_ACCESS[MODULES.COMPANY_MASTER]` (verified at line 920 of `roles.ts` in v2 audit). Phase 3-3 wires `hasCompanyMasterRole = MODULE_ACCESS[MODULES.COMPANY_MASTER].some((role) => userRoles.includes(role))`. The same role union is enforced backend-side per Phase 2-1 (`allowed_roles` set must match exactly). If backend and frontend diverge, the audit will flag a Blocker B-05-class issue.
 
-**MUST_CONTAIN:** RBAC guard on the button (e.g., `{hasBdRole && <Button data-testid="add-store-button" ...>}`)
+**MUST_CONTAIN:** `hasCompanyMasterRole` AND `MODULE_ACCESS[MODULES.COMPANY_MASTER]` in page.tsx
 
-**Verification (`output/s233/verify_phase3.py`):**
+**Verification (`output/s233/verify_phase3.py`) — v2 A5 + A6 + A9:**
 ```python
+import os
+page_src = open("bei-tasks/app/dashboard/bd/companies/page.tsx").read()
+backend_src = open("hrms/api/company_master.py").read()
 checks = [
     ("dialog_file", os.path.exists("bei-tasks/components/company-master/create-store-dialog.tsx")),
     ("hook_in_queries", "useCreateStoreCompany" in open("bei-tasks/lib/queries/company-master.ts").read()),
-    ("button_in_page", "add-store-button" in open("bei-tasks/app/dashboard/bd/companies/page.tsx").read()),
-    ("dialog_mount", "CreateStoreDialog" in open("bei-tasks/app/dashboard/bd/companies/page.tsx").read()),
-    ("rbac_guard_on_button", ...),  # check role-based visibility wrapper
+    ("button_in_page", "add-store-button" in page_src),
+    ("dialog_mount", "CreateStoreDialog" in page_src),
+    # v2 A6 — concrete check, not Ellipsis placeholder
+    ("v2_a6_rbac_guard_var", "hasCompanyMasterRole" in page_src),
+    ("v2_a6_rbac_guard_uses_module_access", "MODULE_ACCESS[MODULES.COMPANY_MASTER]" in page_src),
+    # v2 A5 — backend role set must match frontend MODULE_ACCESS
+    ("v2_a5_business_development_in_backend", '"Business Development"' in backend_src),
+    ("v2_a5_bd_manager_in_backend", '"BD Manager"' in backend_src),
+    ("v2_a5_accounts_manager_in_backend", '"Accounts Manager"' in backend_src),
+    ("v2_a5_hq_user_in_backend", '"HQ User"' in backend_src),
+    ("v2_a5_no_bd_user_in_backend", '"BD User"' not in backend_src),  # nonexistent role
+    # v2 A9 — split truncation fix
+    ("v2_a9_uses_lastIndexOf", 'lastIndexOf(" - ")' in page_src),
+    ("v2_a9_no_split_truncation", 'companyName.split(" - ")[0]' not in page_src),
 ]
+fail = [c for c, ok in checks if not ok]
+print("PASS" if not fail else f"FAIL: {fail}")
+exit(0 if not fail else 1)
 ```
 
 ---
@@ -1219,7 +1435,102 @@ test.describe("S233 L3 — Create Store UI", () => {
 
 #### 5-3. RBAC scenario S7 (1 unit)
 
-#### 5-4. Atomicity scenario S8 (2 units) — verify partial-create rollback
+#### 5-4. Atomicity scenario S8 (2 units) — verify partial-create rollback (v2 A8)
+
+S8 induces a failure INSIDE the savepoint (not before) so the rollback is actually exercised.
+
+```typescript
+test("S8 (v2 A8): savepoint atomicity — invalid customer_group rolls back all 4 records", async ({ loggedInAsCEO, request }) => {
+  const cmp = new CompanyMasterPage(loggedInAsCEO);
+  const dlg = new CreateStoreDialog(loggedInAsCEO);
+  const TEST_LABEL = "S233-L3-ATOMICITY-S8";
+  const TEST_ABBR = "S8ATOM";
+  const expectedCompanyName = `${TEST_LABEL} - ${TEST_PARENT}`;
+
+  // Pre-test invariant: none of the 4 canonical records exist
+  for (const [dt, name] of [
+    ["Company", expectedCompanyName],
+    ["Warehouse", expectedCompanyName],
+    ["Customer", expectedCompanyName],
+    ["Customer", `${TEST_LABEL} (Internal)`],
+  ] as const) {
+    const exists = await frappeReadback.docExists(request, dt, name);
+    expect(exists, `Pre-test: ${dt}:${name} must not exist`).toBe(false);
+  }
+
+  // To force a savepoint-internal failure, we monkey-patch BEI's BKI_STORE
+  // customer_group to a name that won't exist. The Customer.validate hook on
+  // the SECOND insert (billing customer) raises LinkValidationError, which
+  // happens AFTER Company + Warehouse are inserted INSIDE the savepoint.
+  // SSM helper applies the patch + reverts after the test.
+  await ssmRun(`
+    import frappe
+    frappe.init(site="hq.bebang.ph", sites_path="/home/frappe/frappe-bench/sites")
+    frappe.connect()
+    # Temporarily mark BKI Store group as disabled — Customer.validate will reject
+    frappe.db.set_value("Customer Group", "BKI Store", "disabled", 1)
+    frappe.db.commit()
+    frappe.destroy()
+  `);
+
+  try {
+    await cmp.gotoCompanyList();
+    await dlg.openFromCompanyMaster();
+    await dlg.fillStoreLabel(TEST_LABEL);
+    await dlg.pickParent(TEST_PARENT);
+    await dlg.fillAbbr(TEST_ABBR);
+    await dlg.pickOwnership("Managed Franchise");
+    await dlg.submit();
+
+    // Expect failure toast naming customer_group / customer
+    await cmp.waitForToast(/customer/i);
+
+    // INVARIANT: all 4 records absent (savepoint rolled back)
+    for (const [dt, name] of [
+      ["Company", expectedCompanyName],
+      ["Warehouse", expectedCompanyName],
+      ["Customer", expectedCompanyName],
+      ["Customer", `${TEST_LABEL} (Internal)`],
+    ] as const) {
+      const exists = await frappeReadback.docExists(request, dt, name);
+      expect(exists, `Post-failure: ${dt}:${name} MUST be absent (savepoint rollback)`).toBe(false);
+    }
+
+    // INVARIANT: S037 register CSV does NOT contain the test row
+    // (CSV write is post-savepoint per A3, so it should never have fired)
+    const csvRows = await ssmRun(`
+      import csv, os
+      from frappe.utils import get_app_path
+      path = os.path.join(get_app_path("hrms"), "data_seed", "store_entity_mapping_2026-04-13.csv")
+      with open(path, encoding="utf-8-sig") as f:
+        rows = list(csv.reader(f))
+      print(any(r[0] == "${TEST_LABEL}" for r in rows))
+    `);
+    expect(csvRows.trim(), "Post-failure: S037 CSV must NOT contain test row").toBe("False");
+  } finally {
+    // Always restore Customer Group regardless of test outcome
+    await ssmRun(`
+      import frappe
+      frappe.init(site="hq.bebang.ph", sites_path="/home/frappe/frappe-bench/sites")
+      frappe.connect()
+      frappe.db.set_value("Customer Group", "BKI Store", "disabled", 0)
+      frappe.db.commit()
+      frappe.destroy()
+    `);
+  }
+});
+```
+
+**Why this design works (v2 A8 rationale):**
+- v1 attempted to test atomicity by passing `store_label=""`, but `_validate_preconditions` rejects that BEFORE `frappe.db.savepoint()` is even called (Phase 1-2 precondition guard runs first). No savepoint = no rollback to verify.
+- v2 chooses a payload that passes preconditions (valid label/abbr/parent) but fails INSIDE the savepoint at the second Customer insert. This exercises the rollback path that B-02 (commit ordering) and B-03 (CSV placement) fixes are about.
+- Restore of `Customer Group.disabled=0` in `finally` is mandatory — without it, the entire BKI Store customer group is broken for production.
+
+**MUST_CONTAIN (v2 A8):**
+- `set_value("Customer Group", "BKI Store", "disabled", 1)` (the failure-inducing patch)
+- `set_value("Customer Group", "BKI Store", "disabled", 0)` (the cleanup in finally)
+- `frappeReadback.docExists` checks for all 4 records post-failure
+- S037 CSV row absence check post-failure
 
 **MUST_MODIFY:** `bei-tasks/tests/e2e/specs/s233-create-store-ui.spec.ts` (NEW)
 **MUST_CONTAIN:** all 8 scenario test names, `cleanupLedger.record("store-company-create"`, `assertCanonicalStoreShape(`
@@ -1232,6 +1543,7 @@ test.describe("S233 L3 — Create Store UI", () => {
 
 ```bash
 python output/s233/verify_phase0.py
+python output/s233/verify_phase0_5.py    # v2 A7 — constant extraction
 python output/s233/verify_phase1.py
 python output/s233/verify_phase2.py
 python output/s233/verify_phase3.py
@@ -1319,16 +1631,24 @@ Before any code change, the executing agent must verify YES for every item:
 - [ ] Does the helper use `frappe.local.flags.ignore_chart_of_accounts = True`? (HARD BLOCKER per S231 chart bug)
 - [ ] Does the helper use `frappe.flags.in_install = True`? (skip auto_provision_company so first_provision_done stays 0)
 - [ ] Does the helper accept ONLY `"Pre-Opening"` (capital O) for operational_status?
+- [ ] **v2 A1:** Does the helper file live at `hrms/api/create_new_store.py` (NOT `scripts/canonical/`)? `scripts/` is not on Frappe's `sys.path` per HOTFIX4 at `company_master.py:939`.
+- [ ] **v2 A2:** Does the helper call `frappe.db.release_savepoint(sp)` INSIDE try with NO `frappe.db.commit()` inside the savepoint scope? (Frappe's HTTP cycle commits)
+- [ ] **v2 A3:** Is `_append_s037_row(...)` called AFTER `release_savepoint` (outside the try block, post-success), NOT inside the savepoint?
+- [ ] **v2 A4:** Do BOTH Customer inserts set `customer_type="Company"`, `customer_group="BKI Store"`, `territory="Philippines"`? (Without these, Customer.validate raises MandatoryError → savepoint rolls back → helper fails)
+- [ ] **v2 A7:** Does the helper import `from hrms.utils.bei_config import S037_REGISTER_RELPATH` (NOT from `hrms.api.company_master`)? (Phase 0.5 extracted the constant to break circular import)
 - [ ] Does the helper append a row to the latest S037 register CSV atomically (tempfile + os.replace)?
-- [ ] Does `create_store_company` whitelisted endpoint require role `{BD Manager, BD User, System Manager, Administrator}`?
+- [ ] **v2 A5:** Does `create_store_company` whitelisted endpoint require role from `{Business Development, BD Manager, Accounts Manager, HQ User, System Manager, Administrator}` (matching frontend `MODULE_ACCESS[MODULES.COMPANY_MASTER]`)? `"BD User"` MUST NOT appear (does not exist in BEI role taxonomy).
 - [ ] Does `create_store_company` call `set_backend_observability_context(module="company", action="create_store_company", mutation_type="create")` per DM-7?
 - [ ] Does `list_eligible_parent_companies` filter by `is_group=1 AND entity_category in (Head Office, Holding Company, Franchisor, Commissary)`?
 - [ ] Does the frontend dialog have `data-testid` on the dialog root + every form field + submit button?
-- [ ] Does the BD page header button have `data-testid="add-store-button"` + RBAC visibility guard?
+- [ ] Does the BD page header button have `data-testid="add-store-button"` + RBAC visibility guard wrapped in `{hasCompanyMasterRole && ...}`?
+- [ ] **v2 A5:** Does the frontend `hasCompanyMasterRole` use `MODULE_ACCESS[MODULES.COMPANY_MASTER]` from `lib/roles.ts`, and does the backend `allowed_roles` set match the same role union?
+- [ ] **v2 A9:** Does the page.tsx `onCreated` handler use `companyName.lastIndexOf(" - ")` instead of `companyName.split(" - ")[0]` to derive store label?
+- [ ] **v2 A6:** Does `verify_phase3.py` use a concrete check for `hasCompanyMasterRole` (NOT `...` Ellipsis)?
 - [ ] Does `useCreateStoreCompany` invalidate BOTH `["company-master", "list"]` AND `["company-master", "stores"]` queries on success?
 - [ ] Does the L3 cleanupLedger reverse handler delete all 4 records + strip the S037 row?
 - [ ] Are the 8 L3 scenarios written as separate `test()` blocks (not one mega-test)?
-- [ ] Does S8 atomicity scenario verify all-or-nothing creation? (savepoint rollback invariant)
+- [ ] **v2 A8:** Does S8 atomicity scenario disable `Customer Group "BKI Store"` to induce failure inside the savepoint, verify all 4 records absent post-failure, AND restore the Customer Group in `finally`?
 - [ ] Did I commit evidence to `output/s233/` (committed) AND transient logs to `tmp/s233/` (gitignored)?
 - [ ] At closeout, did I run `git worktree remove` on BOTH worktrees?
 
@@ -1394,8 +1714,14 @@ S231 L3 (2026-05-03) discovered the BD Company Master page has no "Add Store" UI
 - `hrms/api/company_master.py:668` — `list_stores` (where new store appears post-create)
 - `hrms/overrides/company.py:592` — `auto_provision_company` (the function we DON'T want firing on create)
 - `hrms/overrides/company.py:31` — `DEFAULT_FIELDS_TO_TRACK` + S231 C-1 wrapper (already deployed)
-- `scripts/canonical/migrate_49_stores.py` — reference for atomic multi-record write
+- `scripts/canonical/migrate_49_stores.py` — reference for atomic multi-record write (CLI-only — runs via `bench execute`, NOT importable from Frappe HTTP context)
 - `scripts/s231_l3_seed_test_store.py` — reference for ignore_chart_of_accounts pattern (this sprint extracts it to canonical helper)
+- `hrms/api/company_master.py:939–941` — **HOTFIX4 comment documents the `from scripts/` import trap**. This is exactly why v2 A1 puts the helper at `hrms/api/create_new_store.py` instead.
+- `hrms/utils/bei_config.py` — receives the v2 A7 extracted constant `S037_REGISTER_RELPATH`
+- `hrms/overrides/company.py:572–575` — canonical Customer-creation pattern with `customer_type`/`customer_group`/`territory` (v2 A4 source)
+- `hrms/on_demand/s206_seed_intercompany_accounts.py:264–266` — alternate Customer-creation pattern using `_best_customer_group()` + `_best_territory()` helpers
+- `hrms/api/procurement.py:6607` — canonical savepoint pattern: `release_savepoint` BEFORE commit, commit OUTSIDE try (v2 A2 source)
+- `bei-tasks/lib/roles.ts:920` — `MODULE_ACCESS[MODULES.COMPANY_MASTER]` (v2 A5 source of truth for backend `allowed_roles`)
 - `bei-tasks/lib/queries/company-master.ts:208-243` — `frappePost`/`frappeGet` helpers (template for new endpoints)
 - `bei-tasks/components/company-master/section-edit-modal.tsx` — dialog component pattern
 - `bei-tasks/tests/e2e/pages/CompanyMasterPage.ts` — Page Object pattern
@@ -1410,18 +1736,19 @@ S231 L3 (2026-05-03) discovered the BD Company Master page has no "Add Store" UI
 
 ---
 
-## Phase Budget Contract
+## Phase Budget Contract (v2)
 
 | Phase | Units | Notes |
 |---|---|---|
 | Phase 0 — Boot | 4 | Baselines, library audit, dependency check |
-| Phase 1 — Canonical helper | 8 | NEW script + atomic 4-record write + S037 append + CLI wrapper |
-| Phase 2 — Whitelisted API + tests | 5 | 2 endpoints + RBAC + 7 unit tests |
-| Phase 3 — Frontend | 10 | Hook + dialog + button + RBAC guard |
+| Phase 0.5 — Constant extract (v2 A7) | 1 | Extract `_S037_RELPATH` to `hrms/utils/bei_config.py` to break circular import |
+| Phase 1 — Canonical helper (in hrms/api/) | 8 | NEW helper at `hrms/api/create_new_store.py` (v2 A1) + atomic 4-record write (v2 A2/A3/A4) + S037 append + CLI wrapper |
+| Phase 2 — Whitelisted API + tests | 5 | 2 endpoints + RBAC matching frontend MODULE_ACCESS (v2 A5) + 7 unit tests |
+| Phase 3 — Frontend | 10 | Hook + dialog + button + RBAC guard (v2 A5) + lastIndexOf split (v2 A9) |
 | Phase 4 — Test library | 6 | Page Object + builder + assertion + cleanup-kind + auth fixture + SSM scripts |
-| Phase 5 — L3 spec | 8 | 8 scenarios in browser-only spec |
+| Phase 5 — L3 spec | 8 | 8 scenarios in browser-only spec, S8 atomicity uses customer_group disable trick (v2 A8) |
 | Closeout | 4 | Verifiers, teardown, plan/registry, PRs, worktree remove |
-| **Total** | **45** | Under 80-unit S089 cap |
+| **Total** | **46** | v1 was 45; v2 adds 1u for B-08 fix. Under 80-unit S089 cap |
 
 Hard limit per phase: 15. Preferred split threshold: 12. Largest phase (Phase 3) is 10 units — within threshold.
 
