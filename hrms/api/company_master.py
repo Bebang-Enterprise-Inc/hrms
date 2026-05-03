@@ -2259,3 +2259,103 @@ def get_orderable_store_warehouses(include_commissary: bool = True) -> list[dict
 		})
 
 	return result
+
+
+# ─────────────────────────────────────────────────────────────────────────
+# S233: Create-New-Store BD UI endpoints (v3 amendments)
+# ─────────────────────────────────────────────────────────────────────────
+
+
+@frappe.whitelist()
+def create_store_company(
+	store_label: str,
+	parent_company: str,
+	abbr: str,
+	store_ownership_type: str,
+	tax_id: str | None = None,
+	region: str | None = None,
+	province: str | None = None,
+	city: str | None = None,
+) -> dict:
+	"""S233: BD UI endpoint — wraps hrms/api/create_new_store.py.
+
+	Permission: requires Frappe `create` perm on Company doctype +
+	one of [Business Development, BD Manager, Accounts Manager, HQ User,
+	System Manager, Administrator] roles. The role union MUST match
+	bei-tasks/lib/roles.ts MODULE_ACCESS[MODULES.COMPANY_MASTER] exactly
+	to prevent false-affordance dead-CTA bugs (S233 v1 audit Blocker B-05).
+
+	Defense-in-depth — UI hides the button for unauthorized roles too via
+	useRoleCheck({ module: MODULES.COMPANY_MASTER }).
+	"""
+	set_backend_observability_context(
+		module="company",
+		action="create_store_company",
+		mutation_type="create",
+		extras={
+			"store_label": store_label,
+			"parent_company": parent_company,
+			"abbr": abbr,
+			"store_ownership_type": store_ownership_type,
+		},
+	)
+
+	if not frappe.has_permission("Company", "create"):
+		frappe.throw(_("Not permitted to create Company"))
+
+	# v3 A5: RBAC roles MUST match bei-tasks/lib/roles.ts MODULE_ACCESS[MODULES.COMPANY_MASTER].
+	# Removed nonexistent "BD User" (zero occurrences in repo). Added "Business Development",
+	# "Accounts Manager", "HQ User" to mirror the frontend grant list. Keep both ends in sync;
+	# divergence creates false-affordance dead-CTA bugs (S233 audit Blocker B-05).
+	allowed_roles = {
+		"Business Development",
+		"BD Manager",
+		"Accounts Manager",
+		"HQ User",
+		"System Manager",
+		"Administrator",
+	}
+	user_roles = set(frappe.get_roles())
+	if not (allowed_roles & user_roles):
+		frappe.throw(_(
+			"S233: create_store_company requires one of: {0}. You have: {1}"
+		).format(", ".join(sorted(allowed_roles)), ", ".join(sorted(user_roles))))
+
+	# v3 A1: helper now lives in hrms/api/ (importable from Frappe HTTP context).
+	# `scripts/` is not on Frappe's sys.path — see HOTFIX4 at company_master.py:939.
+	from hrms.api.create_new_store import create_new_store
+	return create_new_store(
+		store_label=store_label,
+		parent_company=parent_company,
+		abbr=abbr,
+		store_ownership_type=store_ownership_type,
+		tax_id=tax_id,
+		region=region,
+		province=province,
+		city=city,
+	)
+
+
+@frappe.whitelist()
+def list_eligible_parent_companies() -> list[dict]:
+	"""S233: returns Companies that can be parent_company for a new store.
+
+	Filters: is_group=1 AND entity_category in canonical non-store types.
+	Used by the CreateStoreDialog parent picker combobox.
+	"""
+	set_backend_observability_context(
+		module="company",
+		action="list_eligible_parent_companies",
+		mutation_type="read",
+	)
+	rows = frappe.db.sql(
+		"""
+		SELECT name, abbr, entity_category, tax_id
+		FROM `tabCompany`
+		WHERE is_group = 1
+		  AND entity_category IN ('Head Office', 'Holding Company', 'Franchisor', 'Commissary')
+		ORDER BY name
+		""",
+		as_dict=True,
+	)
+	return rows
