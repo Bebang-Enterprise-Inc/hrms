@@ -1,0 +1,91 @@
+{
+  "BEI Delivery Schedule Week": {
+    "istable": 0,
+    "autoname": "BEI-SCHED-.YYYY.-.#####",
+    "fields": [
+      {
+        "fieldname": "week_start",
+        "fieldtype": "Date",
+        "options": null,
+        "reqd": 1,
+        "label": "Week Start (Monday)"
+      },
+      {
+        "fieldname": "published",
+        "fieldtype": "Check",
+        "options": null,
+        "reqd": null,
+        "label": "Published"
+      },
+      {
+        "fieldname": "published_by",
+        "fieldtype": "Link",
+        "options": "User",
+        "reqd": null,
+        "label": "Published By"
+      },
+      {
+        "fieldname": "published_at",
+        "fieldtype": "Datetime",
+        "options": null,
+        "reqd": null,
+        "label": "Published At"
+      },
+      {
+        "fieldname": "unpublish_reason",
+        "fieldtype": "Small Text",
+        "options": null,
+        "reqd": null,
+        "label": "Unpublish Reason"
+      },
+      {
+        "fieldname": "section_entries",
+        "fieldtype": "Section Break",
+        "options": null,
+        "reqd": null,
+        "label": "Schedule Entries"
+      },
+      {
+        "fieldname": "entries",
+        "fieldtype": "Table",
+        "options": "BEI Delivery Schedule Entry",
+        "reqd": null,
+        "label": "Entries"
+      }
+    ]
+  },
+  "BEI Delivery Schedule Entry": {
+    "istable": 1,
+    "autoname": null,
+    "fields": [
+      {
+        "fieldname": "store",
+        "fieldtype": "Link",
+        "options": "Warehouse",
+        "reqd": 1,
+        "label": "Store"
+      },
+      {
+        "fieldname": "day_of_week",
+        "fieldtype": "Select",
+        "options": "Mon\nTue\nWed\nThu\nFri\nSat\nSun",
+        "reqd": 1,
+        "label": "Day of Week"
+      },
+      {
+        "fieldname": "delivery_type",
+        "fieldtype": "Select",
+        "options": "COLD\nDRY",
+        "reqd": 1,
+        "label": "Delivery Type"
+      },
+      {
+        "fieldname": "route_name",
+        "fieldtype": "Link",
+        "options": "BEI Route",
+        "reqd": null,
+        "label": "Route"
+      }
+    ]
+  }
+}

@@ -1,0 +1,18 @@
+store,delivery_type,day_of_week,route_name
+# S234 BEI Delivery Schedule cadence import template
+# Fill one row per (store, delivery_type, day_of_week) combination.
+# Columns:
+#   store         - Frappe Warehouse name. Must match exactly. Use the canonical
+#                   store warehouse, e.g. "ARANETA GATEWAY - TUNGSTEN CAPITAL HOLDINGS OPC".
+#   delivery_type - COLD or DRY (uppercase).
+#   day_of_week   - One of: Mon, Tue, Wed, Thu, Fri, Sat, Sun.
+#   route_name    - OPTIONAL. Leave blank if no specific BEI Route is assigned.
+# Notes:
+#   - Lines starting with # are ignored.
+#   - The seeder is idempotent: re-running with the same CSV is a no-op.
+#     Re-running with a different CSV REPLACES the Week's entries.
+#   - The seeder defaults to --dry-run; pass --no-dry-run to actually write.
+# Example rows (delete the # to activate):
+# ARANETA GATEWAY - TUNGSTEN CAPITAL HOLDINGS OPC,COLD,Mon,
+# ARANETA GATEWAY - TUNGSTEN CAPITAL HOLDINGS OPC,COLD,Thu,
+# ARANETA GATEWAY - TUNGSTEN CAPITAL HOLDINGS OPC,DRY,Tue,
