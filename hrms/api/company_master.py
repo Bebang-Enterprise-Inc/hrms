@@ -496,7 +496,10 @@ def retry_provision(company: str) -> dict:
 # never cloned by GitHub Actions when it builds the bench image, so
 # `_load_s037_rows()` returned an empty list and the entire feature
 # silently produced 0 store rows. L3 testing caught this on first run.
-_S037_RELPATH = ("data_seed", "store_entity_mapping_2026-04-13.csv")
+# S233 v2 A7 + v3 A16: extracted to hrms/utils/bei_config.py to break circular
+# import that emerges when hrms/api/create_new_store.py also needs to read this CSV.
+# Back-compat alias preserved (existing references to `_S037_RELPATH` keep working).
+from hrms.utils.bei_config import STORE_ENTITY_MAPPING_RELPATH as _S037_RELPATH  # noqa: E402
 
 # Non-store legal entities that don't appear in S037 but should still
 # appear in the list. Category maps to the S181 entity_category field.
