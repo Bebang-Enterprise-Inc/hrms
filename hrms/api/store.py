@@ -1327,9 +1327,14 @@ def _get_next_deliveries(store_warehouse: str) -> dict:
 	"""
 	today = getdate(nowdate())
 
+	# S234: synthesize default delivery dates from day offsets so the response
+	# is internally consistent (was: dates None but days_to_cold/dry positive).
+	# UI banners can now render a "best-guess" date when no schedule is published.
+	# schedule_source="default" tag preserved so consumers can distinguish
+	# synthetic vs published schedules.
 	defaults = {
-		"next_cold_delivery": None,
-		"next_dry_delivery": None,
+		"next_cold_delivery": str(add_days(today, 2)),
+		"next_dry_delivery": str(add_days(today, 3)),
 		"days_to_cold": 2,  # Frozen default
 		"days_to_dry": 3,  # Dry default
 		"schedule_source": "default",
