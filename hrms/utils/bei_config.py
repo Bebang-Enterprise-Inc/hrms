@@ -76,3 +76,12 @@ def get_service_account_path() -> str:
 def get_company() -> str:
 	"""Return the default company name from Frappe global defaults."""
 	return frappe.defaults.get_global_default("company") or "Bebang Enterprise Inc."
+
+
+# ── S037 store/entity register CSV (S233 v2 A7 + v3 A16) ─────────────────
+# Extracted from hrms/api/company_master.py to break the circular import
+# that emerges when hrms/api/create_new_store.py needs to read it.
+# v3 A16: name is STORE_ENTITY_MAPPING_RELPATH (descriptive) to avoid
+# confusion with hrms/overrides/company.py::_S037_REGISTER_RELPATH which
+# points to a DIFFERENT CSV (store_buyer_entity_register_2026-03-12.csv).
+STORE_ENTITY_MAPPING_RELPATH = ("data_seed", "store_entity_mapping_2026-04-13.csv")
