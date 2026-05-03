@@ -1,0 +1,2090 @@
+{
+  "audited_sis": 48,
+  "passes": 47,
+  "mismatches": [
+    {
+      "si": "ACC-SINV-2026-00780",
+      "store": "ORTIGAS GREENHILLS - BEIFRANCHISE FOOD OPC",
+      "type": "wrong_tin",
+      "expected": "",
+      "actual": "688-721-280-00000"
+    },
+    {
+      "si": "ACC-SINV-2026-00780",
+      "store": "ORTIGAS GREENHILLS - BEIFRANCHISE FOOD OPC",
+      "type": "customer_record_tin_mismatch",
+      "expected": "",
+      "actual_in_customer_record": "688-721-280-00000"
+    }
+  ],
+  "warnings": [],
+  "store_results": {
+    "ARANETA GATEWAY - TUNGSTEN CAPITAL HOLDINGS OPC": {
+      "si": "ACC-SINV-2026-00763",
+      "fixture": {
+        "expected_customer": "ARANETA GATEWAY - TUNGSTEN CAPITAL HOLDINGS OPC",
+        "expected_tin": "679-843-234-00000",
+        "expected_parent_corporation": "TUNGSTEN CAPITAL HOLDINGS OPC",
+        "store_ownership_type": "Managed Franchise"
+      },
+      "actual": {
+        "name": "ACC-SINV-2026-00763",
+        "customer": "ARANETA GATEWAY - TUNGSTEN CAPITAL HOLDINGS OPC",
+        "customer_name": "ARANETA GATEWAY - TUNGSTEN CAPITAL HOLDINGS OPC",
+        "company": "BEBANG KITCHEN INC.",
+        "tax_id": "679-843-234-00000",
+        "docstatus": 1,
+        "status": "Unpaid",
+        "grand_total": 1544.09,
+        "net_total": 1378.65,
+        "outstanding_amount": 1544.0,
+        "customer_record": {
+          "name": "ARANETA GATEWAY - TUNGSTEN CAPITAL HOLDINGS OPC",
+          "customer_name": "ARANETA GATEWAY - TUNGSTEN CAPITAL HOLDINGS OPC",
+          "tax_id": "679-843-234-00000",
+          "customer_group": "All Customer Groups",
+          "represents_company": null,
+          "disabled": 0
+        },
+        "company_parent_company": "TUNGSTEN CAPITAL HOLDINGS OPC"
+      },
+      "checks": {
+        "customer_matches_fixture": true,
+        "tin_matches_fixture": true,
+        "company_is_bki": true,
+        "gl_party_matches_customer": true,
+        "gl_party_set": [
+          "ARANETA GATEWAY - TUNGSTEN CAPITAL HOLDINGS OPC"
+        ],
+        "customer_record_exists": true,
+        "customer_record_tax_id_matches": true,
+        "company_parent_matches_fixture": true
+      },
+      "verdict": "PASS"
+    },
+    "AYALA EVO CITY - BEBANG MEGA INC.": {
+      "si": "ACC-SINV-2026-00764",
+      "fixture": {
+        "expected_customer": "AYALA EVO CITY - BEBANG MEGA INC.",
+        "expected_tin": "010-885-436-00000",
+        "expected_parent_corporation": "BEBANG MEGA INC.",
+        "store_ownership_type": "Managed Franchise"
+      },
+      "actual": {
+        "name": "ACC-SINV-2026-00764",
+        "customer": "AYALA EVO CITY - BEBANG MEGA INC.",
+        "customer_name": "AYALA EVO CITY - BEBANG MEGA INC.",
+        "company": "BEBANG KITCHEN INC.",
+        "tax_id": "010-885-436-00000",
+        "docstatus": 1,
+        "status": "Unpaid",
+        "grand_total": 653.91,
+        "net_total": 583.85,
+        "outstanding_amount": 654.0,
+        "customer_record": {
+          "name": "AYALA EVO CITY - BEBANG MEGA INC.",
+          "customer_name": "AYALA EVO CITY - BEBANG MEGA INC.",
+          "tax_id": "010-885-436-00000",
+          "customer_group": "All Customer Groups",
+          "represents_company": null,
+          "disabled": 0
+        },
+        "company_parent_company": "BEBANG MEGA INC."
+      },
+      "checks": {
+        "customer_matches_fixture": true,
+        "tin_matches_fixture": true,
+        "company_is_bki": true,
+        "gl_party_matches_customer": true,
+        "gl_party_set": [
+          "AYALA EVO CITY - BEBANG MEGA INC."
+        ],
+        "customer_record_exists": true,
+        "customer_record_tax_id_matches": true,
+        "company_parent_matches_fixture": true
+      },
+      "verdict": "PASS"
+    },
+    "AYALA FAIRVIEW TERRACES - BEBANG FT INC.": {
+      "si": "ACC-SINV-2026-00765",
+      "fixture": {
+        "expected_customer": "AYALA FAIRVIEW TERRACES - BEBANG FT INC.",
+        "expected_tin": "663-440-106-00000",
+        "expected_parent_corporation": "BEBANG ENTERPRISE INC.",
+        "store_ownership_type": "Company Owned"
+      },
+      "actual": {
+        "name": "ACC-SINV-2026-00765",
+        "customer": "AYALA FAIRVIEW TERRACES - BEBANG FT INC.",
+        "customer_name": "AYALA FAIRVIEW TERRACES - BEBANG FT INC.",
+        "company": "BEBANG KITCHEN INC.",
+        "tax_id": "663-440-106-00000",
+        "docstatus": 1,
+        "status": "Unpaid",
+        "grand_total": 1478.74,
+        "net_total": 1320.3,
+        "outstanding_amount": 1479.0,
+        "customer_record": {
+          "name": "AYALA FAIRVIEW TERRACES - BEBANG FT INC.",
+          "customer_name": "AYALA FAIRVIEW TERRACES - BEBANG FT INC.",
+          "tax_id": "663-440-106-00000",
+          "customer_group": "All Customer Groups",
+          "represents_company": null,
+          "disabled": 0
+        },
+        "company_parent_company": "BEBANG ENTERPRISE INC."
+      },
+      "checks": {
+        "customer_matches_fixture": true,
+        "tin_matches_fixture": true,
+        "company_is_bki": true,
+        "gl_party_matches_customer": true,
+        "gl_party_set": [
+          "AYALA FAIRVIEW TERRACES - BEBANG FT INC."
+        ],
+        "customer_record_exists": true,
+        "customer_record_tax_id_matches": true,
+        "company_parent_matches_fixture": true
+      },
+      "verdict": "PASS"
+    },
+    "AYALA MARKET MARKET - BEBANG MARKET MARKET INC.": {
+      "si": "ACC-SINV-2026-00766",
+      "fixture": {
+        "expected_customer": "AYALA MARKET MARKET - BEBANG MARKET MARKET INC.",
+        "expected_tin": "656-572-595-00000",
+        "expected_parent_corporation": "BEBANG ENTERPRISE INC.",
+        "store_ownership_type": "JV"
+      },
+      "actual": {
+        "name": "ACC-SINV-2026-00766",
+        "customer": "AYALA MARKET MARKET - BEBANG MARKET MARKET INC.",
+        "customer_name": "AYALA MARKET MARKET - BEBANG MARKET MARKET INC.",
+        "company": "BEBANG KITCHEN INC.",
+        "tax_id": "656-572-595-00000",
+        "docstatus": 1,
+        "status": "Unpaid",
+        "grand_total": 1031.74,
+        "net_total": 921.2,
+        "outstanding_amount": 1032.0,
+        "customer_record": {
+          "name": "AYALA MARKET MARKET - BEBANG MARKET MARKET INC.",
+          "customer_name": "AYALA MARKET MARKET - BEBANG MARKET MARKET INC.",
+          "tax_id": "656-572-595-00000",
+          "customer_group": "All Customer Groups",
+          "represents_company": null,
+          "disabled": 0
+        },
+        "company_parent_company": "BEBANG ENTERPRISE INC."
+      },
+      "checks": {
+        "customer_matches_fixture": true,
+        "tin_matches_fixture": true,
+        "company_is_bki": true,
+        "gl_party_matches_customer": true,
+        "gl_party_set": [
+          "AYALA MARKET MARKET - BEBANG MARKET MARKET INC."
+        ],
+        "customer_record_exists": true,
+        "customer_record_tax_id_matches": true,
+        "company_parent_matches_fixture": true
+      },
+      "verdict": "PASS"
+    },
+    "AYALA SOLENAD - HFFM SOLENAD FOOD SERVICES INC.": {
+      "si": "ACC-SINV-2026-00767",
+      "fixture": {
+        "expected_customer": "AYALA SOLENAD - HFFM SOLENAD FOOD SERVICES INC.",
+        "expected_tin": "681-476-808-00000",
+        "expected_parent_corporation": null,
+        "store_ownership_type": "Managed Franchise"
+      },
+      "actual": {
+        "name": "ACC-SINV-2026-00767",
+        "customer": "AYALA SOLENAD - HFFM SOLENAD FOOD SERVICES INC.",
+        "customer_name": "AYALA SOLENAD - HFFM SOLENAD FOOD SERVICES INC.",
+        "company": "BEBANG KITCHEN INC.",
+        "tax_id": "681-476-808-00000",
+        "docstatus": 1,
+        "status": "Unpaid",
+        "grand_total": 1488.59,
+        "net_total": 1329.1,
+        "outstanding_amount": 1489.0,
+        "customer_record": {
+          "name": "AYALA SOLENAD - HFFM SOLENAD FOOD SERVICES INC.",
+          "customer_name": "AYALA SOLENAD - HFFM SOLENAD FOOD SERVICES INC.",
+          "tax_id": "681-476-808-00000",
+          "customer_group": "All Customer Groups",
+          "represents_company": null,
+          "disabled": 0
+        },
+        "company_parent_company": null
+      },
+      "checks": {
+        "customer_matches_fixture": true,
+        "tin_matches_fixture": true,
+        "company_is_bki": true,
+        "gl_party_matches_customer": true,
+        "gl_party_set": [
+          "AYALA SOLENAD - HFFM SOLENAD FOOD SERVICES INC."
+        ],
+        "customer_record_exists": true,
+        "customer_record_tax_id_matches": true,
+        "company_parent_matches_fixture": true
+      },
+      "verdict": "PASS"
+    },
+    "AYALA UP TOWN CENTER - BEBANG UP TOWN CENTER INC.": {
+      "si": "ACC-SINV-2026-00768",
+      "fixture": {
+        "expected_customer": "AYALA UP TOWN CENTER - BEBANG UP TOWN CENTER INC.",
+        "expected_tin": "675-270-405-00000",
+        "expected_parent_corporation": "BEBANG ENTERPRISE INC.",
+        "store_ownership_type": "JV"
+      },
+      "actual": {
+        "name": "ACC-SINV-2026-00768",
+        "customer": "AYALA UP TOWN CENTER - BEBANG UP TOWN CENTER INC.",
+        "customer_name": "AYALA UP TOWN CENTER - BEBANG UP TOWN CENTER INC.",
+        "company": "BEBANG KITCHEN INC.",
+        "tax_id": "675-270-405-00000",
+        "docstatus": 1,
+        "status": "Unpaid",
+        "grand_total": 1480.86,
+        "net_total": 1322.2,
+        "outstanding_amount": 1481.0,
+        "customer_record": {
+          "name": "AYALA UP TOWN CENTER - BEBANG UP TOWN CENTER INC.",
+          "customer_name": "AYALA UP TOWN CENTER - BEBANG UP TOWN CENTER INC.",
+          "tax_id": "675-270-405-00000",
+          "customer_group": "All Customer Groups",
+          "represents_company": null,
+          "disabled": 0
+        },
+        "company_parent_company": "BEBANG ENTERPRISE INC."
+      },
+      "checks": {
+        "customer_matches_fixture": true,
+        "tin_matches_fixture": true,
+        "company_is_bki": true,
+        "gl_party_matches_customer": true,
+        "gl_party_set": [
+          "AYALA UP TOWN CENTER - BEBANG UP TOWN CENTER INC."
+        ],
+        "customer_record_exists": true,
+        "customer_record_tax_id_matches": true,
+        "company_parent_matches_fixture": true
+      },
+      "verdict": "PASS"
+    },
+    "AYALA VERMOSA - BEBANG MEGA INC.": {
+      "si": "ACC-SINV-2026-00769",
+      "fixture": {
+        "expected_customer": "AYALA VERMOSA - BEBANG MEGA INC.",
+        "expected_tin": "010-885-436-00000",
+        "expected_parent_corporation": "BEBANG MEGA INC.",
+        "store_ownership_type": "Managed Franchise"
+      },
+      "actual": {
+        "name": "ACC-SINV-2026-00769",
+        "customer": "AYALA VERMOSA - BEBANG MEGA INC.",
+        "customer_name": "AYALA VERMOSA - BEBANG MEGA INC.",
+        "company": "BEBANG KITCHEN INC.",
+        "tax_id": "010-885-436-00000",
+        "docstatus": 1,
+        "status": "Unpaid",
+        "grand_total": 866.82,
+        "net_total": 773.95,
+        "outstanding_amount": 867.0,
+        "customer_record": {
+          "name": "AYALA VERMOSA - BEBANG MEGA INC.",
+          "customer_name": "AYALA VERMOSA - BEBANG MEGA INC.",
+          "tax_id": "010-885-436-00000",
+          "customer_group": "All Customer Groups",
+          "represents_company": null,
+          "disabled": 0
+        },
+        "company_parent_company": "BEBANG MEGA INC."
+      },
+      "checks": {
+        "customer_matches_fixture": true,
+        "tin_matches_fixture": true,
+        "company_is_bki": true,
+        "gl_party_matches_customer": true,
+        "gl_party_set": [
+          "AYALA VERMOSA - BEBANG MEGA INC."
+        ],
+        "customer_record_exists": true,
+        "customer_record_tax_id_matches": true,
+        "company_parent_matches_fixture": true
+      },
+      "verdict": "PASS"
+    },
+    "BF HOMES - BEBANG BF HOMES INC.": {
+      "si": "ACC-SINV-2026-00770",
+      "fixture": {
+        "expected_customer": "BF HOMES - BEBANG BF HOMES INC.",
+        "expected_tin": "673-762-767-00000",
+        "expected_parent_corporation": "BEBANG ENTERPRISE INC.",
+        "store_ownership_type": "JV"
+      },
+      "actual": {
+        "name": "ACC-SINV-2026-00770",
+        "customer": "BF HOMES - BEBANG BF HOMES INC.",
+        "customer_name": "BF HOMES - BEBANG BF HOMES INC.",
+        "company": "BEBANG KITCHEN INC.",
+        "tax_id": "673-762-767-00000",
+        "docstatus": 1,
+        "status": "Unpaid",
+        "grand_total": 1416.3,
+        "net_total": 1264.55,
+        "outstanding_amount": 1416.0,
+        "customer_record": {
+          "name": "BF HOMES - BEBANG BF HOMES INC.",
+          "customer_name": "BF HOMES - BEBANG BF HOMES INC.",
+          "tax_id": "673-762-767-00000",
+          "customer_group": "All Customer Groups",
+          "represents_company": null,
+          "disabled": 0
+        },
+        "company_parent_company": "BEBANG ENTERPRISE INC."
+      },
+      "checks": {
+        "customer_matches_fixture": true,
+        "tin_matches_fixture": true,
+        "company_is_bki": true,
+        "gl_party_matches_customer": true,
+        "gl_party_set": [
+          "BF HOMES - BEBANG BF HOMES INC."
+        ],
+        "customer_record_exists": true,
+        "customer_record_tax_id_matches": true,
+        "company_parent_matches_fixture": true
+      },
+      "verdict": "PASS"
+    },
+    "CTTM TOMAS MORATO - B CUBED VENTURES CORP.": {
+      "si": "ACC-SINV-2026-00771",
+      "fixture": {
+        "expected_customer": "CTTM TOMAS MORATO - B CUBED VENTURES CORP.",
+        "expected_tin": "682-574-745-00000",
+        "expected_parent_corporation": null,
+        "store_ownership_type": "Managed Franchise"
+      },
+      "actual": {
+        "name": "ACC-SINV-2026-00771",
+        "customer": "CTTM TOMAS MORATO - B CUBED VENTURES CORP.",
+        "customer_name": "CTTM TOMAS MORATO - B CUBED VENTURES CORP.",
+        "company": "BEBANG KITCHEN INC.",
+        "tax_id": "682-574-745-00000",
+        "docstatus": 1,
+        "status": "Unpaid",
+        "grand_total": 968.84,
+        "net_total": 865.04,
+        "outstanding_amount": 969.0,
+        "customer_record": {
+          "name": "CTTM TOMAS MORATO - B CUBED VENTURES CORP.",
+          "customer_name": "CTTM TOMAS MORATO - B CUBED VENTURES CORP.",
+          "tax_id": "682-574-745-00000",
+          "customer_group": "All Customer Groups",
+          "represents_company": null,
+          "disabled": 0
+        },
+        "company_parent_company": null
+      },
+      "checks": {
+        "customer_matches_fixture": true,
+        "tin_matches_fixture": true,
+        "company_is_bki": true,
+        "gl_party_matches_customer": true,
+        "gl_party_set": [
+          "CTTM TOMAS MORATO - B CUBED VENTURES CORP."
+        ],
+        "customer_record_exists": true,
+        "customer_record_tax_id_matches": true,
+        "company_parent_matches_fixture": true
+      },
+      "verdict": "PASS"
+    },
+    "D'VERDE CALAMBA - TAJ FOOD CORP.": {
+      "si": "ACC-SINV-2026-00772",
+      "fixture": {
+        "expected_customer": "D'VERDE CALAMBA - TAJ FOOD CORP.",
+        "expected_tin": "681-325-053-00000",
+        "expected_parent_corporation": "TAJ FOOD CORP.",
+        "store_ownership_type": "Managed Franchise"
+      },
+      "actual": {
+        "name": "ACC-SINV-2026-00772",
+        "customer": "D'VERDE CALAMBA - TAJ FOOD CORP.",
+        "customer_name": "D'VERDE CALAMBA - TAJ FOOD CORP.",
+        "company": "BEBANG KITCHEN INC.",
+        "tax_id": "681-325-053-00000",
+        "docstatus": 1,
+        "status": "Unpaid",
+        "grand_total": 1488.59,
+        "net_total": 1329.1,
+        "outstanding_amount": 1489.0,
+        "customer_record": {
+          "name": "D'VERDE CALAMBA - TAJ FOOD CORP.",
+          "customer_name": "D'VERDE CALAMBA - TAJ FOOD CORP.",
+          "tax_id": "681-325-053-00000",
+          "customer_group": "All Customer Groups",
+          "represents_company": null,
+          "disabled": 0
+        },
+        "company_parent_company": "TAJ FOOD CORP."
+      },
+      "checks": {
+        "customer_matches_fixture": true,
+        "tin_matches_fixture": true,
+        "company_is_bki": true,
+        "gl_party_matches_customer": true,
+        "gl_party_set": [
+          "D'VERDE CALAMBA - TAJ FOOD CORP."
+        ],
+        "customer_record_exists": true,
+        "customer_record_tax_id_matches": true,
+        "company_parent_matches_fixture": true
+      },
+      "verdict": "PASS"
+    },
+    "EVER COMMONWEALTH - DLS DESSERT CRAFT INC.": {
+      "si": "ACC-SINV-2026-00773",
+      "fixture": {
+        "expected_customer": "EVER COMMONWEALTH - DLS DESSERT CRAFT INC.",
+        "expected_tin": "671-219-097-00000",
+        "expected_parent_corporation": null,
+        "store_ownership_type": "Full Franchise"
+      },
+      "actual": {
+        "name": "ACC-SINV-2026-00773",
+        "customer": "EVER COMMONWEALTH - DLS DESSERT CRAFT INC.",
+        "customer_name": "EVER COMMONWEALTH - DLS DESSERT CRAFT INC.",
+        "company": "BEBANG KITCHEN INC.",
+        "tax_id": "671-219-097-00000",
+        "docstatus": 1,
+        "status": "Unpaid",
+        "grand_total": 1554.39,
+        "net_total": 1387.85,
+        "outstanding_amount": 1554.0,
+        "customer_record": {
+          "name": "EVER COMMONWEALTH - DLS DESSERT CRAFT INC.",
+          "customer_name": "EVER COMMONWEALTH - DLS DESSERT CRAFT INC.",
+          "tax_id": "671-219-097-00000",
+          "customer_group": "All Customer Groups",
+          "represents_company": null,
+          "disabled": 0
+        },
+        "company_parent_company": null
+      },
+      "checks": {
+        "customer_matches_fixture": true,
+        "tin_matches_fixture": true,
+        "company_is_bki": true,
+        "gl_party_matches_customer": true,
+        "gl_party_set": [
+          "EVER COMMONWEALTH - DLS DESSERT CRAFT INC."
+        ],
+        "customer_record_exists": true,
+        "customer_record_tax_id_matches": true,
+        "company_parent_matches_fixture": true
+      },
+      "verdict": "PASS"
+    },
+    "FESTIVAL MALL ALABANG - BEBANG FESTIVAL INC.": {
+      "si": "ACC-SINV-2026-00774",
+      "fixture": {
+        "expected_customer": "FESTIVAL MALL ALABANG - BEBANG FESTIVAL INC.",
+        "expected_tin": "672-618-586-00000",
+        "expected_parent_corporation": "BEBANG ENTERPRISE INC.",
+        "store_ownership_type": "JV"
+      },
+      "actual": {
+        "name": "ACC-SINV-2026-00774",
+        "customer": "FESTIVAL MALL ALABANG - BEBANG FESTIVAL INC.",
+        "customer_name": "FESTIVAL MALL ALABANG - BEBANG FESTIVAL INC.",
+        "company": "BEBANG KITCHEN INC.",
+        "tax_id": "672-618-586-00000",
+        "docstatus": 1,
+        "status": "Unpaid",
+        "grand_total": 1416.3,
+        "net_total": 1264.55,
+        "outstanding_amount": 1416.0,
+        "customer_record": {
+          "name": "FESTIVAL MALL ALABANG - BEBANG FESTIVAL INC.",
+          "customer_name": "FESTIVAL MALL ALABANG - BEBANG FESTIVAL INC.",
+          "tax_id": "672-618-586-00000",
+          "customer_group": "All Customer Groups",
+          "represents_company": null,
+          "disabled": 0
+        },
+        "company_parent_company": "BEBANG ENTERPRISE INC."
+      },
+      "checks": {
+        "customer_matches_fixture": true,
+        "tin_matches_fixture": true,
+        "company_is_bki": true,
+        "gl_party_matches_customer": true,
+        "gl_party_set": [
+          "FESTIVAL MALL ALABANG - BEBANG FESTIVAL INC."
+        ],
+        "customer_record_exists": true,
+        "customer_record_tax_id_matches": true,
+        "company_parent_matches_fixture": true
+      },
+      "verdict": "PASS"
+    },
+    "LUCKY CHINATOWN - BEBANG LCT INC.": {
+      "si": "ACC-SINV-2026-00775",
+      "fixture": {
+        "expected_customer": "LUCKY CHINATOWN - BEBANG LCT INC.",
+        "expected_tin": "665-462-689-00000",
+        "expected_parent_corporation": "BEBANG ENTERPRISE INC.",
+        "store_ownership_type": "JV"
+      },
+      "actual": {
+        "name": "ACC-SINV-2026-00775",
+        "customer": "LUCKY CHINATOWN - BEBANG LCT INC.",
+        "customer_name": "LUCKY CHINATOWN - BEBANG LCT INC.",
+        "company": "BEBANG KITCHEN INC.",
+        "tax_id": "665-462-689-00000",
+        "docstatus": 1,
+        "status": "Unpaid",
+        "grand_total": 1468.94,
+        "net_total": 1311.55,
+        "outstanding_amount": 1469.0,
+        "customer_record": {
+          "name": "LUCKY CHINATOWN - BEBANG LCT INC.",
+          "customer_name": "LUCKY CHINATOWN - BEBANG LCT INC.",
+          "tax_id": "665-462-689-00000",
+          "customer_group": "All Customer Groups",
+          "represents_company": null,
+          "disabled": 0
+        },
+        "company_parent_company": "BEBANG ENTERPRISE INC."
+      },
+      "checks": {
+        "customer_matches_fixture": true,
+        "tin_matches_fixture": true,
+        "company_is_bki": true,
+        "gl_party_matches_customer": true,
+        "gl_party_set": [
+          "LUCKY CHINATOWN - BEBANG LCT INC."
+        ],
+        "customer_record_exists": true,
+        "customer_record_tax_id_matches": true,
+        "company_parent_matches_fixture": true
+      },
+      "verdict": "PASS"
+    },
+    "MEGAWORLD PASEO CENTER - BEBANG PASEO INC.": {
+      "si": "ACC-SINV-2026-00776",
+      "fixture": {
+        "expected_customer": "MEGAWORLD PASEO CENTER - BEBANG PASEO INC.",
+        "expected_tin": "010-880-720-00000",
+        "expected_parent_corporation": "BEBANG ENTERPRISE INC.",
+        "store_ownership_type": "JV"
+      },
+      "actual": {
+        "name": "ACC-SINV-2026-00776",
+        "customer": "MEGAWORLD PASEO CENTER - BEBANG PASEO INC.",
+        "customer_name": "MEGAWORLD PASEO CENTER - BEBANG PASEO INC.",
+        "company": "BEBANG KITCHEN INC.",
+        "tax_id": "010-880-720-00000",
+        "docstatus": 1,
+        "status": "Unpaid",
+        "grand_total": 598.19,
+        "net_total": 534.1,
+        "outstanding_amount": 598.0,
+        "customer_record": {
+          "name": "MEGAWORLD PASEO CENTER - BEBANG PASEO INC.",
+          "customer_name": "MEGAWORLD PASEO CENTER - BEBANG PASEO INC.",
+          "tax_id": "010-880-720-00000",
+          "customer_group": "All Customer Groups",
+          "represents_company": null,
+          "disabled": 0
+        },
+        "company_parent_company": "BEBANG ENTERPRISE INC."
+      },
+      "checks": {
+        "customer_matches_fixture": true,
+        "tin_matches_fixture": true,
+        "company_is_bki": true,
+        "gl_party_matches_customer": true,
+        "gl_party_set": [
+          "MEGAWORLD PASEO CENTER - BEBANG PASEO INC."
+        ],
+        "customer_record_exists": true,
+        "customer_record_tax_id_matches": true,
+        "company_parent_matches_fixture": true
+      },
+      "verdict": "PASS"
+    },
+    "MEGAWORLD VENICE GRAND CANAL - BEBANG VENICE GRAND CANAL INC.": {
+      "si": "ACC-SINV-2026-00777",
+      "fixture": {
+        "expected_customer": "MEGAWORLD VENICE GRAND CANAL - BEBANG VENICE GRAND CANAL INC.",
+        "expected_tin": "010-880-690-00000",
+        "expected_parent_corporation": "BEBANG ENTERPRISE INC.",
+        "store_ownership_type": "JV"
+      },
+      "actual": {
+        "name": "ACC-SINV-2026-00777",
+        "customer": "MEGAWORLD VENICE GRAND CANAL - BEBANG VENICE GRAND CANAL INC.",
+        "customer_name": "MEGAWORLD VENICE GRAND CANAL - BEBANG VENICE GRAND CANAL INC.",
+        "company": "BEBANG KITCHEN INC.",
+        "tax_id": "010-880-690-00000",
+        "docstatus": 1,
+        "status": "Unpaid",
+        "grand_total": 1416.3,
+        "net_total": 1264.55,
+        "outstanding_amount": 1416.0,
+        "customer_record": {
+          "name": "MEGAWORLD VENICE GRAND CANAL - BEBANG VENICE GRAND CANAL INC.",
+          "customer_name": "MEGAWORLD VENICE GRAND CANAL - BEBANG VENICE GRAND CANAL INC.",
+          "tax_id": "010-880-690-00000",
+          "customer_group": "All Customer Groups",
+          "represents_company": null,
+          "disabled": 0
+        },
+        "company_parent_company": "BEBANG ENTERPRISE INC."
+      },
+      "checks": {
+        "customer_matches_fixture": true,
+        "tin_matches_fixture": true,
+        "company_is_bki": true,
+        "gl_party_matches_customer": true,
+        "gl_party_set": [
+          "MEGAWORLD VENICE GRAND CANAL - BEBANG VENICE GRAND CANAL INC."
+        ],
+        "customer_record_exists": true,
+        "customer_record_tax_id_matches": true,
+        "company_parent_matches_fixture": true
+      },
+      "verdict": "PASS"
+    },
+    "NAIA T3 - HALO-HALO TERMINAL FOOD CORP.": {
+      "si": "ACC-SINV-2026-00778",
+      "fixture": {
+        "expected_customer": "NAIA T3 - HALO-HALO TERMINAL FOOD CORP.",
+        "expected_tin": "690-528-808-00000",
+        "expected_parent_corporation": null,
+        "store_ownership_type": "Managed Franchise"
+      },
+      "actual": {
+        "name": "ACC-SINV-2026-00778",
+        "customer": "NAIA T3 - HALO-HALO TERMINAL FOOD CORP.",
+        "customer_name": "NAIA T3 - HALO-HALO TERMINAL FOOD CORP.",
+        "company": "BEBANG KITCHEN INC.",
+        "tax_id": "690-528-808-00000",
+        "docstatus": 1,
+        "status": "Unpaid",
+        "grand_total": 1219.23,
+        "net_total": 1088.6,
+        "outstanding_amount": 1219.0,
+        "customer_record": {
+          "name": "NAIA T3 - HALO-HALO TERMINAL FOOD CORP.",
+          "customer_name": "NAIA T3 - HALO-HALO TERMINAL FOOD CORP.",
+          "tax_id": "690-528-808-00000",
+          "customer_group": "All Customer Groups",
+          "represents_company": null,
+          "disabled": 0
+        },
+        "company_parent_company": null
+      },
+      "checks": {
+        "customer_matches_fixture": true,
+        "tin_matches_fixture": true,
+        "company_is_bki": true,
+        "gl_party_matches_customer": true,
+        "gl_party_set": [
+          "NAIA T3 - HALO-HALO TERMINAL FOOD CORP."
+        ],
+        "customer_record_exists": true,
+        "customer_record_tax_id_matches": true,
+        "company_parent_matches_fixture": true
+      },
+      "verdict": "PASS"
+    },
+    "ORTIGAS ESTANCIA - BB ESTANCIA FOOD CORP.": {
+      "si": "ACC-SINV-2026-00779",
+      "fixture": {
+        "expected_customer": "ORTIGAS ESTANCIA - BB ESTANCIA FOOD CORP.",
+        "expected_tin": "693-136-289-00000",
+        "expected_parent_corporation": null,
+        "store_ownership_type": "Managed Franchise"
+      },
+      "actual": {
+        "name": "ACC-SINV-2026-00779",
+        "customer": "ORTIGAS ESTANCIA - BB ESTANCIA FOOD CORP.",
+        "customer_name": "ORTIGAS ESTANCIA - BB ESTANCIA FOOD CORP.",
+        "company": "BEBANG KITCHEN INC.",
+        "tax_id": "693-136-289-00000",
+        "docstatus": 1,
+        "status": "Unpaid",
+        "grand_total": 1556.52,
+        "net_total": 1389.75,
+        "outstanding_amount": 1557.0,
+        "customer_record": {
+          "name": "ORTIGAS ESTANCIA - BB ESTANCIA FOOD CORP.",
+          "customer_name": "ORTIGAS ESTANCIA - BB ESTANCIA FOOD CORP.",
+          "tax_id": "693-136-289-00000",
+          "customer_group": "All Customer Groups",
+          "represents_company": null,
+          "disabled": 0
+        },
+        "company_parent_company": null
+      },
+      "checks": {
+        "customer_matches_fixture": true,
+        "tin_matches_fixture": true,
+        "company_is_bki": true,
+        "gl_party_matches_customer": true,
+        "gl_party_set": [
+          "ORTIGAS ESTANCIA - BB ESTANCIA FOOD CORP."
+        ],
+        "customer_record_exists": true,
+        "customer_record_tax_id_matches": true,
+        "company_parent_matches_fixture": true
+      },
+      "verdict": "PASS"
+    },
+    "ORTIGAS GREENHILLS - BEIFRANCHISE FOOD OPC": {
+      "si": "ACC-SINV-2026-00780",
+      "fixture": {
+        "expected_customer": "ORTIGAS GREENHILLS - BEIFRANCHISE FOOD OPC",
+        "expected_tin": "",
+        "expected_parent_corporation": null,
+        "store_ownership_type": "Managed Franchise"
+      },
+      "actual": {
+        "name": "ACC-SINV-2026-00780",
+        "customer": "ORTIGAS GREENHILLS - BEIFRANCHISE FOOD OPC",
+        "customer_name": "ORTIGAS GREENHILLS - BEIFRANCHISE FOOD OPC",
+        "company": "BEBANG KITCHEN INC.",
+        "tax_id": "688-721-280-00000",
+        "docstatus": 1,
+        "status": "Unpaid",
+        "grand_total": 1556.52,
+        "net_total": 1389.75,
+        "outstanding_amount": 1557.0,
+        "customer_record": {
+          "name": "ORTIGAS GREENHILLS - BEIFRANCHISE FOOD OPC",
+          "customer_name": "ORTIGAS GREENHILLS - BEIFRANCHISE FOOD OPC",
+          "tax_id": "688-721-280-00000",
+          "customer_group": "All Customer Groups",
+          "represents_company": null,
+          "disabled": 0
+        },
+        "company_parent_company": null
+      },
+      "checks": {
+        "customer_matches_fixture": true,
+        "tin_matches_fixture": false,
+        "company_is_bki": true,
+        "gl_party_matches_customer": true,
+        "gl_party_set": [
+          "ORTIGAS GREENHILLS - BEIFRANCHISE FOOD OPC"
+        ],
+        "customer_record_exists": true,
+        "customer_record_tax_id_matches": false,
+        "company_parent_matches_fixture": true
+      },
+      "verdict": "MISMATCH"
+    },
+    "ROBINSONS ANTIPOLO - BEBANG ENTERPRISE INC.": {
+      "si": "ACC-SINV-2026-00781",
+      "fixture": {
+        "expected_customer": "ROBINSONS ANTIPOLO - BEBANG ENTERPRISE INC.",
+        "expected_tin": "647-243-690-00000",
+        "expected_parent_corporation": "BEBANG ENTERPRISE INC.",
+        "store_ownership_type": "JV"
+      },
+      "actual": {
+        "name": "ACC-SINV-2026-00781",
+        "customer": "ROBINSONS ANTIPOLO - BEBANG ENTERPRISE INC.",
+        "customer_name": "ROBINSONS ANTIPOLO - BEBANG ENTERPRISE INC.",
+        "company": "BEBANG KITCHEN INC.",
+        "tax_id": "647-243-690-00000",
+        "docstatus": 1,
+        "status": "Unpaid",
+        "grand_total": 1480.86,
+        "net_total": 1322.2,
+        "outstanding_amount": 1481.0,
+        "customer_record": {
+          "name": "ROBINSONS ANTIPOLO - BEBANG ENTERPRISE INC.",
+          "customer_name": "ROBINSONS ANTIPOLO - BEBANG ENTERPRISE INC.",
+          "tax_id": "647-243-690-00000",
+          "customer_group": "All Customer Groups",
+          "represents_company": null,
+          "disabled": 0
+        },
+        "company_parent_company": "BEBANG ENTERPRISE INC."
+      },
+      "checks": {
+        "customer_matches_fixture": true,
+        "tin_matches_fixture": true,
+        "company_is_bki": true,
+        "gl_party_matches_customer": true,
+        "gl_party_set": [
+          "ROBINSONS ANTIPOLO - BEBANG ENTERPRISE INC."
+        ],
+        "customer_record_exists": true,
+        "customer_record_tax_id_matches": true,
+        "company_parent_matches_fixture": true
+      },
+      "verdict": "PASS"
+    },
+    "ROBINSONS GALLERIA SOUTH - TUNGSTEN CAPITAL HOLDINGS OPC": {
+      "si": "ACC-SINV-2026-00782",
+      "fixture": {
+        "expected_customer": "ROBINSONS GALLERIA SOUTH - TUNGSTEN CAPITAL HOLDINGS OPC",
+        "expected_tin": "679-843-234-00000",
+        "expected_parent_corporation": "TUNGSTEN CAPITAL HOLDINGS OPC",
+        "store_ownership_type": "Managed Franchise"
+      },
+      "actual": {
+        "name": "ACC-SINV-2026-00782",
+        "customer": "ROBINSONS GALLERIA SOUTH - TUNGSTEN CAPITAL HOLDINGS OPC",
+        "customer_name": "ROBINSONS GALLERIA SOUTH - TUNGSTEN CAPITAL HOLDINGS OPC",
+        "company": "BEBANG KITCHEN INC.",
+        "tax_id": "679-843-234-00000",
+        "docstatus": 1,
+        "status": "Unpaid",
+        "grand_total": 1488.59,
+        "net_total": 1329.1,
+        "outstanding_amount": 1489.0,
+        "customer_record": {
+          "name": "ROBINSONS GALLERIA SOUTH - TUNGSTEN CAPITAL HOLDINGS OPC",
+          "customer_name": "ROBINSONS GALLERIA SOUTH - TUNGSTEN CAPITAL HOLDINGS OPC",
+          "tax_id": "679-843-234-00000",
+          "customer_group": "All Customer Groups",
+          "represents_company": null,
+          "disabled": 0
+        },
+        "company_parent_company": "TUNGSTEN CAPITAL HOLDINGS OPC"
+      },
+      "checks": {
+        "customer_matches_fixture": true,
+        "tin_matches_fixture": true,
+        "company_is_bki": true,
+        "gl_party_matches_customer": true,
+        "gl_party_set": [
+          "ROBINSONS GALLERIA SOUTH - TUNGSTEN CAPITAL HOLDINGS OPC"
+        ],
+        "customer_record_exists": true,
+        "customer_record_tax_id_matches": true,
+        "company_parent_matches_fixture": true
+      },
+      "verdict": "PASS"
+    },
+    "ROBINSONS GENERAL TRIAS - BEBANG MEGA INC.": {
+      "si": "ACC-SINV-2026-00783",
+      "fixture": {
+        "expected_customer": "ROBINSONS GENERAL TRIAS - BEBANG MEGA INC.",
+        "expected_tin": "010-885-436-00000",
+        "expected_parent_corporation": "BEBANG MEGA INC.",
+        "store_ownership_type": "Managed Franchise"
+      },
+      "actual": {
+        "name": "ACC-SINV-2026-00783",
+        "customer": "ROBINSONS GENERAL TRIAS - BEBANG MEGA INC.",
+        "customer_name": "ROBINSONS GENERAL TRIAS - BEBANG MEGA INC.",
+        "company": "BEBANG KITCHEN INC.",
+        "tax_id": "010-885-436-00000",
+        "docstatus": 1,
+        "status": "Unpaid",
+        "grand_total": 628.77,
+        "net_total": 561.4,
+        "outstanding_amount": 629.0,
+        "customer_record": {
+          "name": "ROBINSONS GENERAL TRIAS - BEBANG MEGA INC.",
+          "customer_name": "ROBINSONS GENERAL TRIAS - BEBANG MEGA INC.",
+          "tax_id": "010-885-436-00000",
+          "customer_group": "All Customer Groups",
+          "represents_company": null,
+          "disabled": 0
+        },
+        "company_parent_company": "BEBANG MEGA INC."
+      },
+      "checks": {
+        "customer_matches_fixture": true,
+        "tin_matches_fixture": true,
+        "company_is_bki": true,
+        "gl_party_matches_customer": true,
+        "gl_party_set": [
+          "ROBINSONS GENERAL TRIAS - BEBANG MEGA INC."
+        ],
+        "customer_record_exists": true,
+        "customer_record_tax_id_matches": true,
+        "company_parent_matches_fixture": true
+      },
+      "verdict": "PASS"
+    },
+    "ROBINSONS IMUS - BEBANG MEGA INC.": {
+      "si": "ACC-SINV-2026-00784",
+      "fixture": {
+        "expected_customer": "ROBINSONS IMUS - BEBANG MEGA INC.",
+        "expected_tin": "010-885-436-00000",
+        "expected_parent_corporation": "BEBANG MEGA INC.",
+        "store_ownership_type": "Managed Franchise"
+      },
+      "actual": {
+        "name": "ACC-SINV-2026-00784",
+        "customer": "ROBINSONS IMUS - BEBANG MEGA INC.",
+        "customer_name": "ROBINSONS IMUS - BEBANG MEGA INC.",
+        "company": "BEBANG KITCHEN INC.",
+        "tax_id": "010-885-436-00000",
+        "docstatus": 1,
+        "status": "Unpaid",
+        "grand_total": 628.77,
+        "net_total": 561.4,
+        "outstanding_amount": 629.0,
+        "customer_record": {
+          "name": "ROBINSONS IMUS - BEBANG MEGA INC.",
+          "customer_name": "ROBINSONS IMUS - BEBANG MEGA INC.",
+          "tax_id": "010-885-436-00000",
+          "customer_group": "All Customer Groups",
+          "represents_company": null,
+          "disabled": 0
+        },
+        "company_parent_company": "BEBANG MEGA INC."
+      },
+      "checks": {
+        "customer_matches_fixture": true,
+        "tin_matches_fixture": true,
+        "company_is_bki": true,
+        "gl_party_matches_customer": true,
+        "gl_party_set": [
+          "ROBINSONS IMUS - BEBANG MEGA INC."
+        ],
+        "customer_record_exists": true,
+        "customer_record_tax_id_matches": true,
+        "company_parent_matches_fixture": true
+      },
+      "verdict": "PASS"
+    },
+    "ROBINSONS PLACE DASMARINAS - FREEZE DELIGHT INC.": {
+      "si": "ACC-SINV-2026-00785",
+      "fixture": {
+        "expected_customer": "ROBINSONS PLACE DASMARINAS - FREEZE DELIGHT INC.",
+        "expected_tin": "697-636-476-00000",
+        "expected_parent_corporation": null,
+        "store_ownership_type": "Managed Franchise"
+      },
+      "actual": {
+        "name": "ACC-SINV-2026-00785",
+        "customer": "ROBINSONS PLACE DASMARINAS - FREEZE DELIGHT INC.",
+        "customer_name": "ROBINSONS PLACE DASMARINAS - FREEZE DELIGHT INC.",
+        "company": "BEBANG KITCHEN INC.",
+        "tax_id": "697-636-476-00000",
+        "docstatus": 1,
+        "status": "Unpaid",
+        "grand_total": 653.91,
+        "net_total": 583.85,
+        "outstanding_amount": 654.0,
+        "customer_record": {
+          "name": "ROBINSONS PLACE DASMARINAS - FREEZE DELIGHT INC.",
+          "customer_name": "ROBINSONS PLACE DASMARINAS - FREEZE DELIGHT INC.",
+          "tax_id": "697-636-476-00000",
+          "customer_group": "All Customer Groups",
+          "represents_company": null,
+          "disabled": 0
+        },
+        "company_parent_company": null
+      },
+      "checks": {
+        "customer_matches_fixture": true,
+        "tin_matches_fixture": true,
+        "company_is_bki": true,
+        "gl_party_matches_customer": true,
+        "gl_party_set": [
+          "ROBINSONS PLACE DASMARINAS - FREEZE DELIGHT INC."
+        ],
+        "customer_record_exists": true,
+        "customer_record_tax_id_matches": true,
+        "company_parent_matches_fixture": true
+      },
+      "verdict": "PASS"
+    },
+    "SM BICUTAN - BEBANG SM BICUTAN INC.": {
+      "si": "ACC-SINV-2026-00786",
+      "fixture": {
+        "expected_customer": "SM BICUTAN - BEBANG SM BICUTAN INC.",
+        "expected_tin": "010-887-661-00000",
+        "expected_parent_corporation": "BEBANG ENTERPRISE INC.",
+        "store_ownership_type": "JV"
+      },
+      "actual": {
+        "name": "ACC-SINV-2026-00786",
+        "customer": "SM BICUTAN - BEBANG SM BICUTAN INC.",
+        "customer_name": "SM BICUTAN - BEBANG SM BICUTAN INC.",
+        "company": "BEBANG KITCHEN INC.",
+        "tax_id": "010-887-661-00000",
+        "docstatus": 1,
+        "status": "Unpaid",
+        "grand_total": 845.04,
+        "net_total": 754.5,
+        "outstanding_amount": 845.0,
+        "customer_record": {
+          "name": "SM BICUTAN - BEBANG SM BICUTAN INC.",
+          "customer_name": "SM BICUTAN - BEBANG SM BICUTAN INC.",
+          "tax_id": "010-887-661-00000",
+          "customer_group": "All Customer Groups",
+          "represents_company": null,
+          "disabled": 0
+        },
+        "company_parent_company": "BEBANG ENTERPRISE INC."
+      },
+      "checks": {
+        "customer_matches_fixture": true,
+        "tin_matches_fixture": true,
+        "company_is_bki": true,
+        "gl_party_matches_customer": true,
+        "gl_party_set": [
+          "SM BICUTAN - BEBANG SM BICUTAN INC."
+        ],
+        "customer_record_exists": true,
+        "customer_record_tax_id_matches": true,
+        "company_parent_matches_fixture": true
+      },
+      "verdict": "PASS"
+    },
+    "SM CALOOCAN - TAJ FOOD CORP.": {
+      "si": "ACC-SINV-2026-00787",
+      "fixture": {
+        "expected_customer": "SM CALOOCAN - TAJ FOOD CORP.",
+        "expected_tin": "681-325-053-00000",
+        "expected_parent_corporation": "TAJ FOOD CORP.",
+        "store_ownership_type": "Managed Franchise"
+      },
+      "actual": {
+        "name": "ACC-SINV-2026-00787",
+        "customer": "SM CALOOCAN - TAJ FOOD CORP.",
+        "customer_name": "SM CALOOCAN - TAJ FOOD CORP.",
+        "company": "BEBANG KITCHEN INC.",
+        "tax_id": "681-325-053-00000",
+        "docstatus": 1,
+        "status": "Unpaid",
+        "grand_total": 1554.39,
+        "net_total": 1387.85,
+        "outstanding_amount": 1554.0,
+        "customer_record": {
+          "name": "SM CALOOCAN - TAJ FOOD CORP.",
+          "customer_name": "SM CALOOCAN - TAJ FOOD CORP.",
+          "tax_id": "681-325-053-00000",
+          "customer_group": "All Customer Groups",
+          "represents_company": null,
+          "disabled": 0
+        },
+        "company_parent_company": "TAJ FOOD CORP."
+      },
+      "checks": {
+        "customer_matches_fixture": true,
+        "tin_matches_fixture": true,
+        "company_is_bki": true,
+        "gl_party_matches_customer": true,
+        "gl_party_set": [
+          "SM CALOOCAN - TAJ FOOD CORP."
+        ],
+        "customer_record_exists": true,
+        "customer_record_tax_id_matches": true,
+        "company_parent_matches_fixture": true
+      },
+      "verdict": "PASS"
+    },
+    "SM CLARK - RED TALDAWA FOODS OPC": {
+      "si": "ACC-SINV-2026-00788",
+      "fixture": {
+        "expected_customer": "SM CLARK - RED TALDAWA FOODS OPC",
+        "expected_tin": "687-525-727-00000",
+        "expected_parent_corporation": null,
+        "store_ownership_type": "Managed Franchise"
+      },
+      "actual": {
+        "name": "ACC-SINV-2026-00788",
+        "customer": "SM CLARK - RED TALDAWA FOODS OPC",
+        "customer_name": "SM CLARK - RED TALDAWA FOODS OPC",
+        "company": "BEBANG KITCHEN INC.",
+        "tax_id": "687-525-727-00000",
+        "docstatus": 1,
+        "status": "Unpaid",
+        "grand_total": 1554.39,
+        "net_total": 1387.85,
+        "outstanding_amount": 1554.0,
+        "customer_record": {
+          "name": "SM CLARK - RED TALDAWA FOODS OPC",
+          "customer_name": "SM CLARK - RED TALDAWA FOODS OPC",
+          "tax_id": "687-525-727-00000",
+          "customer_group": "All Customer Groups",
+          "represents_company": null,
+          "disabled": 0
+        },
+        "company_parent_company": null
+      },
+      "checks": {
+        "customer_matches_fixture": true,
+        "tin_matches_fixture": true,
+        "company_is_bki": true,
+        "gl_party_matches_customer": true,
+        "gl_party_set": [
+          "SM CLARK - RED TALDAWA FOODS OPC"
+        ],
+        "customer_record_exists": true,
+        "customer_record_tax_id_matches": true,
+        "company_parent_matches_fixture": true
+      },
+      "verdict": "PASS"
+    },
+    "SM EAST ORTIGAS - BEBANG SMEO INC.": {
+      "si": "ACC-SINV-2026-00789",
+      "fixture": {
+        "expected_customer": "SM EAST ORTIGAS - BEBANG SMEO INC.",
+        "expected_tin": "665-312-808-00000",
+        "expected_parent_corporation": "BEBANG ENTERPRISE INC.",
+        "store_ownership_type": "JV"
+      },
+      "actual": {
+        "name": "ACC-SINV-2026-00789",
+        "customer": "SM EAST ORTIGAS - BEBANG SMEO INC.",
+        "customer_name": "SM EAST ORTIGAS - BEBANG SMEO INC.",
+        "company": "BEBANG KITCHEN INC.",
+        "tax_id": "665-312-808-00000",
+        "docstatus": 1,
+        "status": "Unpaid",
+        "grand_total": 1468.94,
+        "net_total": 1311.55,
+        "outstanding_amount": 1469.0,
+        "customer_record": {
+          "name": "SM EAST ORTIGAS - BEBANG SMEO INC.",
+          "customer_name": "SM EAST ORTIGAS - BEBANG SMEO INC.",
+          "tax_id": "665-312-808-00000",
+          "customer_group": "All Customer Groups",
+          "represents_company": null,
+          "disabled": 0
+        },
+        "company_parent_company": "BEBANG ENTERPRISE INC."
+      },
+      "checks": {
+        "customer_matches_fixture": true,
+        "tin_matches_fixture": true,
+        "company_is_bki": true,
+        "gl_party_matches_customer": true,
+        "gl_party_set": [
+          "SM EAST ORTIGAS - BEBANG SMEO INC."
+        ],
+        "customer_record_exists": true,
+        "customer_record_tax_id_matches": true,
+        "company_parent_matches_fixture": true
+      },
+      "verdict": "PASS"
+    },
+    "SM GRAND CENTRAL - BEBANG GRAND CENTRAL INC.": {
+      "si": "ACC-SINV-2026-00790",
+      "fixture": {
+        "expected_customer": "SM GRAND CENTRAL - BEBANG GRAND CENTRAL INC.",
+        "expected_tin": "010-880-753-00000",
+        "expected_parent_corporation": "BEBANG ENTERPRISE INC.",
+        "store_ownership_type": "JV"
+      },
+      "actual": {
+        "name": "ACC-SINV-2026-00790",
+        "customer": "SM GRAND CENTRAL - BEBANG GRAND CENTRAL INC.",
+        "customer_name": "SM GRAND CENTRAL - BEBANG GRAND CENTRAL INC.",
+        "company": "BEBANG KITCHEN INC.",
+        "tax_id": "010-880-753-00000",
+        "docstatus": 1,
+        "status": "Unpaid",
+        "grand_total": 928.54,
+        "net_total": 829.05,
+        "outstanding_amount": 929.0,
+        "customer_record": {
+          "name": "SM GRAND CENTRAL - BEBANG GRAND CENTRAL INC.",
+          "customer_name": "SM GRAND CENTRAL - BEBANG GRAND CENTRAL INC.",
+          "tax_id": "010-880-753-00000",
+          "customer_group": "All Customer Groups",
+          "represents_company": null,
+          "disabled": 0
+        },
+        "company_parent_company": "BEBANG ENTERPRISE INC."
+      },
+      "checks": {
+        "customer_matches_fixture": true,
+        "tin_matches_fixture": true,
+        "company_is_bki": true,
+        "gl_party_matches_customer": true,
+        "gl_party_set": [
+          "SM GRAND CENTRAL - BEBANG GRAND CENTRAL INC."
+        ],
+        "customer_record_exists": true,
+        "customer_record_tax_id_matches": true,
+        "company_parent_matches_fixture": true
+      },
+      "verdict": "PASS"
+    },
+    "SM MALL OF ASIA - BEBANG SMOA INC.": {
+      "si": "ACC-SINV-2026-00791",
+      "fixture": {
+        "expected_customer": "SM MALL OF ASIA - BEBANG SMOA INC.",
+        "expected_tin": "665-459-236-00000",
+        "expected_parent_corporation": "BEBANG ENTERPRISE INC.",
+        "store_ownership_type": "JV"
+      },
+      "actual": {
+        "name": "ACC-SINV-2026-00791",
+        "customer": "SM MALL OF ASIA - BEBANG SMOA INC.",
+        "customer_name": "SM MALL OF ASIA - BEBANG SMOA INC.",
+        "company": "BEBANG KITCHEN INC.",
+        "tax_id": "665-459-236-00000",
+        "docstatus": 1,
+        "status": "Unpaid",
+        "grand_total": 1416.3,
+        "net_total": 1264.55,
+        "outstanding_amount": 1416.0,
+        "customer_record": {
+          "name": "SM MALL OF ASIA - BEBANG SMOA INC.",
+          "customer_name": "SM MALL OF ASIA - BEBANG SMOA INC.",
+          "tax_id": "665-459-236-00000",
+          "customer_group": "All Customer Groups",
+          "represents_company": null,
+          "disabled": 0
+        },
+        "company_parent_company": "BEBANG ENTERPRISE INC."
+      },
+      "checks": {
+        "customer_matches_fixture": true,
+        "tin_matches_fixture": true,
+        "company_is_bki": true,
+        "gl_party_matches_customer": true,
+        "gl_party_set": [
+          "SM MALL OF ASIA - BEBANG SMOA INC."
+        ],
+        "customer_record_exists": true,
+        "customer_record_tax_id_matches": true,
+        "company_parent_matches_fixture": true
+      },
+      "verdict": "PASS"
+    },
+    "SM MANILA - BEBANG ENTERPRISE INC.": {
+      "si": "ACC-SINV-2026-00792",
+      "fixture": {
+        "expected_customer": "SM MANILA - BEBANG ENTERPRISE INC.",
+        "expected_tin": "647-243-690-00000",
+        "expected_parent_corporation": "BEBANG ENTERPRISE INC.",
+        "store_ownership_type": "JV"
+      },
+      "actual": {
+        "name": "ACC-SINV-2026-00792",
+        "customer": "SM MANILA - BEBANG ENTERPRISE INC.",
+        "customer_name": "SM MANILA - BEBANG ENTERPRISE INC.",
+        "company": "BEBANG KITCHEN INC.",
+        "tax_id": "647-243-690-00000",
+        "docstatus": 1,
+        "status": "Unpaid",
+        "grand_total": 1480.86,
+        "net_total": 1322.2,
+        "outstanding_amount": 1481.0,
+        "customer_record": {
+          "name": "SM MANILA - BEBANG ENTERPRISE INC.",
+          "customer_name": "SM MANILA - BEBANG ENTERPRISE INC.",
+          "tax_id": "647-243-690-00000",
+          "customer_group": "All Customer Groups",
+          "represents_company": null,
+          "disabled": 0
+        },
+        "company_parent_company": "BEBANG ENTERPRISE INC."
+      },
+      "checks": {
+        "customer_matches_fixture": true,
+        "tin_matches_fixture": true,
+        "company_is_bki": true,
+        "gl_party_matches_customer": true,
+        "gl_party_set": [
+          "SM MANILA - BEBANG ENTERPRISE INC."
+        ],
+        "customer_record_exists": true,
+        "customer_record_tax_id_matches": true,
+        "company_parent_matches_fixture": true
+      },
+      "verdict": "PASS"
+    },
+    "SM MARIKINA - BEBANG SM MARIKINA INC.": {
+      "si": "ACC-SINV-2026-00793",
+      "fixture": {
+        "expected_customer": "SM MARIKINA - BEBANG SM MARIKINA INC.",
+        "expected_tin": "670-282-332-00000",
+        "expected_parent_corporation": "BEBANG ENTERPRISE INC.",
+        "store_ownership_type": "JV"
+      },
+      "actual": {
+        "name": "ACC-SINV-2026-00793",
+        "customer": "SM MARIKINA - BEBANG SM MARIKINA INC.",
+        "customer_name": "SM MARIKINA - BEBANG SM MARIKINA INC.",
+        "company": "BEBANG KITCHEN INC.",
+        "tax_id": "670-282-332-00000",
+        "docstatus": 1,
+        "status": "Unpaid",
+        "grand_total": 1468.94,
+        "net_total": 1311.55,
+        "outstanding_amount": 1469.0,
+        "customer_record": {
+          "name": "SM MARIKINA - BEBANG SM MARIKINA INC.",
+          "customer_name": "SM MARIKINA - BEBANG SM MARIKINA INC.",
+          "tax_id": "670-282-332-00000",
+          "customer_group": "All Customer Groups",
+          "represents_company": null,
+          "disabled": 0
+        },
+        "company_parent_company": "BEBANG ENTERPRISE INC."
+      },
+      "checks": {
+        "customer_matches_fixture": true,
+        "tin_matches_fixture": true,
+        "company_is_bki": true,
+        "gl_party_matches_customer": true,
+        "gl_party_set": [
+          "SM MARIKINA - BEBANG SM MARIKINA INC."
+        ],
+        "customer_record_exists": true,
+        "customer_record_tax_id_matches": true,
+        "company_parent_matches_fixture": true
+      },
+      "verdict": "PASS"
+    },
+    "SM MARILAO - BEBANG MARILAO INC.": {
+      "si": "ACC-SINV-2026-00794",
+      "fixture": {
+        "expected_customer": "SM MARILAO - BEBANG MARILAO INC.",
+        "expected_tin": "675-267-457-00000",
+        "expected_parent_corporation": "BEBANG ENTERPRISE INC.",
+        "store_ownership_type": "JV"
+      },
+      "actual": {
+        "name": "ACC-SINV-2026-00794",
+        "customer": "SM MARILAO - BEBANG MARILAO INC.",
+        "customer_name": "SM MARILAO - BEBANG MARILAO INC.",
+        "company": "BEBANG KITCHEN INC.",
+        "tax_id": "675-267-457-00000",
+        "docstatus": 1,
+        "status": "Unpaid",
+        "grand_total": 1478.74,
+        "net_total": 1320.3,
+        "outstanding_amount": 1479.0,
+        "customer_record": {
+          "name": "SM MARILAO - BEBANG MARILAO INC.",
+          "customer_name": "SM MARILAO - BEBANG MARILAO INC.",
+          "tax_id": "675-267-457-00000",
+          "customer_group": "All Customer Groups",
+          "represents_company": null,
+          "disabled": 0
+        },
+        "company_parent_company": "BEBANG ENTERPRISE INC."
+      },
+      "checks": {
+        "customer_matches_fixture": true,
+        "tin_matches_fixture": true,
+        "company_is_bki": true,
+        "gl_party_matches_customer": true,
+        "gl_party_set": [
+          "SM MARILAO - BEBANG MARILAO INC."
+        ],
+        "customer_record_exists": true,
+        "customer_record_tax_id_matches": true,
+        "company_parent_matches_fixture": true
+      },
+      "verdict": "PASS"
+    },
+    "SM MEGAMALL - BEBANG ENTERPRISE INC.": {
+      "si": "ACC-SINV-2026-00795",
+      "fixture": {
+        "expected_customer": "SM MEGAMALL - BEBANG ENTERPRISE INC.",
+        "expected_tin": "647-243-690-00000",
+        "expected_parent_corporation": "BEBANG ENTERPRISE INC.",
+        "store_ownership_type": "JV"
+      },
+      "actual": {
+        "name": "ACC-SINV-2026-00795",
+        "customer": "SM MEGAMALL - BEBANG ENTERPRISE INC.",
+        "customer_name": "SM MEGAMALL - BEBANG ENTERPRISE INC.",
+        "company": "BEBANG KITCHEN INC.",
+        "tax_id": "647-243-690-00000",
+        "docstatus": 1,
+        "status": "Unpaid",
+        "grand_total": 1184.12,
+        "net_total": 1057.25,
+        "outstanding_amount": 1184.0,
+        "customer_record": {
+          "name": "SM MEGAMALL - BEBANG ENTERPRISE INC.",
+          "customer_name": "SM MEGAMALL - BEBANG ENTERPRISE INC.",
+          "tax_id": "647-243-690-00000",
+          "customer_group": "All Customer Groups",
+          "represents_company": null,
+          "disabled": 0
+        },
+        "company_parent_company": "BEBANG ENTERPRISE INC."
+      },
+      "checks": {
+        "customer_matches_fixture": true,
+        "tin_matches_fixture": true,
+        "company_is_bki": true,
+        "gl_party_matches_customer": true,
+        "gl_party_set": [
+          "SM MEGAMALL - BEBANG ENTERPRISE INC."
+        ],
+        "customer_record_exists": true,
+        "customer_record_tax_id_matches": true,
+        "company_parent_matches_fixture": true
+      },
+      "verdict": "PASS"
+    },
+    "SM NORTH EDSA - BEBANG NORTH EDSA INC.": {
+      "si": "ACC-SINV-2026-00796",
+      "fixture": {
+        "expected_customer": "SM NORTH EDSA - BEBANG NORTH EDSA INC.",
+        "expected_tin": "663-447-579-00000",
+        "expected_parent_corporation": "BEBANG ENTERPRISE INC.",
+        "store_ownership_type": "JV"
+      },
+      "actual": {
+        "name": "ACC-SINV-2026-00796",
+        "customer": "SM NORTH EDSA - BEBANG NORTH EDSA INC.",
+        "customer_name": "SM NORTH EDSA - BEBANG NORTH EDSA INC.",
+        "company": "BEBANG KITCHEN INC.",
+        "tax_id": "663-447-579-00000",
+        "docstatus": 1,
+        "status": "Unpaid",
+        "grand_total": 1478.74,
+        "net_total": 1320.3,
+        "outstanding_amount": 1479.0,
+        "customer_record": {
+          "name": "SM NORTH EDSA - BEBANG NORTH EDSA INC.",
+          "customer_name": "SM NORTH EDSA - BEBANG NORTH EDSA INC.",
+          "tax_id": "663-447-579-00000",
+          "customer_group": "All Customer Groups",
+          "represents_company": null,
+          "disabled": 0
+        },
+        "company_parent_company": "BEBANG ENTERPRISE INC."
+      },
+      "checks": {
+        "customer_matches_fixture": true,
+        "tin_matches_fixture": true,
+        "company_is_bki": true,
+        "gl_party_matches_customer": true,
+        "gl_party_set": [
+          "SM NORTH EDSA - BEBANG NORTH EDSA INC."
+        ],
+        "customer_record_exists": true,
+        "customer_record_tax_id_matches": true,
+        "company_parent_matches_fixture": true
+      },
+      "verdict": "PASS"
+    },
+    "SM PULILAN - BEBANG SMM INC.": {
+      "si": "ACC-SINV-2026-00797",
+      "fixture": {
+        "expected_customer": "SM PULILAN - BEBANG SMM INC.",
+        "expected_tin": "662-567-267-00000",
+        "expected_parent_corporation": "BEBANG ENTERPRISE INC.",
+        "store_ownership_type": "Managed Franchise"
+      },
+      "actual": {
+        "name": "ACC-SINV-2026-00797",
+        "customer": "SM PULILAN - BEBANG SMM INC.",
+        "customer_name": "SM PULILAN - BEBANG SMM INC.",
+        "company": "BEBANG KITCHEN INC.",
+        "tax_id": "662-567-267-00000",
+        "docstatus": 1,
+        "status": "Unpaid",
+        "grand_total": 1554.39,
+        "net_total": 1387.85,
+        "outstanding_amount": 1554.0,
+        "customer_record": {
+          "name": "SM PULILAN - BEBANG SMM INC.",
+          "customer_name": "SM PULILAN - BEBANG SMM INC.",
+          "tax_id": "662-567-267-00000",
+          "customer_group": "All Customer Groups",
+          "represents_company": null,
+          "disabled": 0
+        },
+        "company_parent_company": "BEBANG ENTERPRISE INC."
+      },
+      "checks": {
+        "customer_matches_fixture": true,
+        "tin_matches_fixture": true,
+        "company_is_bki": true,
+        "gl_party_matches_customer": true,
+        "gl_party_set": [
+          "SM PULILAN - BEBANG SMM INC."
+        ],
+        "customer_record_exists": true,
+        "customer_record_tax_id_matches": true,
+        "company_parent_matches_fixture": true
+      },
+      "verdict": "PASS"
+    },
+    "SM SAN JOSE DEL MONTE - JL TRADE OPC": {
+      "si": "ACC-SINV-2026-00798",
+      "fixture": {
+        "expected_customer": "SM SAN JOSE DEL MONTE - JL TRADE OPC",
+        "expected_tin": "775-842-763-00000",
+        "expected_parent_corporation": null,
+        "store_ownership_type": "Company Owned"
+      },
+      "actual": {
+        "name": "ACC-SINV-2026-00798",
+        "customer": "SM SAN JOSE DEL MONTE - JL TRADE OPC",
+        "customer_name": "SM SAN JOSE DEL MONTE - JL TRADE OPC",
+        "company": "BEBANG KITCHEN INC.",
+        "tax_id": "775-842-763-00000",
+        "docstatus": 1,
+        "status": "Unpaid",
+        "grand_total": 1478.74,
+        "net_total": 1320.3,
+        "outstanding_amount": 1479.0,
+        "customer_record": {
+          "name": "SM SAN JOSE DEL MONTE - JL TRADE OPC",
+          "customer_name": "SM SAN JOSE DEL MONTE - JL TRADE OPC",
+          "tax_id": "775-842-763-00000",
+          "customer_group": "All Customer Groups",
+          "represents_company": null,
+          "disabled": 0
+        },
+        "company_parent_company": null
+      },
+      "checks": {
+        "customer_matches_fixture": true,
+        "tin_matches_fixture": true,
+        "company_is_bki": true,
+        "gl_party_matches_customer": true,
+        "gl_party_set": [
+          "SM SAN JOSE DEL MONTE - JL TRADE OPC"
+        ],
+        "customer_record_exists": true,
+        "customer_record_tax_id_matches": true,
+        "company_parent_matches_fixture": true
+      },
+      "verdict": "PASS"
+    },
+    "SM SANGANDAAN - TUNGSTEN CAPITAL HOLDINGS OPC": {
+      "si": "ACC-SINV-2026-00799",
+      "fixture": {
+        "expected_customer": "SM SANGANDAAN - TUNGSTEN CAPITAL HOLDINGS OPC",
+        "expected_tin": "679-843-234-00000",
+        "expected_parent_corporation": "TUNGSTEN CAPITAL HOLDINGS OPC",
+        "store_ownership_type": "Managed Franchise"
+      },
+      "actual": {
+        "name": "ACC-SINV-2026-00799",
+        "customer": "SM SANGANDAAN - TUNGSTEN CAPITAL HOLDINGS OPC",
+        "customer_name": "SM SANGANDAAN - TUNGSTEN CAPITAL HOLDINGS OPC",
+        "company": "BEBANG KITCHEN INC.",
+        "tax_id": "679-843-234-00000",
+        "docstatus": 1,
+        "status": "Unpaid",
+        "grand_total": 1554.39,
+        "net_total": 1387.85,
+        "outstanding_amount": 1554.0,
+        "customer_record": {
+          "name": "SM SANGANDAAN - TUNGSTEN CAPITAL HOLDINGS OPC",
+          "customer_name": "SM SANGANDAAN - TUNGSTEN CAPITAL HOLDINGS OPC",
+          "tax_id": "679-843-234-00000",
+          "customer_group": "All Customer Groups",
+          "represents_company": null,
+          "disabled": 0
+        },
+        "company_parent_company": "TUNGSTEN CAPITAL HOLDINGS OPC"
+      },
+      "checks": {
+        "customer_matches_fixture": true,
+        "tin_matches_fixture": true,
+        "company_is_bki": true,
+        "gl_party_matches_customer": true,
+        "gl_party_set": [
+          "SM SANGANDAAN - TUNGSTEN CAPITAL HOLDINGS OPC"
+        ],
+        "customer_record_exists": true,
+        "customer_record_tax_id_matches": true,
+        "company_parent_matches_fixture": true
+      },
+      "verdict": "PASS"
+    },
+    "SM SOUTHMALL - BEBANG ENTERPRISE INC.": {
+      "si": "ACC-SINV-2026-00800",
+      "fixture": {
+        "expected_customer": "SM SOUTHMALL - BEBANG ENTERPRISE INC.",
+        "expected_tin": "647-243-690-00000",
+        "expected_parent_corporation": "BEBANG ENTERPRISE INC.",
+        "store_ownership_type": "JV"
+      },
+      "actual": {
+        "name": "ACC-SINV-2026-00800",
+        "customer": "SM SOUTHMALL - BEBANG ENTERPRISE INC.",
+        "customer_name": "SM SOUTHMALL - BEBANG ENTERPRISE INC.",
+        "company": "BEBANG KITCHEN INC.",
+        "tax_id": "647-243-690-00000",
+        "docstatus": 1,
+        "status": "Unpaid",
+        "grand_total": 1031.74,
+        "net_total": 921.2,
+        "outstanding_amount": 1032.0,
+        "customer_record": {
+          "name": "SM SOUTHMALL - BEBANG ENTERPRISE INC.",
+          "customer_name": "SM SOUTHMALL - BEBANG ENTERPRISE INC.",
+          "tax_id": "647-243-690-00000",
+          "customer_group": "All Customer Groups",
+          "represents_company": null,
+          "disabled": 0
+        },
+        "company_parent_company": "BEBANG ENTERPRISE INC."
+      },
+      "checks": {
+        "customer_matches_fixture": true,
+        "tin_matches_fixture": true,
+        "company_is_bki": true,
+        "gl_party_matches_customer": true,
+        "gl_party_set": [
+          "SM SOUTHMALL - BEBANG ENTERPRISE INC."
+        ],
+        "customer_record_exists": true,
+        "customer_record_tax_id_matches": true,
+        "company_parent_matches_fixture": true
+      },
+      "verdict": "PASS"
+    },
+    "SM STA. ROSA - SWEET HARMONY FOOD CORP.": {
+      "si": "ACC-SINV-2026-00801",
+      "fixture": {
+        "expected_customer": "SM STA. ROSA - SWEET HARMONY FOOD CORP.",
+        "expected_tin": "691-378-334-00000",
+        "expected_parent_corporation": null,
+        "store_ownership_type": "Managed Franchise"
+      },
+      "actual": {
+        "name": "ACC-SINV-2026-00801",
+        "customer": "SM STA. ROSA - SWEET HARMONY FOOD CORP.",
+        "customer_name": "SM STA. ROSA - SWEET HARMONY FOOD CORP.",
+        "company": "BEBANG KITCHEN INC.",
+        "tax_id": "691-378-334-00000",
+        "docstatus": 1,
+        "status": "Unpaid",
+        "grand_total": 1488.59,
+        "net_total": 1329.1,
+        "outstanding_amount": 1489.0,
+        "customer_record": {
+          "name": "SM STA. ROSA - SWEET HARMONY FOOD CORP.",
+          "customer_name": "SM STA. ROSA - SWEET HARMONY FOOD CORP.",
+          "tax_id": "691-378-334-00000",
+          "customer_group": "All Customer Groups",
+          "represents_company": null,
+          "disabled": 0
+        },
+        "company_parent_company": null
+      },
+      "checks": {
+        "customer_matches_fixture": true,
+        "tin_matches_fixture": true,
+        "company_is_bki": true,
+        "gl_party_matches_customer": true,
+        "gl_party_set": [
+          "SM STA. ROSA - SWEET HARMONY FOOD CORP."
+        ],
+        "customer_record_exists": true,
+        "customer_record_tax_id_matches": true,
+        "company_parent_matches_fixture": true
+      },
+      "verdict": "PASS"
+    },
+    "SM TANZA - BEBANG MEGA INC.": {
+      "si": "ACC-SINV-2026-00802",
+      "fixture": {
+        "expected_customer": "SM TANZA - BEBANG MEGA INC.",
+        "expected_tin": "010-885-436-00000",
+        "expected_parent_corporation": "BEBANG MEGA INC.",
+        "store_ownership_type": "Managed Franchise"
+      },
+      "actual": {
+        "name": "ACC-SINV-2026-00802",
+        "customer": "SM TANZA - BEBANG MEGA INC.",
+        "customer_name": "SM TANZA - BEBANG MEGA INC.",
+        "company": "BEBANG KITCHEN INC.",
+        "tax_id": "010-885-436-00000",
+        "docstatus": 1,
+        "status": "Unpaid",
+        "grand_total": 1488.59,
+        "net_total": 1329.1,
+        "outstanding_amount": 1489.0,
+        "customer_record": {
+          "name": "SM TANZA - BEBANG MEGA INC.",
+          "customer_name": "SM TANZA - BEBANG MEGA INC.",
+          "tax_id": "010-885-436-00000",
+          "customer_group": "All Customer Groups",
+          "represents_company": null,
+          "disabled": 0
+        },
+        "company_parent_company": "BEBANG MEGA INC."
+      },
+      "checks": {
+        "customer_matches_fixture": true,
+        "tin_matches_fixture": true,
+        "company_is_bki": true,
+        "gl_party_matches_customer": true,
+        "gl_party_set": [
+          "SM TANZA - BEBANG MEGA INC."
+        ],
+        "customer_record_exists": true,
+        "customer_record_tax_id_matches": true,
+        "company_parent_matches_fixture": true
+      },
+      "verdict": "PASS"
+    },
+    "SM TAYTAY - DAY ONES FOOD AND DRINK ESTABLISHMENTS CORP.": {
+      "si": "ACC-SINV-2026-00803",
+      "fixture": {
+        "expected_customer": "SM TAYTAY - DAY ONES FOOD AND DRINK ESTABLISHMENTS CORP.",
+        "expected_tin": "010-939-944-00000",
+        "expected_parent_corporation": null,
+        "store_ownership_type": "Managed Franchise"
+      },
+      "actual": {
+        "name": "ACC-SINV-2026-00803",
+        "customer": "SM TAYTAY - DAY ONES FOOD AND DRINK ESTABLISHMENTS CORP.",
+        "customer_name": "SM TAYTAY - DAY ONES FOOD AND DRINK ESTABLISHMENTS CORP.",
+        "company": "BEBANG KITCHEN INC.",
+        "tax_id": "010-939-944-00000",
+        "docstatus": 1,
+        "status": "Unpaid",
+        "grand_total": 1554.39,
+        "net_total": 1387.85,
+        "outstanding_amount": 1554.0,
+        "customer_record": {
+          "name": "SM TAYTAY - DAY ONES FOOD AND DRINK ESTABLISHMENTS CORP.",
+          "customer_name": "SM TAYTAY - DAY ONES FOOD AND DRINK ESTABLISHMENTS CORP.",
+          "tax_id": "010-939-944-00000",
+          "customer_group": "All Customer Groups",
+          "represents_company": null,
+          "disabled": 0
+        },
+        "company_parent_company": null
+      },
+      "checks": {
+        "customer_matches_fixture": true,
+        "tin_matches_fixture": true,
+        "company_is_bki": true,
+        "gl_party_matches_customer": true,
+        "gl_party_set": [
+          "SM TAYTAY - DAY ONES FOOD AND DRINK ESTABLISHMENTS CORP."
+        ],
+        "customer_record_exists": true,
+        "customer_record_tax_id_matches": true,
+        "company_parent_matches_fixture": true
+      },
+      "verdict": "PASS"
+    },
+    "SM VALENZUELA - BEBANG SMV INC.": {
+      "si": "ACC-SINV-2026-00804",
+      "fixture": {
+        "expected_customer": "SM VALENZUELA - BEBANG SMV INC.",
+        "expected_tin": "665-313-198-00000",
+        "expected_parent_corporation": "BEBANG ENTERPRISE INC.",
+        "store_ownership_type": "JV"
+      },
+      "actual": {
+        "name": "ACC-SINV-2026-00804",
+        "customer": "SM VALENZUELA - BEBANG SMV INC.",
+        "customer_name": "SM VALENZUELA - BEBANG SMV INC.",
+        "company": "BEBANG KITCHEN INC.",
+        "tax_id": "665-313-198-00000",
+        "docstatus": 1,
+        "status": "Unpaid",
+        "grand_total": 1478.74,
+        "net_total": 1320.3,
+        "outstanding_amount": 1479.0,
+        "customer_record": {
+          "name": "SM VALENZUELA - BEBANG SMV INC.",
+          "customer_name": "SM VALENZUELA - BEBANG SMV INC.",
+          "tax_id": "665-313-198-00000",
+          "customer_group": "All Customer Groups",
+          "represents_company": null,
+          "disabled": 0
+        },
+        "company_parent_company": "BEBANG ENTERPRISE INC."
+      },
+      "checks": {
+        "customer_matches_fixture": true,
+        "tin_matches_fixture": true,
+        "company_is_bki": true,
+        "gl_party_matches_customer": true,
+        "gl_party_set": [
+          "SM VALENZUELA - BEBANG SMV INC."
+        ],
+        "customer_record_exists": true,
+        "customer_record_tax_id_matches": true,
+        "company_parent_matches_fixture": true
+      },
+      "verdict": "PASS"
+    },
+    "STA. LUCIA EAST GRAND MALL - BEBANG SM MARIKINA INC.": {
+      "si": "ACC-SINV-2026-00805",
+      "fixture": {
+        "expected_customer": "STA. LUCIA EAST GRAND MALL - BEBANG SM MARIKINA INC.",
+        "expected_tin": "670-282-332-00000",
+        "expected_parent_corporation": "SM MARIKINA - BEBANG SM MARIKINA INC.",
+        "store_ownership_type": "JV"
+      },
+      "actual": {
+        "name": "ACC-SINV-2026-00805",
+        "customer": "STA. LUCIA EAST GRAND MALL - BEBANG SM MARIKINA INC.",
+        "customer_name": "STA. LUCIA EAST GRAND MALL - BEBANG SM MARIKINA INC.",
+        "company": "BEBANG KITCHEN INC.",
+        "tax_id": "670-282-332-00000",
+        "docstatus": 1,
+        "status": "Unpaid",
+        "grand_total": 1478.74,
+        "net_total": 1320.3,
+        "outstanding_amount": 1479.0,
+        "customer_record": {
+          "name": "STA. LUCIA EAST GRAND MALL - BEBANG SM MARIKINA INC.",
+          "customer_name": "STA. LUCIA EAST GRAND MALL - BEBANG SM MARIKINA INC.",
+          "tax_id": "670-282-332-00000",
+          "customer_group": "All Customer Groups",
+          "represents_company": null,
+          "disabled": 0
+        },
+        "company_parent_company": "SM MARIKINA - BEBANG SM MARIKINA INC."
+      },
+      "checks": {
+        "customer_matches_fixture": true,
+        "tin_matches_fixture": true,
+        "company_is_bki": true,
+        "gl_party_matches_customer": true,
+        "gl_party_set": [
+          "STA. LUCIA EAST GRAND MALL - BEBANG SM MARIKINA INC."
+        ],
+        "customer_record_exists": true,
+        "customer_record_tax_id_matches": true,
+        "company_parent_matches_fixture": true
+      },
+      "verdict": "PASS"
+    },
+    "THE GRID ROCKWELL - TASTECARTEL CORP.": {
+      "si": "ACC-SINV-2026-00806",
+      "fixture": {
+        "expected_customer": "THE GRID ROCKWELL - TASTECARTEL CORP.",
+        "expected_tin": "672-270-879-00000",
+        "expected_parent_corporation": null,
+        "store_ownership_type": "Full Franchise"
+      },
+      "actual": {
+        "name": "ACC-SINV-2026-00806",
+        "customer": "THE GRID ROCKWELL - TASTECARTEL CORP.",
+        "customer_name": "THE GRID ROCKWELL - TASTECARTEL CORP.",
+        "company": "BEBANG KITCHEN INC.",
+        "tax_id": "672-270-879-00000",
+        "docstatus": 1,
+        "status": "Unpaid",
+        "grand_total": 1488.59,
+        "net_total": 1329.1,
+        "outstanding_amount": 1489.0,
+        "customer_record": {
+          "name": "THE GRID ROCKWELL - TASTECARTEL CORP.",
+          "customer_name": "THE GRID ROCKWELL - TASTECARTEL CORP.",
+          "tax_id": "672-270-879-00000",
+          "customer_group": "All Customer Groups",
+          "represents_company": null,
+          "disabled": 0
+        },
+        "company_parent_company": null
+      },
+      "checks": {
+        "customer_matches_fixture": true,
+        "tin_matches_fixture": true,
+        "company_is_bki": true,
+        "gl_party_matches_customer": true,
+        "gl_party_set": [
+          "THE GRID ROCKWELL - TASTECARTEL CORP."
+        ],
+        "customer_record_exists": true,
+        "customer_record_tax_id_matches": true,
+        "company_parent_matches_fixture": true
+      },
+      "verdict": "PASS"
+    },
+    "THE TERMINAL - BEBANG STARMALL ALABANG INC.": {
+      "si": "ACC-SINV-2026-00807",
+      "fixture": {
+        "expected_customer": "THE TERMINAL - BEBANG STARMALL ALABANG INC.",
+        "expected_tin": "670-277-140-00000",
+        "expected_parent_corporation": "BEBANG ENTERPRISE INC.",
+        "store_ownership_type": "JV"
+      },
+      "actual": {
+        "name": "ACC-SINV-2026-00807",
+        "customer": "THE TERMINAL - BEBANG STARMALL ALABANG INC.",
+        "customer_name": "THE TERMINAL - BEBANG STARMALL ALABANG INC.",
+        "company": "BEBANG KITCHEN INC.",
+        "tax_id": "670-277-140-00000",
+        "docstatus": 1,
+        "status": "Unpaid",
+        "grand_total": 1416.3,
+        "net_total": 1264.55,
+        "outstanding_amount": 1416.0,
+        "customer_record": {
+          "name": "THE TERMINAL - BEBANG STARMALL ALABANG INC.",
+          "customer_name": "THE TERMINAL - BEBANG STARMALL ALABANG INC.",
+          "tax_id": "670-277-140-00000",
+          "customer_group": "All Customer Groups",
+          "represents_company": null,
+          "disabled": 0
+        },
+        "company_parent_company": "BEBANG ENTERPRISE INC."
+      },
+      "checks": {
+        "customer_matches_fixture": true,
+        "tin_matches_fixture": true,
+        "company_is_bki": true,
+        "gl_party_matches_customer": true,
+        "gl_party_set": [
+          "THE TERMINAL - BEBANG STARMALL ALABANG INC."
+        ],
+        "customer_record_exists": true,
+        "customer_record_tax_id_matches": true,
+        "company_parent_matches_fixture": true
+      },
+      "verdict": "PASS"
+    },
+    "UP TOWN MALL BGC - DMD HOLDINGS INC.": {
+      "si": "ACC-SINV-2026-00808",
+      "fixture": {
+        "expected_customer": "UP TOWN MALL BGC - DMD HOLDINGS INC.",
+        "expected_tin": "649-154-841-00000",
+        "expected_parent_corporation": null,
+        "store_ownership_type": "Managed Franchise"
+      },
+      "actual": {
+        "name": "ACC-SINV-2026-00808",
+        "customer": "UP TOWN MALL BGC - DMD HOLDINGS INC.",
+        "customer_name": "UP TOWN MALL BGC - DMD HOLDINGS INC.",
+        "company": "BEBANG KITCHEN INC.",
+        "tax_id": "649-154-841-00000",
+        "docstatus": 1,
+        "status": "Unpaid",
+        "grand_total": 1349.32,
+        "net_total": 1204.75,
+        "outstanding_amount": 1349.0,
+        "customer_record": {
+          "name": "UP TOWN MALL BGC - DMD HOLDINGS INC.",
+          "customer_name": "UP TOWN MALL BGC - DMD HOLDINGS INC.",
+          "tax_id": "649-154-841-00000",
+          "customer_group": "All Customer Groups",
+          "represents_company": null,
+          "disabled": 0
+        },
+        "company_parent_company": null
+      },
+      "checks": {
+        "customer_matches_fixture": true,
+        "tin_matches_fixture": true,
+        "company_is_bki": true,
+        "gl_party_matches_customer": true,
+        "gl_party_set": [
+          "UP TOWN MALL BGC - DMD HOLDINGS INC."
+        ],
+        "customer_record_exists": true,
+        "customer_record_tax_id_matches": true,
+        "company_parent_matches_fixture": true
+      },
+      "verdict": "PASS"
+    },
+    "VISTA MALL TAGUIG - TRICERN FOOD CORP.": {
+      "si": "ACC-SINV-2026-00809",
+      "fixture": {
+        "expected_customer": "VISTA MALL TAGUIG - TRICERN FOOD CORP.",
+        "expected_tin": "010-038-108-00000",
+        "expected_parent_corporation": null,
+        "store_ownership_type": "Managed Franchise"
+      },
+      "actual": {
+        "name": "ACC-SINV-2026-00809",
+        "customer": "VISTA MALL TAGUIG - TRICERN FOOD CORP.",
+        "customer_name": "VISTA MALL TAGUIG - TRICERN FOOD CORP.",
+        "company": "BEBANG KITCHEN INC.",
+        "tax_id": "010-038-108-00000",
+        "docstatus": 1,
+        "status": "Unpaid",
+        "grand_total": 1488.59,
+        "net_total": 1329.1,
+        "outstanding_amount": 1489.0,
+        "customer_record": {
+          "name": "VISTA MALL TAGUIG - TRICERN FOOD CORP.",
+          "customer_name": "VISTA MALL TAGUIG - TRICERN FOOD CORP.",
+          "tax_id": "010-038-108-00000",
+          "customer_group": "All Customer Groups",
+          "represents_company": null,
+          "disabled": 0
+        },
+        "company_parent_company": null
+      },
+      "checks": {
+        "customer_matches_fixture": true,
+        "tin_matches_fixture": true,
+        "company_is_bki": true,
+        "gl_party_matches_customer": true,
+        "gl_party_set": [
+          "VISTA MALL TAGUIG - TRICERN FOOD CORP."
+        ],
+        "customer_record_exists": true,
+        "customer_record_tax_id_matches": true,
+        "company_parent_matches_fixture": true
+      },
+      "verdict": "PASS"
+    },
+    "XENTROMALL MONTALBAN - PERPETUAL FOOD CORP.": {
+      "si": "ACC-SINV-2026-00810",
+      "fixture": {
+        "expected_customer": "XENTROMALL MONTALBAN - PERPETUAL FOOD CORP.",
+        "expected_tin": "698-838-619-00000",
+        "expected_parent_corporation": null,
+        "store_ownership_type": "Managed Franchise"
+      },
+      "actual": {
+        "name": "ACC-SINV-2026-00810",
+        "customer": "XENTROMALL MONTALBAN - PERPETUAL FOOD CORP.",
+        "customer_name": "XENTROMALL MONTALBAN - PERPETUAL FOOD CORP.",
+        "company": "BEBANG KITCHEN INC.",
+        "tax_id": "698-838-619-00000",
+        "docstatus": 1,
+        "status": "Unpaid",
+        "grand_total": 1214.53,
+        "net_total": 1084.4,
+        "outstanding_amount": 1215.0,
+        "customer_record": {
+          "name": "XENTROMALL MONTALBAN - PERPETUAL FOOD CORP.",
+          "customer_name": "XENTROMALL MONTALBAN - PERPETUAL FOOD CORP.",
+          "tax_id": "698-838-619-00000",
+          "customer_group": "All Customer Groups",
+          "represents_company": null,
+          "disabled": 0
+        },
+        "company_parent_company": null
+      },
+      "checks": {
+        "customer_matches_fixture": true,
+        "tin_matches_fixture": true,
+        "company_is_bki": true,
+        "gl_party_matches_customer": true,
+        "gl_party_set": [
+          "XENTROMALL MONTALBAN - PERPETUAL FOOD CORP."
+        ],
+        "customer_record_exists": true,
+        "customer_record_tax_id_matches": true,
+        "company_parent_matches_fixture": true
+      },
+      "verdict": "PASS"
+    }
+  },
+  "pass_rate": "47/48",
+  "mismatch_count": 2,
+  "warning_count": 0
+}

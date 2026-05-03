@@ -1,0 +1,52 @@
+{
+  "checks": {
+    "sm_marikina_is_group_0": true,
+    "bei_routes_24": {
+      "expected": 24,
+      "found": 24,
+      "missing": [],
+      "inactive": [],
+      "ok": true
+    },
+    "sm_marikina_in_allowed_target": true,
+    "allowed_target_count": 106,
+    "all_49_canonical_records": {
+      "missing": [],
+      "ok": true
+    },
+    "all_49_companies_leaf": {
+      "is_group_1": [],
+      "ok": true
+    },
+    "all_49_have_routes": {
+      "no_routes": [
+        "MEGAWORLD PASEO CENTER - BEBANG PASEO INC.",
+        "ROBINSONS GENERAL TRIAS - BEBANG MEGA INC.",
+        "ROBINSONS IMUS - BEBANG MEGA INC.",
+        "SM MANILA - BEBANG ENTERPRISE INC.",
+        "SM MEGAMALL - BEBANG ENTERPRISE INC.",
+        "SM SOUTHMALL - BEBANG ENTERPRISE INC.",
+        "SM TAYTAY - DAY ONES FOOD AND DRINK ESTABLISHMENTS CORP.",
+        "STA. LUCIA EAST GRAND MALL - BEBANG SM MARIKINA INC."
+      ],
+      "ok": false
+    }
+  },
+  "drifts": [
+    {
+      "type": "stores_without_active_routes",
+      "stores": [
+        "MEGAWORLD PASEO CENTER - BEBANG PASEO INC.",
+        "ROBINSONS GENERAL TRIAS - BEBANG MEGA INC.",
+        "ROBINSONS IMUS - BEBANG MEGA INC.",
+        "SM MANILA - BEBANG ENTERPRISE INC.",
+        "SM MEGAMALL - BEBANG ENTERPRISE INC.",
+        "SM SOUTHMALL - BEBANG ENTERPRISE INC.",
+        "SM TAYTAY - DAY ONES FOOD AND DRINK ESTABLISHMENTS CORP.",
+        "STA. LUCIA EAST GRAND MALL - BEBANG SM MARIKINA INC."
+      ]
+    }
+  ],
+  "verdict": "DRIFT_DETECTED",
+  "drift_count": 1
+}
