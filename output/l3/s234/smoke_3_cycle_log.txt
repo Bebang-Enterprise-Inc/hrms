@@ -1,0 +1,6 @@
+=== cycle 1 ===
+cycle 1: PASS cold=2026-05-04 dry=2026-05-04 schedule_source=fallback_last_week
+=== cycle 2 ===
+cycle 2: PASS cold=2026-05-04 dry=2026-05-04 schedule_source=fallback_last_week
+=== cycle 3 ===
+cycle 3: PASS cold=2026-05-04 dry=2026-05-04 schedule_source=fallback_last_week
