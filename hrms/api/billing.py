@@ -2320,3 +2320,61 @@ def flag_discrepancy(trip_name: str, reason: str, amount: Any):
 		"flagged_by": frappe.session.user,
 		"comment_name": comment.name,
 	}
+
+
+# ================================
+# S231 D-5-1: Fee Schedule Reader
+# ================================
+
+
+@frappe.whitelist()
+def get_fee_schedule() -> dict:
+	"""S231 D-5-1: return BEI Fee Schedule + Fee Carveout + markup rates.
+
+	Single read endpoint for the FeePreviewPanel UI in the bei-tasks
+	Company Master detail dialog. Returns:
+	  - schedules: list of BEI Fee Schedule rows (per ownership_type x fee_type)
+	  - carveouts: list of BEI Fee Carveout rows (per store override)
+	  - markup_rates: dict of ownership_type -> bki_markup_<type>_percent
+	    (live BEI Settings values; UI displays these as the BKI
+	    intercompany markup applied on store-side inventory invoices).
+
+	Read-only: no permission check beyond the @frappe.whitelist (any
+	authenticated user can read; the panel surfaces decision-grade
+	context for store ops + finance + BD users).
+	"""
+	set_backend_observability_context(
+		module="billing",
+		action="get_fee_schedule",
+		mutation_type="read",
+	)
+
+	schedules = frappe.get_all(
+		"BEI Fee Schedule",
+		fields=["ownership_type", "fee_type", "rate", "base_field", "recipient_company"],
+		order_by="ownership_type, fee_type",
+	)
+	carveouts = frappe.get_all(
+		"BEI Fee Carveout",
+		fields=["store", "fee_type", "rate_override", "effective_from", "notes"],
+		order_by="store, fee_type",
+	)
+
+	def _markup(field: str) -> float:
+		try:
+			return flt(frappe.db.get_single_value("BEI Settings", field) or 0)
+		except Exception:
+			return 0.0
+
+	markup_rates = {
+		"Company Owned": _markup("bki_markup_company_owned_percent"),
+		"JV": _markup("bki_markup_jv_percent"),
+		"Managed Franchise": _markup("bki_markup_managed_franchise_percent"),
+		"Full Franchise": _markup("bki_markup_full_franchise_percent"),
+	}
+
+	return {
+		"schedules": schedules,
+		"carveouts": carveouts,
+		"markup_rates": markup_rates,
+	}
