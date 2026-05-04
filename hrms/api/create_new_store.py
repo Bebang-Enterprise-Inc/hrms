@@ -213,9 +213,13 @@ def create_new_store(
 		wh.disabled = 0
 		wh.flags.ignore_permissions = True
 		wh.insert()
-		# Frappe may auto-rename to add suffix; force the canonical docname:
+		# Frappe may auto-rename to add suffix; force the canonical docname.
+		# v3 hotfix: force=True only handles cancelled docs; ignore_permissions=True
+		# is required to bypass the per-doc write-permission check in validate_rename.
+		# Without it, the live BD user fails on the source-doc permission check even
+		# though they had insert permission.
 		if wh.name != company_name:
-			frappe.rename_doc("Warehouse", wh.name, company_name, force=True)
+			frappe.rename_doc("Warehouse", wh.name, company_name, force=True, ignore_permissions=True)
 
 		# 3. Billing Customer (v2 A4: mandatory ERPNext fields)
 		bc = frappe.new_doc("Customer")
@@ -228,7 +232,7 @@ def create_new_store(
 		bc.flags.ignore_permissions = True
 		bc.insert()
 		if bc.name != company_name:
-			frappe.rename_doc("Customer", bc.name, company_name, force=True)
+			frappe.rename_doc("Customer", bc.name, company_name, force=True, ignore_permissions=True)
 
 		# 4. Internal Customer (S206 labor cost-sharing; v2 A4: same mandatory fields)
 		ic = frappe.new_doc("Customer")
