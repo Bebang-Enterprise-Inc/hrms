@@ -214,12 +214,17 @@ def create_new_store(
 		wh.flags.ignore_permissions = True
 		wh.insert()
 		# Frappe may auto-rename to add suffix; force the canonical docname.
-		# v3 hotfix: force=True only handles cancelled docs; ignore_permissions=True
-		# is required to bypass the per-doc write-permission check in validate_rename.
-		# Without it, the live BD user fails on the source-doc permission check even
-		# though they had insert permission.
+		# v3 hotfix #720 + #721: must call frappe.model.rename_doc.rename_doc directly
+		# because the top-level frappe.rename_doc wrapper has a strict typing
+		# decorator that doesn't accept `ignore_permissions` (raises TypeError at
+		# runtime). The internal rename_doc accepts both `force` (bypass cancelled-doc
+		# check) and `ignore_permissions` (bypass source-doc write-perm in
+		# validate_rename — required because wh.flags.ignore_permissions=True set
+		# before insert does NOT propagate to the rename validation, which loads a
+		# fresh doc from DB).
+		from frappe.model.rename_doc import rename_doc as _rename_doc_internal
 		if wh.name != company_name:
-			frappe.rename_doc("Warehouse", wh.name, company_name, force=True, ignore_permissions=True)
+			_rename_doc_internal("Warehouse", wh.name, company_name, force=True, ignore_permissions=True)
 
 		# 3. Billing Customer (v2 A4: mandatory ERPNext fields)
 		bc = frappe.new_doc("Customer")
@@ -232,7 +237,7 @@ def create_new_store(
 		bc.flags.ignore_permissions = True
 		bc.insert()
 		if bc.name != company_name:
-			frappe.rename_doc("Customer", bc.name, company_name, force=True, ignore_permissions=True)
+			_rename_doc_internal("Customer", bc.name, company_name, force=True, ignore_permissions=True)
 
 		# 4. Internal Customer (S206 labor cost-sharing; v2 A4: same mandatory fields)
 		ic = frappe.new_doc("Customer")
