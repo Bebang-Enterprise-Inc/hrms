@@ -1,0 +1,8 @@
+
+Running 1 test using 1 worker
+
+[S209 preflight] [S209] total=49 mutated=0 already_set=49 snapshot=F:\Dropbox\Projects\BEI-ERP\output\l3\s209\area_access_snapshot.json
+[S209 revert] ok=true [S209] reverted=0 skipped=49 errors=0
+  ✓  1 [chromium] › tests\e2e\specs\s209-all-stores.spec.ts:179:9 › S209 — 49-store happy chain › happy chain — ARANETA GATEWAY - TUNGSTEN CAPITAL HOLDINGS OPC (1.9m)
+
+  1 passed (2.1m)
