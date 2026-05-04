@@ -2,10 +2,43 @@
 sprint_id: S235
 sprint_title: Test Library Expansion — Real-User Dual Approval Verification
 plan_branch: s235-dual-approval-test-library
-status: PLANNED
+status: COMPLETED
 version: 2
 created_date: 2026-05-04
 revised_date: 2026-05-04
+completed_date: 2026-05-04
+backend_pr: 722
+frontend_pr: 463
+sweep_result: 45 PASS / 4 FAIL (same 4 stores as post-S234; all dispatch-step per-store stock issues, not S235 regressions)
+sweep_skipping_ui_click_count: 0
+execution_summary: |
+  All phases complete. Library expanded with 3 new primitives.
+
+  Phase A (library): forceDualApprovalOnOrder + OrderApprovalPage.approve(opts)
+  + assertDualApprovalExercised. Zero backend changes (v2 audit-self-amendment
+  dropped the originally-planned backend force_dual_approval param after
+  realizing the existing Frappe API token already had write perms on the
+  fields).
+
+  Phase B (spec): s209-all-stores.spec.ts wires all three at the right
+  call sites — forceDualApprovalOnOrder after submit, expectDualApproval=true
+  on both OrderApprovalPage.approve calls, assertDualApprovalExercised after
+  both clicks complete.
+
+  Phase C (trial): single-store ARANETA trial pre-merge passed in 1.9m.
+  BEI-ORD-2026-00980 verified dual approval with distinct approvers (test.area
+  stage 1 at 11:26:51, test.scm stage 2 at 11:27:07).
+
+  Phase D (post-deploy sweep): 45/49 PASS, 4 deterministic FAIL.
+  Failed stores: AYALA VERMOSA, MEGAWORLD PASEO CENTER, ROBINSONS GENERAL
+  TRIAS, ROBINSONS IMUS — same exact 4-store fail set as post-S234 sweep
+  yesterday. All 4 fail at DispatchPage.dispatch's waitForToast (per-store
+  stock at PCS-BKI source warehouse). Operational issue, not test infra.
+
+  Outcome: SCM dual-approval surface healthy across 45 stores. The previous
+  "44/49 effective" reporting in v15/v16/v17/post-S234 sweeps was technically
+  accurate but masked the fact that 0 SCM UI clicks actually fired — all 49
+  hit the early-return shortcut. From now on, sweeps that pass actually pass.
 canonical_scope: none
 canonical_scope_rationale: |
   Pure test infrastructure expansion in `bei-tasks/tests/e2e/`. No backend
