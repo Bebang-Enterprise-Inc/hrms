@@ -231,7 +231,7 @@ def create_new_store(
 		bc.customer_name = company_name
 		bc.customer_type = "Company"
 		bc.customer_group = "BKI Store"      # canonical pattern from company.py:574
-		bc.territory = "Philippines"          # canonical pattern from company.py:575
+		bc.territory = "All Territories"      # v3 hotfix #722: matches existing canonical Customers; "Philippines" doesn't exist in production tabTerritory
 		bc.tax_id = resolved_tax_id
 		bc.is_internal_customer = 0
 		bc.flags.ignore_permissions = True
@@ -244,7 +244,7 @@ def create_new_store(
 		ic.customer_name = f"{store_label} (Internal)"
 		ic.customer_type = "Company"
 		ic.customer_group = "BKI Store"
-		ic.territory = "Philippines"
+		ic.territory = "All Territories"  # v3 hotfix #722: matches existing canonical Internal Customers
 		ic.represents_company = company_name
 		ic.is_internal_customer = 1
 		ic.tax_id = None  # internal — no TIN
