@@ -28,9 +28,13 @@ import os, sys, json, traceback
 for d in (
     "/home/frappe/logs",
     "/home/frappe/frappe-bench/logs",
+    "/home/frappe/frappe-bench/hq.bebang.ph/logs",
     "/home/frappe/frappe-bench/sites/hq.bebang.ph/logs",
 ):
-    os.makedirs(d, exist_ok=True)
+    try:
+        os.makedirs(d, exist_ok=True)
+    except Exception:
+        pass
 import frappe
 frappe.init(site="hq.bebang.ph", sites_path="/home/frappe/frappe-bench/sites")
 frappe.connect()
