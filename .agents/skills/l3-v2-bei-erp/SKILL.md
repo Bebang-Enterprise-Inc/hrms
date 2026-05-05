@@ -9,6 +9,23 @@ user-invocable: true
 
 Execute pre-written test scenarios. **You do NOT invent test cases.** You read them from `docs/testing/scenarios/index.yaml` + mapped scenario files and execute exactly as written.
 
+## 🟥 TEST EMPLOYEE & ACCOUNT NUMBERING — NON-NEGOTIABLE (S237)
+
+L3 tests **MUST NEVER** create test Employee records using attendance_device_id values in the **9xxxxxx** range — that range is reserved for real BEI employees in the Employee Master CSV.
+
+**Rules (enforced — violations are blockers):**
+
+1. **Test attendance_device_id range:** test Employee records MUST use Bio IDs in the **3xxxxxx** range (3000001 → 3999999). Allocate sequentially from `3000001` on a fresh test database; in production tests, query `SELECT MAX(CAST(attendance_device_id AS UNSIGNED)) FROM tabEmployee WHERE attendance_device_id REGEXP '^3[0-9]{6}$'` and increment from there.
+2. **Test employee_name pattern:** test Employee `employee_name` MUST start with one of: `L3-`, `TEST-`, `L3TEST `, `BROWSERTEST `, `APPROVETEST ` (uppercase markers so SQL `LIKE '%TEST%'` finds them). Do NOT use names that look real (no "Maria Santos Reyes" — use "L3-MARIA-SANTOS-001").
+3. **Test User accounts:** test login emails MUST match the existing `test.X@bebang.ph` convention (canonical list in `memory/testing-accounts.md`). Do NOT create new test logins outside the `test.*@bebang.ph` pattern.
+4. **Test branch:** if a fictional branch is needed, use `TEST-STORE-BGC` or another `TEST-*` prefix. Do NOT use real BEI branch names (`ARANETA GATEWAY`, `BRITTANY HOTEL`, `ALABANG TOWN CENTER`, etc.) for ad-hoc test rows that will be left in the database.
+5. **Status discipline at teardown:** every test Employee created during a run MUST end the run as either deleted or `status='Left'` AND `attendance_device_id=NULL`. Active test rows holding any device_id are forbidden at closeout.
+6. **Pre-seed audit (Phase 0):** before pushing any test Employee INSERT, run `SELECT COUNT(*) FROM tabEmployee WHERE attendance_device_id REGEXP '^9[0-9]{6}$' AND (UPPER(employee_name) LIKE '%TEST%' OR UPPER(employee_name) LIKE '%L3%')`. If count > 0, STOP and ask Sam — that means a previous run polluted the real-Bio-ID range and must be cleaned first.
+
+**Why this exists:** S237 (2026-05-05) found 31 L3 test rows squatting on real Bio IDs 9001883–9001917, blocking S228's HR-audited Frappe import for actual new hires (CATINDOY 9001893, ESTRELLA 9001903, etc.). All ADMS punches from those Bio IDs were being mis-routed to ghost test rows marked `status=Left`, breaking payroll attribution. Cleanup migrated 6 Active test rows to `3000001..3000006` and NULLed 26 Left test rows. Going forward, the 9xxxxxx range is real-employees-only.
+
+**Where to encode this in scenario files:** every L3 scenario YAML that creates an Employee record MUST declare `test_bio_id_range: 3xxxxxx` in its preconditions block. Scenarios that violate this are rejected at audit time (`/audit-plan-bei-erp` enforces).
+
 ## Why Scenario-Driven?
 
 Agent-authored tests failed us repeatedly:
