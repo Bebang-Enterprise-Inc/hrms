@@ -266,6 +266,39 @@ When auditing any plan that contains L3 scenarios, sweeps, browser tests, or QA 
 **Incident reference:** S225 sweep (2026-04-28) — 14/49 stores failed because PM001 had 0 actual_qty at the assigned hub. Agent's RCA proposed resolver auto-failover that would have broken the store→hub assignment rule. CEO directive: "DO NOT BREAK THE SYSTEM TRYING TO PASS A TEST. Add test inventory, test users, test data via `/frappe-bulk-edits` if the missing data blocks the test in any way; when done the data should be deleted via `/frappe-bulk-edits`." This rule encodes that directive at audit time.
 
 
+## S237 Test Employee & Account Numbering Audit Rule (MANDATORY for All Plans That Create Test Data)
+
+S237 (2026-05-05) found 31 L3 test rows in production Frappe `tabEmployee` squatting on real-employee Bio IDs 9001883–9001917. Three weeks after the L3 tests created those rows, S228 imported the New Hires Masterlist — assigning the same Bio IDs to real new hires (CATINDOY 9001893, ESTRELLA 9001903, etc.). All ADMS punches from those Bio IDs were being mis-routed to ghost test rows marked `status=Left`, which would have silently broken payroll attribution for ~31 real employees. Cleanup migrated 6 Active test rows to `3000001..3000006` and NULLed 26 Left test rows. The 9xxxxxx range is now strictly reserved for real employees.
+
+When auditing any plan that creates or references test Employee records, test attendance_device_ids, or test login accounts, check all of the following:
+
+1. **9xxxxxx test Bio ID = CRITICAL blocker.** Scan the plan body for any test Employee row that proposes `attendance_device_id` in `9000000..9999999`. If found, classify as a CRITICAL blocker `TEST_BIO_ID_REAL_RANGE_COLLISION`. Test rows MUST use `3xxxxxx` (`3000001..3999999`).
+
+2. **Test employee_name without TEST/L3 marker = WARNING.** Plans that create test rows with realistic-looking names ("Maria Santos", "Juan Dela Cruz") that could be confused with real employees get a WARNING `TEST_EMPLOYEE_NAME_LOOKS_REAL`. Acceptable patterns: `L3-`, `TEST-`, `L3TEST `, `BROWSERTEST `, `APPROVETEST ` prefix on `employee_name`.
+
+3. **Real branch on test row = WARNING.** Plans that create test rows with `branch` set to real BEI branches (`ARANETA GATEWAY`, `BRITTANY HOTEL`, `ALABANG TOWN CENTER`, etc.) and don't delete the row at closeout get a WARNING `TEST_BRANCH_USES_REAL_LOCATION`. Use `TEST-STORE-BGC` or another `TEST-*` prefix.
+
+4. **Ad-hoc test login email = WARNING.** Plans that create new test User accounts outside the canonical `test.X@bebang.ph` list in `memory/testing-accounts.md` get a WARNING `TEST_LOGIN_NOT_IN_REGISTRY`. The fix is to either reuse a canonical login or update the registry first.
+
+5. **Missing teardown contract for test Employee creation = CRITICAL blocker.** If the plan creates test Employee rows but doesn't declare in its Test Data Seeding Contract that the rows will be DELETED or migrated to `status=Left, attendance_device_id=NULL` at closeout, classify as CRITICAL `TEST_EMPLOYEE_TEARDOWN_MISSING`.
+
+6. **Missing pre-seed pollution audit = WARNING.** Phase 0 should include `SELECT COUNT(*) FROM tabEmployee WHERE attendance_device_id REGEXP '^9[0-9]{6}$' AND (UPPER(employee_name) LIKE '%TEST%' OR UPPER(employee_name) LIKE '%L3%')` and STOP if > 0. If the plan doesn't include this, WARNING `MISSING_PRESEED_POLLUTION_CHECK`.
+
+7. **Forbidden plan patterns** — scan for these antipattern strings; each match is a CRITICAL blocker:
+   - "create test Employee with attendance_device_id 9..." → blocker `EXPLICIT_9XXXXXX_TEST_BIO_ID`
+   - "INSERT INTO tabEmployee ... attendance_device_id ... 9001..." → blocker (literal SQL violating the rule)
+   - "use Bio ID 9XXXXXX for test" → blocker `TEST_BIO_ID_GUIDANCE_VIOLATION`
+
+**How to check quickly:**
+- `grep -nE "attendance_device_id.*9[0-9]{6}" <plan>` in any test scenario / seeding section — any match is a flagged collision (unless the plan explicitly references a real-employee enrollment, like S230)
+- `grep -nE "(L3-TEST|TEST-|L3TEST |BROWSERTEST |APPROVETEST )" <plan>` — confirm test Employee names use approved prefixes
+- Spot-check teardown contract: every test Employee insert traces to a teardown step
+
+**Severity anchor:** S237 blockers are CRITICAL. The S237 incident took 3 weeks to surface (Apr 7 → Apr 28 → May 5) because nothing flagged the test-vs-real Bio ID collision at audit time. Plans that violate this MUST NOT proceed to execution. The fix is mechanical (renumber test Bio IDs to 3xxxxxx) and adds zero work to a properly written test plan.
+
+**Incident reference:** S237 (2026-05-05) — `/adms-bei-erp` enrollment of 3 real new hires (CATINDOY/BONGAY/ESTRELLA) revealed that 2 of their Bio IDs (9001893, 9001903) were already squatted in Frappe by L3 test ghosts from 2026-04-07 and 2026-04-09. Forensic audit found 31 test rows on real-range PINs total. CEO directive: enforce 3xxxxxx test Bio ID range, amend `/l3-v2-bei-erp`, `/write-plan-bei-erp`, `/audit-plan-bei-erp` to prevent recurrence.
+
+
 ## S097 Sentry Observability Audit Rule (Required For All Deployable Plans)
 
 S097 proved that agents can plan, audit, implement, deploy, and close out a sprint without adding any observability instrumentation. The Sentry integration exists but agents never use it unless explicitly mandated.

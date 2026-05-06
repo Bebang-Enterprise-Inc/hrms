@@ -563,6 +563,26 @@ Example L3 Scenario Table:
 | test.commissary@bebang.ph | Fill wastage: item=ITEM-001, qty=1, reason=expired → click Log | Success toast, stock entry created | FIX-6 wastage hardening broken |
 ```
 
+## S237 Test Employee & Account Numbering Rule (Required For All Plans That Create Test Data)
+
+S237 (2026-05-05) found 31 L3 test rows squatting on real-employee Bio IDs 9001883–9001917 in production Frappe. The L3 tests on 2026-04-07 and 2026-04-09 grabbed unallocated 9xxxxxx PINs as test attendance_device_ids. Three weeks later S228 imported the New Hires Masterlist into Master CSV — assigning those exact PINs to real new hires (CATINDOY 9001893, ESTRELLA 9001903, etc.). When ADMS punches arrived for those PINs, the Frappe sync routed them to ghost test rows marked `status=Left`, blocking payroll. Cleanup migrated 6 Active test rows to `3000001..3000006` and NULLed 26 Left test rows.
+
+When writing any plan that creates test Employee records, test attendance_device_ids, or test User accounts, enforce the following:
+
+1. **Test Bio ID range:** test Employee `attendance_device_id` MUST be in `3000001..3999999` (`3xxxxxx`). The `9xxxxxx` range is reserved for real employees and is enforced by the Master CSV. Plans that propose creating test Employees with 9xxxxxx Bio IDs are **CRITICAL blockers** at audit time.
+
+2. **Test employee_name pattern:** test Employee `employee_name` MUST start with one of: `L3-`, `TEST-`, `L3TEST `, `BROWSERTEST `, `APPROVETEST ` so SQL `LIKE '%TEST%'` finds them. Realistic-looking names ("Maria Santos", "Juan Dela Cruz") that could be confused with real employees are forbidden in test data.
+
+3. **Test login email pattern:** plans MUST reuse the canonical test logins from `memory/testing-accounts.md` (`test.hr@bebang.ph`, `test.crew@bebang.ph`, `test.areasup@bebang.ph`, etc.) rather than create ad-hoc `test.X@bebang.ph` accounts. If a new role is needed, the plan must propose adding it to the canonical test-account registry FIRST.
+
+4. **Test branch:** plans that need a fictional branch for test rows must use `TEST-STORE-BGC` or another `TEST-*` prefix — NEVER a real BEI branch (`ARANETA GATEWAY`, `BRITTANY HOTEL`, `ALABANG TOWN CENTER`, etc.) for ad-hoc test rows that will be left in the database after the run.
+
+5. **Teardown contract:** every plan that creates test Employee records must declare in its Test Data Seeding Contract that all test rows are either DELETED or migrated to `status=Left, attendance_device_id=NULL` at closeout. Active test rows holding any device_id at closeout are non-compliant.
+
+6. **Pre-seed audit:** Phase 0 of execution-oriented plans must include a pre-seed query: `SELECT COUNT(*) FROM tabEmployee WHERE attendance_device_id REGEXP '^9[0-9]{6}$' AND (UPPER(employee_name) LIKE '%TEST%' OR UPPER(employee_name) LIKE '%L3%')`. If count > 0, STOP — pre-existing pollution must be cleaned before adding more.
+
+If these are missing, classify them as **test-isolation blockers**. Plans that violate the 9xxxxxx vs 3xxxxxx separation will produce the same payroll-attribution failure that took 3 weeks to surface in S237.
+
 ## BEI-Specific Plan Sections
 
 ### For Feature/Sprint Plans, Add:
