@@ -2,7 +2,6 @@ import re
 
 import frappe
 
-
 # S237 (2026-05-05): Bio ID ranges
 #   9xxxxxx (3000001..9999999 with leading 9) → real BEI employees (Master CSV authoritative)
 #   3xxxxxx (3000001..3999999) → test employees (L3, browser, automation fixtures)
