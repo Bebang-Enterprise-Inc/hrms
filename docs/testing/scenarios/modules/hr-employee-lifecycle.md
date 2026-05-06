@@ -4,6 +4,19 @@
 <!-- 137 scenarios across 36 prefixes covering the full 19-stage employee lifecycle. -->
 <!-- Chain convention: most scenarios chain off EMP-CREATE-001 (base test employee). EMP-CREATE-002 produces a second test employee. EMP-CREATE-010 produces a third (transfer destination). -->
 
+> 🟥 **S237 RULE (2026-05-05): TEST EMPLOYEES MUST USE 3xxxxxx BIO ID RANGE — NOT 9xxxxxx.**
+>
+> The 9xxxxxx range (3000001..9999999, leading digit 9) is reserved for REAL BEI employees in the Master CSV. The 3xxxxxx range (3000001..3999999) is reserved for test fixtures.
+>
+> **Affected scenarios (need follow-up sprint to migrate):** EMP-CREATE-001 through EMP-CREATE-010 currently call `create_employee_direct` which auto-allocates the next 9xxxxxx Bio ID. This pollutes the real-employee range and was the direct cause of S237 (Bio IDs 9001893+9001903 squatted by L3 ghosts, blocking S228's HR-audited Frappe import for CATINDOY/ESTRELLA real employees). EMP-CLEAN-003 still asserts against the 9xxxxxx range — it should be assertion against 3xxxxxx after migration.
+>
+> **Until migrated**, every L3 sweep that runs EMP-CREATE-* will RE-POLLUTE the 9xxxxxx range. Anti-regression checks for the S237 cleanup must run AFTER each sweep:
+> ```bash
+> bash output/s237/verify_s237_state.sh # 2289454
+> ```
+>
+> See `.claude/skills/l3-v2-bei-erp/SKILL.md` ("TEST EMPLOYEE & ACCOUNT NUMBERING — NON-NEGOTIABLE (S237)") for the full rule. Migration sprint to be filed as S238 or later: extend `create_employee_direct` to accept `is_test=True` flag that allocates from 3xxxxxx range; update EMP-CREATE-* scenarios to pass it.
+
 ## EMP-CREATE — New employee creation (S164 surface)
 
 ### EMP-CREATE-001: Create employee with mandatory fields only
