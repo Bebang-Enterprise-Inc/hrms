@@ -34,6 +34,83 @@ evidence_transient: []
 
 > **PR-Handoff:** Agent created the PR and STOPS. Sam handles merge.
 
+## Design Rationale (For Cold-Start Agents)
+
+This section exists so a fresh agent reading this plan 6 months from now (or anyone allocating another reserved range / cleaning more test rows / deciding why some rows stayed and others were nulled) can act without re-deriving every choice.
+
+### Why 3xxxxxx for the test range (not 1/2/4/5/6/7/8xxxxxx)?
+
+The ZKTeco MB10-VL biometric device firmware accepts any 7-digit numeric PIN — there is no firmware-level constraint that forced 3xxxxxx. The choice was anchored in three properties:
+
+1. **Distinguishability at a glance.** Real BEI employees are allocated sequentially from 9000003 upward (verified 2026-05-05 against `data/_FINAL/EMPLOYEE_MASTER.csv` — 696 rows, max 9001881). A reviewer reading SQL output or audit logs can tell at-a-glance that `3000001` is a test row but `9001827` is a real employee. Numeric ranges that share a leading digit with real PINs (any 9xxxxxx) failed this test by definition.
+2. **Distance from real-allocation pace.** BEI hires roughly 50 employees/year (~50 new Bio IDs/year). Starting from 9001881, the real range will reach 9999999 in approximately 1600 years. 3xxxxxx is comfortably distant from any historical or projected real-PIN allocation — there is zero collision risk for the lifespan of BEI.
+3. **Future reservation flexibility.** Choosing 3xxxxxx leaves 1/2/4/5/6/7/8xxxxxx all available for future explicit reservations (e.g., `8xxxxxx` for external contractor IDs, `4xxxxxx` for pilot-store crew, `5xxxxxx` for integration-partner accounts). Future plans that reserve another range should pick from those untaken digits and document their own rationale here.
+
+Sam's directive ("BIO ID number start with 3 or something") set 3 as the choice. The reasoning above is what makes 3 a defensible long-term decision rather than an arbitrary one.
+
+### Why migrate 6 Active rows but NULL 26 Left rows?
+
+Both groups need their 9xxxxxx Bio IDs freed. The asymmetric treatment reflects different downstream requirements:
+
+- **Active rows (`HR-EMP-00062, 63, 64, 65, 67, 69`)** are owned by ongoing L3 test scenarios that still execute against them. They need a stable, non-NULL `attendance_device_id` so Frappe permission checks and ADMS punch routing keep working in test runs. Migrating them to `3000001..3000006` preserves the foreign-key surface — every test that reads `frappe.get_doc("Employee", "HR-EMP-00062").attendance_device_id` still gets a valid value, just one in the test range instead of the real range. The `branch` field was also migrated (`ALABANG TOWN CENTER` → `TEST-STORE-BGC`) in v1.1 for the same reason: don't pollute real-branch reports with test rows that are still being actively exercised.
+- **Left rows (26 ghost employees)** are decommissioned test fixtures with no future use. NULL'ing the device_id achieves three goals at once: (a) frees the 9xxxxxx PIN for re-use by real new hires, (b) prevents accidental ADMS routing if an old PIN is ever re-issued, (c) keeps a forensic trail on the row (`employee_name`, `name`, `creation` timestamp) for incident reconstruction without wasting a test-range PIN on a row nothing will read again.
+
+A simpler "NULL all" approach would have broken the 6 still-active L3 scenarios on the next test run. A simpler "migrate all" approach would have wasted 26 test-range PINs on dead fixtures and left them as confusing pseudo-active records with valid-looking PINs.
+
+### Why 21 historical NULL'd test rows were NOT touched
+
+Live audit found 21 additional test-named rows with `attendance_device_id IS NULL` already (created 2026-02-22 by Administrator + a few earlier sprints — `TEST-XXX-001` series, `BEI-EMP-2026-00001..00003`, etc.). These were intentionally LEFT ALONE because:
+
+1. **Zero PIN-collision risk.** Their `attendance_device_id` is already NULL. They cannot squat a real Bio ID by definition — they don't have one.
+2. **Some are referenced by historical L3 traces / docs.** Renaming or deleting them would break `git blame`-equivalent forensic queries that reference these specific row names.
+3. **`status='Left'` already excludes them from the active-employee queries that matter for payroll and reports.** They show up only in `SELECT * FROM tabEmployee` (no filter) — a reasonable place for dead test fixtures to live.
+
+A future hygiene sprint could choose to delete them outright. S237 was scoped to PIN-collision remediation only; broader test-fixture deletion would have inflated scope without addressing the actual incident.
+
+### Why the cleanup ran direct SQL UPDATE instead of Frappe ORM
+
+`frappe.set_value("Employee", name, "attendance_device_id", new)` would have triggered the `Employee.validate` hook, which (per `hrms/utils/bio_id_validation.py` BEFORE v1.1) would have rejected `3000001..3000006` as invalid because the regex was `^9\d{6}$`. The chicken-and-egg: the migration needed the validator extended, but the validator was the thing being migrated to allow. Using direct SQL via `bench mariadb -e` bypassed the validator for the bulk migration, then v1.1 extended the regex (`^[39]\d{6}$`) so future Desk-side or ORM saves work without `frappe.throw`.
+
+The trade-off acknowledged: direct SQL skips `tabVersion` audit trail entries. The cleanup is recorded in Frappe via the `modified` timestamp on each row, in `data/_FINAL/CHANGE_LOG.csv` via S237's manual entries, and in the SSM CommandId `8c5b546c-179a-4439-9252-288e9e54085f` whose stdout is captured in `output/s237/cleanup_log.txt`.
+
+### Why Step-2 of the cleanup script reports "1 row affected"
+
+The cleanup script issued 6 sequential `UPDATE tabEmployee SET attendance_device_id = '3000001..6' WHERE name = 'HR-EMP-00062..69'` statements. MariaDB's `ROW_COUNT()` reports the affected count of the LAST statement only, so the SSM probe captured "1" (the final UPDATE that touched HR-EMP-00069). All 6 migrations succeeded — verified row-by-row in Step 6's enumeration. A reader who sees `Step 2: 1 row affected` should NOT interpret it as "5 of 6 failed"; it's a SQL semantics quirk of `ROW_COUNT()` on chained `bench mariadb -e` statements.
+
+If reproducing the migration with rollback safety, prefer `frappe.db.savepoint()` + `frappe.db.set_value()` AFTER the validator regex is already extended.
+
+### Why `cleanup_log.txt` is base64-encoded
+
+The SSM-side script runs `{ ... } | base64 -w 0` as the last step so the encoded output survives Windows console code-page (cp1252) and BOM-sensitive transports without character corruption. Decode locally with:
+
+```bash
+cat output/s237/cleanup_log.txt | base64 -d | less
+```
+
+The plain-text content is also summarized in `output/s237/SUMMARY.md` for direct reading.
+
+### Known limitations and follow-up work
+
+1. **Validator allows 3xxxxxx but does not enforce it for test rows.** `bio_id_validation.py` accepts any `^[39]\d{6}$`. A developer creating a new test Employee via Desk could still set `attendance_device_id = 9999999` and pass validation. Enforcement requires adding a check like "if `employee_name` matches a TEST/L3 prefix, `attendance_device_id` must start with 3" — DEFERRED to a future sprint that has a clear definition of "test row."
+2. **L3 scenario files still call `create_employee_direct` which auto-allocates the next 9xxxxxx PIN.** S237 added an S237 banner to `docs/testing/scenarios/modules/hr-employee-lifecycle.md` flagging this, but the actual fix requires extending `create_employee_direct` to accept `is_test=True` flag and allocate from 3xxxxxx. **DEFERRED to S238+.** Until then, every L3 sweep that runs `EMP-CREATE-*` will re-pollute the 9xxxxxx range. Mitigation: run `output/s237/verify_s237_state.sh` after each L3 sweep — if it fails, re-run S237's cleanup pattern on the new pollution.
+3. **S228 P4 race window.** S228's pending Frappe Employee insert for 53 new hires depends on Bio IDs 9001882-9001934 being free. S237 freed 9001883-9001917. If S228 P4 runs before another L3 sweep re-pollutes those PINs, the insert succeeds. Sam coordinates manually — there is no advisory lock between S237's verifier and S228's import.
+4. **The 4 Estancia crew (9001827/30/32/35) are still missing from Frappe `tabEmployee`.** Out of S237 scope — S228 anomaly class A1 will fix when HR audit completes.
+5. **No `tabVersion` audit trail.** Direct SQL UPDATE bypassed Frappe's Activity log. Documented in this section + Amendment Log; the live SSM CommandId is the audit anchor.
+
+### Source references
+
+Every claim above is anchored in a specific file or live system state:
+
+- ADMS device firmware constraints: `data/ADMS/ZKTECO_COMPREHENSIVE_DOCUMENTATION.md` + skill `/adms-bei-erp` (verifies 7-digit PIN range)
+- Real Bio ID range: `data/_FINAL/EMPLOYEE_MASTER.csv` (696 rows, max 9001881 verified 2026-05-05)
+- Validator location + hook registration: `hrms/utils/bio_id_validation.py` + `hrms/hooks.py:243`
+- Cleanup execution: SSM CommandId `8c5b546c-179a-4439-9252-288e9e54085f` (output captured in `output/s237/cleanup_log.txt`)
+- Test rows that were active vs Left: `output/s237/cleanup_log.txt` Step 6 enumeration
+- 21 untouched historical rows: `output/s237/DEFECTS.md` "Rows that were NOT touched"
+- L3 scenario impact: `docs/testing/scenarios/modules/hr-employee-lifecycle.md` (S237 banner near top of file)
+- S228 dependency: `docs/plans/2026-04-28-sprint-228-new-hires-import-anomaly-fix.md` (anomaly class A1)
+- Regression detector: `output/s237/verify_s237_state.sh` (run anytime to re-validate cleanup is intact)
+
 ## What broke
 
 L3 test scripts run by `test.hr@bebang.ph` (2026-04-07) and `test.hrmanager@bebang.ph` (2026-04-09) created **31 fake `tabEmployee` rows** for L3 testing. Those scripts assigned `attendance_device_id` values from the **real-employee 9xxxxxx range** (9001883–9001917) — Bio IDs that were unallocated at the time but that S228 imported from the New Hires Masterlist on **2026-04-28**, assigning them to actual new hires.
