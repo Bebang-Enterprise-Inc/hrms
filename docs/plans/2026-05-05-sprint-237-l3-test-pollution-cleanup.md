@@ -6,9 +6,12 @@ plan_filename: 2026-05-05-sprint-237-l3-test-pollution-cleanup.md
 branch: s237-l3-test-pollution-cleanup
 repos: [hrms]
 date_created: 2026-05-05
-status: AGENT_BUILD_COMPLETE
+status: COMPLETED
 plan_version: v1-executed
-completed_date: 2026-05-05
+completed_date: 2026-05-06
+backend_pr: 726
+frontend_pr: null
+l3_result: N/A (no L3 phase — backend cleanup + skill doc amendments only)
 canonical_scope: none
 canonical_scope_rationale: |
   Frappe `tabEmployee` UPDATE-only cleanup (set `attendance_device_id` to NULL or migrate to 3xxxxxx range) + 3 `.claude/skills/*-bei-erp/SKILL.md` doc edits.
@@ -187,3 +190,4 @@ S228's pending Phase 4 (Frappe `tabEmployee` insert for 53 new hires) can now pr
 |------|--------|---------|--------|
 | 2026-05-05 | Sam (via Claude) | INITIAL + EXECUTED | Plan written and executed in same session per CEO "Now" directive. 32 Frappe rows mutated, 3 skills amended, registry updated, PR created. canonical_scope=none verified. |
 | 2026-05-06 | Sam (via Claude) | v1.1 — audit fixes | `/audit-plan-bei-erp` retrospective audit caught 2 CRITICAL + multiple WARNING findings on PR #726 BEFORE merge. v1.1 amendments: **(C-1 fix)** Recovered SPRINT_REGISTRY.md silent-revert — the original S237 commit's registry was based on the pre-S233/S234/S235 snapshot (worktree spawned 2026-04-29 from `3e47ceace`), so the diff against current production silently DELETED the S233 row + S235 row + downgraded S234 from "COMPLETED PR #716 merged" back to "PLANNED TBD". Recovered all 3 rows + appended fresh S237 row + bumped Next to S238. Same incident class as S161 (MEMORY.md `feedback_rebase_before_merge.md`). **(F-1 fix)** Extended `hrms/utils/bio_id_validation.py` regex from `^9\d{6}$` to `^[39]\d{6}$` — the original validator (registered as `Employee.validate` hook in `hrms/hooks.py:243`) would have rejected every future ORM `.save()` on the 6 migrated test rows (3000001..3000006). Bulk SQL UPDATE bypassed it for the migration but Desk-side edits or any `frappe.get_doc("Employee", "HR-EMP-00062").save()` would `frappe.throw`. **(F-4 / self-violation fix)** The 6 migrated test rows still had `branch='ALABANG TOWN CENTER'` (a real BEI branch with 10 active employees) — violating the new S237 audit rule's `TEST_BRANCH_USES_REAL_LOCATION` warning. Created `tabBranch.name='TEST-STORE-BGC'` and migrated all 6 rows' branch via UPDATE. ATC report queries no longer pull these test rows. **(C-CS-1 fix)** Added `output/s237/verify_s237_state.sh` regression-detection script — runs 4 idempotent SSM checks anytime to confirm the cleanup didn't drift. Audit evidence: `output/plan-audit/sprint-237-l3-test-pollution-cleanup/`. ~7 additional work units (32 → 39 total). |
+| 2026-05-07 | Sam (via Claude) | v1.2 — closeout | PR #726 merged 2026-05-06 (UTC 11:13, PHT 19:13). Status flipped `AGENT_BUILD_COMPLETE` → `COMPLETED`. `completed_date` corrected from 2026-05-05 (agent-build date) to 2026-05-06 (PR-merge date). Added `backend_pr: 726`, `frontend_pr: null`, `l3_result: N/A`. Registry row updated: `#726 (PR pending merge)` → `#726`, `AGENT_BUILD_COMPLETE 2026-05-05` → `COMPLETED 2026-05-06`. Doc-only follow-up PR #727 (cold-start Design Rationale section, +77 lines) still OPEN — non-blocking, awaiting Sam merge. No code changes in this closeout. |
