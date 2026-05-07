@@ -1,0 +1,75 @@
+=== STATE AFTER S239 (pre-Sam-restart) ===
+--- 1. Server allowlist line count + UDP3254800655 row ---
+52 /opt/frappe/bebang-hrms/adms_receiver/sn_mapping_all.csv
+52,CAMANGYANAN BULACAN,camangyananbulacan,Camangyanan Bulacan,commissary,,EXACT_NAME,user_clarification,ZKTeco MB10-VL,UDP3254800655,Active,5/7/2026,,
+--- 2. adms_device_cmd state for both target devices ---
+      sn       | status  |  n  
+---------------+---------+-----
+ CNYG242061718 | ACKED   | 193
+ UDP3254800655 | PENDING |   8
+(2 rows)
+
+--- 3. The 9 newly-inserted rows in detail ---
+  id   |      sn       | status  | attempts |                                    preview                                    |         created_at         
+-------+---------------+---------+----------+-------------------------------------------------------------------------------+----------------------------
+ 12016 | UDP3254800655 | PENDING |        0 | DATA UPDATE USERINFO PIN=9001882        Name=ALIMAN, BERNADETTE E.      Pri=0 | 2026-05-07 06:26:31.119325
+ 12017 | UDP3254800655 | PENDING |        0 | DATA UPDATE USERINFO PIN=9001885        Name=ATIP, MARVIN G.    Pri=0         | 2026-05-07 06:26:31.119325
+ 12018 | UDP3254800655 | PENDING |        0 | DATA UPDATE USERINFO PIN=9001898        Name=DEL CARMEN, RUBELYN R.     Pri=0 | 2026-05-07 06:26:31.119325
+ 12019 | UDP3254800655 | PENDING |        0 | DATA UPDATE USERINFO PIN=9001899        Name=DELA CRUZ, GERZIE A.       Pri=0 | 2026-05-07 06:26:31.119325
+ 12020 | UDP3254800655 | PENDING |        0 | DATA UPDATE USERINFO PIN=9001906        Name=GABRIEL, JAIDIE H. Pri=0         | 2026-05-07 06:26:31.119325
+ 12021 | UDP3254800655 | PENDING |        0 | DATA UPDATE USERINFO PIN=9001911        Name=HACOME, GERALYN L. Pri=0         | 2026-05-07 06:26:31.119325
+ 12022 | UDP3254800655 | PENDING |        0 | DATA UPDATE USERINFO PIN=9001921        Name=PALOQUIA, LADIE MAE C.     Pri=0 | 2026-05-07 06:26:31.119325
+ 12023 | UDP3254800655 | PENDING |        0 | DATA UPDATE USERINFO PIN=9001931        Name=SISON, DANICA I.   Pri=0         | 2026-05-07 06:26:31.119325
+ 12024 | CNYG242061718 | ACKED   |        1 | DATA UPDATE USERINFO PIN=9001701        Name=MINGOY, DOMINIC LANCE M.   Pri=0 | 2026-05-07 06:26:31.119325
+(9 rows)
+
+--- 4. Device callback heartbeats UDP3254800655 (still 0 expected — restart needed) ---
+ sn | callbacks 
+----+-----------
+(0 rows)
+
+--- 5. ACK POLLING — wait 30s and re-check status (CNYG242061718 should ACK if device online) ---
+poll 1 06:30:14:
+  id   |      sn       | status  | attempts |          sent_at           |          acked_at          
+-------+---------------+---------+----------+----------------------------+----------------------------
+ 12016 | UDP3254800655 | PENDING |        0 |                            | 
+ 12017 | UDP3254800655 | PENDING |        0 |                            | 
+ 12018 | UDP3254800655 | PENDING |        0 |                            | 
+ 12019 | UDP3254800655 | PENDING |        0 |                            | 
+ 12020 | UDP3254800655 | PENDING |        0 |                            | 
+ 12021 | UDP3254800655 | PENDING |        0 |                            | 
+ 12022 | UDP3254800655 | PENDING |        0 |                            | 
+ 12023 | UDP3254800655 | PENDING |        0 |                            | 
+ 12024 | CNYG242061718 | ACKED   |        1 | 2026-05-07 06:26:35.954431 | 2026-05-07 06:26:36.191426
+(9 rows)
+
+poll 2 06:30:39:
+  id   |      sn       | status  | attempts |          sent_at           |          acked_at          
+-------+---------------+---------+----------+----------------------------+----------------------------
+ 12016 | UDP3254800655 | PENDING |        0 |                            | 
+ 12017 | UDP3254800655 | PENDING |        0 |                            | 
+ 12018 | UDP3254800655 | PENDING |        0 |                            | 
+ 12019 | UDP3254800655 | PENDING |        0 |                            | 
+ 12020 | UDP3254800655 | PENDING |        0 |                            | 
+ 12021 | UDP3254800655 | PENDING |        0 |                            | 
+ 12022 | UDP3254800655 | PENDING |        0 |                            | 
+ 12023 | UDP3254800655 | PENDING |        0 |                            | 
+ 12024 | CNYG242061718 | ACKED   |        1 | 2026-05-07 06:26:35.954431 | 2026-05-07 06:26:36.191426
+(9 rows)
+
+poll 3 06:31:04:
+  id   |      sn       | status  | attempts |          sent_at           |          acked_at          
+-------+---------------+---------+----------+----------------------------+----------------------------
+ 12016 | UDP3254800655 | PENDING |        0 |                            | 
+ 12017 | UDP3254800655 | PENDING |        0 |                            | 
+ 12018 | UDP3254800655 | PENDING |        0 |                            | 
+ 12019 | UDP3254800655 | PENDING |        0 |                            | 
+ 12020 | UDP3254800655 | PENDING |        0 |                            | 
+ 12021 | UDP3254800655 | PENDING |        0 |                            | 
+ 12022 | UDP3254800655 | PENDING |        0 |                            | 
+ 12023 | UDP3254800655 | PENDING |        0 |                            | 
+ 12024 | CNYG242061718 | ACKED   |        1 | 2026-05-07 06:26:35.954431 | 2026-05-07 06:26:36.191426
+(9 rows)
+
+=== END STATE_AFTER ===
+

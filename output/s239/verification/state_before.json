@@ -1,0 +1,38 @@
+{
+  "captured_at": "2026-05-07 PHT — pre-S239",
+  "source_probes": [
+    "tmp/adms_camangyanan_audit_2026-05-07/probe_output_v2.txt",
+    "tmp/adms_camangyanan_audit_2026-05-07/probe_attlog_v2_output.txt"
+  ],
+  "server_allowlist_lines": 51,
+  "udp3254800655_in_allowlist": false,
+  "udp3254800655_callbacks": 0,
+  "udp3254800655_attlogs": 0,
+  "udp3254800655_pending_cmds": 0,
+  "udp3254800655_acked_cmds": 0,
+  "cnyg242061718_pending_cmds": 0,
+  "cnyg242061718_acked_cmds": 192,
+  "frappe_max_bio_id_9xxxxxx": "9001881",
+  "device_mapping_py_entries": 47,
+  "frappe_tabemployee_for_target_pins": {
+    "9001701": {"name": "MINGOY, DOMINIC LANCE M.", "status": "Active", "branch": "D'VERDE CALAMBA", "designation": "Store Crew"},
+    "9001882": "NOT_PRESENT — HR-audit-pending new hire",
+    "9001885": "NOT_PRESENT — HR-audit-pending new hire",
+    "9001898": "NOT_PRESENT — HR-audit-pending new hire",
+    "9001899": "NOT_PRESENT — HR-audit-pending new hire",
+    "9001906": "NOT_PRESENT — HR-audit-pending new hire",
+    "9001911": "NOT_PRESENT — HR-audit-pending new hire",
+    "9001921": "NOT_PRESENT — HR-audit-pending new hire",
+    "9001931": "NOT_PRESENT — HR-audit-pending new hire"
+  },
+  "mingoy_punch_history": {
+    "9001701@UDP3252900188": {"punches": 262, "first": "2026-02-16 13:16:22", "last": "2026-05-07 13:12:26"},
+    "9001701@UDP3251600317": {"punches": 64, "first": "2026-02-01 22:12:49", "last": "2026-02-18 14:00:45 (old reliever stint)"}
+  },
+  "stale_user_registry_rows_deferred": {
+    "count": 11,
+    "pins": ["9001882","9001883","9001884","9001885","9001886","9001887","9001888","9001889","9001890","9001894","9001895"],
+    "verified_test_pollution": "0 attlogs, 0 adms_device_cmd records — physical devices never had these users",
+    "deferred_to": "S240 (optional)"
+  }
+}
