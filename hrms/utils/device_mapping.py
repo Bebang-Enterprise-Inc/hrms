@@ -1,7 +1,7 @@
 """
 Biometric Device to Store Location Mapping
-Source: UPDATED_IT_Device_SN_Mapping.xlsx (Feb 2026) + S230 (Apr 2026)
-Last Updated: 2026-04-29 (S230: added Ortigas Estancia + Xentromall Montalban)
+Source: UPDATED_IT_Device_SN_Mapping.xlsx (Feb 2026) + S230 (Apr 2026) + S239 (May 2026)
+Last Updated: 2026-05-07 (S239: added Camangyanan Bulacan commissary)
 """
 
 # Master device mapping - NEVER return "UNKNOWN"
@@ -56,6 +56,7 @@ DEVICE_TO_STORE = {
     'UDP3252900302': 'ARANETA GATEWAY',
     'UDP3252900305': 'VISTA MALL TAGUIG',
     'UDP3254701502': 'XENTROMALL MONTALBAN',  # S230: matches Frappe tabEmployee.branch for the 12 active Xentro crew + Frappe Company XENTROMALL MONTALBAN - PERPETUAL FOOD CORP.
+    'UDP3254800655': 'CAMANGYANAN BULACAN',  # S239 (2026-05-07): new commissary device — standalone (NOT in cluster 1-9, similar to Shaw Commissary)
 }
 
 def get_store_name(serial_number: str) -> str:

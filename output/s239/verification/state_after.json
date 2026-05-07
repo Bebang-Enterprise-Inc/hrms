@@ -1,0 +1,52 @@
+{
+  "captured_at": "2026-05-07 06:31:04 UTC (14:31:04 PHT) — post-S239 writes, pre-Sam-restart",
+  "ssm_command_id": "42fe01ad-aacc-423c-946a-f5abe2ec13d3",
+  "raw_log": "output/s239/verification/ack_polling.log",
+  "server_allowlist": {
+    "lines": 52,
+    "previous": 51,
+    "udp3254800655_present": true,
+    "udp3254800655_row": "52,CAMANGYANAN BULACAN,camangyananbulacan,Camangyanan Bulacan,commissary,,EXACT_NAME,user_clarification,ZKTeco MB10-VL,UDP3254800655,Active,5/7/2026,,"
+  },
+  "adms_device_cmd_inserts": {
+    "id_range": "12016-12024",
+    "total_rows": 9,
+    "by_target_device": {
+      "UDP3254800655": {
+        "rows": 8,
+        "ids": [12016, 12017, 12018, 12019, 12020, 12021, 12022, 12023],
+        "status": "PENDING",
+        "reason": "Device not yet known to receiver (allowlist appended but receiver in-memory cache not reloaded). Sam to run `docker restart adms_receiver_adms-api_1` post-merge to flush 8 commands."
+      },
+      "CNYG242061718": {
+        "rows": 1,
+        "ids": [12024],
+        "status": "ACKED",
+        "sent_at": "2026-05-07 06:26:35.954431 UTC",
+        "acked_at": "2026-05-07 06:26:36.191426 UTC",
+        "ack_latency_seconds": 0.237,
+        "outcome": "MINGOY (PIN=9001701) USERINFO record live on The Terminal device. Mingoy can punch there immediately upon physical fingerprint scan."
+      }
+    },
+    "tab_byte_validation": "All 9 rows verified tab_count=2 (PIN={}\\tName={}\\tPri=0 has exactly 2 tab bytes)"
+  },
+  "ack_polling_summary": {
+    "polls_run": 3,
+    "interval_seconds": 25,
+    "total_window_seconds": 75,
+    "result": "MINGOY ACKED on poll 1 (already ACKED at 06:26:36, before any poll). 8 Camangyanan rows remain PENDING across all 3 polls — confirms receiver has NOT yet recognized UDP3254800655. Restart required."
+  },
+  "device_callback_status": {
+    "udp3254800655_callbacks": 0,
+    "interpretation": "Device has not heartbeated yet. Either physically not deployed yet OR deployed and getting 403 (allowlist needs reload)."
+  },
+  "sam_handoff_required": {
+    "action": "docker restart adms_receiver_adms-api_1",
+    "reason": "Reload allowlist in-memory cache so UDP3254800655 stops returning 403. Then 8 PENDING commands will get sent on next device heartbeat (or device polls)."
+  },
+  "all_writes_idempotent_proof": [
+    "W1 server allowlist: append-only operation; rerunning would create duplicate row; not done.",
+    "W4 device_cmd inserts: SERIAL id auto-allocated 12016-12024; rerunning would create new IDs but same business semantics; ACKED command 12024 would be re-attempted creating duplicate USERINFO push (harmless on ZKTeco — UPDATE USERINFO is idempotent at device).",
+    "W5 CHANGE_LOG.csv: append-only audit trail; idempotent at the audit-log level (timestamps differ, but rows describe same change)."
+  ]
+}
