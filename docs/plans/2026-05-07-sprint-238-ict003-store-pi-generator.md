@@ -2,12 +2,13 @@
 sprint_id: S238
 sprint_title: ICT-003 Store-Side Purchase Invoice Generator
 plan_branch: s238-ict003-store-pi-generator
-status: PLANNED_AUDITED_v2
-version: 2
+status: PLANNED_AUDITED_v2_1
+version: 2.1
 created_date: 2026-05-07
 revised_date: 2026-05-07
 audit_pr: 729
-amendment_branch: s238-ict003-pi-generator-amendment-v2
+prior_amendment_pr: 730
+amendment_branch: s238-ict003-pi-generator-amendment-v2-1
 canonical_scope: in
 canonical_model_reference: docs/STORE_COMPANY_CANONICAL.md
 canonical_preflight: required
@@ -25,13 +26,67 @@ evidence_transient:
   - tmp/s238/probe_*.json
   - tmp/s238/seed_dry_run_*.log
 sprint_registry_row: |
-  | `S238` | Sprint 238 | `s238-ict003-store-pi-generator` | #729 (plan v1) + amendment-v2 PR pending | PLANNED_AUDITED_v2 2026-05-07 — ICT-003 Store-Side Purchase Invoice Generator (50 units, 11 CRIT audit fixes applied) | `docs/plans/2026-05-07-sprint-238-ict003-store-pi-generator.md` |
+  | `S238` | Sprint 238 | `s238-ict003-store-pi-generator` | #729 (v1) + #730 (v2) + v2.1 PR pending | PLANNED_AUDITED_v2_1 2026-05-07 — ICT-003 Store-Side PI Generator (~57 units, 11 v1 CRITs + 4 v2 CRITs fixed) | `docs/plans/2026-05-07-sprint-238-ict003-store-pi-generator.md` |
 ---
 
-# S238 — ICT-003 Store-Side Purchase Invoice Generator (v2 — Audited)
+# S238 — ICT-003 Store-Side Purchase Invoice Generator (v2.1 — Re-Audited)
 
 > **Canonical model reference:** `docs/STORE_COMPANY_CANONICAL.md`
 > **Supersedes:** `docs/plans/2026-05-05-sprint-236-intercompany-auto-trade.md` (S236 v2 — wrong architecture, see Design Rationale).
+
+---
+
+## v2 → v2.1 Re-Audit Amendments (2026-05-07)
+
+`/audit-plan-bei-erp` ran a SECOND pass on v2 (PR #730 merged at SHA `9392b1d09`). 5 parallel auditors verified all 11 v1 CRIT fixes were correctly applied — but **2 NEW architectural CRITs were introduced by v2's mirror logic** + 2 minor text-drift CRITs. Full report: `output/plan-audit/s238-v2-amendment-audit/AUDIT_SUMMARY.md`.
+
+**v2.1 applies the 4 NEW CRIT fixes WITHOUT changing scope.** The architectural pattern (hook on `Sales Invoice on_submit` → separate Draft PI on per-store books, `is_internal_*=0` everywhere, no canonical changes, no S206 collision) is preserved exactly.
+
+### NEW CRITICAL fixes applied (4)
+
+| # | v2 Bug | v2.1 Fix |
+|---|---|---|
+| **CRIT-1** | `pi.bei_legal_entity = si.bei_legal_entity` mirrored BKI's legal entity onto a per-store-Co PI → triggers production **P10-D04 server script** (`p10_d04_legal_entity_issuance_guard.py:25-32` deployed on Purchase Invoice) which throws `"Legal Entity must match Company for issuance"`. Same failure mode as **S203 incident hrms#610** (2026-04-17), this time on PI side. | Phase 3-T1 code skeleton: `pi.bei_legal_entity = buyer_company` (NOT `si.bei_legal_entity`). Matches existing pattern at `erp_sync.py:2045, 2112`. `pi.bei_store_label` mirror is fine — store label is the same on both sides. |
+| **CRIT-2** | `pi_item.cost_center = si_item.cost_center` mirrored BKI's cost_center onto per-store-Co PI items → ERPNext rejects (`Cost Center.company == doc.company` validation). 3-way confirmed by code-verifier + frappe-backend + ph-finance. **Worse**: savepoint silently swallows error → 0 PIs ever created, hook "works" but produces nothing. | NEW helper `_resolve_per_store_cost_center(buyer_company, buyer_warehouse)` reading `Warehouse.custom_cost_center` (pattern from `store.py:5276-5281`) with fallback to `Company.cost_center`. `_mirror_items` calls helper instead of mirroring SI's value. |
+| **CRIT-3** | Phase 3-T5 verify text says "All 5 must pass" but v2 expanded unit tests to 8 (Test 6 cancel cascade, Test 7 EWT filter, Test 8 has_field guard). Silent skip if 5/8 pass. | Phase 3-T5: "All 8 must pass". |
+| **CRIT-4** | Test Data Seeding Contract section still references `Stock in Hand` parent group (the v1 wrong-name) — directly contradicts B5 fix elsewhere. Authoritative-section drift would mislead executing agent. | Test Data Seeding Contract section: replace `Stock in Hand` reference with dynamic per-store parent group lookup, consistent with B5. |
+
+### Top WARNINGs applied
+
+- **W2 try/except on cascade**: `cascade_cancel_store_pi` wrapped in try/except per S168 reference pattern (`commissary.py:1317-1353`). On PI cleanup failure: log error, allow SI cancel to complete (fail-soft, not fail-hard).
+- **W3 silent-skip log**: generator's "Customer is not a per-store Company" exit path now emits a Sentry breadcrumb so the 251/839 SIs that don't match any Company are visible (vs. silently swallowed).
+- **W4 verify-script contradiction**: Phase 3 verify script's `auto_submit_store_pi` MUST_CONTAIN replaced with `MUST_NOT_CONTAIN` (B11 removed the toggle).
+- **W7 has_field guards on S192/S203 fields**: `pi.bei_legal_entity` and `pi.bei_store_label` assignments wrapped in `if frappe.get_meta("Purchase Invoice").has_field(...)` (matches `erp_sync.py:2044-2047` pattern).
+- **W9 scheduler registration**: `scripts/s238/check_si_pi_pairing.py` registered as Frappe `scheduler_event.weekly` in `hrms/hooks.py` (vs. manual run).
+
+### Production prerequisite (W1 — Sam-action)
+
+`BEI Settings.bki_sales_naming_series` is currently **NULL** in production. Phase 0-T4 HARD STOP triggers immediately. **BEFORE execute kickoff:** Sam confirms with Finance the BIR-registered naming series prefix and sets the value via Frappe Desk OR via `/frappe-bulk-edits`. Documented in Phase 0-T0 (NEW pre-flight task).
+
+### Stale claims fixed
+
+- Plan's reference to `billing.py:1472` and `erp_sync.py:2146` as "raw SQL pattern" — corrected to cite `commissary.py:879` only (the other two use `frappe.db.rollback(save_point=)` Pattern B, not raw SQL Pattern A).
+- 839 historical SI breakdown clarified: 560 Submitted + 49 Draft + 230 Cancelled. Q1 Input VAT recovery applies to 560 Submitted only (~PHP 1.58M aggregate per ph-finance W11), not all 839.
+- 251 of 839 SIs have non-matching Customer.name (W10) — closeout SUMMARY language updated.
+
+### One v1 finding REFUTED — re-confirmed in v2 audit
+
+PH Finance v1 CRIT-6 (BKI Title Case casing) was refuted in v1 + re-refuted in v2 audit. **3-way confirmed** by system-arch + code-verifier + frappe-backend production probe (560 SI rows where `company='BEBANG KITCHEN INC.'` uppercase). Plan's filter is correct. **No v2.1 change.**
+
+### Phase budget impact
+
+| Phase | v2 | v2.1 | Δ rationale |
+|---|---:|---:|---|
+| Phase 0 — Boot + state probe | 6 | 7 | +1: NEW Phase 0-T0 pre-flight check `bki_sales_naming_series` set (Sam-action prerequisite) |
+| Phase 1 — Account seeder | 7 | 7 | unchanged |
+| Phase 2 — Supplier + Custom Field + Toggle | 5 | 5 | unchanged |
+| Phase 3 — PI generator implementation | 14 | 16 | +2: NEW `_resolve_per_store_cost_center` helper (CRIT-2), correct `bei_legal_entity` (CRIT-1), `has_field` guards (W7), try/except on cascade (W2), silent-skip log (W3), verify-script MUST_NOT_CONTAIN flip (W4) |
+| Phase 4 — local-frappe trial | 8 | 8 | unchanged |
+| Phase 5 — 5-store regression + S206 sanity | 5 | 5 | unchanged |
+| Phase 6 — Closeout | 5 | 6 | +1: drift-detection script registered as scheduler_event (W9) |
+| **Total** | **50** | **57** | **+7 units** |
+
+57 units — well under 80-unit ceiling. No phase exceeds 16 units. Single-session executable.
 
 ---
 
@@ -185,7 +240,7 @@ If the verifier prints `VIOLATIONS FOUND`, STOP and ask Sam. Post-implementation
 **Scope claim — what this plan creates / mutates:**
 - INSERT 1 Supplier: `BEBANG KITCHEN INC. - Trade` (`is_internal_supplier=0`).
 - INSERT 49 entries to `BEBANG KITCHEN INC. - Trade.companies` child table (Allowed To Transact With per-store Companies).
-- INSERT 3 GL accounts × 49 stores = 147 accounts under existing parent groups (`Stock in Hand`, `Current Liabilities`, `Current Assets`).
+- INSERT 3 GL accounts × 49 stores = 147 accounts under existing per-store parent groups (`Stock Assets - <ABBR>`, `Accounts Payable - <ABBR>` or `Current Liabilities - <ABBR>`, `Current Assets - <ABBR>`) — discovered dynamically per Phase 0-T4 survey (v2-B5 / v2.1-CRIT-4).
 - INSERT 1 Custom Field on `Purchase Invoice`: `bki_si_reference` (Link → Sales Invoice, read-only).
 - INSERT 1 row in `BEI Settings` (or extend existing settings doc): `enable_bki_store_pi_generator` (toggle, default 1).
 - ADD 1 hook in `hrms/hooks.py`: `Sales Invoice on_submit → hrms.api.bki_store_pi_generator.maybe_generate_store_pi`.
@@ -229,7 +284,7 @@ evidence_transient:
 **Records the scenarios depend on:**
 - 49 per-store Companies + Warehouses + billing Customers + S206 Internal Customers — must exist (verified via canonical preflight).
 - Existing `BEI Settings.bki_sales_income_account` set per ICT-008 — must exist.
-- Per-store CoA must include parent groups: `Stock in Hand`, `Current Liabilities`, `Current Assets` — verified via probe.
+- Per-store CoA must include parent groups dynamically discovered via Phase 0-T4 survey: `Stock Assets - <ABBR>` (for Inventory-from-Commissary leaf), `Accounts Payable - <ABBR>` or `Current Liabilities - <ABBR>` (for AP-Trade-BKI leaf), `Current Assets - <ABBR>` (for Input VAT - BKI Inter-Co leaf). Per-store `<ABBR>` is the CoA suffix per BEI canonical convention. Reference pattern: `_find_parent_group()` in `hrms/on_demand/s206_seed_intercompany_accounts.py:82`. (v2.1-CRIT-4: corrected — v1/v2 incorrectly referenced `Stock in Hand` which does NOT exist in production CoA.)
 - 3 NEW GL accounts × 49 stores = 147 accounts (seeded by this sprint).
 - 1 NEW `BEBANG KITCHEN INC. - Trade` Supplier with 49 Allowed To Transact With entries (seeded by this sprint).
 - 1 NEW Custom Field `bki_si_reference` on `Purchase Invoice` (seeded by this sprint).
@@ -291,9 +346,15 @@ output/l3/s238/historical_si_regression.json
 
 ## Phases
 
-### Phase 0 — Boot, Worktree Spawn, Pre-State Probe (4 units)
+### Phase 0 — Boot, Worktree Spawn, Pre-State Probe (7 units — v2.1)
 
-**0-T1** Read this plan fully.
+**0-T0 (v2.1 NEW — Sam-action prerequisite, BEFORE execute kickoff)** **HARD BLOCKER:** verify `BEI Settings.bki_sales_naming_series` has a non-empty BIR-registered value via SSM probe:
+```bash
+docker exec $BACKEND psql ... -c "SELECT bki_sales_naming_series FROM \`tabBEI Settings\`;"
+```
+If NULL/empty, **STOP and ask Sam** — Sam confirms with Finance the BIR-authorized prefix and sets the value via Frappe Desk OR `/frappe-bulk-edits` BEFORE proceeding. (The v2 audit found this NULL in production; if not pre-set, Phase 0-T4 HARD STOP triggers anyway.)
+
+**0-T1** Read this plan fully (v2.1 amendment section MUST be read; CRIT-1 + CRIT-2 fixes are non-obvious from v2 alone).
 
 **0-T2** Spawn HRMS worktree (already done at plan creation; confirm):
 ```bash
@@ -498,7 +559,19 @@ def maybe_generate_store_pi(doc, method=None):
         return
     # Identify buyer Company (per canonical: Customer.name == per-store Company.name)
     buyer_company = doc.customer if frappe.db.exists("Company", doc.customer) else None
-    if not buyer_company: return  # Customer is not a per-store Company; ignore
+    if not buyer_company:
+        # v2.1-W3: log silent skip via Sentry breadcrumb so non-matching customers
+        # are visible (251/839 historical SIs hit this path; helps diagnose
+        # walk-in / holdco / other non-store customers).
+        try:
+            sentry_sdk.add_breadcrumb(
+                category="s238.pi_generator",
+                message=f"Skipped SI {doc.name}: customer '{doc.customer}' is not a per-store Company",
+                level="info",
+            )
+        except Exception:
+            pass
+        return  # Customer is not a per-store Company; ignore
     # Idempotency: skip if a PI already exists referencing this SI
     if frappe.db.exists("Purchase Invoice", {"bki_si_reference": doc.name}): return
     sp_name = "s238_pi_gen"
@@ -540,6 +613,12 @@ def build_store_pi(si, buyer_company):
     # v2-B2: per-store warehouse — canonical model: Warehouse.docname == Company.name
     buyer_warehouse = buyer_company  # exact same string per docs/STORE_COMPANY_CANONICAL.md
 
+    # v2.1-CRIT-2: resolve per-store cost_center BEFORE building items.
+    # SI's cost_center is BKI's (e.g., 'Stores - BKI') and would fail the per-store
+    # PI's `Cost Center.company == doc.company` validation. Use Warehouse.custom_cost_center
+    # as primary source per pattern at store.py:5276-5281; fall back to Company.cost_center.
+    buyer_cost_center = _resolve_per_store_cost_center(buyer_company, buyer_warehouse)
+
     pi = frappe.new_doc("Purchase Invoice")
     pi.company = buyer_company
     pi.supplier = BKI_TRADE_SUPPLIER
@@ -556,18 +635,49 @@ def build_store_pi(si, buyer_company):
     pi.update_stock = 1
     pi.set_warehouse = buyer_warehouse                    # v2-B2
     pi.credit_to = ap_account
-    # v2-W: mirror S192/S203 BEI tracking fields from SI
-    if getattr(si, "bei_legal_entity", None):
-        pi.bei_legal_entity = si.bei_legal_entity
-    if getattr(si, "bei_store_label", None):
-        pi.bei_store_label = si.bei_store_label
+    # v2.1-CRIT-1: bei_legal_entity is the BUYER's legal entity (per-store Co), NOT the seller's.
+    # P10-D04 server script (p10_d04_legal_entity_issuance_guard.py:25-32) throws on mismatch;
+    # same failure mode as S203 incident hrms#610 (2026-04-17). Existing PI flows at
+    # erp_sync.py:2045, 2112 use buyer's company — match that pattern.
+    # v2.1-W7: has_field guards prevent crashes if S192/S203 Custom Fields not yet installed.
+    pi_meta = frappe.get_meta("Purchase Invoice")
+    if pi_meta.has_field("bei_legal_entity"):
+        pi.bei_legal_entity = buyer_company   # NOT si.bei_legal_entity (was bug in v2)
+    if pi_meta.has_field("bei_store_label") and getattr(si, "bei_store_label", None):
+        pi.bei_store_label = si.bei_store_label   # store label IS same on both sides
     # v2-B9: explicit item + tax mirroring (see _mirror_items, _mirror_taxes below)
-    _mirror_items(pi, si, inv_account, buyer_warehouse)
-    _mirror_taxes(pi, si, vat_account)
+    _mirror_items(pi, si, inv_account, buyer_warehouse, buyer_cost_center)
+    _mirror_taxes(pi, si, vat_account, buyer_cost_center)
     return pi
 
-def _mirror_items(pi, si, inv_account, warehouse):
-    """v2-B9 + B10: mirror SI line items with per-store inventory account + cost_center."""
+def _resolve_per_store_cost_center(buyer_company, buyer_warehouse):
+    """v2.1-CRIT-2: resolve a Cost Center that BELONGS TO the per-store Company.
+
+    SI's cost_center belongs to BKI (e.g., 'Stores - BKI' from
+    commissary.py:_resolve_store_cost_center which hardcodes bki_company filter).
+    Mirroring it onto a per-store PI would fail Frappe's
+    `Cost Center.company == doc.company` validation, and the savepoint try/except
+    would silently swallow the error — 0 PIs ever created.
+
+    Resolution order:
+    1. `Warehouse.custom_cost_center` (per-store warehouse → store's CC) —
+       pattern from `store.py:5276-5281`.
+    2. `Company.cost_center` default — fallback for stores without warehouse-level CC.
+    3. Throw if neither is set — fail loud, not silent.
+    """
+    cc = frappe.db.get_value("Warehouse", buyer_warehouse, "custom_cost_center")
+    if not cc:
+        cc = frappe.db.get_value("Company", buyer_company, "cost_center")
+    if not cc:
+        frappe.throw(_(
+            f"S238: per-store Cost Center not found for {buyer_company}. "
+            f"Set either Warehouse({buyer_warehouse}).custom_cost_center OR "
+            f"Company({buyer_company}).cost_center."
+        ))
+    return cc
+
+def _mirror_items(pi, si, inv_account, warehouse, cost_center):
+    """v2-B9 + B10 + v2.1-CRIT-2: mirror SI line items with per-store inventory account + per-store cost_center."""
     for si_item in si.items:
         pi.append("items", {
             "item_code":   si_item.item_code,
@@ -579,18 +689,24 @@ def _mirror_items(pi, si, inv_account, warehouse):
             "amount":      flt(si_item.amount),
             "warehouse":   warehouse,                     # v2-B2
             "expense_account": inv_account,
-            "cost_center": si_item.cost_center,           # v2-B10
+            "cost_center": cost_center,                   # v2.1-CRIT-2 (was si_item.cost_center — wrong Company)
         })
 
-def _mirror_taxes(pi, si, vat_account):
-    """v2-B9: mirror only Output VAT rows from SI; skip EWT-deduct rows."""
+def _mirror_taxes(pi, si, vat_account, cost_center):
+    """v2-B9 + v2.1-CRIT-2: mirror only Output VAT rows from SI; skip EWT-deduct rows.
+
+    Note: `add_deduct_tax` does NOT exist on Sales Taxes and Charges (only on
+    Purchase Taxes side per audit code-verifier W). The check below is defensive —
+    if Frappe ever adds the column, EWT-deduct rows will be filtered out; until then
+    BKI's tax structure has no EWT-deduct rows per ICT-004 anyway.
+    """
     for si_tax in si.taxes:
         ah = (si_tax.account_head or "").lower()
         # Only mirror VAT (Output VAT on SI side -> Input VAT on PI side).
-        # Skip EWT and any add_deduct_tax='Deduct' rows.
         if "vat" not in ah:
             continue
-        if (si_tax.add_deduct_tax or "").lower() == "deduct":
+        # Defensive filter for future-proofing
+        if getattr(si_tax, "add_deduct_tax", "") and si_tax.add_deduct_tax.lower() == "deduct":
             continue
         pi.append("taxes", {
             "charge_type":      "Actual",
@@ -599,7 +715,7 @@ def _mirror_taxes(pi, si, vat_account):
             "tax_amount":       flt(si_tax.tax_amount),
             "category":         "Total",
             "add_deduct_tax":   "Add",
-            "cost_center":      si_tax.cost_center,
+            "cost_center":      cost_center,   # v2.1-CRIT-2: per-store CC, NOT si_tax.cost_center
         })
 
 def resolve_account_by_number(company, account_number):
@@ -642,40 +758,51 @@ def cascade_cancel_store_pi(doc, method=None):
     )
     if doc.company != BKI_COMPANY: return
     if not frappe.get_meta("Purchase Invoice").has_field("bki_si_reference"): return
-    pi_name = frappe.db.get_value(
-        "Purchase Invoice", {"bki_si_reference": doc.name}, "name"
-    )
-    if not pi_name: return
-    pi_status = frappe.db.get_value("Purchase Invoice", pi_name, "docstatus")
-    if pi_status == 0:
-        # Draft — safe to delete (no GL impact)
-        frappe.delete_doc("Purchase Invoice", pi_name, ignore_permissions=True, force=True)
-        si_comment = frappe.get_doc({
-            "doctype": "Comment", "comment_type": "Comment",
-            "reference_doctype": "Sales Invoice", "reference_name": doc.name,
-            "content": f"S238: Paired Draft PI {pi_name} deleted (SI cancelled).",
-        })
-        si_comment.insert(ignore_permissions=True)
-    elif pi_status == 1:
-        # Submitted — flag for manual review; DO NOT auto-cancel
-        pi_comment = frappe.get_doc({
-            "doctype": "Comment", "comment_type": "Comment",
-            "reference_doctype": "Purchase Invoice", "reference_name": pi_name,
-            "content": (
-                f"S238: Paired BKI SI {doc.name} was CANCELLED. This PI was "
-                f"already submitted; Finance review required to decide whether "
-                f"to cancel this PI (will reverse inventory + Input VAT)."
-            ),
-        })
-        pi_comment.insert(ignore_permissions=True)
+    # v2.1-W2: try/except wrap so a PI cleanup failure does NOT block the SI cancel.
+    # Pattern matches commissary.py:1317-1353 (S168 _delete_orphan_draft_si_on_se_cancel).
+    try:
+        pi_name = frappe.db.get_value(
+            "Purchase Invoice", {"bki_si_reference": doc.name}, "name"
+        )
+        if not pi_name: return
+        pi_status = frappe.db.get_value("Purchase Invoice", pi_name, "docstatus")
+        if pi_status == 0:
+            # Draft — safe to delete (no GL impact)
+            frappe.delete_doc("Purchase Invoice", pi_name, ignore_permissions=True, force=True)
+            si_comment = frappe.get_doc({
+                "doctype": "Comment", "comment_type": "Comment",
+                "reference_doctype": "Sales Invoice", "reference_name": doc.name,
+                "content": f"S238: Paired Draft PI {pi_name} deleted (SI cancelled).",
+            })
+            si_comment.insert(ignore_permissions=True)
+        elif pi_status == 1:
+            # Submitted — flag for manual review; DO NOT auto-cancel
+            pi_comment = frappe.get_doc({
+                "doctype": "Comment", "comment_type": "Comment",
+                "reference_doctype": "Purchase Invoice", "reference_name": pi_name,
+                "content": (
+                    f"S238: Paired BKI SI {doc.name} was CANCELLED. This PI was "
+                    f"already submitted; Finance review required to decide whether "
+                    f"to cancel this PI (will reverse inventory + Input VAT)."
+                ),
+            })
+            pi_comment.insert(ignore_permissions=True)
+            frappe.log_error(
+                f"S238: BKI SI {doc.name} cancelled but paired PI {pi_name} is submitted — manual review required",
+                "S238 PI Cascade Manual Review",
+            )
+    except Exception:
+        # Fail-soft: don't block SI cancel just because PI cleanup raised.
+        # Sentry captures via frappe.log_error monkey-patch.
         frappe.log_error(
-            f"S238: BKI SI {doc.name} cancelled but paired PI {pi_name} is submitted — manual review required",
-            "S238 PI Cascade Manual Review",
+            f"S238: cascade_cancel_store_pi failed for SI {doc.name}: {frappe.get_traceback()}",
+            "S238 PI Cascade Error",
         )
 ```
 
 **MUST_MODIFY:** `hrms/api/bki_store_pi_generator.py` (NEW)
-**MUST_CONTAIN:** `maybe_generate_store_pi`, `cascade_cancel_store_pi`, `set_backend_observability_context`, `frappe.db.savepoint`, `ROLLBACK TO SAVEPOINT`, `BEBANG KITCHEN INC. - Trade`, `bki_si_reference`, `inter_company_invoice_reference`, `update_stock = 1`, `set_warehouse`, `set_posting_time`, `posting_time = si.posting_time`, `enable_bki_store_pi_generator`, `bki_sales_naming_series`, `has_field("bki_si_reference")`, `_mirror_items`, `_mirror_taxes`, `resolve_account_by_number`, `bei_legal_entity`, `bei_store_label`, `cost_center`, `1104210`, `1106210`, `2103210`
+**MUST_CONTAIN:** `maybe_generate_store_pi`, `cascade_cancel_store_pi`, `_resolve_per_store_cost_center`, `set_backend_observability_context`, `frappe.db.savepoint`, `ROLLBACK TO SAVEPOINT`, `BEBANG KITCHEN INC. - Trade`, `bki_si_reference`, `inter_company_invoice_reference`, `update_stock = 1`, `set_warehouse`, `set_posting_time`, `posting_time = si.posting_time`, `enable_bki_store_pi_generator`, `bki_sales_naming_series`, `has_field("bki_si_reference")`, `has_field("bei_legal_entity")`, `_mirror_items`, `_mirror_taxes`, `resolve_account_by_number`, `pi.bei_legal_entity = buyer_company`, `bei_store_label`, `custom_cost_center`, `1104210`, `1106210`, `2103210`
+**MUST_NOT_CONTAIN:** `pi.bei_legal_entity = si.bei_legal_entity` (v2.1-CRIT-1 fix), `cost_center: si_item.cost_center` (v2.1-CRIT-2 fix), `auto_submit_store_pi` (v2-B11 verified)
 
 **3-T2 (v2)** Add hooks to `hrms/hooks.py`:
 ```python
@@ -706,25 +833,45 @@ def cascade_cancel_store_pi(doc, method=None):
 **MUST_MODIFY:** `hrms/tests/test_s238_pi_generator.py` (NEW)
 **MUST_CONTAIN:** all 8 test docstrings, `cascade_cancel_store_pi` reference, `_mirror_taxes`, `account_number`
 
-**3-T5** Run unit tests via `/local-frappe`:
+**3-T5 (v2.1-CRIT-3)** Run unit tests via `/local-frappe`:
 ```bash
 bench --site hq.bebang.ph run-tests --module hrms.tests.test_s238_pi_generator
 ```
-All 5 must pass.
+**All 8 tests must pass** (was incorrectly stated as 5 in v2 — expanded to 8 in v2 to add Test 6 cancel cascade, Test 7 EWT filter, Test 8 has_field guard).
 
-**Phase 3 verify:**
+**Phase 3 verify (v2.1):**
 ```python
 import sys, os
 errs = []
 src = open("hrms/api/bki_store_pi_generator.py", encoding="utf-8").read()
-for m in ["maybe_generate_store_pi", "set_backend_observability_context",
-          "frappe.db.savepoint", "BEBANG KITCHEN INC. - Trade", "bki_si_reference",
-          "update_stock = 1", "posting_date = si.posting_date",
-          "enable_bki_store_pi_generator", "auto_submit_store_pi"]:
+# v2.1: full MUST_CONTAIN list including v2.1-CRIT-1, v2.1-CRIT-2 fix markers
+for m in ["maybe_generate_store_pi", "cascade_cancel_store_pi",
+          "_resolve_per_store_cost_center",
+          "set_backend_observability_context",
+          "frappe.db.savepoint", "ROLLBACK TO SAVEPOINT",
+          "BEBANG KITCHEN INC. - Trade", "bki_si_reference",
+          "inter_company_invoice_reference",
+          "update_stock = 1", "set_warehouse",
+          "set_posting_time", "posting_time = si.posting_time",
+          "enable_bki_store_pi_generator", "bki_sales_naming_series",
+          'has_field("bki_si_reference")', 'has_field("bei_legal_entity")',
+          "_mirror_items", "_mirror_taxes", "resolve_account_by_number",
+          "pi.bei_legal_entity = buyer_company",  # v2.1-CRIT-1
+          "custom_cost_center",                    # v2.1-CRIT-2 (Warehouse field used by helper)
+          "1104210", "1106210", "2103210"]:
     if m not in src: errs.append(f"generator MUST_CONTAIN: {m}")
+# v2.1-W4: MUST_NOT_CONTAIN — verify B11 toggle removed AND v2.1 CRITs not regressed
+for m in ["pi.bei_legal_entity = si.bei_legal_entity",  # v2.1-CRIT-1 — must NOT mirror seller
+          "cost_center: si_item.cost_center"]:           # v2.1-CRIT-2 — must NOT mirror seller's CC
+    if m in src: errs.append(f"generator MUST_NOT_CONTAIN: {m}")
+# auto_submit may appear in comments noting it's removed; check it doesn't appear as actual code
+if "pi.submit()" in src:
+    errs.append("generator must NOT call pi.submit() (v2-B11 removed auto-submit)")
 hooks = open("hrms/hooks.py", encoding="utf-8").read()
 if "bki_store_pi_generator.maybe_generate_store_pi" not in hooks:
     errs.append("hooks.py missing on_submit hook")
+if "bki_store_pi_generator.cascade_cancel_store_pi" not in hooks:
+    errs.append("hooks.py missing on_cancel hook (v2-B3)")
 if not os.path.exists("hrms/tests/test_s238_pi_generator.py"):
     errs.append("Unit tests file missing")
 print("PASS" if not errs else "\n".join(errs))
@@ -871,43 +1018,55 @@ git worktree remove F:/Dropbox/Projects/BEI-ERP-s238-ict003-pi-generator
 - If 0 rows after 60 seconds → check Sentry for `S238 Store PI Generator Error`; the hook may have failed silently. Triage immediately.
 - Write result to `output/s238/verification/post_merge_smoke.json`.
 
-**6-T7 (v2 NEW — drift-detection script)** Ship `scripts/s238/check_si_pi_pairing.py` as a weekly reconciliation tool:
+**6-T7 (v2 + v2.1-W9 — drift-detection script registered as scheduled job)** Ship `scripts/s238/check_si_pi_pairing.py` as a weekly reconciliation tool:
 - Query: BKI SIs submitted in the last 7 days WITHOUT a matching PI on `bki_si_reference`.
 - Output: `output/s238/reconciliation/<date>_si_without_pi.csv` listing SI name + customer + grand_total + age.
-- Add a hint to closeout SUMMARY.md: "Run this weekly until v3 (queued-job auto-submit) lands; investigate any rows."
+- **v2.1-W9 NEW**: register as a Frappe `scheduler_event.weekly` job in `hrms/hooks.py` so it runs autonomously (not manual). Pattern:
+```python
+# in hrms/hooks.py
+scheduler_events = {
+    "weekly": [
+        # ... existing entries ...
+        "hrms.api.bki_store_pi_generator.run_si_pi_pairing_check",  # v2.1-W9
+    ],
+}
+```
+- Add a thin entry-point function in the generator module that imports and runs the check, emits Sentry alert if drift > 5 SIs.
+- Add closeout SUMMARY hint: "Auto-runs weekly; investigate any rows surfaced via Sentry alert."
 
-**6-T8 (v2 NEW — 839-SI follow-up flag)** Add to `output/s238/SUMMARY.md` a clearly-labeled "Follow-Up Sprint Candidate" section noting:
-- Pre-S238 BKI SI count (839 as of audit baseline) without paired PI
-- Each store's Q1 2026 BIR Form 2550Q has incomplete Input VAT claim
-- Estimated recoverable Input VAT: ~6-7 figures across 49 entities
-- Mechanism: same generator function reusable as one-off backfill script (idempotent via `bki_si_reference` check); BIR amended 2550Q filing required per entity
-- DECISION: defer to Sam (CEO) — not auto-actioned by S238
-
----
-
-## Phase Budget Contract (v2 — audit-amended)
-
-| Phase | v1 | v2 | Δ rationale |
-|---|---:|---:|---|
-| Phase 0 — Boot + state probe | 4 | 6 | +2: 49-store CoA parent-group survey (B5), `bki_sales_naming_series` check (B7) |
-| Phase 1 — Account seeder | 5 | 7 | +2: dynamic parent-group lookup via `_find_parent_group` (B5), account_number prefix scheme (B4) |
-| Phase 2 — Supplier + Custom Field + Toggle | 5 | 5 | net 0: drop `auto_submit_store_pi` toggle (-1, B11) + add `lock_posting_date_on_bki_paired_pi` validate hook (+1, B8) |
-| Phase 3 — PI generator implementation | 10 | 14 | +4: on_cancel cascade fn + hook (B3), posting_time mirror (B8), cost_center mirror (B10), `has_field` guard (W), `inter_company_invoice_reference` dual-set (W G-046), explicit tax row spec (B9), savepoint API fix (B1), bei_legal_entity/bei_store_label mirror (W S192/S203) |
-| Phase 4 — local-frappe trial | 8 | 8 | unchanged (just stripped "or production" language) |
-| Phase 5 — 5-store regression + S206 sanity | 5 | 5 | unchanged |
-| Phase 6 — Closeout | 3 | 5 | +2: post-merge smoke (6-T6), drift-detection script (6-T7), 839-SI follow-up flag (6-T8), explicit deploy mode declaration (6-T1a) |
-| **Total** | **40** | **50** | +10 units |
-
-50 units — well under 80-unit ceiling. No phase exceeds 14 units. Single-session executable.
+**6-T8 (v2 + v2.1-W11 — refined Input VAT recovery estimate)** Add to `output/s238/SUMMARY.md` a clearly-labeled "Follow-Up Sprint Candidate" section noting:
+- Pre-S238 BKI SI breakdown (per code-verifier production probe): **560 Submitted + 49 Draft + 230 Cancelled = 839 total**.
+- Only the **560 Submitted** are eligible for Input VAT recovery (Drafts not in books; Cancelled have docstatus=2 reversals).
+- Each store's Q1 2026 BIR Form 2550Q has incomplete Input VAT claim from BKI commissary purchases.
+- **Refined estimate**: ≈ PHP 1.58M aggregate Input VAT recoverable (low end of 7 figures), distributed across the per-store buyers per their share of the 560 Submitted SIs. 251 of the 839 SIs have non-matching customers (walk-in / holdco / other) — those are NOT eligible for per-store Input VAT recovery.
+- Mechanism: same generator function reusable as one-off backfill script (idempotent via `bki_si_reference` check); BIR amended 2550Q filing required per per-store entity. Note: amended filings require Q1 2026 to still be amendable (BIR usually allows 3-year amendment window).
+- DECISION: defer to Sam (CEO) — not auto-actioned by S238.
 
 ---
 
-## Surface Ownership Matrix (S087, v2)
+## Phase Budget Contract (v2.1 — re-audit-amended)
+
+| Phase | v1 | v2 | v2.1 | v2.1 Δ rationale |
+|---|---:|---:|---:|---|
+| Phase 0 — Boot + state probe | 4 | 6 | 7 | v2.1: +1 — NEW Phase 0-T0 pre-flight `bki_sales_naming_series` SAM-action check |
+| Phase 1 — Account seeder | 5 | 7 | 7 | unchanged |
+| Phase 2 — Supplier + Custom Field + Toggle | 5 | 5 | 5 | unchanged |
+| Phase 3 — PI generator implementation | 10 | 14 | 16 | v2.1: +2 — `_resolve_per_store_cost_center` helper (CRIT-2), correct `bei_legal_entity` (CRIT-1), `has_field` guards on S192/S203 fields (W7), try/except on cascade (W2), silent-skip Sentry breadcrumb (W3), verify-script MUST_NOT_CONTAIN flip (W4) |
+| Phase 4 — local-frappe trial | 8 | 8 | 8 | unchanged |
+| Phase 5 — 5-store regression + S206 sanity | 5 | 5 | 5 | unchanged |
+| Phase 6 — Closeout | 3 | 5 | 6 | v2.1: +1 — register drift script as `scheduler_event.weekly` (W9) |
+| **Total** | **40** | **50** | **57** | v2.1: +7 units (4 CRIT fixes + 5 W fixes) |
+
+**v2.1 total: 57 units** — well under 80-unit ceiling. No phase exceeds 16 units. Single-session executable.
+
+---
+
+## Surface Ownership Matrix (S087, v2.1)
 
 | Surface | Owner | Allowed mutations |
 |---|---|---|
-| `hrms/api/bki_store_pi_generator.py` | S238 | NEW file (v2: + cascade_cancel_store_pi + lock_posting_date_on_bki_paired_pi + _mirror_items + _mirror_taxes + resolve_account_by_number) |
-| `hrms/hooks.py` | S238 | ADD `Sales Invoice on_submit` + `Sales Invoice on_cancel` (v2-B3) + `Purchase Invoice validate` (v2-B8) entries |
+| `hrms/api/bki_store_pi_generator.py` | S238 | NEW file (v2.1: + cascade_cancel_store_pi w/try-except + lock_posting_date_on_bki_paired_pi + _mirror_items + _mirror_taxes + resolve_account_by_number + **_resolve_per_store_cost_center** [v2.1-CRIT-2] + run_si_pi_pairing_check entry point [v2.1-W9]; bei_legal_entity uses buyer_company [v2.1-CRIT-1]) |
+| `hrms/hooks.py` | S238 | ADD `Sales Invoice on_submit` + `Sales Invoice on_cancel` (v2-B3) + `Purchase Invoice validate` (v2-B8) + `scheduler_events.weekly` for drift script (v2.1-W9) entries |
 | `hrms/tests/test_s238_pi_generator.py` | S238 | NEW file (v2: 8 tests, was 5) |
 | `scripts/s238/seed_pi_generator_accounts.py` | S238 | NEW (v2: account_number prefixes, dynamic `_find_parent_group`) |
 | `scripts/s238/seed_bki_trade_supplier.py` | S238 | NEW |
@@ -944,6 +1103,26 @@ git worktree remove F:/Dropbox/Projects/BEI-ERP-s238-ict003-pi-generator
 - **remote_truth_baseline:** `tmp/s238/remote_truth_baseline_hrms.sha`
 - **pretouch_backup:** none required (no master-data mutations on existing records)
 - **supersession_map:** S236 v2 → S238 (S236 v2 was wrong architecture; S238 follows ICT-003 correctly)
+
+---
+
+## Requirements Regression Checklist (v2.1)
+
+### NEW v2.1 audit-fix checks (must all pass)
+
+- [ ] **CRIT-1 (bei_legal_entity)**: code skeleton has `pi.bei_legal_entity = buyer_company` (NOT `si.bei_legal_entity`). Verify via grep: `grep -c "pi.bei_legal_entity = buyer_company"` returns ≥1, AND `grep -c "pi.bei_legal_entity = si.bei_legal_entity"` returns 0.
+- [ ] **CRIT-1 (P10-D04 trial)**: ARANETA trial PI submits without "Legal Entity must match Company for issuance" error.
+- [ ] **CRIT-2 (cost_center)**: `_resolve_per_store_cost_center` helper exists in generator module with Warehouse.custom_cost_center → Company.cost_center fallback. `_mirror_items` and `_mirror_taxes` BOTH use the buyer-company-resolved cost_center, NOT `si_item.cost_center`.
+- [ ] **CRIT-2 (validation pass)**: ARANETA trial PI passes `Cost Center.company == doc.company` validation (does not crash with "Cost Center X does not belong to Company Y").
+- [ ] **CRIT-3 (test count)**: Phase 3-T5 says "All 8 tests must pass" (NOT 5). All 8 tests run.
+- [ ] **CRIT-4 (parent group naming)**: NO occurrence of `Stock in Hand` parent group reference in plan body outside of explanatory amendment notes. Test Data Seeding Contract uses `Stock Assets - <ABBR>` (or dynamic per-store reference).
+- [ ] **W1 (BIR series Sam-action)**: Phase 0-T0 verifies `BEI Settings.bki_sales_naming_series` is set BEFORE Phase 0-T1 begins. If NULL, agent STOPS and asks Sam.
+- [ ] **W2 (cascade try/except)**: `cascade_cancel_store_pi` wraps body in try/except; SI cancel never blocks on PI cleanup failure.
+- [ ] **W3 (silent skip log)**: generator's "customer is not a per-store Company" exit path emits Sentry breadcrumb. Verify by grep for `add_breadcrumb` in generator module.
+- [ ] **W4 (verify-script flip)**: Phase 3 verify script uses MUST_NOT_CONTAIN for `pi.bei_legal_entity = si.bei_legal_entity` and `cost_center: si_item.cost_center`. `auto_submit_store_pi` may appear in code comments but NOT as actual `pi.submit()` call.
+- [ ] **W7 (has_field guards)**: `pi.bei_legal_entity` and `pi.bei_store_label` assignments wrapped in `frappe.get_meta("Purchase Invoice").has_field(...)` guards.
+- [ ] **W9 (scheduler registration)**: `hrms/hooks.py` has `scheduler_events.weekly` entry registering `run_si_pi_pairing_check`. Drift script auto-runs without manual trigger.
+- [ ] **3-way refutation preserved**: Plan does NOT include any "BKI Title Case" guard logic. The hook filter uses uppercase string match (`if doc.company != "BEBANG KITCHEN INC."`).
 
 ---
 
