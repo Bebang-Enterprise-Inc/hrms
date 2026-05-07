@@ -2,9 +2,12 @@
 sprint_id: S238
 sprint_title: ICT-003 Store-Side Purchase Invoice Generator
 plan_branch: s238-ict003-store-pi-generator
-status: PLANNED
-version: 1
+status: PLANNED_AUDITED_v2
+version: 2
 created_date: 2026-05-07
+revised_date: 2026-05-07
+audit_pr: 729
+amendment_branch: s238-ict003-pi-generator-amendment-v2
 canonical_scope: in
 canonical_model_reference: docs/STORE_COMPANY_CANONICAL.md
 canonical_preflight: required
@@ -22,13 +25,68 @@ evidence_transient:
   - tmp/s238/probe_*.json
   - tmp/s238/seed_dry_run_*.log
 sprint_registry_row: |
-  | `S238` | Sprint 238 | `s238-ict003-store-pi-generator` | TBD | PLANNED 2026-05-07 — ICT-003 Store-Side Purchase Invoice Generator | `docs/plans/2026-05-07-sprint-238-ict003-store-pi-generator.md` |
+  | `S238` | Sprint 238 | `s238-ict003-store-pi-generator` | #729 (plan v1) + amendment-v2 PR pending | PLANNED_AUDITED_v2 2026-05-07 — ICT-003 Store-Side Purchase Invoice Generator (50 units, 11 CRIT audit fixes applied) | `docs/plans/2026-05-07-sprint-238-ict003-store-pi-generator.md` |
 ---
 
-# S238 — ICT-003 Store-Side Purchase Invoice Generator
+# S238 — ICT-003 Store-Side Purchase Invoice Generator (v2 — Audited)
 
 > **Canonical model reference:** `docs/STORE_COMPANY_CANONICAL.md`
 > **Supersedes:** `docs/plans/2026-05-05-sprint-236-intercompany-auto-trade.md` (S236 v2 — wrong architecture, see Design Rationale).
+
+---
+
+## v1 → v2 Audit Amendments (2026-05-07)
+
+`/audit-plan-bei-erp` ran 5 parallel auditors (frappe-backend, ph-finance, deployment-qa, system-arch, code-verifier) on v1 (PR #729, merged at SHA `c1920c9ec`). Verdict: architecturally sound, but 11 CRITICAL implementation-detail bugs + ~14 WARNINGs. Full report: `output/plan-audit/s238-ict003-store-pi-generator/AUDIT_SUMMARY.md`.
+
+**v2 applies the audit fixes WITHOUT changing scope.** The architectural pattern (hook on `Sales Invoice on_submit` → separate Draft PI on per-store books, `is_internal_*=0` everywhere, no canonical changes, no S206 collision) is preserved exactly. The amendments are mechanical bug fixes within that scope.
+
+### CRITICAL fixes applied (11)
+
+| # | Audit blocker | v2 fix |
+|---|---|---|
+| **B1** | `frappe.db.rollback_to_savepoint()` doesn't exist in this Frappe build (showstopper — would crash production on first failure path) | Phase 3-T1 code skeleton replaced with `frappe.db.sql("ROLLBACK TO SAVEPOINT s238_pi_gen")`. Pattern matches existing `commissary.py:879`, `billing.py:1472`, `erp_sync.py:2146`. |
+| **B2** | Missing `pi.set_warehouse` for `update_stock=1` — ARANETA trial fails immediately on "Warehouse is mandatory" | `build_store_pi` resolves per-store warehouse via `resolve_warehouse_company` and sets `pi.set_warehouse`. Per canonical model, Warehouse.docname == Company.name == buyer_company, so direct assignment works. |
+| **B3** | No `Sales Invoice on_cancel` cascade — orphan Draft PIs forever (4-way confirmed across deployment-qa, frappe-backend, system-arch, code-verifier) | NEW `cascade_cancel_store_pi` function in generator module + new `Sales Invoice on_cancel` hook in hooks.py. Reference pattern: `commissary.py:1317-1353` (S168's `_delete_orphan_draft_si_on_se_cancel`). |
+| **B4** | Account resolution `LIKE %name%` silently picks wrong account on duplicate matches | Replace with EXACT-match by `account_number` (numbered prefix per BEI CoA convention). Seed scripts assign deterministic numbers; resolver looks up by number. |
+| **B5** | Plan's parent group `Stock in Hand` doesn't exist in production CoA — actual is `Stock Assets - <ABBR>` (per code-verifier production probe of ARANETA / AYALA EVO / SM TANZA) | Phase 0-T4 expands to survey ALL 49 per-store CoA parent groups and write to `before_state.json`. Phase 1-T1 seed script uses dynamic parent-group lookup via `_find_parent_group()` pattern from `s206_seed_intercompany_accounts.py:82`. |
+| **B6** | Stale ICT-008 reference: plan said `4000003 SALES — BKI TO STORES`; actual production = `4000210 - DELIVERIES - BKI` | Plan updated. DECISIONS.md ICT-008 amendment is OUT OF SCOPE for this sprint (separate doc fix); flagged in closeout SUMMARY as a follow-up data-fix. |
+| **B7** | `bill_no=si.name` may not be BIR-authorized if `bki_sales_naming_series` unset | Phase 0-T4 verifies `BEI Settings.bki_sales_naming_series` is set; HARD STOP if not. Generator additionally guards: only fires when `si.naming_series` matches the BIR-authorized series. |
+| **B8** | `posting_time` not mirrored + Denise can edit `posting_date` during Draft review → SLE timestamp drift + PFRS 15 period-match break | `build_store_pi` sets `pi.set_posting_time=1, pi.posting_time=si.posting_time`. NEW: validate hook on Purchase Invoice rejects `posting_date` edits when `bki_si_reference` is set (plus `read_only=1` on the field for non-Administrator users). |
+| **B9** | Tax row construction unspecified — VAT mismatch risk in BIR cross-checks | Phase 3-T3 expanded with explicit pseudocode: iterate `si.taxes`, filter to `account_head LIKE 'Output VAT%'` only (skip EWT-deduct rows), set `charge_type='Actual'`, mirror `tax_amount`, map to per-store Input VAT account. |
+| **B10** | `pi.cost_center` not set — per-store P&L attribution lost | Mirror `si.items[i].cost_center` to `pi.items[i].cost_center` per line. Reuse `_resolve_store_cost_center` from `commissary.py:1166-1172` if SI line lacks cost_center. |
+| **B11** | `auto_submit_store_pi=1` transaction race — books split if PI submit fails inside SI's on_submit chain | v2 EXCLUDES the `auto_submit_store_pi` toggle entirely from Phase 2 install. Default = always create as Draft. Auto-submit deferred to a future sprint with proper queued-job design (out of scope for v1 ship). |
+
+### High-priority WARNINGs applied
+
+- Strike `(or production)` from Phase 4-T2; trial locked to local-frappe ONLY.
+- Phase 6 declares deploy mode `skip_build=false, no_cache=true` (MEMORY lesson #2).
+- `build_store_pi` ALSO sets `pi.inter_company_invoice_reference = si.name` so existing G-046 dashboard at `procurement.py:4707/4731/4765` keeps reporting correctly.
+- NEW Phase 6-T6: post-merge L1 smoke check (one real BKI SI, verify Draft PI auto-creates).
+- NEW `scripts/s238/check_si_pi_pairing.py` — weekly reconciliation report finding SIs without paired PIs (catches silent hook failures).
+- Generator guards with `frappe.get_meta("Purchase Invoice").has_field("bki_si_reference")` to prevent firing during the deployment window before the Custom Field installs.
+- Mirror `pi.bei_legal_entity` and `pi.bei_store_label` from SI (S192/S203 server-side guards).
+- Standardize on `companies` (lowercase fieldname) in code; "Allowed To Transact With" only in prose/labels.
+- Closeout SUMMARY surfaces 839 historical SIs Q1 2026 Input VAT recovery (~6-7 figures across 49 entities) as a follow-up sprint candidate.
+
+### One audit finding REFUTED
+
+PH Finance flagged BKI Company casing as CRIT-6. **Refuted** by system-arch + code-verifier with production evidence (`tmp/pi_probe.json`, `s206_seed_intercompany_accounts.py:82`, `STORE_COMPANY_CANONICAL.md:172`). Actual `tabCompany.name` IS uppercase `"BEBANG KITCHEN INC."`. Plan's `if doc.company != "BEBANG KITCHEN INC."` filter is correct. **No v2 change needed.**
+
+### Phase budget impact
+
+| Phase | v1 | v2 |
+|---|---:|---:|
+| Phase 0 — Boot + state probe | 4 | 6 (+2: full 49-store CoA survey, naming series check) |
+| Phase 1 — Account seeder | 5 | 7 (+2: dynamic parent-group lookup, account_number prefix) |
+| Phase 2 — Supplier + Custom Field + Toggle | 5 | 5 (unchanged: drop auto_submit toggle = 1u saved; add validate hook for posting_date = 1u added) |
+| Phase 3 — PI generator implementation | 10 | 14 (+4: on_cancel cascade fn + hook, posting_time mirror, cost_center mirror, has_field guard, IC ref dual-set, tax row spec, savepoint API fix) |
+| Phase 4 — ARANETA trial (local-frappe only) | 8 | 8 (unchanged) |
+| Phase 5 — 5-store regression + S206 sanity | 5 | 5 (unchanged) |
+| Phase 6 — Closeout | 3 | 5 (+2: post-merge smoke, deploy mode, 839-SI follow-up note) |
+| **Total** | **40** | **50** |
+
+50 units — well under 80 ceiling, single-session executable.
 
 ---
 
@@ -251,19 +309,21 @@ python scripts/verify_canonical_structure.py 2>&1 | tee tmp/s238/canonical_prefl
 ```
 If violations, STOP.
 
-**0-T4** Probe production state via SSM — write `output/s238/verification/before_state.json` with:
-- BKI SI total count
+**0-T4 (v2)** Probe production state via SSM — write `output/s238/verification/before_state.json` with:
+- BKI SI total count + sample of latest 5 SI naming_series values
 - PI count where company in (49 per-store Cos) AND supplier matches BKI pattern (expected: 0)
 - Existing Suppliers matching `BEBANG KITCHEN%` pattern (verify ONLY the S206 internal one exists, no Trade variant yet)
-- Existence of 3 needed account templates per per-store CoA (sample 3 stores)
 - Existence of `bki_si_reference` Custom Field on Purchase Invoice (expected: false)
 - Existence of `enable_bki_store_pi_generator` setting (expected: false)
-- `BEI Settings.bki_sales_income_account` value (must be set per ICT-008; if missing, STOP)
+- `BEI Settings.bki_sales_income_account` value (HARD STOP if unset — ICT-008 prerequisite per audit B6)
+- **v2-B7**: `BEI Settings.bki_sales_naming_series` value (HARD STOP if unset — BIR-authorized series prerequisite per audit B7)
+- **v2-B5**: per-store CoA structure for ALL 49 per-store Companies — list each Company's parent groups for `Stock Assets - <ABBR>`, the appropriate Liability parent (`Current Liabilities - <ABBR>` or equivalent), and `Current Assets - <ABBR>` (for Input VAT). Discover each store's `<ABBR>` via existing leaf account suffix pattern (reuse `s206_seed_intercompany_accounts._find_parent_group()` pattern).
+- **v2-B6**: read actual `bki_sales_income_account` value and confirm it matches production (currently `4000210 - DELIVERIES - BKI`, NOT the `4000003` referenced in stale DECISIONS.md ICT-008 row — that doc fix is OUT OF SCOPE for this sprint).
 
 **MUST_MODIFY:** `output/s238/verification/before_state.json`
-**MUST_CONTAIN:** `"bki_si_total"`, `"existing_bki_supplier_count"`, `"bki_trade_supplier_exists"`, `"custom_field_exists"`, `"bki_sales_income_account"`
+**MUST_CONTAIN:** `"bki_si_total"`, `"existing_bki_supplier_count"`, `"bki_trade_supplier_exists"`, `"custom_field_exists"`, `"bki_sales_income_account"`, `"bki_sales_naming_series"`, `"per_store_coa_parent_groups"` (dict of 49 stores × 3 parent group names), `"bki_sales_income_account_value"`
 
-**Phase 0 verify:**
+**Phase 0 verify (v2):**
 ```python
 import os, json, sys
 errs = []
@@ -277,6 +337,17 @@ if os.path.exists("output/s238/verification/before_state.json"):
         errs.append("BKI Trade Supplier already exists — investigate before seeding")
     if not s.get("bki_sales_income_account"):
         errs.append("BEI Settings.bki_sales_income_account not set — ICT-008 prerequisite missing, STOP")
+    # v2-B7: BIR-authorized naming series prerequisite
+    if not s.get("bki_sales_naming_series"):
+        errs.append("BEI Settings.bki_sales_naming_series not set — BIR series prerequisite missing, STOP")
+    # v2-B5: every store must have all 3 parent groups identified
+    cga = s.get("per_store_coa_parent_groups") or {}
+    if len(cga) != 49:
+        errs.append(f"Expected 49 per-store CoA surveys, got {len(cga)}")
+    for store, groups in cga.items():
+        for need in ("stock_assets_parent", "ap_parent", "current_assets_parent"):
+            if not groups.get(need):
+                errs.append(f"{store}: missing parent group key '{need}'")
 print("PASS" if not errs else "\n".join(errs))
 sys.exit(0 if not errs else 1)
 ```
@@ -285,23 +356,23 @@ sys.exit(0 if not errs else 1)
 
 ### Phase 1 — GL Account Seeder (5 units)
 
-**1-T1** Write `scripts/s238/seed_pi_generator_accounts.py` (NEW):
-- For each per-store Company (49), seed 3 accounts under appropriate parent groups:
-  - `<numeric>1 Inventory-from-Commissary` — under `Stock in Hand` parent, account_type=`Stock`, root_type=Asset, report_type=Balance Sheet
-  - `<numeric>2 Input VAT - BKI Inter-Co` — under `VAT Input - <Co>` or `Current Assets`, account_type=`Tax`, root_type=Asset, report_type=Balance Sheet
-  - `<numeric>3 AP-Trade-BKI` — under `Accounts Payable` or `Current Liabilities`, account_type=`Payable`, root_type=Liability, report_type=Balance Sheet
-- Numeric prefix: discover from existing CoA (use parent's prefix + 3 next-available leaves). Do NOT invent prefixes; survey actual per-store CoA via SSM probe.
-- `frappe.db.savepoint("s238_account_seed_<co>")` per Company (DM-2).
+**1-T1 (v2)** Write `scripts/s238/seed_pi_generator_accounts.py` (NEW):
+- For each per-store Company (49), seed 3 accounts with **deterministic account_number prefixes** (v2-B4 — exact-match resolver depends on these numbers):
+  - **`1104210 Inventory-from-Commissary`** — under `Stock Assets - <ABBR>` parent (v2-B5 — actual production parent group, NOT `Stock in Hand`), account_type=`Stock`, root_type=Asset, report_type=Balance Sheet
+  - **`1106210 Input VAT - BKI Inter-Co`** — under `Current Assets - <ABBR>` (or VAT-input parent if exists), account_type=`Tax`, root_type=Asset, report_type=Balance Sheet
+  - **`2103210 AP-Trade-BKI`** — under `Accounts Payable - <ABBR>` (preferred) or `Current Liabilities - <ABBR>`, account_type=`Payable`, root_type=Liability, report_type=Balance Sheet
+- v2-B5: Per-store `<ABBR>` discovered from `before_state.json` `per_store_coa_parent_groups` survey (Phase 0-T4). Reuse `_find_parent_group()` pattern from `hrms/on_demand/s206_seed_intercompany_accounts.py:82` so the seed script handles per-store CoA divergence dynamically.
+- v2-B1 (savepoint API): use `frappe.db.savepoint("s238_seed_<co_safe>")` for entry, and on exception use raw SQL `frappe.db.sql("ROLLBACK TO SAVEPOINT s238_seed_<co_safe>")` (NOT `rollback_to_savepoint` — does not exist).
 - `--dry-run` (default) and `--apply` modes.
-- Idempotent: skip if account already exists with same name pattern.
+- Idempotent: skip if account_number already exists for the Company.
 - All accounts logged to `output/l3/s238/teardown_ledger.json`.
 
 **MUST_MODIFY:** `scripts/s238/seed_pi_generator_accounts.py` (NEW)
-**MUST_CONTAIN:** `frappe.db.savepoint`, `Inventory-from-Commissary`, `Input VAT - BKI Inter-Co`, `AP-Trade-BKI`, `--dry-run`, `--apply`
+**MUST_CONTAIN:** `frappe.db.savepoint`, `ROLLBACK TO SAVEPOINT`, `1104210`, `1106210`, `2103210`, `Stock Assets`, `_find_parent_group`, `--dry-run`, `--apply`
 
-**1-T2** Dry-run on production via SSM, capture log to `tmp/s238/seed_dry_run_accounts.log`. Manually inspect — verify parent_account assignments make sense for each per-store CoA. If any store has an unusual CoA structure (e.g., missing `Stock in Hand` parent), STOP and ask Sam.
+**1-T2 (v2)** Dry-run on production via SSM, capture log to `tmp/s238/seed_dry_run_accounts.log`. Verify parent_account assignments are correct for each per-store CoA per the Phase 0-T4 survey. If any store has missing parent groups (some stores may not have all 3 of `Stock Assets`, `Accounts Payable`, `Current Assets`), STOP — Phase 0-T4 should have caught this; if it slipped through, ask Sam.
 
-**1-T3** Apply on production. Re-probe. Verify 147 accounts exist (49 × 3).
+**1-T3** Apply on production. Re-probe. Verify 147 accounts exist (49 × 3) with the right account_numbers (`1104210`, `1106210`, `2103210` per Company).
 
 ---
 
@@ -334,14 +405,39 @@ sys.exit(0 if not errs else 1)
 **MUST_MODIFY:** `scripts/s238/install_bki_si_reference_field.py` (NEW)
 **MUST_CONTAIN:** `bki_si_reference`, `Link`, `Sales Invoice`, `read_only`
 
-**2-T3** Add toggle to BEI Settings (existing single doctype):
-- `enable_bki_store_pi_generator` (Check, default 1)
-- `auto_submit_store_pi` (Check, default 0 — Draft for review by default)
+**2-T3 (v2)** Add toggle to BEI Settings (existing single doctype):
+- `enable_bki_store_pi_generator` (Check, default 1) — kill switch for the hook.
+- ~~`auto_submit_store_pi`~~ — **REMOVED in v2 (audit B11).** Always Draft. Auto-submit deferred to a future queued-job sprint (out of scope here).
 
 Add via `scripts/s238/install_bei_settings_toggles.py` (NEW) OR extend existing settings install script.
 
 **MUST_MODIFY:** `scripts/s238/install_bei_settings_toggles.py` (or amend existing)
-**MUST_CONTAIN:** `enable_bki_store_pi_generator`, `auto_submit_store_pi`
+**MUST_CONTAIN:** `enable_bki_store_pi_generator`
+**MUST_NOT_CONTAIN:** `auto_submit_store_pi` (v2-B11 — explicitly excluded)
+
+**2-T3a (v2-B8)** NEW: install validate hook on Purchase Invoice that locks `posting_date` from edit when `bki_si_reference` is set:
+
+```python
+# in hrms/api/bki_store_pi_generator.py — additional validate fn
+def lock_posting_date_on_bki_paired_pi(doc, method=None):
+    """v2-B8: prevent Denise from editing posting_date on auto-generated PIs.
+    The posting_date must equal the SI's posting_date (per ICT-007 + PFRS 15
+    period match). Only Administrator may override.
+    """
+    if not doc.get("bki_si_reference"): return
+    if doc.is_new(): return  # initial insert by hook is fine
+    if frappe.session.user == "Administrator": return
+    db_pd = frappe.db.get_value("Purchase Invoice", doc.name, "posting_date")
+    if db_pd and str(doc.posting_date) != str(db_pd):
+        frappe.throw(_(
+            "S238: posting_date is locked on BKI-paired PIs (must match the "
+            "BKI SI's posting_date per ICT-007). Contact Administrator to override."
+        ))
+```
+
+Register in hooks.py: `Purchase Invoice` → `validate` → list-style append `bki_store_pi_generator.lock_posting_date_on_bki_paired_pi`.
+
+**MUST_CONTAIN (in 2-T3a):** `lock_posting_date_on_bki_paired_pi`, `Purchase Invoice` validate registration in hooks.py
 
 **2-T4** Apply all seeds on production. Verify post-seed state in `output/s238/verification/after_state.json`.
 
@@ -349,7 +445,7 @@ Add via `scripts/s238/install_bei_settings_toggles.py` (NEW) OR extend existing 
 
 ### Phase 3 — PI Generator Implementation (10 units)
 
-**3-T1** Create `hrms/api/bki_store_pi_generator.py` (NEW):
+**3-T1 (v2)** Create `hrms/api/bki_store_pi_generator.py` (NEW):
 
 ```python
 """S238 — Generate store-side Draft Purchase Invoice when a BKI Sales Invoice submits.
@@ -357,13 +453,25 @@ Add via `scripts/s238/install_bei_settings_toggles.py` (NEW) OR extend existing 
 Implements ICT-003: each BKI→store SI must have a paired PI on the receiving
 store's books for BIR per-entity bookkeeping. NOT an atomic auto-mirror — the
 PI is a SEPARATE document on a SEPARATE Company, awaiting Denise's team review.
+
+v2: audit fixes B1 (savepoint API), B2 (set_warehouse), B3 (on_cancel),
+B4 (account_number resolution), B7 (naming series guard), B8 (posting_time),
+B9 (tax mirror), B10 (cost_center mirror), B11 (no auto_submit), W (IC ref
+dual-set, has_field guard, S192/S203 fields).
 """
 import frappe
 from frappe import _
 from frappe.utils import flt
 from hrms.utils.sentry import set_backend_observability_context
 
+BKI_COMPANY = "BEBANG KITCHEN INC."
 BKI_TRADE_SUPPLIER = "BEBANG KITCHEN INC. - Trade"
+
+# Account number prefixes seeded by scripts/s238/seed_pi_generator_accounts.py.
+# v2-B4: exact match by account_number, not LIKE %name%.
+ACCT_INVENTORY_FROM_COMMISSARY = "1104210"   # Asset, leaf under Stock Assets - <ABBR>
+ACCT_INPUT_VAT_BKI_INTERCO    = "1106210"   # Asset (Tax)
+ACCT_AP_TRADE_BKI             = "2103210"   # Liability (Payable)
 
 def maybe_generate_store_pi(doc, method=None):
     """S238: Sales Invoice on_submit hook — generates store-side PI."""
@@ -373,22 +481,35 @@ def maybe_generate_store_pi(doc, method=None):
         mutation_type="create",
         extras={"si_name": doc.name, "company": doc.company, "customer": doc.customer},
     )
-    # Filter: only BKI -> store SIs trigger the generator
-    if doc.company != "BEBANG KITCHEN INC.": return
+    # Filter 1: only BKI -> store SIs trigger the generator
+    if doc.company != BKI_COMPANY: return
+    # Filter 2 (v2-W has_field guard): skip if Custom Field not installed yet
+    if not frappe.get_meta("Purchase Invoice").has_field("bki_si_reference"):
+        frappe.log_error(
+            "S238: bki_si_reference Custom Field not installed; skipping PI generation",
+            "S238 Custom Field Missing",
+        )
+        return
     settings = frappe.get_single("BEI Settings")
     if not getattr(settings, "enable_bki_store_pi_generator", 1): return
+    # Filter 3 (v2-B7): only fire when SI used BIR-authorized series
+    bir_series = (getattr(settings, "bki_sales_naming_series", "") or "").strip()
+    if bir_series and doc.naming_series and not doc.naming_series.startswith(bir_series.split(".")[0]):
+        return
     # Identify buyer Company (per canonical: Customer.name == per-store Company.name)
     buyer_company = doc.customer if frappe.db.exists("Company", doc.customer) else None
     if not buyer_company: return  # Customer is not a per-store Company; ignore
     # Idempotency: skip if a PI already exists referencing this SI
     if frappe.db.exists("Purchase Invoice", {"bki_si_reference": doc.name}): return
+    sp_name = "s238_pi_gen"
     try:
-        frappe.db.savepoint("s238_pi_gen")
+        frappe.db.savepoint(sp_name)
         pi = build_store_pi(doc, buyer_company)
         pi.insert(ignore_permissions=True)
-        if getattr(settings, "auto_submit_store_pi", 0):
-            pi.submit()
-        frappe.db.release_savepoint("s238_pi_gen")
+        # v2-B11: auto_submit_store_pi is REMOVED from this version. Always Draft.
+        # Future auto-submit will be a separate queued-job sprint.
+        # v2-B1: this Frappe build does NOT have rollback_to_savepoint() method.
+        # Use raw SQL pattern matching commissary.py:879, billing.py:1472.
         # Add a comment on the SI for audit trail
         si_comment = frappe.get_doc({
             "doctype": "Comment", "comment_type": "Comment",
@@ -398,7 +519,11 @@ def maybe_generate_store_pi(doc, method=None):
         })
         si_comment.insert(ignore_permissions=True)
     except Exception:
-        frappe.db.rollback_to_savepoint("s238_pi_gen")
+        # v2-B1: raw SQL ROLLBACK TO SAVEPOINT (rollback_to_savepoint API doesn't exist)
+        try:
+            frappe.db.sql(f"ROLLBACK TO SAVEPOINT {sp_name}")
+        except Exception:
+            pass
         frappe.log_error(
             f"S238: PI generation failed for SI {doc.name}: {frappe.get_traceback()}",
             "S238 Store PI Generator Error",
@@ -407,61 +532,179 @@ def maybe_generate_store_pi(doc, method=None):
 
 def build_store_pi(si, buyer_company):
     """Construct the Draft PI mirroring the SI's items + taxes."""
-    inv_account = resolve_account(buyer_company, "Inventory-from-Commissary")
-    vat_account = resolve_account(buyer_company, "Input VAT - BKI Inter-Co")
-    ap_account  = resolve_account(buyer_company, "AP-Trade-BKI")
+    # v2-B4: exact-match by account_number (deterministic, no LIKE pattern fragility)
+    inv_account = resolve_account_by_number(buyer_company, ACCT_INVENTORY_FROM_COMMISSARY)
+    vat_account = resolve_account_by_number(buyer_company, ACCT_INPUT_VAT_BKI_INTERCO)
+    ap_account  = resolve_account_by_number(buyer_company, ACCT_AP_TRADE_BKI)
+
+    # v2-B2: per-store warehouse — canonical model: Warehouse.docname == Company.name
+    buyer_warehouse = buyer_company  # exact same string per docs/STORE_COMPANY_CANONICAL.md
 
     pi = frappe.new_doc("Purchase Invoice")
     pi.company = buyer_company
     pi.supplier = BKI_TRADE_SUPPLIER
     pi.posting_date = si.posting_date
+    # v2-B8: mirror posting_time so SLE lands at SI's exact timestamp
+    pi.set_posting_time = 1
+    pi.posting_time = si.posting_time
     pi.bill_no = si.name
     pi.bill_date = si.posting_date
     pi.bki_si_reference = si.name
+    # v2-W (G-046 dashboard): also set the standard ERPNext IC ref so existing
+    # procurement dashboards at procurement.py:4707/4731/4765 continue to report
+    pi.inter_company_invoice_reference = si.name
     pi.update_stock = 1
+    pi.set_warehouse = buyer_warehouse                    # v2-B2
     pi.credit_to = ap_account
-    # ... mirror items + taxes from SI; details in implementation
+    # v2-W: mirror S192/S203 BEI tracking fields from SI
+    if getattr(si, "bei_legal_entity", None):
+        pi.bei_legal_entity = si.bei_legal_entity
+    if getattr(si, "bei_store_label", None):
+        pi.bei_store_label = si.bei_store_label
+    # v2-B9: explicit item + tax mirroring (see _mirror_items, _mirror_taxes below)
+    _mirror_items(pi, si, inv_account, buyer_warehouse)
+    _mirror_taxes(pi, si, vat_account)
     return pi
 
-def resolve_account(company, name_substring):
-    """Find the per-Company account by name LIKE pattern."""
+def _mirror_items(pi, si, inv_account, warehouse):
+    """v2-B9 + B10: mirror SI line items with per-store inventory account + cost_center."""
+    for si_item in si.items:
+        pi.append("items", {
+            "item_code":   si_item.item_code,
+            "item_name":   si_item.item_name,
+            "description": si_item.description,
+            "qty":         flt(si_item.qty),
+            "uom":         si_item.uom,
+            "rate":        flt(si_item.rate),
+            "amount":      flt(si_item.amount),
+            "warehouse":   warehouse,                     # v2-B2
+            "expense_account": inv_account,
+            "cost_center": si_item.cost_center,           # v2-B10
+        })
+
+def _mirror_taxes(pi, si, vat_account):
+    """v2-B9: mirror only Output VAT rows from SI; skip EWT-deduct rows."""
+    for si_tax in si.taxes:
+        ah = (si_tax.account_head or "").lower()
+        # Only mirror VAT (Output VAT on SI side -> Input VAT on PI side).
+        # Skip EWT and any add_deduct_tax='Deduct' rows.
+        if "vat" not in ah:
+            continue
+        if (si_tax.add_deduct_tax or "").lower() == "deduct":
+            continue
+        pi.append("taxes", {
+            "charge_type":      "Actual",
+            "account_head":     vat_account,
+            "description":      f"Input VAT — BKI Inter-Co (mirrors SI {si.name})",
+            "tax_amount":       flt(si_tax.tax_amount),
+            "category":         "Total",
+            "add_deduct_tax":   "Add",
+            "cost_center":      si_tax.cost_center,
+        })
+
+def resolve_account_by_number(company, account_number):
+    """v2-B4: exact match by account_number (deterministic).
+
+    Replaces v1's LIKE %name% lookup which silently picked random matches on dupes.
+    """
     rows = frappe.db.sql(
-        "SELECT name FROM `tabAccount` WHERE company=%s AND account_name LIKE %s "
-        "AND disabled=0 LIMIT 1",
-        (company, f"%{name_substring}%"), as_dict=True,
+        "SELECT name FROM `tabAccount` "
+        "WHERE company=%s AND account_number=%s AND disabled=0 LIMIT 1",
+        (company, account_number), as_dict=True,
     )
     if not rows:
-        frappe.throw(_(f"S238: account matching '{name_substring}' not found on {company}"))
+        frappe.throw(_(
+            f"S238: account number '{account_number}' not found on {company}. "
+            f"Run scripts/s238/seed_pi_generator_accounts.py --apply first."
+        ))
     return rows[0]["name"]
+
+
+# v2-B3: on_cancel cascade hook handler (Sales Invoice on_cancel)
+def cascade_cancel_store_pi(doc, method=None):
+    """When a BKI SI is cancelled, cascade to the paired store-side PI.
+
+    - If paired PI is Draft (docstatus=0): delete it (no GL impact).
+    - If paired PI is Submitted (docstatus=1): file a Comment alert and DO NOT
+      auto-cancel — that requires Denise's review (cancel cascade on a
+      Submitted PI reverses inventory + Input VAT in the per-store books and
+      should be a deliberate accounting action, not an automatic one).
+
+    Reference pattern: commissary.py:1317-1353 (S168's
+    _delete_orphan_draft_si_on_se_cancel handles the analogous
+    Stock Entry → Sales Invoice cascade).
+    """
+    set_backend_observability_context(
+        module="billing",
+        action="cascade_cancel_store_pi",
+        mutation_type="delete",
+        extras={"si_name": doc.name},
+    )
+    if doc.company != BKI_COMPANY: return
+    if not frappe.get_meta("Purchase Invoice").has_field("bki_si_reference"): return
+    pi_name = frappe.db.get_value(
+        "Purchase Invoice", {"bki_si_reference": doc.name}, "name"
+    )
+    if not pi_name: return
+    pi_status = frappe.db.get_value("Purchase Invoice", pi_name, "docstatus")
+    if pi_status == 0:
+        # Draft — safe to delete (no GL impact)
+        frappe.delete_doc("Purchase Invoice", pi_name, ignore_permissions=True, force=True)
+        si_comment = frappe.get_doc({
+            "doctype": "Comment", "comment_type": "Comment",
+            "reference_doctype": "Sales Invoice", "reference_name": doc.name,
+            "content": f"S238: Paired Draft PI {pi_name} deleted (SI cancelled).",
+        })
+        si_comment.insert(ignore_permissions=True)
+    elif pi_status == 1:
+        # Submitted — flag for manual review; DO NOT auto-cancel
+        pi_comment = frappe.get_doc({
+            "doctype": "Comment", "comment_type": "Comment",
+            "reference_doctype": "Purchase Invoice", "reference_name": pi_name,
+            "content": (
+                f"S238: Paired BKI SI {doc.name} was CANCELLED. This PI was "
+                f"already submitted; Finance review required to decide whether "
+                f"to cancel this PI (will reverse inventory + Input VAT)."
+            ),
+        })
+        pi_comment.insert(ignore_permissions=True)
+        frappe.log_error(
+            f"S238: BKI SI {doc.name} cancelled but paired PI {pi_name} is submitted — manual review required",
+            "S238 PI Cascade Manual Review",
+        )
 ```
 
 **MUST_MODIFY:** `hrms/api/bki_store_pi_generator.py` (NEW)
-**MUST_CONTAIN:** `maybe_generate_store_pi`, `set_backend_observability_context`, `frappe.db.savepoint`, `BEBANG KITCHEN INC. - Trade`, `bki_si_reference`, `update_stock = 1`, `posting_date = si.posting_date`, `enable_bki_store_pi_generator`, `auto_submit_store_pi`
+**MUST_CONTAIN:** `maybe_generate_store_pi`, `cascade_cancel_store_pi`, `set_backend_observability_context`, `frappe.db.savepoint`, `ROLLBACK TO SAVEPOINT`, `BEBANG KITCHEN INC. - Trade`, `bki_si_reference`, `inter_company_invoice_reference`, `update_stock = 1`, `set_warehouse`, `set_posting_time`, `posting_time = si.posting_time`, `enable_bki_store_pi_generator`, `bki_sales_naming_series`, `has_field("bki_si_reference")`, `_mirror_items`, `_mirror_taxes`, `resolve_account_by_number`, `bei_legal_entity`, `bei_store_label`, `cost_center`, `1104210`, `1106210`, `2103210`
 
-**3-T2** Add hook to `hrms/hooks.py`:
+**3-T2 (v2)** Add hooks to `hrms/hooks.py`:
 ```python
 "Sales Invoice": {
     "on_submit": "hrms.api.bki_store_pi_generator.maybe_generate_store_pi",
+    "on_cancel": "hrms.api.bki_store_pi_generator.cascade_cancel_store_pi",   # v2-B3
 },
 ```
 
 **MUST_MODIFY:** `hrms/hooks.py`
-**MUST_CONTAIN:** `bki_store_pi_generator.maybe_generate_store_pi`
+**MUST_CONTAIN:** `bki_store_pi_generator.maybe_generate_store_pi`, `bki_store_pi_generator.cascade_cancel_store_pi`
 
-**3-T3** Implement item + tax mirroring logic in `build_store_pi`:
-- For each `si.items` row → append to `pi.items` with same `item_code, qty, rate, item_name, description, uom`. Override `expense_account = inv_account` (per-store Inventory-from-Commissary, not BKI's).
-- For each `si.taxes` row → if Output VAT 12%, append corresponding Input VAT row on PI with `account_head = vat_account`, `add_deduct_tax = "Add"`, `category = "Total"`, mirror the rate and tax_amount.
-- Preserve `total`, `grand_total`, `outstanding_amount` calculations via Frappe's standard validate.
+**3-T3 (v2)** Implement item + tax mirroring logic in `build_store_pi` (already inline in 3-T1 code skeleton above):
+- `_mirror_items`: each `si.items` row → `pi.items` with `item_code`, `qty`, `rate`, `uom`, `warehouse=buyer_warehouse` (v2-B2), `expense_account=inv_account`, **`cost_center=si_item.cost_center`** (v2-B10).
+- `_mirror_taxes`: filter `si.taxes` to only `account_head LIKE '%vat%'` AND `add_deduct_tax != 'Deduct'` (v2-B9 — skip EWT-deduct rows). Set `charge_type='Actual'`, mirror `tax_amount`, point `account_head` to per-store `Input VAT - BKI Inter-Co` account (resolved by number).
+- Preserve `total`, `grand_total`, `outstanding_amount` calculations via Frappe's standard validate (auto on `pi.insert()`).
 
-**3-T4** Write unit tests in `hrms/tests/test_s238_pi_generator.py` (NEW):
-- Test 1: SI on BKI to ARANETA Customer → 1 Draft PI created on ARANETA Co with right supplier + accounts.
-- Test 2: SI on BKI to a non-Company Customer (e.g., Walk-in, holdco) → NO PI created (filter works).
-- Test 3: SI on BKI with toggle OFF → NO PI created.
-- Test 4: Resubmit SI scenario → PI not duplicated (idempotency via `bki_si_reference` check).
-- Test 5: SI on a non-BKI Company → NO PI created (filter works).
+**3-T4 (v2)** Write unit tests in `hrms/tests/test_s238_pi_generator.py` (NEW) — expanded to 8 tests:
+- **Test 1**: SI on BKI to ARANETA Customer → 1 Draft PI created on ARANETA Co with right supplier + accounts (resolved by account_number) + `set_warehouse=ARANETA-warehouse` + `posting_time` mirrored.
+- **Test 2**: SI on BKI to a non-Company Customer (e.g., Walk-in, holdco) → NO PI created (filter works).
+- **Test 3**: SI on BKI with `enable_bki_store_pi_generator=0` → NO PI created.
+- **Test 4**: Resubmit SI scenario → PI not duplicated (idempotency via `bki_si_reference` check).
+- **Test 5**: SI on a non-BKI Company → NO PI created (filter works).
+- **Test 6 (v2-B3)**: BKI SI cancelled while paired PI is Draft → cascade deletes the PI; cancelled while paired PI is Submitted → manual-review Comment posted, PI NOT auto-cancelled.
+- **Test 7 (v2-B9)**: SI with both Output VAT and EWT-deduct rows → PI mirrors only the VAT row; EWT row is excluded from PI taxes.
+- **Test 8 (v2-W has_field)**: Custom Field `bki_si_reference` removed mid-test → hook returns early without inserting PI; logs the missing-field error.
 
 **MUST_MODIFY:** `hrms/tests/test_s238_pi_generator.py` (NEW)
-**MUST_CONTAIN:** all 5 test docstrings
+**MUST_CONTAIN:** all 8 test docstrings, `cascade_cancel_store_pi` reference, `_mirror_taxes`, `account_number`
 
 **3-T5** Run unit tests via `/local-frappe`:
 ```bash
@@ -492,12 +735,13 @@ sys.exit(0 if not errs else 1)
 
 ### Phase 4 — Single-Store Trial (ARANETA) (8 units)
 
-**4-T1** Deploy code to local-frappe via `/local-frappe` first. Run unit tests.
+**4-T1** Deploy code to local-frappe via `/local-frappe` first. Run unit tests (8 tests, all must pass).
 
-**4-T2** Submit BKI→ARANETA SI via the existing `complete_receiving` flow on local-frappe (or production with `auto_submit_store_pi=0` so PI stays Draft):
+**4-T2 (v2)** Submit BKI→ARANETA SI via the existing `complete_receiving` flow **on local-frappe ONLY** (v2 audit blocker — PRODUCTION trial is forbidden because it consumes BIR-authorized ATP serials per Phase 4 v2 amendment):
 - Small amount (~PHP 1.00, 1 line item from existing catalog)
 - Verify SI submits successfully
-- Verify Draft PI auto-created on ARANETA's books
+- Verify Draft PI auto-created on per-store-replica's books in local-frappe
+- All 8 unit tests + browser-validated trial run on local-frappe before any production touch
 
 **4-T3** Open the auto-created Draft PI in Frappe Desk:
 - `supplier=BEBANG KITCHEN INC. - Trade` ✓
@@ -564,7 +808,7 @@ sys.exit(0 if not errs else 1)
 
 Write `output/s238/verification/historical_si_regression.json` with the results.
 
-**5-T3** For each of the 5 trial stores, submit a NEW BKI SI (small amount, immediately cancel). Verify each generates a Draft PI on each respective store's books with the right supplier + accounts. Cancel each Draft PI.
+**5-T3 (v2)** For each of the 5 trial stores, submit a NEW BKI SI **on local-frappe** (small amount, immediately cancel — never on production per v2-B-trial-on-prod fix). Verify each generates a Draft PI on each respective store's books with the right supplier + accounts. Cancel each Draft PI; verify on_cancel cascade deletes the Draft PI (v2-B3 test).
 
 **5-T4** S206 sanity check: trigger labor JE creation for one of the 5 trial stores via existing S206 path:
 - Labor JE creates against the existing `(Internal)` Customer (UNTOUCHED).
@@ -581,21 +825,29 @@ Must show `ALL CANONICAL`. No new violations vs Phase 0 baseline.
 
 ### Phase 6 — Closeout (3 units)
 
-**6-T1** Push branch + open PR with all changes (single PR):
+**6-T1 (v2)** Push branch + open PR with all changes (single PR):
 ```bash
 git push -u origin s238-ict003-store-pi-generator
 GH_TOKEN="" gh pr create --repo Bebang-Enterprise-Inc/hrms --base production \
   --head s238-ict003-store-pi-generator \
-  --title "feat(S238): ICT-003 store-side Purchase Invoice generator" \
+  --title "feat(S238 v2): ICT-003 store-side Purchase Invoice generator" \
   --body-file output/s238/PR_BODY.md
 ```
 
 PR description calls out:
-- ICT-003 implementation gap closed (per Butch's 2026-02-20 directive, still binding).
-- 147 GL accounts seeded + 1 new BKI Trade Supplier + 1 Custom Field + 1 BEI Settings toggle + 1 hook + 1 generator module.
-- Trial + 5-store regression + S206 sanity all green.
-- `is_internal_customer/_supplier` flags ALL untouched.
-- Backfill of 839 historical SI deferred (separate sprint if BIR Q1 amendment needed).
+- ICT-003 implementation gap closed (per Butch's 2026-02-20 directive, still binding per 2026-05-07 banner).
+- 147 GL accounts seeded (account_numbers `1104210`/`1106210`/`2103210` × 49 stores) + 1 new BKI Trade Supplier + 1 Custom Field + 1 BEI Settings toggle + 1 generator module + 2 hooks (on_submit + on_cancel).
+- Trial + 5-store regression + S206 sanity all green on **local-frappe only** (v2 audit fix — no production trial).
+- `is_internal_customer/_supplier` flags ALL untouched. Canonical Rules 1-8 UNCHANGED.
+- Backfill of 839 historical SI deferred (separate sprint if BIR Q1 2026 amended 2550Q recovery is approved — likely 6-7 figures of Input VAT across 49 entities per audit ph-finance W).
+- Deploy mode: `skip_build=false, no_cache=true` (v2 audit B-deploy — full build required for new module).
+
+**6-T1a (v2 NEW — declares deploy mode)** When PR merges and Sam triggers `/deploy-frappe`, MUST use:
+```bash
+skip_build=false
+no_cache=true
+```
+The new module `hrms/api/bki_store_pi_generator.py` is NOT in the cached Docker image. `skip_build=true` would silently break the feature (MEMORY lesson #2).
 
 **6-T2** Update plan YAML → `status: COMPLETED`, `completed_date`, `pr`, `execution_summary`. Mark S236 v2 as SUPERSEDED in its YAML (`status: SUPERSEDED_BY_S238`).
 
@@ -612,45 +864,66 @@ cd F:/Dropbox/Projects/BEI-ERP
 git worktree remove F:/Dropbox/Projects/BEI-ERP-s238-ict003-pi-generator
 ```
 
+**6-T6 (v2 NEW — post-merge smoke check)** After Sam merges the PR and `/deploy-frappe` runs successfully, perform a 1-store production smoke:
+- Wait for the next BKI→ARANETA SI to submit through the normal `complete_receiving` flow (or manually trigger one if needed).
+- Within 30 seconds, query: `SELECT name, supplier, bki_si_reference, inter_company_invoice_reference FROM \`tabPurchase Invoice\` WHERE bki_si_reference = '<that SI>'`
+- If 1 row returned with `supplier="BEBANG KITCHEN INC. - Trade"` AND `bki_si_reference` populated AND `inter_company_invoice_reference` populated → SMOKE PASS.
+- If 0 rows after 60 seconds → check Sentry for `S238 Store PI Generator Error`; the hook may have failed silently. Triage immediately.
+- Write result to `output/s238/verification/post_merge_smoke.json`.
+
+**6-T7 (v2 NEW — drift-detection script)** Ship `scripts/s238/check_si_pi_pairing.py` as a weekly reconciliation tool:
+- Query: BKI SIs submitted in the last 7 days WITHOUT a matching PI on `bki_si_reference`.
+- Output: `output/s238/reconciliation/<date>_si_without_pi.csv` listing SI name + customer + grand_total + age.
+- Add a hint to closeout SUMMARY.md: "Run this weekly until v3 (queued-job auto-submit) lands; investigate any rows."
+
+**6-T8 (v2 NEW — 839-SI follow-up flag)** Add to `output/s238/SUMMARY.md` a clearly-labeled "Follow-Up Sprint Candidate" section noting:
+- Pre-S238 BKI SI count (839 as of audit baseline) without paired PI
+- Each store's Q1 2026 BIR Form 2550Q has incomplete Input VAT claim
+- Estimated recoverable Input VAT: ~6-7 figures across 49 entities
+- Mechanism: same generator function reusable as one-off backfill script (idempotent via `bki_si_reference` check); BIR amended 2550Q filing required per entity
+- DECISION: defer to Sam (CEO) — not auto-actioned by S238
+
 ---
 
-## Phase Budget Contract
+## Phase Budget Contract (v2 — audit-amended)
 
-| Phase | Units |
-|---|---:|
-| Phase 0 — Boot + state probe | 4 |
-| Phase 1 — Account seeder | 5 |
-| Phase 2 — Supplier + Custom Field + Toggle | 5 |
-| Phase 3 — PI generator implementation | 10 |
-| Phase 4 — ARANETA trial | 8 |
-| Phase 5 — 5-store regression + S206 sanity | 5 |
-| Phase 6 — Closeout | 3 |
-| **Total** | **40 units** |
+| Phase | v1 | v2 | Δ rationale |
+|---|---:|---:|---|
+| Phase 0 — Boot + state probe | 4 | 6 | +2: 49-store CoA parent-group survey (B5), `bki_sales_naming_series` check (B7) |
+| Phase 1 — Account seeder | 5 | 7 | +2: dynamic parent-group lookup via `_find_parent_group` (B5), account_number prefix scheme (B4) |
+| Phase 2 — Supplier + Custom Field + Toggle | 5 | 5 | net 0: drop `auto_submit_store_pi` toggle (-1, B11) + add `lock_posting_date_on_bki_paired_pi` validate hook (+1, B8) |
+| Phase 3 — PI generator implementation | 10 | 14 | +4: on_cancel cascade fn + hook (B3), posting_time mirror (B8), cost_center mirror (B10), `has_field` guard (W), `inter_company_invoice_reference` dual-set (W G-046), explicit tax row spec (B9), savepoint API fix (B1), bei_legal_entity/bei_store_label mirror (W S192/S203) |
+| Phase 4 — local-frappe trial | 8 | 8 | unchanged (just stripped "or production" language) |
+| Phase 5 — 5-store regression + S206 sanity | 5 | 5 | unchanged |
+| Phase 6 — Closeout | 3 | 5 | +2: post-merge smoke (6-T6), drift-detection script (6-T7), 839-SI follow-up flag (6-T8), explicit deploy mode declaration (6-T1a) |
+| **Total** | **40** | **50** | +10 units |
 
-40 units total — well under 80-unit ceiling. No phase exceeds 12 units. Single-session executable.
+50 units — well under 80-unit ceiling. No phase exceeds 14 units. Single-session executable.
 
 ---
 
-## Surface Ownership Matrix (S087)
+## Surface Ownership Matrix (S087, v2)
 
 | Surface | Owner | Allowed mutations |
 |---|---|---|
-| `hrms/api/bki_store_pi_generator.py` | S238 | NEW file |
-| `hrms/hooks.py` | S238 | ADD `Sales Invoice on_submit` hook entry |
-| `hrms/tests/test_s238_pi_generator.py` | S238 | NEW file (5 tests) |
-| `scripts/s238/seed_pi_generator_accounts.py` | S238 | NEW |
+| `hrms/api/bki_store_pi_generator.py` | S238 | NEW file (v2: + cascade_cancel_store_pi + lock_posting_date_on_bki_paired_pi + _mirror_items + _mirror_taxes + resolve_account_by_number) |
+| `hrms/hooks.py` | S238 | ADD `Sales Invoice on_submit` + `Sales Invoice on_cancel` (v2-B3) + `Purchase Invoice validate` (v2-B8) entries |
+| `hrms/tests/test_s238_pi_generator.py` | S238 | NEW file (v2: 8 tests, was 5) |
+| `scripts/s238/seed_pi_generator_accounts.py` | S238 | NEW (v2: account_number prefixes, dynamic `_find_parent_group`) |
 | `scripts/s238/seed_bki_trade_supplier.py` | S238 | NEW |
 | `scripts/s238/install_bki_si_reference_field.py` | S238 | NEW |
-| `scripts/s238/install_bei_settings_toggles.py` | S238 | NEW (or amend existing) |
-| `tabAccount` | S238 | INSERT 147 accounts (3 × 49 stores) |
-| `tabSupplier` | S238 | INSERT 1 record (`BEBANG KITCHEN INC. - Trade`) + 49 Allowed To Transact With entries |
+| `scripts/s238/install_bei_settings_toggles.py` | S238 | NEW — installs only `enable_bki_store_pi_generator` (v2-B11: NOT `auto_submit_store_pi`) |
+| `scripts/s238/check_si_pi_pairing.py` | S238 | NEW (v2-W: drift-detection reconciliation) |
+| `tabAccount` | S238 | INSERT 147 accounts (3 × 49 stores) with deterministic account_numbers `1104210`/`1106210`/`2103210` (v2-B4) |
+| `tabSupplier` | S238 | INSERT 1 record (`BEBANG KITCHEN INC. - Trade`) + 49 `companies` child entries (lowercase fieldname per v2 standardization) |
 | `Custom Field` on `Purchase Invoice` | S238 | INSERT 1 field (`bki_si_reference`) |
-| `BEI Settings` | S238 | INSERT 2 toggle fields |
+| `BEI Settings` | S238 | INSERT 1 toggle field (`enable_bki_store_pi_generator`); v2 dropped `auto_submit_store_pi` |
 | `hrms/api/commissary.py` | NOT S238 | UNCHANGED — including line 1137 hardcode |
-| `hrms/api/billing.py` | NOT S238 | UNCHANGED — including line 595 hardcode |
+| `hrms/api/billing.py` | NOT S238 | UNCHANGED — including line 674/867 hardcodes (corrected from v1's incorrect line 595 per code-verifier) |
 | `hrms/utils/supply_chain_contracts.py` | NOT S238 | UNCHANGED |
 | `hrms/utils/labor_allocation.py` | NOT S238 | UNCHANGED |
 | `docs/STORE_COMPANY_CANONICAL.md` | NOT S238 | UNCHANGED |
+| `data/_CONSOLIDATED/01_FINANCE/DECISIONS.md` ICT-008 row | NOT S238 | OUT OF SCOPE — separate doc fix to update `4000003` → `4000210` (flagged in closeout SUMMARY) |
 | `tabCustomer` | NOT S238 | UNCHANGED — no flag flips |
 | Existing `BEBANG KITCHEN INC. (Internal)` Supplier | NOT S238 | UNCHANGED |
 | Existing 839 historical BKI SIs | NOT S238 | UNCHANGED — no backfill |
@@ -674,34 +947,54 @@ git worktree remove F:/Dropbox/Projects/BEI-ERP-s238-ict003-pi-generator
 
 ---
 
-## Requirements Regression Checklist
+## Requirements Regression Checklist (v2)
 
 Executing agent MUST verify before each PR:
 
+**v1 baseline checks**
 - [ ] Canonical preflight ran clean BEFORE any code change (Phase 0)
 - [ ] `BEI Settings.bki_sales_income_account` exists (ICT-008 prerequisite verified at Phase 0)
 - [ ] 147 accounts seeded across 49 per-store Companies (3 × 49) with proper `account_type` / `root_type` / `report_type` / `parent_account` per per-store CoA
 - [ ] 1 NEW Supplier `BEBANG KITCHEN INC. - Trade` created with `is_internal_supplier=0` and `tax_id` populated
-- [ ] 49 Allowed To Transact With entries on the new Supplier
+- [ ] 49 `companies` child entries on the new Supplier (v2: lowercase fieldname per code standardization)
 - [ ] 1 Custom Field `bki_si_reference` on Purchase Invoice (Link → Sales Invoice, read-only)
-- [ ] 2 BEI Settings toggles installed (`enable_bki_store_pi_generator`, `auto_submit_store_pi`)
 - [ ] `hrms/api/bki_store_pi_generator.py` implements `maybe_generate_store_pi` with all MUST_CONTAIN strings
 - [ ] `hrms/hooks.py` has `Sales Invoice on_submit → maybe_generate_store_pi` entry
-- [ ] 5 unit tests in `test_s238_pi_generator.py` all pass
 - [ ] Sentry observability — `set_backend_observability_context` called with `module=billing`, `action=maybe_generate_store_pi`
-- [ ] ARANETA trial: SI submits, Draft PI auto-created with `supplier=BEBANG KITCHEN INC. - Trade`, `update_stock=1`, `bki_si_reference` populated
 - [ ] PI submit creates SLE on per-store warehouse + GL Entries with `party_type=Supplier, party=BEBANG KITCHEN INC. - Trade` (DM-1)
 - [ ] PI carries 12% Input VAT mirroring SI's Output VAT
-- [ ] 5-store regression: each generates Draft PI correctly
 - [ ] S206 labor JE flow STILL works (no resolver/Customer/Supplier collision)
 - [ ] Toggle off → no PI generated (kill switch works)
 - [ ] Idempotency: re-running generator on same SI → no duplicate PI
 - [ ] Canonical post-check `ALL CANONICAL` (zero new violations)
 - [ ] DM-1 / DM-2 / DM-3 / DM-4 / DM-5 / DM-6 — verified per checklist
 - [ ] No flips to `is_internal_customer/_supplier` anywhere
-- [ ] No modifications to `commissary.py:1137`, `billing.py:595`, `labor_allocation.py`, `supply_chain_contracts.py`, `STORE_COMPANY_CANONICAL.md`
+- [ ] No modifications to `commissary.py:1137`, `billing.py:674,867` (v2-corrected from v1's 595), `labor_allocation.py`, `supply_chain_contracts.py`, `STORE_COMPANY_CANONICAL.md`
 - [ ] Worktree closeout clean
 - [ ] Test SI + Draft PI cancelled; teardown ledger complete
+
+**v2 audit-fix checks (NEW — must all pass)**
+- [ ] **B1**: NO occurrence of `frappe.db.rollback_to_savepoint(` anywhere in `bki_store_pi_generator.py`. Use `frappe.db.sql("ROLLBACK TO SAVEPOINT ...")` exclusively (verify via `grep -c "rollback_to_savepoint" hrms/api/bki_store_pi_generator.py` → must be 0).
+- [ ] **B2**: `pi.set_warehouse` is set in `build_store_pi`. Verify via grep + ARANETA trial PI doc shows `set_warehouse` populated.
+- [ ] **B3**: `cascade_cancel_store_pi` exists; `Sales Invoice on_cancel → cascade_cancel_store_pi` registered in hooks.py; Test 6 passes (cancel cascade Draft delete + Submitted manual-review path).
+- [ ] **B4**: `resolve_account_by_number` uses exact-match on `account_number`; no `LIKE` patterns in account resolution.
+- [ ] **B5**: `before_state.json` has `per_store_coa_parent_groups` for all 49 stores; seed script uses dynamic `_find_parent_group()`; new accounts land under `Stock Assets - <ABBR>` (NOT `Stock in Hand`).
+- [ ] **B6**: Plan body references `4000210 - DELIVERIES - BKI` (production reality), not `4000003`. Closeout SUMMARY flags DECISIONS.md ICT-008 row as a follow-up data fix.
+- [ ] **B7**: `BEI Settings.bki_sales_naming_series` verified set in Phase 0 (HARD STOP if missing). Generator additionally guards on `naming_series` prefix match.
+- [ ] **B8**: PI has `set_posting_time=1, posting_time=si.posting_time`. `lock_posting_date_on_bki_paired_pi` validate hook prevents non-Administrator edits.
+- [ ] **B9**: `_mirror_taxes` filters to VAT only, skips EWT-deduct rows; `charge_type='Actual'`; tax_amount mirrored. Test 7 passes.
+- [ ] **B10**: PI items have `cost_center` mirrored from SI per line.
+- [ ] **B11**: `auto_submit_store_pi` toggle is NOT installed. `MUST_NOT_CONTAIN` check passes on `install_bei_settings_toggles.py`. Generator code has NO `pi.submit()` call.
+- [ ] W (G-046): PI also has `inter_company_invoice_reference = si.name`. G-046 dashboard at `procurement.py:4707` reflects S238 PIs.
+- [ ] W (has_field guard): generator returns early if `Purchase Invoice.bki_si_reference` Custom Field not installed.
+- [ ] W (S192/S203): PI has `bei_legal_entity` and `bei_store_label` mirrored from SI.
+- [ ] W (companies fieldname): code uses lowercase `companies`; "Allowed To Transact With" only in prose/labels.
+- [ ] W (deploy mode): PR description AND closeout note `skip_build=false, no_cache=true`.
+- [ ] W (post-merge smoke): 6-T6 executed; `output/s238/verification/post_merge_smoke.json` PASS.
+- [ ] W (drift-detection): `scripts/s238/check_si_pi_pairing.py` shipped.
+- [ ] W (839-SI follow-up): closeout SUMMARY surfaces ~6-7 figures Q1 Input VAT recovery as Sam-decision item.
+- [ ] W (trial on local-frappe only): Phase 4-T2 + 5-T3 do NOT touch production; "(or production)" stripped.
+- [ ] **8 unit tests** (was 5 in v1) all pass: includes Test 6 (on_cancel cascade), Test 7 (EWT filter), Test 8 (has_field guard).
 
 ---
 
