@@ -1,0 +1,67 @@
+{
+  "captured_at": "2026-05-08 PHT — post-S241 writes",
+  "ssm_command_ids": [
+    "13c29be9-2552-4bea-a27b-7eee9db3bcd9 (146 INSERT execution)",
+    "4df66c17-f754-4e78-a594-71643baa5d2f (Ñ hex verification + final ACK poll)"
+  ],
+  "master_csv": {
+    "rows_before": 749,
+    "rows_after": 794,
+    "delta": 45,
+    "max_bio_id_before": 9001934,
+    "max_bio_id_after": 9001979,
+    "new_bio_id_range": "9001935-9001979",
+    "rename_applied": "16 commissary rows renamed CAMANGYANAN BULACAN -> 3MD COMMISSARY (consistent with S240)",
+    "backup_at": "tmp/s241_new_hires/EMPLOYEE_MASTER_pre_s241_backup.csv"
+  },
+  "adms_device_cmd_inserts": {
+    "total_userinfo": 146,
+    "id_range_observed": "12025-12170 (approximate; 146 contiguous)",
+    "tab_byte_validation": "min=2, max=2 across all 146 (every command_text has exactly 2 tab bytes between PIN/Name/Pri)",
+    "utf8_validation": "Hex-dumped Ñ-containing names confirm c391 byte sequence stored correctly; SSM output stream display rendered as � (Windows console codepage), not actual data corruption",
+    "by_scope": {
+      "commissary-home": 16,
+      "head-office-3": 15,
+      "cluster-1": 5,
+      "cluster-2": 4,
+      "cluster-3": 5,
+      "cluster-4": 20,
+      "cluster-5": 10,
+      "cluster-6": 15,
+      "cluster-8": 25,
+      "cluster-9": 30,
+      "standalone-greenhills": 1
+    },
+    "ack_status_at_+60s": {
+      "ACKED": 141,
+      "PENDING": 5,
+      "ack_rate_percent": 96.6
+    },
+    "pending_devices": {
+      "UDP3251600215": "BF Homes — 3 PENDING (device offline at poll moment)",
+      "UDP3252100385": "Robinsons Gentri — 1 PENDING",
+      "UDP3252900251": "Greenhills — 1 PENDING"
+    },
+    "expected_resolution": "Auto-ACK on next device heartbeat (~60s polling interval)"
+  },
+  "change_log_appends": {
+    "rows_before": 798,
+    "rows_after": 888,
+    "delta": 90,
+    "breakdown": {
+      "EMPLOYEE_MASTER ADD": 45,
+      "ADMS ENROLL (one per employee summarizing all target SNs)": 45
+    }
+  },
+  "hr_handoff": {
+    "xlsx_path": "output/s241/hr_handoff/S241_New_Hires_Apr20_May9_2026-05-08.xlsx",
+    "tabs": ["S241 New Hires (Apr 20 - May 9)", "Summary"],
+    "purpose": "Mirror to BEI Employee Master Google Sheet (1iFDbvaOg0...) — HR action"
+  },
+  "sam_handoff": [
+    "Review and merge PR",
+    "Send XLSX to HR for Google Sheet mirror",
+    "Optionally re-poll ACK status in 5-10 minutes for the 5 offline devices",
+    "Notify stores/commissary that new hires can physically register fingerprints"
+  ]
+}
