@@ -1,0 +1,378 @@
+{
+  "sprint": "S238",
+  "phase": "0",
+  "task": "T0+T4 probe",
+  "timestamp_utc": "2026-05-09T09:27:51.543689Z",
+  "bki_sales_naming_series": "BKI-SI-.YYYY.-.#####",
+  "bki_sales_income_account": "4000210 - DELIVERIES - BKI",
+  "bki_sales_vat_template": "BKI Output VAT 12% Sales - BKI",
+  "bki_output_vat_account": "OUTPUT VAT PAYABLE - BKI",
+  "bki_default_incoterm": "Destination",
+  "bki_markup_jv_percent": 2.75,
+  "bki_markup_managed_franchise_percent": 8.0,
+  "bki_markup_full_franchise_percent": 8.0,
+  "bki_si_by_docstatus": {
+    "0": 49,
+    "1": 560,
+    "2": 230
+  },
+  "bki_si_total": 839,
+  "latest_bki_si_sample": [
+    {
+      "name": "ACC-SINV-2026-00903",
+      "naming_series": "ACC-SINV-.YYYY.-",
+      "posting_date": "2026-05-04",
+      "customer": "XENTROMALL MONTALBAN - PERPETUAL FOOD CORP.",
+      "grand_total": 1208.48,
+      "docstatus": 1
+    },
+    {
+      "name": "ACC-SINV-2026-00902",
+      "naming_series": "ACC-SINV-.YYYY.-",
+      "posting_date": "2026-05-04",
+      "customer": "VISTA MALL TAGUIG - TRICERN FOOD CORP.",
+      "grand_total": 1802.58,
+      "docstatus": 1
+    },
+    {
+      "name": "ACC-SINV-2026-00901",
+      "naming_series": "ACC-SINV-.YYYY.-",
+      "posting_date": "2026-05-04",
+      "customer": "UP TOWN MALL BGC - DMD HOLDINGS INC.",
+      "grand_total": 1663.31,
+      "docstatus": 1
+    },
+    {
+      "name": "ACC-SINV-2026-00900",
+      "naming_series": "ACC-SINV-.YYYY.-",
+      "posting_date": "2026-05-04",
+      "customer": "THE TERMINAL - BEBANG STARMALL ALABANG INC.",
+      "grand_total": 1715.0,
+      "docstatus": 1
+    },
+    {
+      "name": "ACC-SINV-2026-00899",
+      "naming_series": "ACC-SINV-.YYYY.-",
+      "posting_date": "2026-05-04",
+      "customer": "THE GRID ROCKWELL - TASTECARTEL CORP.",
+      "grand_total": 1802.58,
+      "docstatus": 1
+    }
+  ],
+  "existing_store_bki_pi_count": 0,
+  "bki_suppliers_existing": [
+    {
+      "name": "Bebang Kitchen Inc.",
+      "supplier_group": "All Supplier Groups",
+      "is_internal_supplier": 1,
+      "represents_company": "BEBANG KITCHEN INC."
+    }
+  ],
+  "existing_bki_supplier_count": 1,
+  "bki_trade_supplier_exists": false,
+  "custom_field_bki_si_reference_exists": false,
+  "custom_field_exists": false,
+  "toggle_field_exists": false,
+  "pi_has_field_bei_legal_entity": true,
+  "pi_has_field_bei_store_label": true,
+  "per_store_company_count": 49,
+  "per_store_coa_parent_groups": {
+    "ARANETA GATEWAY - TUNGSTEN CAPITAL HOLDINGS OPC": {
+      "abbr": "ARGW",
+      "stock_assets_parent": "Stock Assets - ARGW",
+      "ap_parent": "Accounts Payable - ARGW",
+      "current_assets_parent": "Current Assets - ARGW"
+    },
+    "AYALA EVO CITY - BEBANG MEGA INC.": {
+      "abbr": "AYEVO",
+      "stock_assets_parent": "Stock Assets - AYEVO",
+      "ap_parent": "Accounts Payable - AYEVO",
+      "current_assets_parent": "Current Assets - AYEVO"
+    },
+    "AYALA FAIRVIEW TERRACES - BEBANG FT INC.": {
+      "abbr": "AFT",
+      "stock_assets_parent": "Stock Assets - AFT",
+      "ap_parent": "Accounts Payable - AFT",
+      "current_assets_parent": "Current Assets - AFT"
+    },
+    "AYALA MARKET MARKET - BEBANG MARKET MARKET INC.": {
+      "abbr": "AMM",
+      "stock_assets_parent": "Stock Assets - AMM",
+      "ap_parent": "Accounts Payable - AMM",
+      "current_assets_parent": "Current Assets - AMM"
+    },
+    "AYALA SOLENAD - HFFM SOLENAD FOOD SERVICES INC.": {
+      "abbr": "AYSOL",
+      "stock_assets_parent": "Stock Assets - AYSOL",
+      "ap_parent": "Accounts Payable - AYSOL",
+      "current_assets_parent": "Current Assets - AYSOL"
+    },
+    "AYALA UP TOWN CENTER - BEBANG UP TOWN CENTER INC.": {
+      "abbr": "UPTC",
+      "stock_assets_parent": "Stock Assets - UPTC",
+      "ap_parent": "Accounts Payable - UPTC",
+      "current_assets_parent": "Current Assets - UPTC"
+    },
+    "AYALA VERMOSA - BEBANG MEGA INC.": {
+      "abbr": "AYVER",
+      "stock_assets_parent": "Stock Assets - AYVER",
+      "ap_parent": "Accounts Payable - AYVER",
+      "current_assets_parent": "Current Assets - AYVER"
+    },
+    "BF HOMES - BEBANG BF HOMES INC.": {
+      "abbr": "BFH",
+      "stock_assets_parent": "Stock Assets - BFH",
+      "ap_parent": "Accounts Payable - BFH",
+      "current_assets_parent": "Current Assets - BFH"
+    },
+    "CTTM TOMAS MORATO - B CUBED VENTURES CORP.": {
+      "abbr": "CTTM",
+      "stock_assets_parent": "Stock Assets - CTTM",
+      "ap_parent": "Accounts Payable - CTTM",
+      "current_assets_parent": "Current Assets - CTTM"
+    },
+    "D'VERDE CALAMBA - TAJ FOOD CORP.": {
+      "abbr": "DVCAL",
+      "stock_assets_parent": "Stock Assets - DVCAL",
+      "ap_parent": "Accounts Payable - DVCAL",
+      "current_assets_parent": "Current Assets - DVCAL"
+    },
+    "EVER COMMONWEALTH - DLS DESSERT CRAFT INC.": {
+      "abbr": "EGC",
+      "stock_assets_parent": "Stock Assets - EGC",
+      "ap_parent": "Accounts Payable - EGC",
+      "current_assets_parent": "Current Assets - EGC"
+    },
+    "FESTIVAL MALL ALABANG - BEBANG FESTIVAL INC.": {
+      "abbr": "FMA",
+      "stock_assets_parent": "Stock Assets - FMA",
+      "ap_parent": "Accounts Payable - FMA",
+      "current_assets_parent": "Current Assets - FMA"
+    },
+    "LUCKY CHINATOWN - BEBANG LCT INC.": {
+      "abbr": "LCT",
+      "stock_assets_parent": "Stock Assets - LCT",
+      "ap_parent": "Accounts Payable - LCT",
+      "current_assets_parent": "Current Assets - LCT"
+    },
+    "MEGAWIDE PITX - BEBANG PITX INC.": {
+      "abbr": "PTX",
+      "stock_assets_parent": "Stock Assets - PTX",
+      "ap_parent": "Accounts Payable - PTX",
+      "current_assets_parent": "Current Assets - PTX"
+    },
+    "MEGAWORLD PASEO CENTER - BEBANG PASEO INC.": {
+      "abbr": "MPD",
+      "stock_assets_parent": "Stock Assets - MPD",
+      "ap_parent": "Accounts Payable - MPD",
+      "current_assets_parent": "Current Assets - MPD"
+    },
+    "MEGAWORLD VENICE GRAND CANAL - BEBANG VENICE GRAND CANAL INC.": {
+      "abbr": "VGC",
+      "stock_assets_parent": "Stock Assets - VGC",
+      "ap_parent": "Accounts Payable - VGC",
+      "current_assets_parent": "Current Assets - VGC"
+    },
+    "NAIA T3 - HALO-HALO TERMINAL FOOD CORP.": {
+      "abbr": "NAIA",
+      "stock_assets_parent": "Stock Assets - NAIA",
+      "ap_parent": "Accounts Payable - NAIA",
+      "current_assets_parent": "Current Assets - NAIA"
+    },
+    "ORTIGAS ESTANCIA - BB ESTANCIA FOOD CORP.": {
+      "abbr": "ESM",
+      "stock_assets_parent": "Stock Assets - ESM",
+      "ap_parent": "Accounts Payable - ESM",
+      "current_assets_parent": "Current Assets - ESM"
+    },
+    "ORTIGAS GREENHILLS - BEIFRANCHISE FOOD OPC": {
+      "abbr": "GHO",
+      "stock_assets_parent": "Stock Assets - GHO",
+      "ap_parent": "Accounts Payable - GHO",
+      "current_assets_parent": "Current Assets - GHO"
+    },
+    "ROBINSONS ANTIPOLO - BEBANG ENTERPRISE INC.": {
+      "abbr": "ROA",
+      "stock_assets_parent": "Stock Assets - ROA",
+      "ap_parent": "Accounts Payable - ROA",
+      "current_assets_parent": "Current Assets - ROA"
+    },
+    "ROBINSONS GALLERIA SOUTH - TUNGSTEN CAPITAL HOLDINGS OPC": {
+      "abbr": "ROBGS",
+      "stock_assets_parent": "Stock Assets - ROBGS",
+      "ap_parent": "Accounts Payable - ROBGS",
+      "current_assets_parent": "Current Assets - ROBGS"
+    },
+    "ROBINSONS GENERAL TRIAS - BEBANG MEGA INC.": {
+      "abbr": "ROBGT",
+      "stock_assets_parent": "Stock Assets - ROBGT",
+      "ap_parent": "Accounts Payable - ROBGT",
+      "current_assets_parent": "Current Assets - ROBGT"
+    },
+    "ROBINSONS IMUS - BEBANG MEGA INC.": {
+      "abbr": "ROBIM",
+      "stock_assets_parent": "Stock Assets - ROBIM",
+      "ap_parent": "Accounts Payable - ROBIM",
+      "current_assets_parent": "Current Assets - ROBIM"
+    },
+    "ROBINSONS PLACE DASMARINAS - FREEZE DELIGHT INC.": {
+      "abbr": "ROBDA",
+      "stock_assets_parent": "Stock Assets - ROBDA",
+      "ap_parent": "2110000 - ACCOUNTS PAYABLE - ROBDA",
+      "current_assets_parent": "1100000 - CURRENT ASSETS - ROBDA"
+    },
+    "SM BICUTAN - BEBANG SM BICUTAN INC.": {
+      "abbr": "SMBIC",
+      "stock_assets_parent": "Stock Assets - SMBIC",
+      "ap_parent": "Accounts Payable - SMBIC",
+      "current_assets_parent": "Current Assets - SMBIC"
+    },
+    "SM CALOOCAN - TAJ FOOD CORP.": {
+      "abbr": "SMCAL",
+      "stock_assets_parent": "Stock Assets - SMCAL",
+      "ap_parent": "Accounts Payable - SMCAL",
+      "current_assets_parent": "Current Assets - SMCAL"
+    },
+    "SM CLARK - RED TALDAWA FOODS OPC": {
+      "abbr": "SMCLK",
+      "stock_assets_parent": "Stock Assets - SMCLK",
+      "ap_parent": "Accounts Payable - SMCLK",
+      "current_assets_parent": "Current Assets - SMCLK"
+    },
+    "SM EAST ORTIGAS - BEBANG SMEO INC.": {
+      "abbr": "SMEO",
+      "stock_assets_parent": "Stock Assets - SMEO",
+      "ap_parent": "Accounts Payable - SMEO",
+      "current_assets_parent": "Current Assets - SMEO"
+    },
+    "SM GRAND CENTRAL - BEBANG GRAND CENTRAL INC.": {
+      "abbr": "SMGC",
+      "stock_assets_parent": "Stock Assets - SMGC",
+      "ap_parent": "Accounts Payable - SMGC",
+      "current_assets_parent": "Current Assets - SMGC"
+    },
+    "SM MALL OF ASIA - BEBANG SMOA INC.": {
+      "abbr": "SMMOA",
+      "stock_assets_parent": "Stock Assets - SMMOA",
+      "ap_parent": "Accounts Payable - SMMOA",
+      "current_assets_parent": "Current Assets - SMMOA"
+    },
+    "SM MANILA - BEBANG ENTERPRISE INC.": {
+      "abbr": "SMM",
+      "stock_assets_parent": "Stock Assets - SMM",
+      "ap_parent": "Accounts Payable - SMM",
+      "current_assets_parent": "Current Assets - SMM"
+    },
+    "SM MARIKINA - BEBANG SM MARIKINA INC.": {
+      "abbr": "SMK",
+      "stock_assets_parent": "Stock Assets - SMK",
+      "ap_parent": "Accounts Payable - SMK",
+      "current_assets_parent": "Current Assets - SMK"
+    },
+    "SM MARILAO - BEBANG MARILAO INC.": {
+      "abbr": "SMMAR",
+      "stock_assets_parent": "Stock Assets - SMMAR",
+      "ap_parent": "Accounts Payable - SMMAR",
+      "current_assets_parent": "Current Assets - SMMAR"
+    },
+    "SM MEGAMALL - BEBANG ENTERPRISE INC.": {
+      "abbr": "SMMM",
+      "stock_assets_parent": "Stock Assets - SMMM",
+      "ap_parent": "Accounts Payable - SMMM",
+      "current_assets_parent": "Current Assets - SMMM"
+    },
+    "SM NORTH EDSA - BEBANG NORTH EDSA INC.": {
+      "abbr": "SMNE",
+      "stock_assets_parent": "Stock Assets - SMNE",
+      "ap_parent": "Accounts Payable - SMNE",
+      "current_assets_parent": "Current Assets - SMNE"
+    },
+    "SM PULILAN - BEBANG SMM INC.": {
+      "abbr": "SMPUL",
+      "stock_assets_parent": "Stock Assets - SMPUL",
+      "ap_parent": "Accounts Payable - SMPUL",
+      "current_assets_parent": "Current Assets - SMPUL"
+    },
+    "SM SAN JOSE DEL MONTE - JL TRADE OPC": {
+      "abbr": "SJDM",
+      "stock_assets_parent": "Stock Assets - SJDM",
+      "ap_parent": "Accounts Payable - SJDM",
+      "current_assets_parent": "Current Assets - SJDM"
+    },
+    "SM SANGANDAAN - TUNGSTEN CAPITAL HOLDINGS OPC": {
+      "abbr": "SMSDN",
+      "stock_assets_parent": "Stock Assets - SMSDN",
+      "ap_parent": "Accounts Payable - SMSDN",
+      "current_assets_parent": "Current Assets - SMSDN"
+    },
+    "SM SOUTHMALL - BEBANG ENTERPRISE INC.": {
+      "abbr": "SMS",
+      "stock_assets_parent": "Stock Assets - SMS",
+      "ap_parent": "Accounts Payable - SMS",
+      "current_assets_parent": "Current Assets - SMS"
+    },
+    "SM STA. ROSA - SWEET HARMONY FOOD CORP.": {
+      "abbr": "SMSTR",
+      "stock_assets_parent": "Stock Assets - SMSTR",
+      "ap_parent": "Accounts Payable - SMSTR",
+      "current_assets_parent": "Current Assets - SMSTR"
+    },
+    "SM TANZA - BEBANG MEGA INC.": {
+      "abbr": "SMTZ",
+      "stock_assets_parent": "Stock Assets - SMTZ",
+      "ap_parent": "Accounts Payable - SMTZ",
+      "current_assets_parent": "Current Assets - SMTZ"
+    },
+    "SM TAYTAY - DAY ONES FOOD AND DRINK ESTABLISHMENTS CORP.": {
+      "abbr": "SMTAY",
+      "stock_assets_parent": "Stock Assets - SMTAY",
+      "ap_parent": "Accounts Payable - SMTAY",
+      "current_assets_parent": "Current Assets - SMTAY"
+    },
+    "SM VALENZUELA - BEBANG SMV INC.": {
+      "abbr": "SMV",
+      "stock_assets_parent": "Stock Assets - SMV",
+      "ap_parent": "Accounts Payable - SMV",
+      "current_assets_parent": "Current Assets - SMV"
+    },
+    "STA. LUCIA EAST GRAND MALL - BEBANG SM MARIKINA INC.": {
+      "abbr": "SLGM",
+      "stock_assets_parent": "Stock Assets - SLGM",
+      "ap_parent": "Accounts Payable - SLGM",
+      "current_assets_parent": "Current Assets - SLGM"
+    },
+    "THE GRID ROCKWELL - TASTECARTEL CORP.": {
+      "abbr": "TGR",
+      "stock_assets_parent": "Stock Assets - TGR",
+      "ap_parent": "Accounts Payable - TGR",
+      "current_assets_parent": "Current Assets - TGR"
+    },
+    "THE TERMINAL - BEBANG STARMALL ALABANG INC.": {
+      "abbr": "TTA",
+      "stock_assets_parent": "Stock Assets - TTA",
+      "ap_parent": "Accounts Payable - TTA",
+      "current_assets_parent": "Current Assets - TTA"
+    },
+    "UP TOWN MALL BGC - DMD HOLDINGS INC.": {
+      "abbr": "UMBGC",
+      "stock_assets_parent": "Stock Assets - UMBGC",
+      "ap_parent": "Accounts Payable - UMBGC",
+      "current_assets_parent": "Current Assets - UMBGC"
+    },
+    "VISTA MALL TAGUIG - TRICERN FOOD CORP.": {
+      "abbr": "VMTAG",
+      "stock_assets_parent": "Stock Assets - VMTAG",
+      "ap_parent": "Accounts Payable - VMTAG",
+      "current_assets_parent": "Current Assets - VMTAG"
+    },
+    "XENTROMALL MONTALBAN - PERPETUAL FOOD CORP.": {
+      "abbr": "XMM",
+      "stock_assets_parent": "Stock Assets - XMM",
+      "ap_parent": "2110000 - ACCOUNTS PAYABLE - XMM",
+      "current_assets_parent": "1100000 - CURRENT ASSETS - XMM"
+    }
+  },
+  "coa_survey_complete_count": 49,
+  "p10_d04_server_script_exists": false,
+  "status": "OK"
+}
