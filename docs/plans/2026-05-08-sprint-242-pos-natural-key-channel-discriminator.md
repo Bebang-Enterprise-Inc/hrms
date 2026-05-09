@@ -3,11 +3,21 @@ sprint: S242
 title: pos_orders Natural-Key Channel Discriminator (parallel-bill schema fix)
 filename: 2026-05-08-sprint-242-pos-natural-key-channel-discriminator.md
 branch: s242-pos-natural-key-channel-discriminator
-status: PLANNED_AUDITED_v1.1
+status: COMPLETED
 version: 1.1
 audit_log:
   - 2026-05-08 v1.0 PLANNED initial draft
   - 2026-05-08 v1.1 PLANNED_AUDITED — 4 CRITICAL + 6 WARNING blockers identified by /audit-plan-bei-erp; amendments applied inline
+  - 2026-05-09 EXECUTED autonomously — 74 rows / PHP 30,964.58 restored across 70 store-days; Paseo bill 39966 matches XLSX to the centavo; 11/12 MATCH on 12-store-day audit (1 expected mismatch by design); 0 Sentry errors; PR pending Sam merge
+completed_date: 2026-05-09
+execution_summary: |
+  Migration ran in <30s as a single transaction. 74 channel-distinct
+  tombstones restored to live (PHP 30,964.58); 307 same-channel
+  tombstones preserved (true Mosaic-returned-twice duplicates).
+  Idempotency verified (re-run produces 0 additional changes).
+  Both polling sync and mosaic_webhook now share hrms/utils/pos_order_reconciliation.py.
+  Cron pause window: ~8 minutes; 0 webhook 23505 errors observed.
+  Paseo 4/21 dashboard moved from PHP 121,494 to PHP 121,722 = matches XLSX.
 created: 2026-05-08
 owner: CEO (single-owner)
 canonical_scope: none

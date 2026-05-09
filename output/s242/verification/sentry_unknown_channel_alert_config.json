@@ -1,0 +1,64 @@
+{
+  "_doc": "S242 Phase 6.3 — Sentry alert configuration for channel='Unknown' arrivals on pos_orders",
+  "alert_rule_id": "TBD-pending-sam-manual-create",
+  "alert_rule_status": "DESIGNED — needs creation via Sentry web UI or API",
+  "rationale": "Post-S242 the partial unique index keys on (loc, date, bill, channel). If mosaic_webhook.py ingests an order with channel='Unknown' (the fallback when service_type_id is NULL), it would coexist with all other channel-named rows for the same bill — potentially obscuring real reconciliation failures. Pre-S232 audit confirmed channel='Unknown' currently appears in 0% of pos_orders rows; any post-deploy spike means a webhook payload is missing service_type_id, which is itself a Mosaic API regression worth investigating.",
+  "spec": {
+    "org": "bebang-enterprise-inc",
+    "project": "bei-hrms",
+    "alert_type": "metric_alert",
+    "name": "S242 — channel='Unknown' arrivals on pos_orders",
+    "dataset": "events_or_metric",
+    "trigger_query": "FROM pos_orders WHERE channel = 'Unknown' AND created_at >= now() - interval '24 hours' GROUP BY 1",
+    "implementation_options": [
+      {
+        "option": "Sentry custom metric via SDK",
+        "where": "Add `metrics.incr('pos_orders.unknown_channel')` in mosaic_webhook.py after _resolve_channel returns 'Unknown'. Then create Sentry metric alert with threshold > 5 in 24h.",
+        "snippet": "import sentry_sdk\nif order_row.get('channel') == 'Unknown':\n    sentry_sdk.metrics.incr('pos_orders.unknown_channel', tags={'location_id': str(order_row.get('location_id'))})"
+      },
+      {
+        "option": "Supabase scheduled query + Sentry webhook",
+        "where": "Create a Supabase scheduled function that runs every 1h: SELECT COUNT(*) FROM pos_orders WHERE channel = 'Unknown' AND created_at >= now() - interval '24 hours'. POST to a Sentry webhook DSN if count > 5.",
+        "snippet": null
+      },
+      {
+        "option": "External monitor (Blip Sentinel)",
+        "where": "Add a probe to Blip Sentinel that pings the same SQL count endpoint and routes to Google Chat on threshold breach.",
+        "snippet": null
+      }
+    ],
+    "thresholds": {
+      "critical": {
+        "value": 5,
+        "interval_seconds": 86400,
+        "comparison_type": "above"
+      }
+    },
+    "actions_to_trigger": [
+      {
+        "type": "email",
+        "target": "sam@bebang.ph"
+      },
+      {
+        "type": "google_chat",
+        "space": "spaces/AAQABiNmpBg",
+        "_note": "same space as POS sync failure alerts (workflow-level)"
+      }
+    ]
+  },
+  "manual_create_steps": [
+    "1. Open https://bebang-enterprise-inc.sentry.io/alerts/rules/bei-hrms/new/",
+    "2. Pick alert type: 'Metric Alert' if using SDK metric, 'Issue Alert' if using log-based count",
+    "3. Set name: 'S242 — channel=Unknown arrivals on pos_orders'",
+    "4. Trigger: described in spec.thresholds above",
+    "5. Actions: email sam@bebang.ph + Google Chat to spaces/AAQABiNmpBg",
+    "6. Set environment: production",
+    "7. Save and copy the alert rule URL — paste into this JSON's alert_rule_id field",
+    "8. Test by manually triggering a webhook with channel=Unknown payload (SQL: UPDATE pos_orders SET channel='Unknown' WHERE id=<test-id>; rollback after) — verify alert fires and recover."
+  ],
+  "current_baseline_post_migration": {
+    "captured_at": "2026-05-09T14:55:00+08:00",
+    "channel_unknown_count_in_pos_orders": 0,
+    "_note": "Verified via SELECT COUNT(*) FROM pos_orders WHERE channel = 'Unknown' — should stay at 0 for healthy ingestion."
+  }
+}
