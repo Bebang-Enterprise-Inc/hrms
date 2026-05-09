@@ -1,0 +1,1138 @@
+{
+  "mode": "apply",
+  "timestamp_utc": "2026-05-09T09:32:01.924107Z",
+  "stores": {
+    "ARANETA GATEWAY - TUNGSTEN CAPITAL HOLDINGS OPC": {
+      "company": "ARANETA GATEWAY - TUNGSTEN CAPITAL HOLDINGS OPC",
+      "result": [
+        {
+          "account_number": "1104210",
+          "name": "1104210 - 1104210 - Inventory-from-Commissary - ARGW",
+          "parent_account": "Stock Assets - ARGW",
+          "status": "created"
+        },
+        {
+          "account_number": "1106210",
+          "name": "1106210 - 1106210 - Input VAT - BKI Inter-Co - ARGW",
+          "parent_account": "Current Assets - ARGW",
+          "status": "created"
+        },
+        {
+          "account_number": "2103210",
+          "name": "2103210 - 2103210 - AP-Trade-BKI - ARGW",
+          "parent_account": "Accounts Payable - ARGW",
+          "status": "created"
+        }
+      ]
+    },
+    "AYALA EVO CITY - BEBANG MEGA INC.": {
+      "company": "AYALA EVO CITY - BEBANG MEGA INC.",
+      "result": [
+        {
+          "account_number": "1104210",
+          "name": "1104210 - 1104210 - Inventory-from-Commissary - AYEVO",
+          "parent_account": "Stock Assets - AYEVO",
+          "status": "created"
+        },
+        {
+          "account_number": "1106210",
+          "name": "1106210 - 1106210 - Input VAT - BKI Inter-Co - AYEVO",
+          "parent_account": "Current Assets - AYEVO",
+          "status": "created"
+        },
+        {
+          "account_number": "2103210",
+          "name": "2103210 - 2103210 - AP-Trade-BKI - AYEVO",
+          "parent_account": "Accounts Payable - AYEVO",
+          "status": "created"
+        }
+      ]
+    },
+    "AYALA FAIRVIEW TERRACES - BEBANG FT INC.": {
+      "company": "AYALA FAIRVIEW TERRACES - BEBANG FT INC.",
+      "result": [
+        {
+          "account_number": "1104210",
+          "name": "1104210 - 1104210 - Inventory-from-Commissary - AFT",
+          "parent_account": "Stock Assets - AFT",
+          "status": "created"
+        },
+        {
+          "account_number": "1106210",
+          "name": "1106210 - 1106210 - Input VAT - BKI Inter-Co - AFT",
+          "parent_account": "Current Assets - AFT",
+          "status": "created"
+        },
+        {
+          "account_number": "2103210",
+          "name": "2103210 - 2103210 - AP-Trade-BKI - AFT",
+          "parent_account": "Accounts Payable - AFT",
+          "status": "created"
+        }
+      ]
+    },
+    "AYALA MARKET MARKET - BEBANG MARKET MARKET INC.": {
+      "company": "AYALA MARKET MARKET - BEBANG MARKET MARKET INC.",
+      "result": [
+        {
+          "account_number": "1104210",
+          "name": "1104210 - 1104210 - Inventory-from-Commissary - AMM",
+          "parent_account": "Stock Assets - AMM",
+          "status": "created"
+        },
+        {
+          "account_number": "1106210",
+          "name": "1106210 - 1106210 - Input VAT - BKI Inter-Co - AMM",
+          "parent_account": "Current Assets - AMM",
+          "status": "created"
+        },
+        {
+          "account_number": "2103210",
+          "name": "2103210 - 2103210 - AP-Trade-BKI - AMM",
+          "parent_account": "Accounts Payable - AMM",
+          "status": "created"
+        }
+      ]
+    },
+    "AYALA SOLENAD - HFFM SOLENAD FOOD SERVICES INC.": {
+      "company": "AYALA SOLENAD - HFFM SOLENAD FOOD SERVICES INC.",
+      "result": [
+        {
+          "account_number": "1104210",
+          "name": "1104210 - 1104210 - Inventory-from-Commissary - AYSOL",
+          "parent_account": "Stock Assets - AYSOL",
+          "status": "created"
+        },
+        {
+          "account_number": "1106210",
+          "name": "1106210 - 1106210 - Input VAT - BKI Inter-Co - AYSOL",
+          "parent_account": "Current Assets - AYSOL",
+          "status": "created"
+        },
+        {
+          "account_number": "2103210",
+          "name": "2103210 - 2103210 - AP-Trade-BKI - AYSOL",
+          "parent_account": "Accounts Payable - AYSOL",
+          "status": "created"
+        }
+      ]
+    },
+    "AYALA UP TOWN CENTER - BEBANG UP TOWN CENTER INC.": {
+      "company": "AYALA UP TOWN CENTER - BEBANG UP TOWN CENTER INC.",
+      "result": [
+        {
+          "account_number": "1104210",
+          "name": "1104210 - 1104210 - Inventory-from-Commissary - UPTC",
+          "parent_account": "Stock Assets - UPTC",
+          "status": "created"
+        },
+        {
+          "account_number": "1106210",
+          "name": "1106210 - 1106210 - Input VAT - BKI Inter-Co - UPTC",
+          "parent_account": "Current Assets - UPTC",
+          "status": "created"
+        },
+        {
+          "account_number": "2103210",
+          "name": "2103210 - 2103210 - AP-Trade-BKI - UPTC",
+          "parent_account": "Accounts Payable - UPTC",
+          "status": "created"
+        }
+      ]
+    },
+    "AYALA VERMOSA - BEBANG MEGA INC.": {
+      "company": "AYALA VERMOSA - BEBANG MEGA INC.",
+      "result": [
+        {
+          "account_number": "1104210",
+          "name": "1104210 - 1104210 - Inventory-from-Commissary - AYVER",
+          "parent_account": "Stock Assets - AYVER",
+          "status": "created"
+        },
+        {
+          "account_number": "1106210",
+          "name": "1106210 - 1106210 - Input VAT - BKI Inter-Co - AYVER",
+          "parent_account": "Current Assets - AYVER",
+          "status": "created"
+        },
+        {
+          "account_number": "2103210",
+          "name": "2103210 - 2103210 - AP-Trade-BKI - AYVER",
+          "parent_account": "Accounts Payable - AYVER",
+          "status": "created"
+        }
+      ]
+    },
+    "BF HOMES - BEBANG BF HOMES INC.": {
+      "company": "BF HOMES - BEBANG BF HOMES INC.",
+      "result": [
+        {
+          "account_number": "1104210",
+          "name": "1104210 - 1104210 - Inventory-from-Commissary - BFH",
+          "parent_account": "Stock Assets - BFH",
+          "status": "created"
+        },
+        {
+          "account_number": "1106210",
+          "name": "1106210 - 1106210 - Input VAT - BKI Inter-Co - BFH",
+          "parent_account": "Current Assets - BFH",
+          "status": "created"
+        },
+        {
+          "account_number": "2103210",
+          "name": "2103210 - 2103210 - AP-Trade-BKI - BFH",
+          "parent_account": "Accounts Payable - BFH",
+          "status": "created"
+        }
+      ]
+    },
+    "CTTM TOMAS MORATO - B CUBED VENTURES CORP.": {
+      "company": "CTTM TOMAS MORATO - B CUBED VENTURES CORP.",
+      "result": [
+        {
+          "account_number": "1104210",
+          "name": "1104210 - 1104210 - Inventory-from-Commissary - CTTM",
+          "parent_account": "Stock Assets - CTTM",
+          "status": "created"
+        },
+        {
+          "account_number": "1106210",
+          "name": "1106210 - 1106210 - Input VAT - BKI Inter-Co - CTTM",
+          "parent_account": "Current Assets - CTTM",
+          "status": "created"
+        },
+        {
+          "account_number": "2103210",
+          "name": "2103210 - 2103210 - AP-Trade-BKI - CTTM",
+          "parent_account": "Accounts Payable - CTTM",
+          "status": "created"
+        }
+      ]
+    },
+    "D'VERDE CALAMBA - TAJ FOOD CORP.": {
+      "company": "D'VERDE CALAMBA - TAJ FOOD CORP.",
+      "result": [
+        {
+          "account_number": "1104210",
+          "name": "1104210 - 1104210 - Inventory-from-Commissary - DVCAL",
+          "parent_account": "Stock Assets - DVCAL",
+          "status": "created"
+        },
+        {
+          "account_number": "1106210",
+          "name": "1106210 - 1106210 - Input VAT - BKI Inter-Co - DVCAL",
+          "parent_account": "Current Assets - DVCAL",
+          "status": "created"
+        },
+        {
+          "account_number": "2103210",
+          "name": "2103210 - 2103210 - AP-Trade-BKI - DVCAL",
+          "parent_account": "Accounts Payable - DVCAL",
+          "status": "created"
+        }
+      ]
+    },
+    "EVER COMMONWEALTH - DLS DESSERT CRAFT INC.": {
+      "company": "EVER COMMONWEALTH - DLS DESSERT CRAFT INC.",
+      "result": [
+        {
+          "account_number": "1104210",
+          "name": "1104210 - 1104210 - Inventory-from-Commissary - EGC",
+          "parent_account": "Stock Assets - EGC",
+          "status": "created"
+        },
+        {
+          "account_number": "1106210",
+          "name": "1106210 - 1106210 - Input VAT - BKI Inter-Co - EGC",
+          "parent_account": "Current Assets - EGC",
+          "status": "created"
+        },
+        {
+          "account_number": "2103210",
+          "name": "2103210 - 2103210 - AP-Trade-BKI - EGC",
+          "parent_account": "Accounts Payable - EGC",
+          "status": "created"
+        }
+      ]
+    },
+    "FESTIVAL MALL ALABANG - BEBANG FESTIVAL INC.": {
+      "company": "FESTIVAL MALL ALABANG - BEBANG FESTIVAL INC.",
+      "result": [
+        {
+          "account_number": "1104210",
+          "name": "1104210 - 1104210 - Inventory-from-Commissary - FMA",
+          "parent_account": "Stock Assets - FMA",
+          "status": "created"
+        },
+        {
+          "account_number": "1106210",
+          "name": "1106210 - 1106210 - Input VAT - BKI Inter-Co - FMA",
+          "parent_account": "Current Assets - FMA",
+          "status": "created"
+        },
+        {
+          "account_number": "2103210",
+          "name": "2103210 - 2103210 - AP-Trade-BKI - FMA",
+          "parent_account": "Accounts Payable - FMA",
+          "status": "created"
+        }
+      ]
+    },
+    "LUCKY CHINATOWN - BEBANG LCT INC.": {
+      "company": "LUCKY CHINATOWN - BEBANG LCT INC.",
+      "result": [
+        {
+          "account_number": "1104210",
+          "name": "1104210 - 1104210 - Inventory-from-Commissary - LCT",
+          "parent_account": "Stock Assets - LCT",
+          "status": "created"
+        },
+        {
+          "account_number": "1106210",
+          "name": "1106210 - 1106210 - Input VAT - BKI Inter-Co - LCT",
+          "parent_account": "Current Assets - LCT",
+          "status": "created"
+        },
+        {
+          "account_number": "2103210",
+          "name": "2103210 - 2103210 - AP-Trade-BKI - LCT",
+          "parent_account": "Accounts Payable - LCT",
+          "status": "created"
+        }
+      ]
+    },
+    "MEGAWIDE PITX - BEBANG PITX INC.": {
+      "company": "MEGAWIDE PITX - BEBANG PITX INC.",
+      "result": [
+        {
+          "account_number": "1104210",
+          "name": "1104210 - 1104210 - Inventory-from-Commissary - PTX",
+          "parent_account": "Stock Assets - PTX",
+          "status": "created"
+        },
+        {
+          "account_number": "1106210",
+          "name": "1106210 - 1106210 - Input VAT - BKI Inter-Co - PTX",
+          "parent_account": "Current Assets - PTX",
+          "status": "created"
+        },
+        {
+          "account_number": "2103210",
+          "name": "2103210 - 2103210 - AP-Trade-BKI - PTX",
+          "parent_account": "Accounts Payable - PTX",
+          "status": "created"
+        }
+      ]
+    },
+    "MEGAWORLD PASEO CENTER - BEBANG PASEO INC.": {
+      "company": "MEGAWORLD PASEO CENTER - BEBANG PASEO INC.",
+      "result": [
+        {
+          "account_number": "1104210",
+          "name": "1104210 - 1104210 - Inventory-from-Commissary - MPD",
+          "parent_account": "Stock Assets - MPD",
+          "status": "created"
+        },
+        {
+          "account_number": "1106210",
+          "name": "1106210 - 1106210 - Input VAT - BKI Inter-Co - MPD",
+          "parent_account": "Current Assets - MPD",
+          "status": "created"
+        },
+        {
+          "account_number": "2103210",
+          "name": "2103210 - 2103210 - AP-Trade-BKI - MPD",
+          "parent_account": "Accounts Payable - MPD",
+          "status": "created"
+        }
+      ]
+    },
+    "MEGAWORLD VENICE GRAND CANAL - BEBANG VENICE GRAND CANAL INC.": {
+      "company": "MEGAWORLD VENICE GRAND CANAL - BEBANG VENICE GRAND CANAL INC.",
+      "result": [
+        {
+          "account_number": "1104210",
+          "name": "1104210 - 1104210 - Inventory-from-Commissary - VGC",
+          "parent_account": "Stock Assets - VGC",
+          "status": "created"
+        },
+        {
+          "account_number": "1106210",
+          "name": "1106210 - 1106210 - Input VAT - BKI Inter-Co - VGC",
+          "parent_account": "Current Assets - VGC",
+          "status": "created"
+        },
+        {
+          "account_number": "2103210",
+          "name": "2103210 - 2103210 - AP-Trade-BKI - VGC",
+          "parent_account": "Accounts Payable - VGC",
+          "status": "created"
+        }
+      ]
+    },
+    "NAIA T3 - HALO-HALO TERMINAL FOOD CORP.": {
+      "company": "NAIA T3 - HALO-HALO TERMINAL FOOD CORP.",
+      "result": [
+        {
+          "account_number": "1104210",
+          "name": "1104210 - 1104210 - Inventory-from-Commissary - NAIA",
+          "parent_account": "Stock Assets - NAIA",
+          "status": "created"
+        },
+        {
+          "account_number": "1106210",
+          "name": "1106210 - 1106210 - Input VAT - BKI Inter-Co - NAIA",
+          "parent_account": "Current Assets - NAIA",
+          "status": "created"
+        },
+        {
+          "account_number": "2103210",
+          "name": "2103210 - 2103210 - AP-Trade-BKI - NAIA",
+          "parent_account": "Accounts Payable - NAIA",
+          "status": "created"
+        }
+      ]
+    },
+    "ORTIGAS ESTANCIA - BB ESTANCIA FOOD CORP.": {
+      "company": "ORTIGAS ESTANCIA - BB ESTANCIA FOOD CORP.",
+      "result": [
+        {
+          "account_number": "1104210",
+          "name": "1104210 - 1104210 - Inventory-from-Commissary - ESM",
+          "parent_account": "Stock Assets - ESM",
+          "status": "created"
+        },
+        {
+          "account_number": "1106210",
+          "name": "1106210 - 1106210 - Input VAT - BKI Inter-Co - ESM",
+          "parent_account": "Current Assets - ESM",
+          "status": "created"
+        },
+        {
+          "account_number": "2103210",
+          "name": "2103210 - 2103210 - AP-Trade-BKI - ESM",
+          "parent_account": "Accounts Payable - ESM",
+          "status": "created"
+        }
+      ]
+    },
+    "ORTIGAS GREENHILLS - BEIFRANCHISE FOOD OPC": {
+      "company": "ORTIGAS GREENHILLS - BEIFRANCHISE FOOD OPC",
+      "result": [
+        {
+          "account_number": "1104210",
+          "name": "1104210 - 1104210 - Inventory-from-Commissary - GHO",
+          "parent_account": "Stock Assets - GHO",
+          "status": "created"
+        },
+        {
+          "account_number": "1106210",
+          "name": "1106210 - 1106210 - Input VAT - BKI Inter-Co - GHO",
+          "parent_account": "Current Assets - GHO",
+          "status": "created"
+        },
+        {
+          "account_number": "2103210",
+          "name": "2103210 - 2103210 - AP-Trade-BKI - GHO",
+          "parent_account": "Accounts Payable - GHO",
+          "status": "created"
+        }
+      ]
+    },
+    "ROBINSONS ANTIPOLO - BEBANG ENTERPRISE INC.": {
+      "company": "ROBINSONS ANTIPOLO - BEBANG ENTERPRISE INC.",
+      "result": [
+        {
+          "account_number": "1104210",
+          "name": "1104210 - 1104210 - Inventory-from-Commissary - ROA",
+          "parent_account": "Stock Assets - ROA",
+          "status": "created"
+        },
+        {
+          "account_number": "1106210",
+          "name": "1106210 - 1106210 - Input VAT - BKI Inter-Co - ROA",
+          "parent_account": "Current Assets - ROA",
+          "status": "created"
+        },
+        {
+          "account_number": "2103210",
+          "name": "2103210 - 2103210 - AP-Trade-BKI - ROA",
+          "parent_account": "Accounts Payable - ROA",
+          "status": "created"
+        }
+      ]
+    },
+    "ROBINSONS GALLERIA SOUTH - TUNGSTEN CAPITAL HOLDINGS OPC": {
+      "company": "ROBINSONS GALLERIA SOUTH - TUNGSTEN CAPITAL HOLDINGS OPC",
+      "result": [
+        {
+          "account_number": "1104210",
+          "name": "1104210 - 1104210 - Inventory-from-Commissary - ROBGS",
+          "parent_account": "Stock Assets - ROBGS",
+          "status": "created"
+        },
+        {
+          "account_number": "1106210",
+          "name": "1106210 - 1106210 - Input VAT - BKI Inter-Co - ROBGS",
+          "parent_account": "Current Assets - ROBGS",
+          "status": "created"
+        },
+        {
+          "account_number": "2103210",
+          "name": "2103210 - 2103210 - AP-Trade-BKI - ROBGS",
+          "parent_account": "Accounts Payable - ROBGS",
+          "status": "created"
+        }
+      ]
+    },
+    "ROBINSONS GENERAL TRIAS - BEBANG MEGA INC.": {
+      "company": "ROBINSONS GENERAL TRIAS - BEBANG MEGA INC.",
+      "result": [
+        {
+          "account_number": "1104210",
+          "name": "1104210 - 1104210 - Inventory-from-Commissary - ROBGT",
+          "parent_account": "Stock Assets - ROBGT",
+          "status": "created"
+        },
+        {
+          "account_number": "1106210",
+          "name": "1106210 - 1106210 - Input VAT - BKI Inter-Co - ROBGT",
+          "parent_account": "Current Assets - ROBGT",
+          "status": "created"
+        },
+        {
+          "account_number": "2103210",
+          "name": "2103210 - 2103210 - AP-Trade-BKI - ROBGT",
+          "parent_account": "Accounts Payable - ROBGT",
+          "status": "created"
+        }
+      ]
+    },
+    "ROBINSONS IMUS - BEBANG MEGA INC.": {
+      "company": "ROBINSONS IMUS - BEBANG MEGA INC.",
+      "result": [
+        {
+          "account_number": "1104210",
+          "name": "1104210 - 1104210 - Inventory-from-Commissary - ROBIM",
+          "parent_account": "Stock Assets - ROBIM",
+          "status": "created"
+        },
+        {
+          "account_number": "1106210",
+          "name": "1106210 - 1106210 - Input VAT - BKI Inter-Co - ROBIM",
+          "parent_account": "Current Assets - ROBIM",
+          "status": "created"
+        },
+        {
+          "account_number": "2103210",
+          "name": "2103210 - 2103210 - AP-Trade-BKI - ROBIM",
+          "parent_account": "Accounts Payable - ROBIM",
+          "status": "created"
+        }
+      ]
+    },
+    "ROBINSONS PLACE DASMARINAS - FREEZE DELIGHT INC.": {
+      "company": "ROBINSONS PLACE DASMARINAS - FREEZE DELIGHT INC.",
+      "result": [
+        {
+          "account_number": "1104210",
+          "name": "1104210 - 1104210 - Inventory-from-Commissary - ROBDA",
+          "parent_account": "Stock Assets - ROBDA",
+          "status": "created"
+        },
+        {
+          "account_number": "1106210",
+          "name": "1106210 - 1106210 - Input VAT - BKI Inter-Co - ROBDA",
+          "parent_account": "1100000 - CURRENT ASSETS - ROBDA",
+          "status": "created"
+        },
+        {
+          "account_number": "2103210",
+          "name": "2103210 - 2103210 - AP-Trade-BKI - ROBDA",
+          "parent_account": "2110000 - ACCOUNTS PAYABLE - ROBDA",
+          "status": "created"
+        }
+      ]
+    },
+    "SM BICUTAN - BEBANG SM BICUTAN INC.": {
+      "company": "SM BICUTAN - BEBANG SM BICUTAN INC.",
+      "result": [
+        {
+          "account_number": "1104210",
+          "name": "1104210 - 1104210 - Inventory-from-Commissary - SMBIC",
+          "parent_account": "Stock Assets - SMBIC",
+          "status": "created"
+        },
+        {
+          "account_number": "1106210",
+          "name": "1106210 - 1106210 - Input VAT - BKI Inter-Co - SMBIC",
+          "parent_account": "Current Assets - SMBIC",
+          "status": "created"
+        },
+        {
+          "account_number": "2103210",
+          "name": "2103210 - 2103210 - AP-Trade-BKI - SMBIC",
+          "parent_account": "Accounts Payable - SMBIC",
+          "status": "created"
+        }
+      ]
+    },
+    "SM CALOOCAN - TAJ FOOD CORP.": {
+      "company": "SM CALOOCAN - TAJ FOOD CORP.",
+      "result": [
+        {
+          "account_number": "1104210",
+          "name": "1104210 - 1104210 - Inventory-from-Commissary - SMCAL",
+          "parent_account": "Stock Assets - SMCAL",
+          "status": "created"
+        },
+        {
+          "account_number": "1106210",
+          "name": "1106210 - 1106210 - Input VAT - BKI Inter-Co - SMCAL",
+          "parent_account": "Current Assets - SMCAL",
+          "status": "created"
+        },
+        {
+          "account_number": "2103210",
+          "name": "2103210 - 2103210 - AP-Trade-BKI - SMCAL",
+          "parent_account": "Accounts Payable - SMCAL",
+          "status": "created"
+        }
+      ]
+    },
+    "SM CLARK - RED TALDAWA FOODS OPC": {
+      "company": "SM CLARK - RED TALDAWA FOODS OPC",
+      "result": [
+        {
+          "account_number": "1104210",
+          "name": "1104210 - 1104210 - Inventory-from-Commissary - SMCLK",
+          "parent_account": "Stock Assets - SMCLK",
+          "status": "created"
+        },
+        {
+          "account_number": "1106210",
+          "name": "1106210 - 1106210 - Input VAT - BKI Inter-Co - SMCLK",
+          "parent_account": "Current Assets - SMCLK",
+          "status": "created"
+        },
+        {
+          "account_number": "2103210",
+          "name": "2103210 - 2103210 - AP-Trade-BKI - SMCLK",
+          "parent_account": "Accounts Payable - SMCLK",
+          "status": "created"
+        }
+      ]
+    },
+    "SM EAST ORTIGAS - BEBANG SMEO INC.": {
+      "company": "SM EAST ORTIGAS - BEBANG SMEO INC.",
+      "result": [
+        {
+          "account_number": "1104210",
+          "name": "1104210 - 1104210 - Inventory-from-Commissary - SMEO",
+          "parent_account": "Stock Assets - SMEO",
+          "status": "created"
+        },
+        {
+          "account_number": "1106210",
+          "name": "1106210 - 1106210 - Input VAT - BKI Inter-Co - SMEO",
+          "parent_account": "Current Assets - SMEO",
+          "status": "created"
+        },
+        {
+          "account_number": "2103210",
+          "name": "2103210 - 2103210 - AP-Trade-BKI - SMEO",
+          "parent_account": "Accounts Payable - SMEO",
+          "status": "created"
+        }
+      ]
+    },
+    "SM GRAND CENTRAL - BEBANG GRAND CENTRAL INC.": {
+      "company": "SM GRAND CENTRAL - BEBANG GRAND CENTRAL INC.",
+      "result": [
+        {
+          "account_number": "1104210",
+          "name": "1104210 - 1104210 - Inventory-from-Commissary - SMGC",
+          "parent_account": "Stock Assets - SMGC",
+          "status": "created"
+        },
+        {
+          "account_number": "1106210",
+          "name": "1106210 - 1106210 - Input VAT - BKI Inter-Co - SMGC",
+          "parent_account": "Current Assets - SMGC",
+          "status": "created"
+        },
+        {
+          "account_number": "2103210",
+          "name": "2103210 - 2103210 - AP-Trade-BKI - SMGC",
+          "parent_account": "Accounts Payable - SMGC",
+          "status": "created"
+        }
+      ]
+    },
+    "SM MALL OF ASIA - BEBANG SMOA INC.": {
+      "company": "SM MALL OF ASIA - BEBANG SMOA INC.",
+      "result": [
+        {
+          "account_number": "1104210",
+          "name": "1104210 - 1104210 - Inventory-from-Commissary - SMMOA",
+          "parent_account": "Stock Assets - SMMOA",
+          "status": "created"
+        },
+        {
+          "account_number": "1106210",
+          "name": "1106210 - 1106210 - Input VAT - BKI Inter-Co - SMMOA",
+          "parent_account": "Current Assets - SMMOA",
+          "status": "created"
+        },
+        {
+          "account_number": "2103210",
+          "name": "2103210 - 2103210 - AP-Trade-BKI - SMMOA",
+          "parent_account": "Accounts Payable - SMMOA",
+          "status": "created"
+        }
+      ]
+    },
+    "SM MANILA - BEBANG ENTERPRISE INC.": {
+      "company": "SM MANILA - BEBANG ENTERPRISE INC.",
+      "result": [
+        {
+          "account_number": "1104210",
+          "name": "1104210 - 1104210 - Inventory-from-Commissary - SMM",
+          "parent_account": "Stock Assets - SMM",
+          "status": "created"
+        },
+        {
+          "account_number": "1106210",
+          "name": "1106210 - 1106210 - Input VAT - BKI Inter-Co - SMM",
+          "parent_account": "Current Assets - SMM",
+          "status": "created"
+        },
+        {
+          "account_number": "2103210",
+          "name": "2103210 - 2103210 - AP-Trade-BKI - SMM",
+          "parent_account": "Accounts Payable - SMM",
+          "status": "created"
+        }
+      ]
+    },
+    "SM MARIKINA - BEBANG SM MARIKINA INC.": {
+      "company": "SM MARIKINA - BEBANG SM MARIKINA INC.",
+      "result": [
+        {
+          "account_number": "1104210",
+          "name": "1104210 - 1104210 - Inventory-from-Commissary - SMK",
+          "parent_account": "Stock Assets - SMK",
+          "status": "created"
+        },
+        {
+          "account_number": "1106210",
+          "name": "1106210 - 1106210 - Input VAT - BKI Inter-Co - SMK",
+          "parent_account": "Current Assets - SMK",
+          "status": "created"
+        },
+        {
+          "account_number": "2103210",
+          "name": "2103210 - 2103210 - AP-Trade-BKI - SMK",
+          "parent_account": "Accounts Payable - SMK",
+          "status": "created"
+        }
+      ]
+    },
+    "SM MARILAO - BEBANG MARILAO INC.": {
+      "company": "SM MARILAO - BEBANG MARILAO INC.",
+      "result": [
+        {
+          "account_number": "1104210",
+          "name": "1104210 - 1104210 - Inventory-from-Commissary - SMMAR",
+          "parent_account": "Stock Assets - SMMAR",
+          "status": "created"
+        },
+        {
+          "account_number": "1106210",
+          "name": "1106210 - 1106210 - Input VAT - BKI Inter-Co - SMMAR",
+          "parent_account": "Current Assets - SMMAR",
+          "status": "created"
+        },
+        {
+          "account_number": "2103210",
+          "name": "2103210 - 2103210 - AP-Trade-BKI - SMMAR",
+          "parent_account": "Accounts Payable - SMMAR",
+          "status": "created"
+        }
+      ]
+    },
+    "SM MEGAMALL - BEBANG ENTERPRISE INC.": {
+      "company": "SM MEGAMALL - BEBANG ENTERPRISE INC.",
+      "result": [
+        {
+          "account_number": "1104210",
+          "name": "1104210 - 1104210 - Inventory-from-Commissary - SMMM",
+          "parent_account": "Stock Assets - SMMM",
+          "status": "created"
+        },
+        {
+          "account_number": "1106210",
+          "name": "1106210 - 1106210 - Input VAT - BKI Inter-Co - SMMM",
+          "parent_account": "Current Assets - SMMM",
+          "status": "created"
+        },
+        {
+          "account_number": "2103210",
+          "name": "2103210 - 2103210 - AP-Trade-BKI - SMMM",
+          "parent_account": "Accounts Payable - SMMM",
+          "status": "created"
+        }
+      ]
+    },
+    "SM NORTH EDSA - BEBANG NORTH EDSA INC.": {
+      "company": "SM NORTH EDSA - BEBANG NORTH EDSA INC.",
+      "result": [
+        {
+          "account_number": "1104210",
+          "name": "1104210 - 1104210 - Inventory-from-Commissary - SMNE",
+          "parent_account": "Stock Assets - SMNE",
+          "status": "created"
+        },
+        {
+          "account_number": "1106210",
+          "name": "1106210 - 1106210 - Input VAT - BKI Inter-Co - SMNE",
+          "parent_account": "Current Assets - SMNE",
+          "status": "created"
+        },
+        {
+          "account_number": "2103210",
+          "name": "2103210 - 2103210 - AP-Trade-BKI - SMNE",
+          "parent_account": "Accounts Payable - SMNE",
+          "status": "created"
+        }
+      ]
+    },
+    "SM PULILAN - BEBANG SMM INC.": {
+      "company": "SM PULILAN - BEBANG SMM INC.",
+      "result": [
+        {
+          "account_number": "1104210",
+          "name": "1104210 - 1104210 - Inventory-from-Commissary - SMPUL",
+          "parent_account": "Stock Assets - SMPUL",
+          "status": "created"
+        },
+        {
+          "account_number": "1106210",
+          "name": "1106210 - 1106210 - Input VAT - BKI Inter-Co - SMPUL",
+          "parent_account": "Current Assets - SMPUL",
+          "status": "created"
+        },
+        {
+          "account_number": "2103210",
+          "name": "2103210 - 2103210 - AP-Trade-BKI - SMPUL",
+          "parent_account": "Accounts Payable - SMPUL",
+          "status": "created"
+        }
+      ]
+    },
+    "SM SAN JOSE DEL MONTE - JL TRADE OPC": {
+      "company": "SM SAN JOSE DEL MONTE - JL TRADE OPC",
+      "result": [
+        {
+          "account_number": "1104210",
+          "name": "1104210 - 1104210 - Inventory-from-Commissary - SJDM",
+          "parent_account": "Stock Assets - SJDM",
+          "status": "created"
+        },
+        {
+          "account_number": "1106210",
+          "name": "1106210 - 1106210 - Input VAT - BKI Inter-Co - SJDM",
+          "parent_account": "Current Assets - SJDM",
+          "status": "created"
+        },
+        {
+          "account_number": "2103210",
+          "name": "2103210 - 2103210 - AP-Trade-BKI - SJDM",
+          "parent_account": "Accounts Payable - SJDM",
+          "status": "created"
+        }
+      ]
+    },
+    "SM SANGANDAAN - TUNGSTEN CAPITAL HOLDINGS OPC": {
+      "company": "SM SANGANDAAN - TUNGSTEN CAPITAL HOLDINGS OPC",
+      "result": [
+        {
+          "account_number": "1104210",
+          "name": "1104210 - 1104210 - Inventory-from-Commissary - SMSDN",
+          "parent_account": "Stock Assets - SMSDN",
+          "status": "created"
+        },
+        {
+          "account_number": "1106210",
+          "name": "1106210 - 1106210 - Input VAT - BKI Inter-Co - SMSDN",
+          "parent_account": "Current Assets - SMSDN",
+          "status": "created"
+        },
+        {
+          "account_number": "2103210",
+          "name": "2103210 - 2103210 - AP-Trade-BKI - SMSDN",
+          "parent_account": "Accounts Payable - SMSDN",
+          "status": "created"
+        }
+      ]
+    },
+    "SM SOUTHMALL - BEBANG ENTERPRISE INC.": {
+      "company": "SM SOUTHMALL - BEBANG ENTERPRISE INC.",
+      "result": [
+        {
+          "account_number": "1104210",
+          "name": "1104210 - 1104210 - Inventory-from-Commissary - SMS",
+          "parent_account": "Stock Assets - SMS",
+          "status": "created"
+        },
+        {
+          "account_number": "1106210",
+          "name": "1106210 - 1106210 - Input VAT - BKI Inter-Co - SMS",
+          "parent_account": "Current Assets - SMS",
+          "status": "created"
+        },
+        {
+          "account_number": "2103210",
+          "name": "2103210 - 2103210 - AP-Trade-BKI - SMS",
+          "parent_account": "Accounts Payable - SMS",
+          "status": "created"
+        }
+      ]
+    },
+    "SM STA. ROSA - SWEET HARMONY FOOD CORP.": {
+      "company": "SM STA. ROSA - SWEET HARMONY FOOD CORP.",
+      "result": [
+        {
+          "account_number": "1104210",
+          "name": "1104210 - 1104210 - Inventory-from-Commissary - SMSTR",
+          "parent_account": "Stock Assets - SMSTR",
+          "status": "created"
+        },
+        {
+          "account_number": "1106210",
+          "name": "1106210 - 1106210 - Input VAT - BKI Inter-Co - SMSTR",
+          "parent_account": "Current Assets - SMSTR",
+          "status": "created"
+        },
+        {
+          "account_number": "2103210",
+          "name": "2103210 - 2103210 - AP-Trade-BKI - SMSTR",
+          "parent_account": "Accounts Payable - SMSTR",
+          "status": "created"
+        }
+      ]
+    },
+    "SM TANZA - BEBANG MEGA INC.": {
+      "company": "SM TANZA - BEBANG MEGA INC.",
+      "result": [
+        {
+          "account_number": "1104210",
+          "name": "1104210 - 1104210 - Inventory-from-Commissary - SMTZ",
+          "parent_account": "Stock Assets - SMTZ",
+          "status": "created"
+        },
+        {
+          "account_number": "1106210",
+          "name": "1106210 - 1106210 - Input VAT - BKI Inter-Co - SMTZ",
+          "parent_account": "Current Assets - SMTZ",
+          "status": "created"
+        },
+        {
+          "account_number": "2103210",
+          "name": "2103210 - 2103210 - AP-Trade-BKI - SMTZ",
+          "parent_account": "Accounts Payable - SMTZ",
+          "status": "created"
+        }
+      ]
+    },
+    "SM TAYTAY - DAY ONES FOOD AND DRINK ESTABLISHMENTS CORP.": {
+      "company": "SM TAYTAY - DAY ONES FOOD AND DRINK ESTABLISHMENTS CORP.",
+      "result": [
+        {
+          "account_number": "1104210",
+          "name": "1104210 - 1104210 - Inventory-from-Commissary - SMTAY",
+          "parent_account": "Stock Assets - SMTAY",
+          "status": "created"
+        },
+        {
+          "account_number": "1106210",
+          "name": "1106210 - 1106210 - Input VAT - BKI Inter-Co - SMTAY",
+          "parent_account": "Current Assets - SMTAY",
+          "status": "created"
+        },
+        {
+          "account_number": "2103210",
+          "name": "2103210 - 2103210 - AP-Trade-BKI - SMTAY",
+          "parent_account": "Accounts Payable - SMTAY",
+          "status": "created"
+        }
+      ]
+    },
+    "SM VALENZUELA - BEBANG SMV INC.": {
+      "company": "SM VALENZUELA - BEBANG SMV INC.",
+      "result": [
+        {
+          "account_number": "1104210",
+          "name": "1104210 - 1104210 - Inventory-from-Commissary - SMV",
+          "parent_account": "Stock Assets - SMV",
+          "status": "created"
+        },
+        {
+          "account_number": "1106210",
+          "name": "1106210 - 1106210 - Input VAT - BKI Inter-Co - SMV",
+          "parent_account": "Current Assets - SMV",
+          "status": "created"
+        },
+        {
+          "account_number": "2103210",
+          "name": "2103210 - 2103210 - AP-Trade-BKI - SMV",
+          "parent_account": "Accounts Payable - SMV",
+          "status": "created"
+        }
+      ]
+    },
+    "STA. LUCIA EAST GRAND MALL - BEBANG SM MARIKINA INC.": {
+      "company": "STA. LUCIA EAST GRAND MALL - BEBANG SM MARIKINA INC.",
+      "result": [
+        {
+          "account_number": "1104210",
+          "name": "1104210 - 1104210 - Inventory-from-Commissary - SLGM",
+          "parent_account": "Stock Assets - SLGM",
+          "status": "created"
+        },
+        {
+          "account_number": "1106210",
+          "name": "1106210 - 1106210 - Input VAT - BKI Inter-Co - SLGM",
+          "parent_account": "Current Assets - SLGM",
+          "status": "created"
+        },
+        {
+          "account_number": "2103210",
+          "name": "2103210 - 2103210 - AP-Trade-BKI - SLGM",
+          "parent_account": "Accounts Payable - SLGM",
+          "status": "created"
+        }
+      ]
+    },
+    "THE GRID ROCKWELL - TASTECARTEL CORP.": {
+      "company": "THE GRID ROCKWELL - TASTECARTEL CORP.",
+      "result": [
+        {
+          "account_number": "1104210",
+          "name": "1104210 - 1104210 - Inventory-from-Commissary - TGR",
+          "parent_account": "Stock Assets - TGR",
+          "status": "created"
+        },
+        {
+          "account_number": "1106210",
+          "name": "1106210 - 1106210 - Input VAT - BKI Inter-Co - TGR",
+          "parent_account": "Current Assets - TGR",
+          "status": "created"
+        },
+        {
+          "account_number": "2103210",
+          "name": "2103210 - 2103210 - AP-Trade-BKI - TGR",
+          "parent_account": "Accounts Payable - TGR",
+          "status": "created"
+        }
+      ]
+    },
+    "THE TERMINAL - BEBANG STARMALL ALABANG INC.": {
+      "company": "THE TERMINAL - BEBANG STARMALL ALABANG INC.",
+      "result": [
+        {
+          "account_number": "1104210",
+          "name": "1104210 - 1104210 - Inventory-from-Commissary - TTA",
+          "parent_account": "Stock Assets - TTA",
+          "status": "created"
+        },
+        {
+          "account_number": "1106210",
+          "name": "1106210 - 1106210 - Input VAT - BKI Inter-Co - TTA",
+          "parent_account": "Current Assets - TTA",
+          "status": "created"
+        },
+        {
+          "account_number": "2103210",
+          "name": "2103210 - 2103210 - AP-Trade-BKI - TTA",
+          "parent_account": "Accounts Payable - TTA",
+          "status": "created"
+        }
+      ]
+    },
+    "UP TOWN MALL BGC - DMD HOLDINGS INC.": {
+      "company": "UP TOWN MALL BGC - DMD HOLDINGS INC.",
+      "result": [
+        {
+          "account_number": "1104210",
+          "name": "1104210 - 1104210 - Inventory-from-Commissary - UMBGC",
+          "parent_account": "Stock Assets - UMBGC",
+          "status": "created"
+        },
+        {
+          "account_number": "1106210",
+          "name": "1106210 - 1106210 - Input VAT - BKI Inter-Co - UMBGC",
+          "parent_account": "Current Assets - UMBGC",
+          "status": "created"
+        },
+        {
+          "account_number": "2103210",
+          "name": "2103210 - 2103210 - AP-Trade-BKI - UMBGC",
+          "parent_account": "Accounts Payable - UMBGC",
+          "status": "created"
+        }
+      ]
+    },
+    "VISTA MALL TAGUIG - TRICERN FOOD CORP.": {
+      "company": "VISTA MALL TAGUIG - TRICERN FOOD CORP.",
+      "result": [
+        {
+          "account_number": "1104210",
+          "name": "1104210 - 1104210 - Inventory-from-Commissary - VMTAG",
+          "parent_account": "Stock Assets - VMTAG",
+          "status": "created"
+        },
+        {
+          "account_number": "1106210",
+          "name": "1106210 - 1106210 - Input VAT - BKI Inter-Co - VMTAG",
+          "parent_account": "Current Assets - VMTAG",
+          "status": "created"
+        },
+        {
+          "account_number": "2103210",
+          "name": "2103210 - 2103210 - AP-Trade-BKI - VMTAG",
+          "parent_account": "Accounts Payable - VMTAG",
+          "status": "created"
+        }
+      ]
+    },
+    "XENTROMALL MONTALBAN - PERPETUAL FOOD CORP.": {
+      "company": "XENTROMALL MONTALBAN - PERPETUAL FOOD CORP.",
+      "result": [
+        {
+          "account_number": "1104210",
+          "name": "1104210 - 1104210 - Inventory-from-Commissary - XMM",
+          "parent_account": "Stock Assets - XMM",
+          "status": "created"
+        },
+        {
+          "account_number": "1106210",
+          "name": "1106210 - 1106210 - Input VAT - BKI Inter-Co - XMM",
+          "parent_account": "1100000 - CURRENT ASSETS - XMM",
+          "status": "created"
+        },
+        {
+          "account_number": "2103210",
+          "name": "2103210 - 2103210 - AP-Trade-BKI - XMM",
+          "parent_account": "2110000 - ACCOUNTS PAYABLE - XMM",
+          "status": "created"
+        }
+      ]
+    }
+  },
+  "errors": [],
+  "total_created": 147,
+  "total_existed": 0,
+  "total_errors": 0,
+  "committed": true
+}
