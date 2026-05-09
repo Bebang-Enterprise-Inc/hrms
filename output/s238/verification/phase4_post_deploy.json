@@ -1,0 +1,61 @@
+{
+  "sprint": "S238",
+  "phase": "4-post-deploy",
+  "task": "verify deploy + readiness without consuming test SI",
+  "timestamp_utc": "2026-05-09T16:15:42.562689Z",
+  "modules_importable": true,
+  "bki_si_naming_has_func": true,
+  "bki_store_pi_generator_funcs": {
+    "maybe_generate_store_pi": true,
+    "cascade_cancel_store_pi": true,
+    "lock_posting_date_on_bki_paired_pi": true,
+    "run_si_pi_pairing_check": true,
+    "build_store_pi": true,
+    "_resolve_per_store_cost_center": true,
+    "resolve_account_by_number": true
+  },
+  "constants": {
+    "BKI_COMPANY": "BEBANG KITCHEN INC.",
+    "BKI_TRADE_SUPPLIER": "BEBANG KITCHEN INC. - Trade",
+    "ACCT_INVENTORY_FROM_COMMISSARY": "1104210",
+    "ACCT_INPUT_VAT_BKI_INTERCO": "1106210",
+    "ACCT_AP_TRADE_BKI": "2103210"
+  },
+  "hooks_registered": {
+    "SI.autoname.set_bki_si_name": true,
+    "SI.on_submit.maybe_generate_store_pi": true,
+    "SI.on_cancel.cascade_cancel_store_pi": true,
+    "PI.validate.lock_posting_date_on_bki_paired_pi": true
+  },
+  "scheduler_weekly_drift_check": true,
+  "pi_has_field_bki_si_reference": true,
+  "bei_has_field_enable_bki_store_pi_generator": true,
+  "trade_supplier": {
+    "name": "BEBANG KITCHEN INC. - Trade",
+    "supplier_name": "BEBANG KITCHEN INC. - Trade",
+    "is_internal_supplier": 0,
+    "tax_id": "010-880-681-00001"
+  },
+  "trade_supplier_companies_count": 49,
+  "leaf_accounts_count": 147,
+  "leaf_accounts_expected": 147,
+  "leaf_accounts_per_number": {
+    "1104210": 49,
+    "1106210": 49,
+    "2103210": 49
+  },
+  "toggle_value": 1,
+  "bki_si_since_deploy": [],
+  "bki_si_since_deploy_count": 0,
+  "paired_pis": [],
+  "paired_pi_count": 0,
+  "s238_errors_since_deploy": [
+    {
+      "name": "2kg9aev6o4",
+      "creation": "2026-05-10 00:02:48.019552",
+      "preview": "S238 SI/PI Pairing Drift"
+    }
+  ],
+  "s238_errors_since_deploy_count": 1,
+  "status": "OK"
+}
