@@ -1,0 +1,119 @@
+{
+  "mode": "commit",
+  "timestamp_utc": "2026-05-09T05:55:44.332642Z",
+  "stores": {
+    "SMMM": {
+      "abbr": "SMMM",
+      "company": "SM MEGAMALL - BEBANG ENTERPRISE INC.",
+      "result": [
+        {
+          "name": "Current Assets - SMMM",
+          "account_name": "Current Assets",
+          "expected_docname": "Current Assets - SMMM",
+          "parent_account": "1100000 - ASSETS - SMMM",
+          "status": "created"
+        },
+        {
+          "name": "Stock Assets - SMMM",
+          "account_name": "Stock Assets",
+          "expected_docname": "Stock Assets - SMMM",
+          "parent_account": "Current Assets - SMMM",
+          "status": "created"
+        },
+        {
+          "name": "Accounts Payable - SMMM",
+          "account_name": "Accounts Payable",
+          "expected_docname": "Accounts Payable - SMMM",
+          "parent_account": "2104000 - INTERCOMPANY PAYABLES - SMMM",
+          "status": "created"
+        }
+      ]
+    },
+    "SMS": {
+      "abbr": "SMS",
+      "company": "SM SOUTHMALL - BEBANG ENTERPRISE INC.",
+      "result": [
+        {
+          "name": "Current Assets - SMS",
+          "account_name": "Current Assets",
+          "expected_docname": "Current Assets - SMS",
+          "parent_account": "1100000 - ASSETS - SMS",
+          "status": "created"
+        },
+        {
+          "name": "Stock Assets - SMS",
+          "account_name": "Stock Assets",
+          "expected_docname": "Stock Assets - SMS",
+          "parent_account": "Current Assets - SMS",
+          "status": "created"
+        },
+        {
+          "name": "Accounts Payable - SMS",
+          "account_name": "Accounts Payable",
+          "expected_docname": "Accounts Payable - SMS",
+          "parent_account": "2104000 - INTERCOMPANY PAYABLES - SMS",
+          "status": "created"
+        }
+      ]
+    },
+    "SMM": {
+      "abbr": "SMM",
+      "company": "SM MANILA - BEBANG ENTERPRISE INC.",
+      "result": [
+        {
+          "name": "Current Assets - SMM",
+          "account_name": "Current Assets",
+          "expected_docname": "Current Assets - SMM",
+          "parent_account": "1100000 - ASSETS - SMM",
+          "status": "created"
+        },
+        {
+          "name": "Stock Assets - SMM",
+          "account_name": "Stock Assets",
+          "expected_docname": "Stock Assets - SMM",
+          "parent_account": "Current Assets - SMM",
+          "status": "created"
+        },
+        {
+          "name": "Accounts Payable - SMM",
+          "account_name": "Accounts Payable",
+          "expected_docname": "Accounts Payable - SMM",
+          "parent_account": "2104000 - INTERCOMPANY PAYABLES - SMM",
+          "status": "created"
+        }
+      ]
+    },
+    "ROA": {
+      "abbr": "ROA",
+      "company": "ROBINSONS ANTIPOLO - BEBANG ENTERPRISE INC.",
+      "result": [
+        {
+          "name": "Current Assets - ROA",
+          "account_name": "Current Assets",
+          "expected_docname": "Current Assets - ROA",
+          "parent_account": "1100000 - ASSETS - ROA",
+          "status": "created"
+        },
+        {
+          "name": "Stock Assets - ROA",
+          "account_name": "Stock Assets",
+          "expected_docname": "Stock Assets - ROA",
+          "parent_account": "Current Assets - ROA",
+          "status": "created"
+        },
+        {
+          "name": "Accounts Payable - ROA",
+          "account_name": "Accounts Payable",
+          "expected_docname": "Accounts Payable - ROA",
+          "parent_account": "2104000 - INTERCOMPANY PAYABLES - ROA",
+          "status": "created"
+        }
+      ]
+    }
+  },
+  "errors": [],
+  "total_created": 12,
+  "total_existed": 0,
+  "total_errors": 0,
+  "rollback_confirmed": false
+}
