@@ -1,0 +1,9 @@
+{
+  "same_channel_count_after": 307,
+  "same_channel_gross_after": 117475.93,
+  "expected_band": [
+    287,
+    327
+  ],
+  "expected_count_baseline": 307
+}

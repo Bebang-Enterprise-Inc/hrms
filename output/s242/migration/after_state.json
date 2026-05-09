@@ -1,0 +1,9 @@
+{
+  "captured_at": "2026-05-09T06:35:41.144351+00:00",
+  "channel_distinct_tombstones_remaining": 0,
+  "same_channel_tombstones_count": 307,
+  "total_live_with_bill": 1715675,
+  "total_tombstones_with_bill": 3424,
+  "index_ddl": "CREATE UNIQUE INDEX pos_orders_bill_number_natural_key ON public.pos_orders USING btree (location_id, business_date, bill_number, channel) WHERE ((bill_number IS NOT NULL) AND (is_duplicate = false))",
+  "paseo_bill_39966_live_count": 2
+}

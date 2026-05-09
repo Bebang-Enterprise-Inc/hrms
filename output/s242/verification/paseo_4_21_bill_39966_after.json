@@ -1,0 +1,29 @@
+{
+  "store": "Megaworld Paseo Center",
+  "location_id": 2177,
+  "business_date": "2026-04-21",
+  "bill_number": "39966",
+  "phase": "post_migration",
+  "rows": [
+    {
+      "id": 51234586,
+      "channel": "POS",
+      "payment_status": "PAID",
+      "gross_sales": "228.00",
+      "net_sales": "203.57",
+      "paid_at": "2026-04-21 05:31:30+00",
+      "is_duplicate": false
+    },
+    {
+      "id": 51234223,
+      "channel": "FoodPanda",
+      "payment_status": "PAID",
+      "gross_sales": "704.00",
+      "net_sales": "628.57",
+      "paid_at": "2026-04-21 06:01:39+00",
+      "is_duplicate": false
+    }
+  ],
+  "live_count": 2,
+  "tombstone_count": 0
+}
