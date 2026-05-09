@@ -9,7 +9,7 @@
     "Accounts Payable": "Accounts Payable - <ABBR> -> Current Liabilities - <ABBR> -> Source of Funds (Liabilities) - <ABBR>",
     "Current Assets": "Current Assets - <ABBR> -> Application of Funds (Assets) - <ABBR>"
   },
-  "deviation_from_canonical": "Asset side: parent Current Assets to target store's existing '1100000 - ASSETS - <ABBR>' instead of canonical 'Application of Funds (Assets) - <ABBR>' — saves creating 1 extra group per store. Liability side: parent Accounts Payable to NULL (top-level, sibling to existing 2104000 - INTERCOMPANY PAYABLES - <ABBR>) instead of canonical 'Accounts Payable -> Current Liabilities -> Source of Funds (Liabilities)' — saves creating 2 extra groups per store. S238's _find_parent_group_for queries by account_name (BARE), not by parent chain — so the deviation does NOT break S238's lookup. Closeout SUMMARY records the canonical-root mismatch as follow-up sprint candidate (alongside B8 verifier extension).",
+  "deviation_from_canonical": "Asset side: parent Current Assets to target stores existing 1100000 - ASSETS - <ABBR> (saves 1 group). Liability side: parent Accounts Payable to existing 2104000 - INTERCOMPANY PAYABLES - <ABBR> (Frappe rejects creating a 2nd top-level Liability root). Taxonomic compromise: AP appears as sub-category of IC PAYABLES on these 4 stores. S238 _find_parent_group_for queries by account_name (BARE), not parent chain \u2014 so deviation does NOT break S238. Closeout SUMMARY records as follow-up sprint candidate (S244+) to harmonize CoA fully alongside B8 verifier extension.",
   "ROA": {
     "abbr": "ROA",
     "company": "ROBINSONS ANTIPOLO - BEBANG ENTERPRISE INC.",
@@ -42,11 +42,11 @@
       {
         "account_name": "Accounts Payable",
         "account_number": null,
-        "parent_account": null,
+        "parent_account": "2104000 - INTERCOMPANY PAYABLES - ROA",
         "root_type": "Liability",
         "is_group": 1,
         "expected_docname": "Accounts Payable - ROA",
-        "rationale": "S238 Phase 1-T1 needs this parent for AP-Trade-BKI leaf. Top-level Liability group (parent=NULL); sibling to existing 2104000 - INTERCOMPANY PAYABLES - ROA. Deviates from canonical AP -> Current Liabilities -> Source of Funds chain (would exceed 4-group limit) but S238 lookup unaffected.",
+        "rationale": "S238 Phase 1-T1 needs this parent for AP-Trade-BKI leaf. Parented to existing 2104000 - INTERCOMPANY PAYABLES - <ABBR> because Frappe rejects 2nd top-level Liability root (each Company has exactly one Liability root). Taxonomic compromise: AP appears as sub-category of IC PAYABLES on these 4 stores; S238 lookup by account_name unaffected.",
         "create_order": 3
       }
     ]
@@ -83,11 +83,11 @@
       {
         "account_name": "Accounts Payable",
         "account_number": null,
-        "parent_account": null,
+        "parent_account": "2104000 - INTERCOMPANY PAYABLES - SMM",
         "root_type": "Liability",
         "is_group": 1,
         "expected_docname": "Accounts Payable - SMM",
-        "rationale": "S238 Phase 1-T1 needs this parent for AP-Trade-BKI leaf. Top-level Liability group.",
+        "rationale": "S238 Phase 1-T1 needs this parent for AP-Trade-BKI leaf. Parented to existing 2104000 - INTERCOMPANY PAYABLES - <ABBR> because Frappe rejects 2nd top-level Liability root (each Company has exactly one Liability root). Taxonomic compromise: AP appears as sub-category of IC PAYABLES on these 4 stores; S238 lookup by account_name unaffected.",
         "create_order": 3
       }
     ]
@@ -124,11 +124,11 @@
       {
         "account_name": "Accounts Payable",
         "account_number": null,
-        "parent_account": null,
+        "parent_account": "2104000 - INTERCOMPANY PAYABLES - SMMM",
         "root_type": "Liability",
         "is_group": 1,
         "expected_docname": "Accounts Payable - SMMM",
-        "rationale": "S238 Phase 1-T1 needs this parent for AP-Trade-BKI leaf. Top-level Liability group.",
+        "rationale": "S238 Phase 1-T1 needs this parent for AP-Trade-BKI leaf. Parented to existing 2104000 - INTERCOMPANY PAYABLES - <ABBR> because Frappe rejects 2nd top-level Liability root (each Company has exactly one Liability root). Taxonomic compromise: AP appears as sub-category of IC PAYABLES on these 4 stores; S238 lookup by account_name unaffected.",
         "create_order": 3
       }
     ]
@@ -165,11 +165,11 @@
       {
         "account_name": "Accounts Payable",
         "account_number": null,
-        "parent_account": null,
+        "parent_account": "2104000 - INTERCOMPANY PAYABLES - SMS",
         "root_type": "Liability",
         "is_group": 1,
         "expected_docname": "Accounts Payable - SMS",
-        "rationale": "S238 Phase 1-T1 needs this parent for AP-Trade-BKI leaf. Top-level Liability group.",
+        "rationale": "S238 Phase 1-T1 needs this parent for AP-Trade-BKI leaf. Parented to existing 2104000 - INTERCOMPANY PAYABLES - <ABBR> because Frappe rejects 2nd top-level Liability root (each Company has exactly one Liability root). Taxonomic compromise: AP appears as sub-category of IC PAYABLES on these 4 stores; S238 lookup by account_name unaffected.",
         "create_order": 3
       }
     ]
@@ -179,12 +179,16 @@
     "groups_per_store": 3,
     "all_within_hb1_limit": true,
     "all_account_names_in_allowed_set": true,
-    "allowed_account_names": ["Stock Assets", "Accounts Payable", "Current Assets"]
+    "allowed_account_names": [
+      "Stock Assets",
+      "Accounts Payable",
+      "Current Assets"
+    ]
   },
   "hb_check": {
     "HB1_max_4_per_store": "PASS (3 per store)",
     "HB2_5_sampled_consistent": "PASS (reference_bare_name_coa.json convention_consistent: true)",
-    "HB3_AP_parent_resolvable": "PASS (parent_account=NULL is valid; top-level Liability group; sibling to existing target-store IC PAYABLES which is also top-level)",
+    "HB3_AP_parent_resolvable": "PASS (parent_account=2104000 - INTERCOMPANY PAYABLES - <ABBR>; existing top-level Liability group on each target store)",
     "HB4_no_docname_collision_with_existing": "PASS (target stores' existing groups use number-prefix naming; new BARE-NAME docnames cannot collide)"
   }
 }
