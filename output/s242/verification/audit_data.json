@@ -1,0 +1,516 @@
+[
+  {
+    "location_id": 2339,
+    "store_name": "SM  Manila",
+    "business_date": "2026-05-03",
+    "scenario": "SM Manila \u2014 peak weekend (Sun)",
+    "mosaic": {
+      "raw_orders": 376,
+      "deduped_orders": 356,
+      "dupes_in_fetch": 20,
+      "distinct_bills": 356,
+      "distinct_paid_bills": 336,
+      "payment_status_mix": {
+        "PAID": 336,
+        "VOIDED": 20
+      },
+      "cancelled_count": 0,
+      "sum_gross_paid": 193378.59,
+      "sum_net_paid": 174390.62,
+      "first_paid_at": "2026-05-03T02:10:27.000000Z",
+      "last_paid_at": "2026-05-03T13:09:47.000000Z"
+    },
+    "supabase": {
+      "raw_orders": 356,
+      "distinct_bills": 356,
+      "distinct_paid_bills": 336,
+      "payment_status_mix": {
+        "PAID": 336,
+        "VOIDED": 20,
+        "OTHER": 0
+      },
+      "cancelled_count": 0,
+      "sum_gross_paid": 193378.58,
+      "sum_net_paid": 174390.48,
+      "first_paid_at": "2026-05-03 02:10:27+00",
+      "last_paid_at": "2026-05-03 13:09:47+00"
+    },
+    "compare": {
+      "distinct_paid_bills_delta": 0,
+      "sum_gross_paid_delta": 0.01,
+      "sum_net_paid_delta": 0.14,
+      "verdict": "MATCH"
+    }
+  },
+  {
+    "location_id": 2338,
+    "store_name": "SM Megamall",
+    "business_date": "2026-05-07",
+    "scenario": "SM Megamall \u2014 recovered 149 missing bills",
+    "mosaic": {
+      "raw_orders": 309,
+      "deduped_orders": 307,
+      "dupes_in_fetch": 2,
+      "distinct_bills": 307,
+      "distinct_paid_bills": 305,
+      "payment_status_mix": {
+        "PAID": 305,
+        "VOIDED": 2
+      },
+      "cancelled_count": 0,
+      "sum_gross_paid": 164591.67,
+      "sum_net_paid": 148475.85,
+      "first_paid_at": "2026-05-07T03:05:44.000000Z",
+      "last_paid_at": "2026-05-07T13:59:16.000000Z"
+    },
+    "supabase": {
+      "raw_orders": 307,
+      "distinct_bills": 307,
+      "distinct_paid_bills": 305,
+      "payment_status_mix": {
+        "PAID": 305,
+        "VOIDED": 2,
+        "OTHER": 0
+      },
+      "cancelled_count": 0,
+      "sum_gross_paid": 164591.66,
+      "sum_net_paid": 148475.79,
+      "first_paid_at": "2026-05-07 03:05:44+00",
+      "last_paid_at": "2026-05-07 13:59:16+00"
+    },
+    "compare": {
+      "distinct_paid_bills_delta": 0,
+      "sum_gross_paid_delta": 0.01,
+      "sum_net_paid_delta": 0.06,
+      "verdict": "MATCH"
+    }
+  },
+  {
+    "location_id": 2284,
+    "store_name": "SM North EDSA",
+    "business_date": "2026-05-07",
+    "scenario": "SM North EDSA \u2014 recovered 101 missing bills",
+    "mosaic": {
+      "raw_orders": 384,
+      "deduped_orders": 377,
+      "dupes_in_fetch": 7,
+      "distinct_bills": 377,
+      "distinct_paid_bills": 370,
+      "payment_status_mix": {
+        "PAID": 370,
+        "VOIDED": 7
+      },
+      "cancelled_count": 0,
+      "sum_gross_paid": 203358.04,
+      "sum_net_paid": 184557.68,
+      "first_paid_at": "2026-05-07T03:03:49.000000Z",
+      "last_paid_at": "2026-05-07T13:50:59.000000Z"
+    },
+    "supabase": {
+      "raw_orders": 377,
+      "distinct_bills": 377,
+      "distinct_paid_bills": 370,
+      "payment_status_mix": {
+        "PAID": 370,
+        "VOIDED": 7,
+        "OTHER": 0
+      },
+      "cancelled_count": 0,
+      "sum_gross_paid": 203358.04,
+      "sum_net_paid": 184557.62,
+      "first_paid_at": "2026-05-07 03:03:49+00",
+      "last_paid_at": "2026-05-07 13:50:59+00"
+    },
+    "compare": {
+      "distinct_paid_bills_delta": 0,
+      "sum_gross_paid_delta": 0.0,
+      "sum_net_paid_delta": 0.06,
+      "verdict": "MATCH"
+    }
+  },
+  {
+    "location_id": 2547,
+    "store_name": "Ayala Solenad",
+    "business_date": "2026-05-07",
+    "scenario": "Ayala Solenad \u2014 recovered 95 missing bills",
+    "mosaic": {
+      "raw_orders": 163,
+      "deduped_orders": 159,
+      "dupes_in_fetch": 4,
+      "distinct_bills": 159,
+      "distinct_paid_bills": 155,
+      "payment_status_mix": {
+        "VOIDED": 4,
+        "PAID": 155
+      },
+      "cancelled_count": 0,
+      "sum_gross_paid": 90323.04,
+      "sum_net_paid": 81692.29,
+      "first_paid_at": "2026-05-07T04:01:12.000000Z",
+      "last_paid_at": "2026-05-07T12:55:10.000000Z"
+    },
+    "supabase": {
+      "raw_orders": 159,
+      "distinct_bills": 159,
+      "distinct_paid_bills": 155,
+      "payment_status_mix": {
+        "PAID": 155,
+        "VOIDED": 4,
+        "OTHER": 0
+      },
+      "cancelled_count": 0,
+      "sum_gross_paid": 90323.04,
+      "sum_net_paid": 81692.29,
+      "first_paid_at": "2026-05-07 04:01:12+00",
+      "last_paid_at": "2026-05-07 12:55:10+00"
+    },
+    "compare": {
+      "distinct_paid_bills_delta": 0,
+      "sum_gross_paid_delta": 0.0,
+      "sum_net_paid_delta": 0.0,
+      "verdict": "MATCH"
+    }
+  },
+  {
+    "location_id": 2250,
+    "store_name": "The Grid - Rockwell",
+    "business_date": "2026-05-02",
+    "scenario": "The Grid Rockwell \u2014 synthetic-id collision case",
+    "mosaic": {
+      "raw_orders": 363,
+      "deduped_orders": 361,
+      "dupes_in_fetch": 2,
+      "distinct_bills": 361,
+      "distinct_paid_bills": 361,
+      "payment_status_mix": {
+        "PAID": 361
+      },
+      "cancelled_count": 0,
+      "sum_gross_paid": 140740.53,
+      "sum_net_paid": 128384.8,
+      "first_paid_at": "2026-05-02T02:16:11.000000Z",
+      "last_paid_at": "2026-05-02T14:09:40.000000Z"
+    },
+    "supabase": {
+      "raw_orders": 362,
+      "distinct_bills": 361,
+      "distinct_paid_bills": 361,
+      "payment_status_mix": {
+        "PAID": 362,
+        "VOIDED": 0,
+        "OTHER": 0
+      },
+      "cancelled_count": 0,
+      "sum_gross_paid": 140800.53,
+      "sum_net_paid": 128438.36,
+      "first_paid_at": "2026-05-02 02:16:11+00",
+      "last_paid_at": "2026-05-02 14:09:40+00"
+    },
+    "compare": {
+      "distinct_paid_bills_delta": 0,
+      "sum_gross_paid_delta": -60.0,
+      "sum_net_paid_delta": -53.56,
+      "verdict": "MISMATCH"
+    }
+  },
+  {
+    "location_id": 2557,
+    "store_name": "Araneta Gateway",
+    "business_date": "2026-05-03",
+    "scenario": "Araneta Gateway \u2014 credential group + collision",
+    "mosaic": {
+      "raw_orders": 262,
+      "deduped_orders": 261,
+      "dupes_in_fetch": 1,
+      "distinct_bills": 261,
+      "distinct_paid_bills": 260,
+      "payment_status_mix": {
+        "PAID": 260,
+        "VOIDED": 1
+      },
+      "cancelled_count": 0,
+      "sum_gross_paid": 107225.1,
+      "sum_net_paid": 97573.01,
+      "first_paid_at": "2026-05-03T02:26:11.000000Z",
+      "last_paid_at": "2026-05-03T13:19:50.000000Z"
+    },
+    "supabase": {
+      "raw_orders": 261,
+      "distinct_bills": 261,
+      "distinct_paid_bills": 260,
+      "payment_status_mix": {
+        "PAID": 260,
+        "VOIDED": 1,
+        "OTHER": 0
+      },
+      "cancelled_count": 0,
+      "sum_gross_paid": 107225.1,
+      "sum_net_paid": 97573.0,
+      "first_paid_at": "2026-05-03 02:26:11+00",
+      "last_paid_at": "2026-05-03 13:19:50+00"
+    },
+    "compare": {
+      "distinct_paid_bills_delta": 0,
+      "sum_gross_paid_delta": 0.0,
+      "sum_net_paid_delta": 0.01,
+      "verdict": "MATCH"
+    }
+  },
+  {
+    "location_id": 2217,
+    "store_name": "BF Homes",
+    "business_date": "2026-05-03",
+    "scenario": "BF Homes \u2014 recovered 106 missing bills",
+    "mosaic": {
+      "raw_orders": 289,
+      "deduped_orders": 273,
+      "dupes_in_fetch": 16,
+      "distinct_bills": 273,
+      "distinct_paid_bills": 257,
+      "payment_status_mix": {
+        "PAID": 257,
+        "VOIDED": 16
+      },
+      "cancelled_count": 0,
+      "sum_gross_paid": 160056.9,
+      "sum_net_paid": 144889.22,
+      "first_paid_at": "2026-05-03T02:05:05.000000Z",
+      "last_paid_at": "2026-05-03T13:35:39.000000Z"
+    },
+    "supabase": {
+      "raw_orders": 273,
+      "distinct_bills": 273,
+      "distinct_paid_bills": 257,
+      "payment_status_mix": {
+        "PAID": 257,
+        "VOIDED": 16,
+        "OTHER": 0
+      },
+      "cancelled_count": 0,
+      "sum_gross_paid": 160056.89,
+      "sum_net_paid": 144889.15,
+      "first_paid_at": "2026-05-03 02:05:05+00",
+      "last_paid_at": "2026-05-03 13:35:39+00"
+    },
+    "compare": {
+      "distinct_paid_bills_delta": 0,
+      "sum_gross_paid_delta": 0.01,
+      "sum_net_paid_delta": 0.07,
+      "verdict": "MATCH"
+    }
+  },
+  {
+    "location_id": 2766,
+    "store_name": "D'Verde Calamba",
+    "business_date": "2026-05-05",
+    "scenario": "D'Verde Calamba \u2014 small store + early-cutoff day",
+    "mosaic": {
+      "raw_orders": 82,
+      "deduped_orders": 81,
+      "dupes_in_fetch": 1,
+      "distinct_bills": 81,
+      "distinct_paid_bills": 80,
+      "payment_status_mix": {
+        "PAID": 80,
+        "VOIDED": 1
+      },
+      "cancelled_count": 0,
+      "sum_gross_paid": 45260.61,
+      "sum_net_paid": 40850.38,
+      "first_paid_at": "2026-05-05T01:51:55.000000Z",
+      "last_paid_at": "2026-05-05T12:45:49.000000Z"
+    },
+    "supabase": {
+      "raw_orders": 81,
+      "distinct_bills": 81,
+      "distinct_paid_bills": 80,
+      "payment_status_mix": {
+        "PAID": 80,
+        "VOIDED": 1,
+        "OTHER": 0
+      },
+      "cancelled_count": 0,
+      "sum_gross_paid": 45260.61,
+      "sum_net_paid": 40850.37,
+      "first_paid_at": "2026-05-05 01:51:55+00",
+      "last_paid_at": "2026-05-05 12:45:49+00"
+    },
+    "compare": {
+      "distinct_paid_bills_delta": 0,
+      "sum_gross_paid_delta": 0.0,
+      "sum_net_paid_delta": 0.01,
+      "verdict": "MATCH"
+    }
+  },
+  {
+    "location_id": 2412,
+    "store_name": "SM Bicutan",
+    "business_date": "2026-05-05",
+    "scenario": "SM Bicutan \u2014 control mid-volume Tue",
+    "mosaic": {
+      "raw_orders": 172,
+      "deduped_orders": 171,
+      "dupes_in_fetch": 1,
+      "distinct_bills": 171,
+      "distinct_paid_bills": 170,
+      "payment_status_mix": {
+        "PAID": 170,
+        "VOIDED": 1
+      },
+      "cancelled_count": 0,
+      "sum_gross_paid": 83107.51,
+      "sum_net_paid": 75511.38,
+      "first_paid_at": "2026-05-05T03:09:55.000000Z",
+      "last_paid_at": "2026-05-05T13:17:34.000000Z"
+    },
+    "supabase": {
+      "raw_orders": 171,
+      "distinct_bills": 171,
+      "distinct_paid_bills": 170,
+      "payment_status_mix": {
+        "PAID": 170,
+        "VOIDED": 1,
+        "OTHER": 0
+      },
+      "cancelled_count": 0,
+      "sum_gross_paid": 83107.51,
+      "sum_net_paid": 75511.35,
+      "first_paid_at": "2026-05-05 03:09:55+00",
+      "last_paid_at": "2026-05-05 13:17:34+00"
+    },
+    "compare": {
+      "distinct_paid_bills_delta": 0,
+      "sum_gross_paid_delta": 0.0,
+      "sum_net_paid_delta": 0.03,
+      "verdict": "MATCH"
+    }
+  },
+  {
+    "location_id": 2464,
+    "store_name": "SM Caloocan",
+    "business_date": "2026-05-04",
+    "scenario": "SM Caloocan \u2014 control normal Mon",
+    "mosaic": {
+      "raw_orders": 121,
+      "deduped_orders": 121,
+      "dupes_in_fetch": 0,
+      "distinct_bills": 121,
+      "distinct_paid_bills": 121,
+      "payment_status_mix": {
+        "PAID": 121
+      },
+      "cancelled_count": 0,
+      "sum_gross_paid": 50792.78,
+      "sum_net_paid": 46377.61,
+      "first_paid_at": "2026-05-04T03:25:44.000000Z",
+      "last_paid_at": "2026-05-04T12:49:42.000000Z"
+    },
+    "supabase": {
+      "raw_orders": 121,
+      "distinct_bills": 121,
+      "distinct_paid_bills": 121,
+      "payment_status_mix": {
+        "PAID": 121,
+        "VOIDED": 0,
+        "OTHER": 0
+      },
+      "cancelled_count": 0,
+      "sum_gross_paid": 50792.78,
+      "sum_net_paid": 46377.6,
+      "first_paid_at": "2026-05-04 03:25:44+00",
+      "last_paid_at": "2026-05-04 12:49:42+00"
+    },
+    "compare": {
+      "distinct_paid_bills_delta": 0,
+      "sum_gross_paid_delta": 0.0,
+      "sum_net_paid_delta": 0.01,
+      "verdict": "MATCH"
+    }
+  },
+  {
+    "location_id": 2179,
+    "store_name": "Megawide PITX",
+    "business_date": "2026-05-02",
+    "scenario": "Megawide PITX \u2014 control weekend",
+    "mosaic": {
+      "raw_orders": 149,
+      "deduped_orders": 145,
+      "dupes_in_fetch": 4,
+      "distinct_bills": 145,
+      "distinct_paid_bills": 142,
+      "payment_status_mix": {
+        "PAID": 142,
+        "VOIDED": 3
+      },
+      "cancelled_count": 0,
+      "sum_gross_paid": 51459.81,
+      "sum_net_paid": 46684.26,
+      "first_paid_at": "2026-05-02T00:58:57.000000Z",
+      "last_paid_at": "2026-05-02T12:25:13.000000Z"
+    },
+    "supabase": {
+      "raw_orders": 145,
+      "distinct_bills": 145,
+      "distinct_paid_bills": 142,
+      "payment_status_mix": {
+        "PAID": 142,
+        "VOIDED": 3,
+        "OTHER": 0
+      },
+      "cancelled_count": 0,
+      "sum_gross_paid": 51459.81,
+      "sum_net_paid": 46684.25,
+      "first_paid_at": "2026-05-02 00:58:57+00",
+      "last_paid_at": "2026-05-02 12:25:13+00"
+    },
+    "compare": {
+      "distinct_paid_bills_delta": 0,
+      "sum_gross_paid_delta": 0.0,
+      "sum_net_paid_delta": 0.01,
+      "verdict": "MATCH"
+    }
+  },
+  {
+    "location_id": 2287,
+    "store_name": "Ayala Market Market",
+    "business_date": "2026-05-05",
+    "scenario": "Ayala Market Market \u2014 was 61 missing bills",
+    "mosaic": {
+      "raw_orders": 239,
+      "deduped_orders": 232,
+      "dupes_in_fetch": 7,
+      "distinct_bills": 232,
+      "distinct_paid_bills": 229,
+      "payment_status_mix": {
+        "PAID": 229,
+        "VOIDED": 3
+      },
+      "cancelled_count": 0,
+      "sum_gross_paid": 101736.5,
+      "sum_net_paid": 92115.48,
+      "first_paid_at": "2026-05-05T02:05:15.000000Z",
+      "last_paid_at": "2026-05-05T13:12:04.000000Z"
+    },
+    "supabase": {
+      "raw_orders": 232,
+      "distinct_bills": 232,
+      "distinct_paid_bills": 229,
+      "payment_status_mix": {
+        "PAID": 229,
+        "VOIDED": 3,
+        "OTHER": 0
+      },
+      "cancelled_count": 0,
+      "sum_gross_paid": 101736.49,
+      "sum_net_paid": 92115.45,
+      "first_paid_at": "2026-05-05 02:05:15+00",
+      "last_paid_at": "2026-05-05 13:12:04+00"
+    },
+    "compare": {
+      "distinct_paid_bills_delta": 0,
+      "sum_gross_paid_delta": 0.01,
+      "sum_net_paid_delta": 0.03,
+      "verdict": "MATCH"
+    }
+  }
+]
