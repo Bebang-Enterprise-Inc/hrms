@@ -8,8 +8,10 @@ version: 1.1
 audit_log:
   - 2026-05-08 v1.0 PLANNED initial draft
   - 2026-05-08 v1.1 PLANNED_AUDITED — 4 CRITICAL + 6 WARNING blockers identified by /audit-plan-bei-erp; amendments applied inline
-  - 2026-05-09 EXECUTED autonomously — 74 rows / PHP 30,964.58 restored across 70 store-days; Paseo bill 39966 matches XLSX to the centavo; 11/12 MATCH on 12-store-day audit (1 expected mismatch by design); 0 Sentry errors; PR pending Sam merge
+  - 2026-05-09 EXECUTED autonomously — 74 rows / PHP 30,964.58 restored across 70 store-days; Paseo bill 39966 matches XLSX to the centavo; 11/12 MATCH on 12-store-day audit (1 expected mismatch by design); 0 Sentry errors; PR #737 created
 completed_date: 2026-05-09
+pr_number: 737
+pr_url: https://github.com/Bebang-Enterprise-Inc/hrms/pull/737
 execution_summary: |
   Migration ran in <30s as a single transaction. 74 channel-distinct
   tombstones restored to live (PHP 30,964.58); 307 same-channel
