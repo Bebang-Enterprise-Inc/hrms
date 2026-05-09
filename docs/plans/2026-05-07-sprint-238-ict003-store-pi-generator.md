@@ -2,12 +2,15 @@
 sprint_id: S238
 sprint_title: ICT-003 Store-Side Purchase Invoice Generator
 plan_branch: s238-ict003-store-pi-generator
-status: PLANNED_AUDITED_v2_1
-version: 2.1
+execute_branch: s238-execute
+status: EXECUTING_v2_2
+version: 2.2
 created_date: 2026-05-07
-revised_date: 2026-05-07
+revised_date: 2026-05-08
 audit_pr: 729
 prior_amendment_pr: 730
+v2_1_amendment_pr: 733
+v2_2_amendment_inline: true
 amendment_branch: s238-ict003-pi-generator-amendment-v2-1
 canonical_scope: in
 canonical_model_reference: docs/STORE_COMPANY_CANONICAL.md
@@ -19,6 +22,7 @@ evidence_committed:
   - output/s238/verification/before_state.json
   - output/s238/verification/after_state.json
   - output/s238/verification/aranetatrial_pi.json
+  - output/s238/verification/aranetatrial_si_naming.json
   - output/s238/verification/historical_si_regression.json
   - output/s238/verification/canonical_post_check.log
 evidence_transient:
@@ -26,13 +30,42 @@ evidence_transient:
   - tmp/s238/probe_*.json
   - tmp/s238/seed_dry_run_*.log
 sprint_registry_row: |
-  | `S238` | Sprint 238 | `s238-ict003-store-pi-generator` | #729 (v1) + #730 (v2) + v2.1 PR pending | PLANNED_AUDITED_v2_1 2026-05-07 — ICT-003 Store-Side PI Generator (~57 units, 11 v1 CRITs + 4 v2 CRITs fixed) | `docs/plans/2026-05-07-sprint-238-ict003-store-pi-generator.md` |
+  | `S238` | Sprint 238 | `s238-ict003-store-pi-generator` | #729 (v1) + #730 (v2) + #733 (v2.1) + execute (v2.2 inline) | EXECUTING_v2_2 2026-05-08 — ICT-003 Store-Side PI Generator + bundled SI autoname hook (~59 units) | `docs/plans/2026-05-07-sprint-238-ict003-store-pi-generator.md` |
 ---
 
-# S238 — ICT-003 Store-Side Purchase Invoice Generator (v2.1 — Re-Audited)
+# S238 — ICT-003 Store-Side Purchase Invoice Generator (v2.2 — Execute, BIR/SI naming bundled)
 
 > **Canonical model reference:** `docs/STORE_COMPANY_CANONICAL.md`
 > **Supersedes:** `docs/plans/2026-05-05-sprint-236-intercompany-auto-trade.md` (S236 v2 — wrong architecture, see Design Rationale).
+
+---
+
+## v2.1 → v2.2 Inline Amendment — BIR/SI Naming Hook (2026-05-08)
+
+**Trigger:** Phase 0-T0 probe confirmed `BEI Settings.bki_sales_naming_series` is NULL in production. Sam (CEO) authorised research into the BIR rules behind that gate; research file at `tmp/s238/BIR_SERIES_RESEARCH.md` concluded:
+
+1. BIR-registered SI series are required ONLY for principal invoices (ATP / PTU Loose-Leaf / PTU CAS / EIS).
+2. BEI's Frappe ERP is **NOT** BIR-accredited (no PTU CAS, no PTU Loose-Leaf, no EIS filing). Mosaic POS is the only BIR-accredited issuance system at BEI today (retail). Frappe-issued BKI→Store SIs are therefore **supplementary documents** in BIR's classification.
+3. Because Frappe SIs are supplementary, BIR does not dictate their number format. The optimization objective is internal traceability.
+
+**Sam's directive (2026-05-08, in-conversation):**
+
+> "Bundle into S238 — go" → expand Phase 2 by +2 units to add an autoname hook so every BKI Sales Invoice's name embeds its originating BEI Store Order #. Naming target: `BKI-SI-{YYYY}-{order-tail}-{n}` (e.g. `BKI-SI-2026-00903-1` for the 1st SI created from `BEI-ORD-2026-00903`).
+
+**v2.2 scope expansion (CEO-approved, no external audit needed):**
+
+| # | Addition | Where |
+|---|---|---|
+| **A1** | NEW file `hrms/api/bki_si_naming.py` (~40 lines) — `set_bki_si_name(doc, method)` autoname hook. Only acts when `doc.company == "BEBANG KITCHEN INC."`. Reads `doc.custom_bei_store_order`, regex-parses `BEI-ORD-(\d{4})-(\d+)$`, counts existing BKI SIs already linked to the same order, sets `doc.name = f"BKI-SI-{year}-{tail}-{n+1}"`. Falls back to `make_autoname("BKI-SI-MISC-.YYYY.-.####")` for SIs without `custom_bei_store_order` (delivery-fee billing, S206 cost-share, manual finance SIs). | Phase 2-T5 (NEW) |
+| **A2** | EDIT `hrms/hooks.py` — add `doc_events: {"Sales Invoice": {"autoname": "hrms.api.bki_si_naming.set_bki_si_name"}}`. Coexists with the existing `Sales Invoice on_submit` (PI generator) and `Sales Invoice on_cancel` (cascade) registrations from Phase 3. | Phase 2-T5 (NEW) |
+| **A3** | NEW file `hrms/tests/test_s238_bki_si_naming.py` — 4 unit tests: (a) BKI SI with valid `custom_bei_store_order` → `BKI-SI-2026-00903-1`, (b) 2nd SI for same order → `-2`, (c) BKI SI without `custom_bei_store_order` → MISC fallback, (d) non-BKI company SI → autoname unchanged (Frappe default behaviour). | Phase 2-T6 (NEW) |
+| **A4** | Phase 4 ARANETA trial extends to verify the new SI naming format on the trial SI. Evidence file: `output/s238/verification/aranetatrial_si_naming.json`. | Phase 4 (extended, no unit increase — folds into existing trial work) |
+
+**Why no audit-plan re-run:** scope expansion is small (~40 LOC + 1 test file), additive (no existing surface modified except `hooks.py`), CEO-approved in conversation, and orthogonal to the PI mirror (lives entirely on the SI side). The 11 v1 CRITs + 4 v2 CRITs fixed by v2 + v2.1 are fully preserved.
+
+**Phase budget impact:** Phase 2: 5 → 7. Total: 57 → **59 units** (still well under 80-unit ceiling, single-session executable).
+
+**Production prerequisite (Sam-action — same as v2.1 W1):** Sam sets `BEI Settings.bki_sales_naming_series = "BKI-SI-.YYYY.-.#####"` (used as fallback by Frappe naming when the autoname hook returns control without setting `doc.name`). Phase 0-T0 probe verifies non-empty before proceeding.
 
 ---
 
@@ -437,7 +470,7 @@ sys.exit(0 if not errs else 1)
 
 ---
 
-### Phase 2 — Supplier + Custom Field + Toggle (5 units)
+### Phase 2 — Supplier + Custom Field + Toggle + SI Autoname (7 units — v2.2)
 
 **2-T1** Write `scripts/s238/seed_bki_trade_supplier.py` (NEW):
 - Create Supplier:
@@ -501,6 +534,122 @@ Register in hooks.py: `Purchase Invoice` → `validate` → list-style append `b
 **MUST_CONTAIN (in 2-T3a):** `lock_posting_date_on_bki_paired_pi`, `Purchase Invoice` validate registration in hooks.py
 
 **2-T4** Apply all seeds on production. Verify post-seed state in `output/s238/verification/after_state.json`.
+
+**2-T5 (v2.2 NEW — CEO scope expansion)** Create `hrms/api/bki_si_naming.py` (NEW):
+
+```python
+"""S238 v2.2 — Autoname hook for BKI Sales Invoices.
+
+Embeds the originating BEI Store Order # into the SI name so a Frappe list
+view shows SI ↔ Order linkage at a glance. Only acts when company is BKI;
+non-BKI SIs fall back to whatever naming_series their doc carries.
+
+BIR context: Frappe ERP is not BIR-accredited (no PTU CAS / PTU LL / EIS).
+The Frappe-issued BKI→Store SI is a supplementary document in BIR terms;
+the buyer's Input-VAT-eligible invoice comes from a separate BIR-registered
+channel. See tmp/s238/BIR_SERIES_RESEARCH.md (CEO-approved 2026-05-08).
+"""
+
+from __future__ import annotations
+
+import re
+
+import frappe
+from frappe.model.naming import make_autoname
+
+_BKI_COMPANY = "BEBANG KITCHEN INC."
+_ORDER_PATTERN = re.compile(r"^BEI-ORD-(\d{4})-(\d+)$")
+
+
+def set_bki_si_name(doc, method=None):
+    """Frappe doc_event handler for Sales Invoice autoname.
+
+    Algorithm:
+    1. If company != BKI, return (Frappe falls back to naming_series).
+    2. If custom_bei_store_order is empty/missing, name = MISC fallback.
+    3. If custom_bei_store_order parses BEI-ORD-{YYYY}-{NNNNN}, count
+       existing SIs already linked to that order, set
+       doc.name = f"BKI-SI-{year}-{tail}-{count+1}".
+    4. If parse fails, name = MISC fallback (defensive).
+    """
+    if (doc.company or "").strip().upper() != _BKI_COMPANY:
+        return  # non-BKI SIs unaffected
+
+    order = (getattr(doc, "custom_bei_store_order", "") or "").strip()
+    if not order:
+        doc.name = make_autoname("BKI-SI-MISC-.YYYY.-.####")
+        return
+
+    m = _ORDER_PATTERN.match(order)
+    if not m:
+        doc.name = make_autoname("BKI-SI-MISC-.YYYY.-.####")
+        return
+
+    year, tail = m.group(1), m.group(2)
+
+    # Count BKI SIs already linked to this same order.
+    # Exclude doc itself in case Frappe re-runs autoname during validation.
+    existing = frappe.db.count(
+        "Sales Invoice",
+        {
+            "custom_bei_store_order": order,
+            "company": _BKI_COMPANY,
+            "name": ["!=", doc.name or ""],
+        },
+    )
+    doc.name = f"BKI-SI-{year}-{tail}-{existing + 1}"
+```
+
+**MUST_MODIFY:** `hrms/api/bki_si_naming.py` (NEW)
+**MUST_CONTAIN:** `set_bki_si_name`, `BEBANG KITCHEN INC.`, `custom_bei_store_order`, `BEI-ORD-`, `make_autoname`, `BKI-SI-MISC-.YYYY.-.####`
+
+Then EDIT `hrms/hooks.py` to register the hook in `doc_events`:
+
+```python
+doc_events = {
+    # ... existing entries ...
+    "Sales Invoice": {
+        "autoname": "hrms.api.bki_si_naming.set_bki_si_name",
+        # existing on_submit / on_cancel from Phase 3 stay alongside this
+    },
+}
+```
+
+**MUST_MODIFY:** `hrms/hooks.py`
+**MUST_CONTAIN:** `hrms.api.bki_si_naming.set_bki_si_name`, `"autoname"` registration under `Sales Invoice`
+
+**2-T6 (v2.2 NEW — CEO scope expansion)** Create `hrms/tests/test_s238_bki_si_naming.py` (NEW). 4 unit tests, all run in `bench --site test_site run-tests --module hrms.tests.test_s238_bki_si_naming`:
+
+- **Test A** — BKI SI with valid `custom_bei_store_order = "BEI-ORD-2026-00903"` → `doc.name == "BKI-SI-2026-00903-1"`
+- **Test B** — 2nd SI for the same order, after Test A's SI exists → `doc.name == "BKI-SI-2026-00903-2"`
+- **Test C** — BKI SI with `custom_bei_store_order = ""` (or attribute missing) → `doc.name` matches regex `^BKI-SI-MISC-2026-\d{4}$`
+- **Test D** — Non-BKI company SI (e.g. company="ARANETATRIAL") with `custom_bei_store_order = "BEI-ORD-2026-00903"` → autoname hook is no-op; Frappe's default naming runs (verifies the company guard works)
+
+**MUST_MODIFY:** `hrms/tests/test_s238_bki_si_naming.py` (NEW)
+**MUST_CONTAIN:** all 4 test method names: `test_a_bki_si_with_order`, `test_b_second_si_same_order`, `test_c_bki_si_no_order`, `test_d_non_bki_company_unaffected`
+
+**Phase 2 verify (v2.2):**
+
+```python
+import os, re, sys, subprocess
+errs = []
+for f in [
+    "scripts/s238/seed_bki_trade_supplier.py",
+    "scripts/s238/install_bki_si_reference_field.py",
+    "scripts/s238/install_bei_settings_toggles.py",
+    "hrms/api/bki_si_naming.py",
+    "hrms/tests/test_s238_bki_si_naming.py",
+]:
+    if not os.path.exists(f): errs.append(f"MISSING: {f}")
+naming = open("hrms/api/bki_si_naming.py", encoding="utf-8").read()
+for needle in ["set_bki_si_name", "BEBANG KITCHEN INC.", "custom_bei_store_order", "BEI-ORD-", "make_autoname", "BKI-SI-MISC-.YYYY.-.####"]:
+    if needle not in naming: errs.append(f"naming module missing: {needle}")
+hooks = open("hrms/hooks.py", encoding="utf-8").read()
+if "hrms.api.bki_si_naming.set_bki_si_name" not in hooks:
+    errs.append("hooks.py missing autoname registration")
+print("PASS" if not errs else "\n".join(errs))
+sys.exit(0 if not errs else 1)
+```
 
 ---
 
@@ -882,7 +1031,10 @@ sys.exit(0 if not errs else 1)
 
 ### Phase 4 — Single-Store Trial (ARANETA) (8 units)
 
-**4-T1** Deploy code to local-frappe via `/local-frappe` first. Run unit tests (8 tests, all must pass).
+**4-T1 (v2.2)** Deploy code to local-frappe via `/local-frappe` first. Run unit tests:
+- `test_s238_pi_generator.py` — 8 tests (Phase 3 deliverable)
+- `test_s238_bki_si_naming.py` — 4 tests (Phase 2-T6 / v2.2 deliverable)
+- **Total: 12 tests, ALL MUST PASS** before proceeding to 4-T2.
 
 **4-T2 (v2)** Submit BKI→ARANETA SI via the existing `complete_receiving` flow **on local-frappe ONLY** (v2 audit blocker — PRODUCTION trial is forbidden because it consumes BIR-authorized ATP serials per Phase 4 v2 amendment):
 - Small amount (~PHP 1.00, 1 line item from existing catalog)
@@ -923,6 +1075,22 @@ Write to `output/s238/verification/aranetatrial_pi.json`:
 ```
 
 **4-T6** Cancel the test PI then test SI; verify clean state.
+
+**4-T7 (v2.2 NEW — CEO scope expansion)** Capture SI naming evidence to `output/s238/verification/aranetatrial_si_naming.json`:
+
+```json
+{
+  "trial_si_name": "<actual SI name from local-frappe trial>",
+  "trial_si_company": "BEBANG KITCHEN INC.",
+  "trial_si_custom_bei_store_order": "<order # if set, else null>",
+  "expected_format_match": "BKI-SI-2026-NNNNN-N or BKI-SI-MISC-2026-NNNN",
+  "actual_format_pass": true,
+  "non_bki_test_si_name": "<from Test D — should NOT match BKI-SI- prefix>",
+  "non_bki_test_si_pass": true
+}
+```
+
+Verification: `trial_si_name` matches `^BKI-SI-(\d{4}-\d+-\d+|MISC-\d{4}-\d{4})$`. Confirms the autoname hook fired correctly.
 
 **Phase 4 verify:**
 ```python
@@ -1044,30 +1212,32 @@ scheduler_events = {
 
 ---
 
-## Phase Budget Contract (v2.1 — re-audit-amended)
+## Phase Budget Contract (v2.2 — execute-time amended)
 
-| Phase | v1 | v2 | v2.1 | v2.1 Δ rationale |
-|---|---:|---:|---:|---|
-| Phase 0 — Boot + state probe | 4 | 6 | 7 | v2.1: +1 — NEW Phase 0-T0 pre-flight `bki_sales_naming_series` SAM-action check |
-| Phase 1 — Account seeder | 5 | 7 | 7 | unchanged |
-| Phase 2 — Supplier + Custom Field + Toggle | 5 | 5 | 5 | unchanged |
-| Phase 3 — PI generator implementation | 10 | 14 | 16 | v2.1: +2 — `_resolve_per_store_cost_center` helper (CRIT-2), correct `bei_legal_entity` (CRIT-1), `has_field` guards on S192/S203 fields (W7), try/except on cascade (W2), silent-skip Sentry breadcrumb (W3), verify-script MUST_NOT_CONTAIN flip (W4) |
-| Phase 4 — local-frappe trial | 8 | 8 | 8 | unchanged |
-| Phase 5 — 5-store regression + S206 sanity | 5 | 5 | 5 | unchanged |
-| Phase 6 — Closeout | 3 | 5 | 6 | v2.1: +1 — register drift script as `scheduler_event.weekly` (W9) |
-| **Total** | **40** | **50** | **57** | v2.1: +7 units (4 CRIT fixes + 5 W fixes) |
+| Phase | v1 | v2 | v2.1 | v2.2 | v2.2 Δ rationale |
+|---|---:|---:|---:|---:|---|
+| Phase 0 — Boot + state probe | 4 | 6 | 7 | 7 | unchanged |
+| Phase 1 — Account seeder | 5 | 7 | 7 | 7 | unchanged |
+| Phase 2 — Supplier + Custom Field + Toggle + **SI autoname** | 5 | 5 | 5 | **7** | **v2.2: +2 — NEW 2-T5 (`hrms/api/bki_si_naming.py` + `hrms/hooks.py` registration) and 2-T6 (4 unit tests). CEO scope expansion 2026-05-08.** |
+| Phase 3 — PI generator implementation | 10 | 14 | 16 | 16 | unchanged |
+| Phase 4 — local-frappe trial | 8 | 8 | 8 | 8 | unchanged (extended verification: SI naming format check folds into existing trial) |
+| Phase 5 — 5-store regression + S206 sanity | 5 | 5 | 5 | 5 | unchanged |
+| Phase 6 — Closeout | 3 | 5 | 6 | 6 | unchanged |
+| **Total** | **40** | **50** | **57** | **59** | **v2.2: +2 units (CEO-approved bundle of SI autoname hook)** |
 
-**v2.1 total: 57 units** — well under 80-unit ceiling. No phase exceeds 16 units. Single-session executable.
+**v2.2 total: 59 units** — well under 80-unit ceiling. No phase exceeds 16 units. Single-session executable.
 
 ---
 
-## Surface Ownership Matrix (S087, v2.1)
+## Surface Ownership Matrix (S087, v2.2)
 
 | Surface | Owner | Allowed mutations |
 |---|---|---|
 | `hrms/api/bki_store_pi_generator.py` | S238 | NEW file (v2.1: + cascade_cancel_store_pi w/try-except + lock_posting_date_on_bki_paired_pi + _mirror_items + _mirror_taxes + resolve_account_by_number + **_resolve_per_store_cost_center** [v2.1-CRIT-2] + run_si_pi_pairing_check entry point [v2.1-W9]; bei_legal_entity uses buyer_company [v2.1-CRIT-1]) |
-| `hrms/hooks.py` | S238 | ADD `Sales Invoice on_submit` + `Sales Invoice on_cancel` (v2-B3) + `Purchase Invoice validate` (v2-B8) + `scheduler_events.weekly` for drift script (v2.1-W9) entries |
+| `hrms/api/bki_si_naming.py` | S238 | **NEW file (v2.2)** — `set_bki_si_name` autoname hook for BKI Sales Invoices |
+| `hrms/hooks.py` | S238 | ADD `Sales Invoice on_submit` + `Sales Invoice on_cancel` (v2-B3) + `Purchase Invoice validate` (v2-B8) + `scheduler_events.weekly` for drift script (v2.1-W9) + **`Sales Invoice autoname` for BKI SI naming (v2.2)** entries |
 | `hrms/tests/test_s238_pi_generator.py` | S238 | NEW file (v2: 8 tests, was 5) |
+| `hrms/tests/test_s238_bki_si_naming.py` | S238 | **NEW file (v2.2)** — 4 unit tests for `set_bki_si_name` |
 | `scripts/s238/seed_pi_generator_accounts.py` | S238 | NEW (v2: account_number prefixes, dynamic `_find_parent_group`) |
 | `scripts/s238/seed_bki_trade_supplier.py` | S238 | NEW |
 | `scripts/s238/install_bki_si_reference_field.py` | S238 | NEW |
@@ -1106,7 +1276,15 @@ scheduler_events = {
 
 ---
 
-## Requirements Regression Checklist (v2.1)
+## Requirements Regression Checklist (v2.2)
+
+### NEW v2.2 CEO-approved bundle checks (must all pass)
+
+- [ ] **A1 (autoname module)**: `hrms/api/bki_si_naming.py` exists with `set_bki_si_name` function. `grep -c "set_bki_si_name"` ≥ 1, `grep -c "BEBANG KITCHEN INC."` ≥ 1, `grep -c "custom_bei_store_order"` ≥ 1, `grep -c "BEI-ORD-"` ≥ 1.
+- [ ] **A2 (hook registration)**: `hrms/hooks.py` registers `hrms.api.bki_si_naming.set_bki_si_name` on `Sales Invoice` `autoname` event. Coexists with existing `on_submit` + `on_cancel` registrations (no overwrite).
+- [ ] **A3 (unit tests)**: `hrms/tests/test_s238_bki_si_naming.py` runs all 4 tests pass: A (BKI SI w/ order → `BKI-SI-2026-00903-1`), B (2nd SI same order → `-2`), C (BKI SI no order → MISC fallback), D (non-BKI SI → unaffected).
+- [ ] **A4 (ARANETA trial naming check)**: Phase 4 trial SI's name matches `^BKI-SI-2026-\d+-1$` if a `custom_bei_store_order` is set, OR `^BKI-SI-MISC-2026-\d{4}$` otherwise. Captured in `output/s238/verification/aranetatrial_si_naming.json`.
+- [ ] **A5 (no historical rename)**: 560 historical Submitted BKI SIs at `ACC-SINV-2026-XXXXX` are NOT renamed by S238. `grep -c "rename_doc.*Sales Invoice"` in S238 scripts returns 0.
 
 ### NEW v2.1 audit-fix checks (must all pass)
 

@@ -1,0 +1,36 @@
+{
+  "mode": "apply",
+  "results": {
+    "seed_bki_trade_supplier.py": {
+      "mode": "apply",
+      "timestamp_utc": "2026-05-09T09:35:11.855982Z",
+      "supplier": "BEBANG KITCHEN INC. - Trade",
+      "errors": [
+        {
+          "step": "create_supplier",
+          "error": "('Supplier', 'BEBANG KITCHEN INC.', IntegrityError(1062, \"Duplicate entry 'BEBANG KITCHEN INC.' for key 'PRIMARY'\"))"
+        }
+      ],
+      "status": "error",
+      "error": "('Supplier', 'BEBANG KITCHEN INC.', IntegrityError(1062, \"Duplicate entry 'BEBANG KITCHEN INC.' for key 'PRIMARY'\"))"
+    },
+    "install_bki_si_reference_field.py": {
+      "mode": "apply",
+      "timestamp_utc": "2026-05-09T09:35:18.230073Z",
+      "doctype": "Purchase Invoice",
+      "fieldname": "bki_si_reference",
+      "status": "error",
+      "name": "Purchase Invoice-bki_si_reference",
+      "error": "(1305, 'SAVEPOINT s238_install_si_ref_field does not exist')"
+    },
+    "install_bei_settings_toggles.py": {
+      "mode": "apply",
+      "timestamp_utc": "2026-05-09T09:35:24.449709Z",
+      "doctype": "BEI Settings",
+      "fieldname": "enable_bki_store_pi_generator",
+      "status": "created",
+      "name": "BEI Settings-enable_bki_store_pi_generator",
+      "default_set": true
+    }
+  }
+}
