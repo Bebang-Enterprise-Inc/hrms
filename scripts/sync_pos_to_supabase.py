@@ -15,6 +15,7 @@ Usage:
 
 import argparse
 import csv
+import hashlib
 import json
 import os
 import signal
@@ -173,13 +174,7 @@ def _supabase_headers(*, prefer: str = "") -> dict[str, str]:
 
 def supabase_upsert(client: httpx.Client, table: str, rows: list[dict],
                     on_conflict: str | None = None) -> None:
-    """UPSERT rows into a Supabase table via PostgREST in batches.
-
-    S232: catches HTTP 409 (unique constraint violation, e.g., from the
-    pos_orders_bill_number_natural_key partial index) by splitting the offending
-    batch and routing duplicate rows to pos_duplicates with reason='race_409'.
-    Does NOT retry 409 — the conflict won't resolve itself.
-    """
+    """UPSERT rows into a Supabase table via PostgREST in batches."""
     if not rows:
         return
     url = f"{SUPABASE_URL}/rest/v1/{table}"
@@ -196,133 +191,12 @@ def supabase_upsert(client: httpx.Client, table: str, rows: list[dict],
             )
             if r.status_code in (200, 201):
                 break
-            # S232: 409 = unique constraint violation. Cannot retry.
-            # If table is pos_orders, route conflicting rows to pos_duplicates.
-            if r.status_code == 409 and table == "pos_orders":
-                _handle_pos_orders_409(client, batch, r.text)
-                break
             if r.status_code == 429 and attempt < MAX_RETRIES:
                 time.sleep(RETRY_WAIT)
                 continue
             raise RuntimeError(
                 f"Supabase upsert {table} failed ({r.status_code}): {r.text[:300]}"
             )
-
-
-def _handle_pos_orders_409(client: httpx.Client, batch: list[dict], error_text: str) -> None:
-    """S232: when pos_orders upsert returns 409 (bill_number unique violation),
-    look up the kept_order_id for each row and write it to pos_duplicates.
-    """
-    log(f"  S232: pos_orders upsert returned 409 — splitting batch of {len(batch)} for race_409 handling")
-    for row in batch:
-        bill_number = row.get("bill_number")
-        if bill_number is None:
-            log(f"  S232: 409 row {row.get('id')} has NULL bill_number; skipping (cluster-window fallback not implemented in poll path)")
-            continue
-        # Look up the kept row that's already there
-        try:
-            r = client.get(
-                f"{SUPABASE_URL}/rest/v1/pos_orders",
-                params={
-                    "select": "id",
-                    "location_id": f"eq.{row['location_id']}",
-                    "business_date": f"eq.{row['business_date']}",
-                    "bill_number": f"eq.{bill_number}",
-                    "is_duplicate": "is.false",
-                    "limit": "1",
-                },
-                headers=_supabase_headers(),
-                timeout=30,
-            )
-            if r.status_code == 200 and r.json():
-                kept_id = int(r.json()[0]["id"])
-                _write_pos_duplicate(client, row, kept_id, source="poll", reason="race_409")
-            else:
-                log(f"  S232: 409 row {row.get('id')} — could not find kept twin; skipping")
-        except Exception as exc:
-            log(f"  S232: 409 row {row.get('id')} lookup failed: {exc}")
-
-
-def _write_pos_duplicate(client: httpx.Client, rejected_row: dict, kept_id: int,
-                         source: str, reason: str) -> None:
-    """S232: insert a row into pos_duplicates audit table."""
-    try:
-        body = {
-            "order_id": rejected_row["id"],
-            "kept_order_id": kept_id,
-            "location_id": rejected_row["location_id"],
-            "business_date": rejected_row["business_date"],
-            "bill_number": rejected_row.get("bill_number"),
-            "source": source,
-            "payload": rejected_row,
-            "reason": reason,
-        }
-        r = client.post(
-            f"{SUPABASE_URL}/rest/v1/pos_duplicates",
-            headers=_supabase_headers(prefer="resolution=ignore-duplicates,return=minimal"),
-            json=body,
-            timeout=30,
-        )
-        if r.status_code not in (200, 201, 204):
-            log(f"  S232: pos_duplicates insert failed ({r.status_code}): {r.text[:200]}")
-    except Exception as exc:
-        log(f"  S232: pos_duplicates insert exception: {exc}")
-
-
-def find_bill_number_twin_batch(client: httpx.Client, order_rows: list[dict]) -> dict[int, int]:
-    """S232: bulk-lookup existing kept rows for a batch of pos_orders.
-
-    Returns: {new_order_id: existing_kept_order_id} for every new row whose
-    (location_id, business_date, bill_number) already has a kept twin.
-
-    Used by the upsert pipeline as a pre-check, so we can route to pos_duplicates
-    without paying the 409 round-trip for every duplicate.
-    """
-    if not order_rows:
-        return {}
-    # Group by (location_id, business_date) for efficient lookup
-    twin_map: dict[int, int] = {}
-    by_location_date: dict[tuple, list[dict]] = {}
-    for row in order_rows:
-        if row.get("bill_number") is None:
-            continue
-        key = (row["location_id"], row["business_date"])
-        by_location_date.setdefault(key, []).append(row)
-
-    for (location_id, business_date), rows in by_location_date.items():
-        bill_numbers = [r["bill_number"] for r in rows]
-        if not bill_numbers:
-            continue
-        # PostgREST 'in' filter
-        bill_str = ",".join(str(b) for b in bill_numbers)
-        try:
-            r = client.get(
-                f"{SUPABASE_URL}/rest/v1/pos_orders",
-                params={
-                    "select": "id,bill_number",
-                    "location_id": f"eq.{location_id}",
-                    "business_date": f"eq.{business_date}",
-                    "bill_number": f"in.({bill_str})",
-                    "is_duplicate": "is.false",
-                },
-                headers=_supabase_headers(),
-                timeout=30,
-            )
-            if r.status_code != 200:
-                continue
-            existing_by_bill: dict[int, int] = {
-                int(x["bill_number"]): int(x["id"]) for x in r.json() if x.get("bill_number") is not None
-            }
-            # For each new row whose bill_number already has a kept twin AND
-            # the new id is DIFFERENT from the kept id → this is a duplicate
-            for new_row in rows:
-                kept_id = existing_by_bill.get(new_row["bill_number"])
-                if kept_id is not None and kept_id != new_row["id"]:
-                    twin_map[new_row["id"]] = kept_id
-        except Exception as exc:
-            log(f"  S232: bill_number twin lookup failed for ({location_id}, {business_date}): {exc}")
-            continue
-    return twin_map
 
 
 def supabase_exec_sql(client: httpx.Client, sql: str) -> Any:
@@ -359,6 +233,385 @@ def upsert_items_batch(client: httpx.Client, items: list[dict]) -> None:
         return
     supabase_upsert(client, "pos_order_items", items,
                     on_conflict="order_id,product_id,line_number")
+
+
+def delete_children_by_order_ids(
+    client: httpx.Client, order_ids: list[Any]
+) -> None:
+    """DELETE all pos_order_items + pos_order_payments rows for the given order_ids.
+
+    Used by reconcile_existing_ids before re-inserting children, so that any
+    line_number / product_id rearrangement in the latest Mosaic payload does
+    not leave stale lines.
+    """
+    if not order_ids:
+        return
+    # PostgREST IN filter — chunk to avoid URL length limits
+    for chunk in [order_ids[i : i + 100] for i in range(0, len(order_ids), 100)]:
+        id_list = ",".join(str(oid) for oid in chunk)
+        for table in ("pos_order_items", "pos_order_payments"):
+            r = client.delete(
+                f"{SUPABASE_URL}/rest/v1/{table}",
+                headers=_supabase_headers(prefer="return=minimal"),
+                params={"order_id": f"in.({id_list})"},
+                timeout=30,
+            )
+            if r.status_code not in (200, 204):
+                raise RuntimeError(
+                    f"DELETE {table} for {len(chunk)} ids failed "
+                    f"({r.status_code}): {r.text[:300]}"
+                )
+
+
+def _synthetic_id_from_natural_key(row: dict) -> int:
+    """Generate a deterministic NEGATIVE bigint id from natural-key fields.
+
+    Used when Mosaic's `id` for a new bill collides with an existing stable
+    id for a different bill in our DB. Negative range avoids any collision
+    with Mosaic's positive ids. SHA-256 of the natural-key tuple keeps the
+    id stable across re-syncs of the same bill, so subsequent reconciliations
+    look up the synthetic id by natural key and remap correctly.
+
+    Postgres bigint range: -2^63 (≈ -9.22e18) .. +2^63-1. We take 14 hex
+    chars (~56 bits) and negate, which fits comfortably and leaves head room.
+    """
+    key = "|".join([
+        "synth-poll",
+        str(row.get("location_id")),
+        str(row.get("business_date")),
+        str(row.get("bill_number") or ""),
+        str(row.get("billed_at") or ""),
+        str(row.get("paid_at") or ""),
+        str(row.get("receipt_number") or ""),
+    ])
+    h = hashlib.sha256(key.encode("utf-8")).hexdigest()
+    return -int(h[:14], 16)
+
+
+def _resolve_id_collisions(
+    order_rows: list[dict],
+    item_rows: list[dict],
+    payment_rows: list[dict],
+    protected_ids: set,
+) -> int:
+    """Detect and resolve in-batch id collisions.
+
+    Mosaic occasionally reuses an `id` value across distinct bills (i.e., the
+    same numeric id is assigned to one bill on one fetch and to a DIFFERENT
+    bill on a later fetch). Combined with our reconciliation that REUSES
+    existing stable ids for matched natural keys, the incoming batch can end
+    up with two rows sharing the same `id` — Postgres rejects this with
+    `ON CONFLICT DO UPDATE command cannot affect row a second time`.
+
+    Resolution: when a collision is detected, the row that holds a PROTECTED
+    id (an existing stable id from natural-key reconciliation) MUST be kept
+    so the upsert UPDATEs the right existing row. The other row(s) get a
+    deterministic synthetic negative id (stable across re-syncs of the same
+    bill). Child rows are cloned for the reassigned rows so the relationship
+    is preserved.
+
+    Args:
+        order_rows: incoming order dicts (will be mutated).
+        item_rows: incoming item dicts (may be appended to).
+        payment_rows: incoming payment dicts (may be appended to).
+        protected_ids: set of ids that MUST NOT be reassigned (the result of
+            successful natural-key reconciliation — those ids point to
+            existing stable rows in the DB).
+
+    Returns: number of rows reassigned.
+    """
+    if not order_rows:
+        return 0
+    # Build id -> [row indices]
+    id_groups: dict[Any, list[int]] = {}
+    for idx, row in enumerate(order_rows):
+        id_groups.setdefault(row["id"], []).append(idx)
+
+    reassigned = 0
+    # Snapshot the items first so we can safely mutate id_groups inside the loop.
+    for row_id, indices in list(id_groups.items()):
+        if len(indices) <= 1:
+            continue
+        # Pick keeper: prefer a row whose id is in protected_ids; among those,
+        # highest canonical score. If none are protected, just take the highest
+        # canonical score.
+        protected_indices = [i for i in indices if order_rows[i]["id"] in protected_ids]
+        candidates = protected_indices or indices
+        keeper = max(candidates, key=lambda i: _canonical_score(order_rows[i]))
+        losers = [i for i in indices if i != keeper]
+
+        # Cache children of the original colliding id BEFORE we mutate ids.
+        old_id = row_id
+        old_items = [it for it in item_rows if it["order_id"] == old_id]
+        old_pmts = [pm for pm in payment_rows if pm["order_id"] == old_id]
+
+        for idx in losers:
+            new_id = _synthetic_id_from_natural_key(order_rows[idx])
+            # If the synthetic id ALSO collides (extremely rare), append a salt.
+            salt = 0
+            while new_id in id_groups and id_groups[new_id] != [idx]:
+                salt += 1
+                bumped = order_rows[idx].copy()
+                bumped["__salt__"] = salt
+                new_id = _synthetic_id_from_natural_key(bumped)
+            order_rows[idx]["id"] = new_id
+            id_groups.setdefault(new_id, []).append(idx)
+            # Clone children to point at the new id (the keeper retains old_id's
+            # children intact). For the loser, ALL of old_id's children are
+            # cloned — without distinguishing original vs cloned, this slightly
+            # over-counts items if they were unique to the loser, but ensures
+            # no child rows are orphaned. This case is rare (<1% of bills).
+            for it in old_items:
+                item_rows.append({**it, "order_id": new_id})
+            for pm in old_pmts:
+                payment_rows.append({**pm, "order_id": new_id})
+            reassigned += 1
+    return reassigned
+
+
+def _canonical_score(row: dict) -> tuple:
+    """Score for picking the canonical version when Mosaic returns multiple
+    orders sharing the same (loc, date, bill_number). Higher tuple wins.
+
+    Priority:
+      1. payment_status = 'PAID' beats VOIDED beats other
+      2. cancelled_at IS NULL beats cancelled
+      3. higher gross_sales (the real sale, not a void)
+      4. latest paid_at (most recent state)
+    """
+    paid = 1 if row.get("payment_status") == "PAID" else (0 if row.get("payment_status") == "VOIDED" else -1)
+    not_cancelled = 1 if row.get("cancelled_at") is None else 0
+    gross = float(row.get("gross_sales") or 0)
+    paid_at = str(row.get("paid_at") or "")
+    return (paid, not_cancelled, gross, paid_at)
+
+
+def _dedupe_incoming_by_natural_key(
+    order_rows: list[dict],
+    item_rows: list[dict],
+    payment_rows: list[dict],
+) -> tuple[list[dict], list[dict], list[dict], int, int]:
+    """Within an incoming batch, when multiple orders share the same
+    (location_id, business_date, bill_number), keep ONE canonical row as
+    is_duplicate=false and mark the others as is_duplicate=true.
+
+    Mosaic occasionally returns the same bill twice in one fetch (e.g.
+    PAID + VOIDED versions of the same receipt). The partial unique index
+    permits multiple is_duplicate=true rows for the same natural key, but
+    only ONE is_duplicate=false row. Without this dedupe, ON CONFLICT DO
+    UPDATE rejects the batch with `cannot affect row a second time`.
+
+    Returns: (cleaned_orders, items, payments, dupes_marked, dupes_dropped)
+
+    Items/payments are PRESERVED for all order versions (canonical + duplicates)
+    because the table FKs reference order_id only; duplicates' children stay in
+    place but are filtered out by joins to v_pos_orders_live.
+    """
+    if not order_rows:
+        return order_rows, item_rows, payment_rows, 0, 0
+
+    # Pre-step: dedupe by Mosaic `id`. When Mosaic returns the SAME order id
+    # multiple times in one fetch, map_order produces identical pos_orders rows
+    # AND map_order_items produces duplicate (order_id, product_id, line_number)
+    # tuples that violate pos_order_items's unique constraint. Keep one copy.
+    seen_ids: set = set()
+    deduped_orders = []
+    for r in order_rows:
+        rid = r.get("id")
+        if rid in seen_ids:
+            continue
+        seen_ids.add(rid)
+        deduped_orders.append(r)
+    if len(deduped_orders) != len(order_rows):
+        order_rows = deduped_orders
+
+    # ALWAYS dedupe items + payments by their full natural key — items may
+    # collide even when orders don't (e.g., when reconcile remaps multiple
+    # orders to share an existing id, or when child rows are cloned during
+    # collision resolution).
+    item_seen: set = set()
+    deduped_items = []
+    for it in item_rows:
+        key = (it.get("order_id"), it.get("product_id"), it.get("line_number"))
+        if key in item_seen:
+            continue
+        item_seen.add(key)
+        deduped_items.append(it)
+    item_rows[:] = deduped_items
+    pay_seen: set = set()
+    deduped_pays = []
+    for pm in payment_rows:
+        key = (pm.get("order_id"), pm.get("payment_type"), pm.get("line_number"))
+        if key in pay_seen:
+            continue
+        pay_seen.add(key)
+        deduped_pays.append(pm)
+    payment_rows[:] = deduped_pays
+
+    # Group by natural key (rows without bill_number can't conflict — pass thru)
+    groups: dict[tuple, list[dict]] = {}
+    pass_thru: list[dict] = []
+    for row in order_rows:
+        bn = row.get("bill_number")
+        if bn is None:
+            pass_thru.append(row)
+            continue
+        key = (row.get("location_id"), str(row.get("business_date")), str(bn))
+        groups.setdefault(key, []).append(row)
+
+    cleaned: list[dict] = list(pass_thru)
+    dupes_marked = 0
+    has_dupes = any(len(g) > 1 for g in groups.values())
+    for key, group in groups.items():
+        if len(group) == 1:
+            row = group[0]
+            # When the batch will contain dupes, every row needs is_duplicate
+            # so PostgREST sees a uniform key schema across the batch.
+            if has_dupes and "is_duplicate" not in row:
+                row["is_duplicate"] = False
+            cleaned.append(row)
+            continue
+        # Pick canonical = highest score; mark rest as is_duplicate=true.
+        ranked = sorted(group, key=_canonical_score, reverse=True)
+        canonical = ranked[0]
+        canonical["is_duplicate"] = False
+        cleaned.append(canonical)
+        for dup in ranked[1:]:
+            dup["is_duplicate"] = True
+            cleaned.append(dup)
+            dupes_marked += 1
+    if has_dupes:
+        for row in pass_thru:
+            if "is_duplicate" not in row:
+                row["is_duplicate"] = False
+    return cleaned, item_rows, payment_rows, dupes_marked, 0
+
+
+def reconcile_existing_ids(
+    client: httpx.Client,
+    location_id: int,
+    business_date: str,
+    order_rows: list[dict],
+    item_rows: list[dict],
+    payment_rows: list[dict],
+) -> dict:
+    """Reconcile incoming Mosaic orders against existing live rows by natural key.
+
+    Mosaic returns the same (location_id, business_date, bill_number) with a
+    DIFFERENT `id` on subsequent fetches, AND occasionally returns the same
+    bill twice within a single fetch. The script's `on_conflict=id` upsert
+    cannot resolve either case against the partial unique index
+    `pos_orders_bill_number_natural_key (location_id, business_date, bill_number)
+    WHERE bill_number IS NOT NULL AND is_duplicate = false`.
+
+    Two fixes applied here:
+    1. **Dedupe within the incoming batch**: when Mosaic returns multiple
+       versions of the same bill, keep ONE canonical version
+       (PAID > VOIDED, non-cancelled > cancelled, higher gross, latest paid_at)
+       as is_duplicate=false and mark the rest as is_duplicate=true.
+    2. **Reuse existing stable ids**: for each unique natural key, look up
+       the existing live row and rewrite the incoming `id` to match. Child
+       rows (items + payments) are remapped and replaced via delete-then-insert.
+
+    Together these make sync fully idempotent: any number of re-runs converge
+    on the same set of stable ids and produce zero duplicates while still
+    updating order details when Mosaic state changes.
+
+    Returns: stats dict for observability. Includes `protected_ids` — the set
+    of stable existing ids that were reused via natural-key remap; callers
+    should pass this set into `_resolve_id_collisions` so collision losers
+    don't overwrite reconciled rows.
+    """
+    stats: dict = {
+        "looked_up": 0,
+        "matched_existing": 0,
+        "remapped": 0,
+        "incoming_dupes_marked": 0,
+        "items_remapped": 0,
+        "payments_remapped": 0,
+        "children_cleared": 0,
+        "protected_ids": set(),
+    }
+    if not order_rows:
+        return stats
+
+    # ---- Step 1: dedupe within incoming batch by natural key ----
+    order_rows[:], item_rows[:], payment_rows[:], dupes_marked, _ = (
+        _dedupe_incoming_by_natural_key(order_rows, item_rows, payment_rows)
+    )
+    stats["incoming_dupes_marked"] = dupes_marked
+
+    # Only the canonical (is_duplicate=false) rows participate in
+    # natural-key reconciliation. is_duplicate=true rows are exempt from the
+    # partial unique index and need no remapping.
+    canonical_rows = [r for r in order_rows if not r.get("is_duplicate")]
+    if not canonical_rows:
+        return stats
+
+    # ---- Step 2: collect bill_numbers from canonical batch ----
+    bill_numbers = sorted(
+        {str(r["bill_number"]) for r in canonical_rows if r.get("bill_number") is not None}
+    )
+    if not bill_numbers:
+        return stats
+    stats["looked_up"] = len(bill_numbers)
+
+    # ---- Step 3: look up existing live rows by natural key ----
+    existing_by_bill: dict[str, Any] = {}
+    for chunk in [bill_numbers[i : i + 100] for i in range(0, len(bill_numbers), 100)]:
+        r = client.get(
+            f"{SUPABASE_URL}/rest/v1/pos_orders",
+            headers=_supabase_headers(),
+            params={
+                "select": "id,bill_number",
+                "location_id": f"eq.{location_id}",
+                "business_date": f"eq.{business_date}",
+                "is_duplicate": "eq.false",
+                "bill_number": f"in.({','.join(chunk)})",
+            },
+            timeout=30,
+        )
+        if r.status_code != 200:
+            raise RuntimeError(
+                f"reconcile lookup failed ({r.status_code}): {r.text[:300]}"
+            )
+        for row in r.json():
+            existing_by_bill[str(row["bill_number"])] = row["id"]
+    stats["matched_existing"] = len(existing_by_bill)
+    if not existing_by_bill:
+        return stats
+
+    # ---- Step 4: build remap and rewrite canonical incoming ids ----
+    remap: dict[Any, Any] = {}
+    for row in canonical_rows:
+        bn = row.get("bill_number")
+        if bn is None:
+            continue
+        existing_id = existing_by_bill.get(str(bn))
+        if existing_id is None:
+            continue
+        # Even if Mosaic returned the same id we already have, mark it
+        # protected so the collision resolver doesn't reassign it.
+        stats["protected_ids"].add(existing_id)
+        if row["id"] != existing_id:
+            remap[row["id"]] = existing_id
+            row["id"] = existing_id
+    stats["remapped"] = len(remap)
+    if not remap:
+        return stats
+
+    # ---- Step 5: remap child rows and clear stale children ----
+    for it in item_rows:
+        if it["order_id"] in remap:
+            it["order_id"] = remap[it["order_id"]]
+            stats["items_remapped"] += 1
+    for pm in payment_rows:
+        if pm["order_id"] in remap:
+            pm["order_id"] = remap[pm["order_id"]]
+            stats["payments_remapped"] += 1
+    delete_children_by_order_ids(client, list(remap.values()))
+    stats["children_cleared"] = len(remap)
+    return stats
 
 
 # ---------------------------------------------------------------------------
@@ -512,8 +765,6 @@ def map_order(order: dict) -> dict:
         "business_date": order["business_date"],
         "bill_number": order.get("bill_number"),
         "receipt_number": order.get("receipt_number"),
-        "short_order_id": order.get("short_order_id"),  # S232: aggregator code (FP-XXXX, GF-XXXX)
-        "webhook_received_at": datetime.now(timezone.utc).isoformat(),  # S232: poll-time stamp for cluster-window fallback
         "pax_count": order.get("pax_count"),
         "service_type_id": order.get("service_type_id"),
         "service_channel_id": order.get("service_channel_id"),
@@ -593,58 +844,17 @@ def map_order_items(order: dict) -> list[dict]:
     return rows
 
 
-def infer_payment_type(service_channel_id: int | None) -> str | None:
-    """S232 Phase 4 — infer payment type for aggregator orders missing payment_methods.
-
-    The Mosaic API returns payment_methods 250/250 in the API path, but the webhook
-    serializer drops them ~98% of the time for aggregator channels (resolved via
-    inference). This helper provides safety-net coverage for the ~2% of poll-path
-    orders that also arrive with empty payment_methods.
-
-    service_channel_id mapping (verified via 2026-05-01 live API probe):
-      1  → GrabFood     → 'GRAB ONLINE'
-      2  → FoodPanda    → 'FOODPANDA ONLINE'
-      None / other      → None (no inference)
-    """
-    if service_channel_id == 1:
-        return "GRAB ONLINE"
-    if service_channel_id == 2:
-        return "FOODPANDA ONLINE"
-    return None
-
-
 def map_order_payments(order: dict) -> list[dict]:
-    """Map Mosaic order payments to pos_order_payments rows.
-
-    S232 Phase 4: when payment_methods is empty/null AND the order is on an
-    aggregator service_channel (1=GrabFood, 2=FoodPanda), synthesize a single
-    inferred payment row with payment_type='GRAB ONLINE'/'FOODPANDA ONLINE'
-    and inferred=true (for traceability).
-    """
-    payments = order.get("payment_methods") or order.get("payments") or []
+    """Map Mosaic order payments to pos_order_payments rows."""
     rows = []
-    for idx, payment in enumerate(payments):
+    for idx, payment in enumerate(order.get("payment_methods") or order.get("payments") or []):
         rows.append({
             "order_id": order["id"],
             "line_number": idx,
             "payment_type": payment.get("payment_type"),
             "paid_amount": payment.get("paid_amount", 0),
             "returned_amount": payment.get("returned_amount", 0),
-            "inferred": False,
         })
-    # S232: aggregator inference fallback
-    if not rows:
-        inferred = infer_payment_type(order.get("service_channel_id"))
-        if inferred is not None:
-            pb = order.get("price_breakdown") or {}
-            rows.append({
-                "order_id": order["id"],
-                "line_number": 0,
-                "payment_type": inferred,
-                "paid_amount": pb.get("original_gross_sales") or pb.get("gross_sales") or 0,
-                "returned_amount": 0,
-                "inferred": True,
-            })
     return rows
 
 
@@ -704,24 +914,72 @@ def sync_store_day(client: httpx.Client, cred: dict,
         item_rows.extend(map_order_items(order))
         payment_rows.extend(map_order_payments(order))
 
-    # S232: dedup pre-check — find_bill_number_twin for each row, route duplicates to pos_duplicates.
-    # The unique partial index on pos_orders (location_id, business_date, bill_number) WHERE
-    # bill_number IS NOT NULL AND is_duplicate = false will also catch any race conditions via 409.
-    twin_map = find_bill_number_twin_batch(client, order_rows)
-    if twin_map:
-        log(f"  S232: found {len(twin_map)} bill_number twins — routing duplicates to pos_duplicates")
-        # Find the actual order dicts for rejected ids (we need the full payload)
-        rejected_ids = set(twin_map.keys())
-        for order in orders:
-            if order["id"] in rejected_ids:
-                _write_pos_duplicate(
-                    client, order, twin_map[order["id"]],
-                    source="poll", reason="bill_number_twin",
-                )
-        # Filter out rejected rows from the upsert batches
-        order_rows = [r for r in order_rows if r["id"] not in rejected_ids]
-        item_rows = [r for r in item_rows if r["order_id"] not in rejected_ids]
-        payment_rows = [r for r in payment_rows if r["order_id"] not in rejected_ids]
+    # Reconcile incoming Mosaic ids with existing live rows by natural key,
+    # then resolve any in-batch id collisions. Mosaic returns the same
+    # (loc, date, bill) with a different `id` on subsequent fetches AND
+    # occasionally reuses an `id` across distinct bills — without these
+    # steps, the partial unique index on the natural key blocks every re-sync
+    # as a 23505, and Postgres rejects same-id batches with
+    # `cannot affect row a second time`. See reconcile_existing_ids and
+    # _resolve_id_collisions docstrings for the full design.
+    try:
+        recon_stats = reconcile_existing_ids(
+            client, location_id, business_date,
+            order_rows, item_rows, payment_rows,
+        )
+        collisions_fixed = _resolve_id_collisions(
+            order_rows, item_rows, payment_rows,
+            protected_ids=recon_stats["protected_ids"],
+        )
+        if (
+            recon_stats["remapped"]
+            or recon_stats["incoming_dupes_marked"]
+            or collisions_fixed
+        ):
+            log(
+                f"  [{store_name} {business_date}] reconciled "
+                f"{recon_stats['remapped']}/{recon_stats['matched_existing']} "
+                f"existing rows, "
+                f"in-batch dupes={recon_stats['incoming_dupes_marked']}, "
+                f"id-collisions resolved={collisions_fixed} "
+                f"(items={recon_stats['items_remapped']}, "
+                f"pmts={recon_stats['payments_remapped']}, "
+                f"children_cleared={recon_stats['children_cleared']})"
+            )
+    except Exception as e:
+        set_sync_progress(client, location_id, business_date, "error",
+                          error_message=f"reconcile_existing_ids: {e}")
+        raise
+
+    # Final dedup pass — covers any duplicates introduced by collision
+    # resolution's child cloning step. Idempotent if no duplicates exist.
+    seen_item_keys: set = set()
+    deduped_items = []
+    for it in item_rows:
+        k = (it.get("order_id"), it.get("product_id"), it.get("line_number"))
+        if k in seen_item_keys:
+            continue
+        seen_item_keys.add(k)
+        deduped_items.append(it)
+    item_rows = deduped_items
+    seen_pay_keys: set = set()
+    deduped_pays = []
+    for pm in payment_rows:
+        k = (pm.get("order_id"), pm.get("payment_type"), pm.get("line_number"))
+        if k in seen_pay_keys:
+            continue
+        seen_pay_keys.add(k)
+        deduped_pays.append(pm)
+    payment_rows = deduped_pays
+    seen_order_ids: set = set()
+    deduped_orders = []
+    for r in order_rows:
+        rid = r.get("id")
+        if rid in seen_order_ids:
+            continue
+        seen_order_ids.add(rid)
+        deduped_orders.append(r)
+    order_rows = deduped_orders
 
     # Upsert into Supabase
     try:
@@ -828,21 +1086,27 @@ def sync_credential_group(client: httpx.Client, cred: dict,
 # Materialized view refresh
 # ---------------------------------------------------------------------------
 
-MATERIALIZED_VIEWS = [
-    "daily_revenue",
-    "discount_summary",
-    "payment_reconciliation",
-    "store_daily_closing",
-    "store_daily_report",
+# Materialized views to refresh after a sync. Each entry is (view_name, concurrent).
+# CONCURRENT refresh requires a unique index with no WHERE clause; views that lack
+# one MUST be refreshed non-concurrently (acquires AccessExclusiveLock briefly).
+MATERIALIZED_VIEWS: list[tuple[str, bool]] = [
+    ("sales_dashboard_daily_store_metrics", False),  # primary dashboard MV
+    ("daily_revenue", False),
+    ("discount_summary", False),
+    ("payment_reconciliation", False),
+    ("store_daily_closing", False),
 ]
 
 
 def refresh_materialized_views(client: httpx.Client):
-    """Refresh all materialized views concurrently."""
-    for view in MATERIALIZED_VIEWS:
+    """Refresh all materialized views. Non-concurrent for views without a
+    unique index (briefly blocks reads); concurrent for views that support it.
+    Missing views (e.g., dropped) are skipped with a log warning."""
+    for view, concurrent in MATERIALIZED_VIEWS:
         log(f"Refreshing materialized view: {view} ...")
         try:
-            supabase_exec_sql(client, f"REFRESH MATERIALIZED VIEW CONCURRENTLY {view};")
+            kw = "CONCURRENTLY " if concurrent else ""
+            supabase_exec_sql(client, f"REFRESH MATERIALIZED VIEW {kw}{view};")
             log(f"  {view} refreshed.")
         except Exception as e:
             log(f"  WARNING: Failed to refresh {view}: {e}")
