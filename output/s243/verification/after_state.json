@@ -1,0 +1,413 @@
+{
+  "sprint": "S243",
+  "phase": "0-T4",
+  "task": "pre-state probe (regenerated; replaces tmp/s238 dependency per v1.1-B5)",
+  "timestamp_utc": "2026-05-09T05:56:06.324355Z",
+  "stores": {
+    "ROBINSONS ANTIPOLO - BEBANG ENTERPRISE INC.": {
+      "company": "ROBINSONS ANTIPOLO - BEBANG ENTERPRISE INC.",
+      "abbr": "ROA",
+      "parent_company": "BEBANG ENTERPRISE INC.",
+      "entity_category": "Store",
+      "default_currency": "PHP",
+      "total_accounts": 8,
+      "group_accounts_count": 5,
+      "leaf_accounts_count": 3,
+      "all_group_accounts": [
+        {
+          "name": "1100000 - ASSETS - ROA",
+          "account_name": "1100000 - ASSETS",
+          "account_number": null,
+          "parent_account": null,
+          "root_type": "Asset",
+          "account_type": ""
+        },
+        {
+          "name": "Current Assets - ROA",
+          "account_name": "Current Assets",
+          "account_number": null,
+          "parent_account": "1100000 - ASSETS - ROA",
+          "root_type": "Asset",
+          "account_type": ""
+        },
+        {
+          "name": "Stock Assets - ROA",
+          "account_name": "Stock Assets",
+          "account_number": null,
+          "parent_account": "Current Assets - ROA",
+          "root_type": "Asset",
+          "account_type": ""
+        },
+        {
+          "name": "Accounts Payable - ROA",
+          "account_name": "Accounts Payable",
+          "account_number": null,
+          "parent_account": "2104000 - INTERCOMPANY PAYABLES - ROA",
+          "root_type": "Liability",
+          "account_type": ""
+        },
+        {
+          "name": "2104000 - INTERCOMPANY PAYABLES - ROA",
+          "account_name": "INTERCOMPANY PAYABLES",
+          "account_number": "2104000",
+          "parent_account": null,
+          "root_type": "Liability",
+          "account_type": null
+        }
+      ],
+      "all_leaf_accounts": [
+        {
+          "name": "1104200 - DUE FROM GROUP ENTITIES - ROA",
+          "account_name": "1104200 - DUE FROM GROUP ENTITIES",
+          "account_number": null,
+          "parent_account": "1100000 - ASSETS - ROA",
+          "root_type": "Asset",
+          "account_type": "Receivable"
+        },
+        {
+          "name": "2104200 - DUE TO GROUP ENTITIES - ROA",
+          "account_name": "2104200 - DUE TO GROUP ENTITIES",
+          "account_number": null,
+          "parent_account": "2104000 - INTERCOMPANY PAYABLES - ROA",
+          "root_type": "Liability",
+          "account_type": "Payable"
+        },
+        {
+          "name": "2104200 - DUE TO BFC - ROA",
+          "account_name": "DUE TO BFC",
+          "account_number": "2104200",
+          "parent_account": "2104000 - INTERCOMPANY PAYABLES - ROA",
+          "root_type": "Liability",
+          "account_type": "Payable"
+        }
+      ],
+      "billing_customer_exists": true,
+      "billing_customer": "ROBINSONS ANTIPOLO - BEBANG ENTERPRISE INC.",
+      "warehouse_list": [
+        {
+          "name": "ROBINSONS ANTIPOLO - BEBANG ENTERPRISE INC.",
+          "warehouse_name": "ROBINSONS ANTIPOLO",
+          "is_group": 0,
+          "disabled": 0
+        }
+      ],
+      "BKI_si_counts": {
+        "0": {
+          "count": 1,
+          "total": 1480.86
+        },
+        "1": {
+          "count": 8,
+          "total": 11846.88
+        }
+      },
+      "BKI_si_total_count": 9
+    },
+    "SM MANILA - BEBANG ENTERPRISE INC.": {
+      "company": "SM MANILA - BEBANG ENTERPRISE INC.",
+      "abbr": "SMM",
+      "parent_company": "BEBANG ENTERPRISE INC.",
+      "entity_category": "Store",
+      "default_currency": "PHP",
+      "total_accounts": 8,
+      "group_accounts_count": 5,
+      "leaf_accounts_count": 3,
+      "all_group_accounts": [
+        {
+          "name": "1100000 - ASSETS - SMM",
+          "account_name": "1100000 - ASSETS",
+          "account_number": null,
+          "parent_account": null,
+          "root_type": "Asset",
+          "account_type": ""
+        },
+        {
+          "name": "Current Assets - SMM",
+          "account_name": "Current Assets",
+          "account_number": null,
+          "parent_account": "1100000 - ASSETS - SMM",
+          "root_type": "Asset",
+          "account_type": ""
+        },
+        {
+          "name": "Stock Assets - SMM",
+          "account_name": "Stock Assets",
+          "account_number": null,
+          "parent_account": "Current Assets - SMM",
+          "root_type": "Asset",
+          "account_type": ""
+        },
+        {
+          "name": "Accounts Payable - SMM",
+          "account_name": "Accounts Payable",
+          "account_number": null,
+          "parent_account": "2104000 - INTERCOMPANY PAYABLES - SMM",
+          "root_type": "Liability",
+          "account_type": ""
+        },
+        {
+          "name": "2104000 - INTERCOMPANY PAYABLES - SMM",
+          "account_name": "INTERCOMPANY PAYABLES",
+          "account_number": "2104000",
+          "parent_account": null,
+          "root_type": "Liability",
+          "account_type": null
+        }
+      ],
+      "all_leaf_accounts": [
+        {
+          "name": "1104200 - DUE FROM GROUP ENTITIES - SMM",
+          "account_name": "1104200 - DUE FROM GROUP ENTITIES",
+          "account_number": null,
+          "parent_account": "1100000 - ASSETS - SMM",
+          "root_type": "Asset",
+          "account_type": "Receivable"
+        },
+        {
+          "name": "2104200 - DUE TO GROUP ENTITIES - SMM",
+          "account_name": "2104200 - DUE TO GROUP ENTITIES",
+          "account_number": null,
+          "parent_account": "2104000 - INTERCOMPANY PAYABLES - SMM",
+          "root_type": "Liability",
+          "account_type": "Payable"
+        },
+        {
+          "name": "2104200 - DUE TO BFC - SMM",
+          "account_name": "DUE TO BFC",
+          "account_number": "2104200",
+          "parent_account": "2104000 - INTERCOMPANY PAYABLES - SMM",
+          "root_type": "Liability",
+          "account_type": "Payable"
+        }
+      ],
+      "billing_customer_exists": true,
+      "billing_customer": "SM MANILA - BEBANG ENTERPRISE INC.",
+      "warehouse_list": [
+        {
+          "name": "SM MANILA - BEBANG ENTERPRISE INC.",
+          "warehouse_name": "SM MANILA",
+          "is_group": 0,
+          "disabled": 0
+        }
+      ],
+      "BKI_si_counts": {
+        "0": {
+          "count": 1,
+          "total": 1480.86
+        },
+        "1": {
+          "count": 11,
+          "total": 16289.46
+        },
+        "2": {
+          "count": 7,
+          "total": 15395.78
+        }
+      },
+      "BKI_si_total_count": 19
+    },
+    "SM MEGAMALL - BEBANG ENTERPRISE INC.": {
+      "company": "SM MEGAMALL - BEBANG ENTERPRISE INC.",
+      "abbr": "SMMM",
+      "parent_company": "BEBANG ENTERPRISE INC.",
+      "entity_category": "Store",
+      "default_currency": "PHP",
+      "total_accounts": 8,
+      "group_accounts_count": 5,
+      "leaf_accounts_count": 3,
+      "all_group_accounts": [
+        {
+          "name": "1100000 - ASSETS - SMMM",
+          "account_name": "1100000 - ASSETS",
+          "account_number": null,
+          "parent_account": null,
+          "root_type": "Asset",
+          "account_type": ""
+        },
+        {
+          "name": "Current Assets - SMMM",
+          "account_name": "Current Assets",
+          "account_number": null,
+          "parent_account": "1100000 - ASSETS - SMMM",
+          "root_type": "Asset",
+          "account_type": ""
+        },
+        {
+          "name": "Stock Assets - SMMM",
+          "account_name": "Stock Assets",
+          "account_number": null,
+          "parent_account": "Current Assets - SMMM",
+          "root_type": "Asset",
+          "account_type": ""
+        },
+        {
+          "name": "Accounts Payable - SMMM",
+          "account_name": "Accounts Payable",
+          "account_number": null,
+          "parent_account": "2104000 - INTERCOMPANY PAYABLES - SMMM",
+          "root_type": "Liability",
+          "account_type": ""
+        },
+        {
+          "name": "2104000 - INTERCOMPANY PAYABLES - SMMM",
+          "account_name": "INTERCOMPANY PAYABLES",
+          "account_number": "2104000",
+          "parent_account": null,
+          "root_type": "Liability",
+          "account_type": null
+        }
+      ],
+      "all_leaf_accounts": [
+        {
+          "name": "1104200 - DUE FROM GROUP ENTITIES - SMMM",
+          "account_name": "1104200 - DUE FROM GROUP ENTITIES",
+          "account_number": null,
+          "parent_account": "1100000 - ASSETS - SMMM",
+          "root_type": "Asset",
+          "account_type": "Receivable"
+        },
+        {
+          "name": "2104200 - DUE TO GROUP ENTITIES - SMMM",
+          "account_name": "2104200 - DUE TO GROUP ENTITIES",
+          "account_number": null,
+          "parent_account": "2104000 - INTERCOMPANY PAYABLES - SMMM",
+          "root_type": "Liability",
+          "account_type": "Payable"
+        },
+        {
+          "name": "2104200 - DUE TO BFC - SMMM",
+          "account_name": "DUE TO BFC",
+          "account_number": "2104200",
+          "parent_account": "2104000 - INTERCOMPANY PAYABLES - SMMM",
+          "root_type": "Liability",
+          "account_type": "Payable"
+        }
+      ],
+      "billing_customer_exists": true,
+      "billing_customer": "SM MEGAMALL - BEBANG ENTERPRISE INC.",
+      "warehouse_list": [
+        {
+          "name": "SM MEGAMALL - BEBANG ENTERPRISE INC.",
+          "warehouse_name": "SM MEGAMALL",
+          "is_group": 0,
+          "disabled": 0
+        }
+      ],
+      "BKI_si_counts": {
+        "0": {
+          "count": 1,
+          "total": 1184.12
+        },
+        "1": {
+          "count": 13,
+          "total": 443955.6
+        },
+        "2": {
+          "count": 6,
+          "total": 14841.44
+        }
+      },
+      "BKI_si_total_count": 20
+    },
+    "SM SOUTHMALL - BEBANG ENTERPRISE INC.": {
+      "company": "SM SOUTHMALL - BEBANG ENTERPRISE INC.",
+      "abbr": "SMS",
+      "parent_company": "BEBANG ENTERPRISE INC.",
+      "entity_category": "Store",
+      "default_currency": "PHP",
+      "total_accounts": 8,
+      "group_accounts_count": 5,
+      "leaf_accounts_count": 3,
+      "all_group_accounts": [
+        {
+          "name": "1100000 - ASSETS - SMS",
+          "account_name": "1100000 - ASSETS",
+          "account_number": null,
+          "parent_account": null,
+          "root_type": "Asset",
+          "account_type": ""
+        },
+        {
+          "name": "Current Assets - SMS",
+          "account_name": "Current Assets",
+          "account_number": null,
+          "parent_account": "1100000 - ASSETS - SMS",
+          "root_type": "Asset",
+          "account_type": ""
+        },
+        {
+          "name": "Stock Assets - SMS",
+          "account_name": "Stock Assets",
+          "account_number": null,
+          "parent_account": "Current Assets - SMS",
+          "root_type": "Asset",
+          "account_type": ""
+        },
+        {
+          "name": "Accounts Payable - SMS",
+          "account_name": "Accounts Payable",
+          "account_number": null,
+          "parent_account": "2104000 - INTERCOMPANY PAYABLES - SMS",
+          "root_type": "Liability",
+          "account_type": ""
+        },
+        {
+          "name": "2104000 - INTERCOMPANY PAYABLES - SMS",
+          "account_name": "INTERCOMPANY PAYABLES",
+          "account_number": "2104000",
+          "parent_account": null,
+          "root_type": "Liability",
+          "account_type": null
+        }
+      ],
+      "all_leaf_accounts": [
+        {
+          "name": "1104200 - DUE FROM GROUP ENTITIES - SMS",
+          "account_name": "1104200 - DUE FROM GROUP ENTITIES",
+          "account_number": null,
+          "parent_account": "1100000 - ASSETS - SMS",
+          "root_type": "Asset",
+          "account_type": "Receivable"
+        },
+        {
+          "name": "2104200 - DUE TO GROUP ENTITIES - SMS",
+          "account_name": "2104200 - DUE TO GROUP ENTITIES",
+          "account_number": null,
+          "parent_account": "2104000 - INTERCOMPANY PAYABLES - SMS",
+          "root_type": "Liability",
+          "account_type": "Payable"
+        },
+        {
+          "name": "2104200 - DUE TO BFC - SMS",
+          "account_name": "DUE TO BFC",
+          "account_number": "2104200",
+          "parent_account": "2104000 - INTERCOMPANY PAYABLES - SMS",
+          "root_type": "Liability",
+          "account_type": "Payable"
+        }
+      ],
+      "billing_customer_exists": true,
+      "billing_customer": "SM SOUTHMALL - BEBANG ENTERPRISE INC.",
+      "warehouse_list": [
+        {
+          "name": "SM SOUTHMALL - BEBANG ENTERPRISE INC.",
+          "warehouse_name": "SM SOUTHMALL",
+          "is_group": 0,
+          "disabled": 0
+        }
+      ],
+      "BKI_si_counts": {
+        "1": {
+          "count": 10,
+          "total": 11040.64
+        },
+        "2": {
+          "count": 3,
+          "total": 3169.83
+        }
+      },
+      "BKI_si_total_count": 13
+    }
+  },
+  "status": "OK"
+}

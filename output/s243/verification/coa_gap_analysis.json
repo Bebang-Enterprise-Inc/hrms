@@ -1,0 +1,194 @@
+{
+  "sprint": "S243",
+  "phase": "1-T2",
+  "task": "gap analysis vs BARE-NAME canonical",
+  "timestamp_utc": "2026-05-09T00:00:00Z",
+  "method": "compare 4 incomplete stores against 5-store BARE-NAME sample (AMM/AFT/AYEVO/UPTC/AYSOL); identify ONLY the groups directly required by S238 to keep within the v1.1 plan's ALLOWED_ACCOUNT_NAMES = {Stock Assets, Accounts Payable, Current Assets} and HB-1 (max 4 groups per store)",
+  "sample_canonical_chain_observed": {
+    "Stock Assets": "Stock Assets - <ABBR> -> Current Assets - <ABBR> -> Application of Funds (Assets) - <ABBR>",
+    "Accounts Payable": "Accounts Payable - <ABBR> -> Current Liabilities - <ABBR> -> Source of Funds (Liabilities) - <ABBR>",
+    "Current Assets": "Current Assets - <ABBR> -> Application of Funds (Assets) - <ABBR>"
+  },
+  "deviation_from_canonical": "Asset side: parent Current Assets to target stores existing 1100000 - ASSETS - <ABBR> (saves 1 group). Liability side: parent Accounts Payable to existing 2104000 - INTERCOMPANY PAYABLES - <ABBR> (Frappe rejects creating a 2nd top-level Liability root). Taxonomic compromise: AP appears as sub-category of IC PAYABLES on these 4 stores. S238 _find_parent_group_for queries by account_name (BARE), not parent chain \u2014 so deviation does NOT break S238. Closeout SUMMARY records as follow-up sprint candidate (S244+) to harmonize CoA fully alongside B8 verifier extension.",
+  "ROA": {
+    "abbr": "ROA",
+    "company": "ROBINSONS ANTIPOLO - BEBANG ENTERPRISE INC.",
+    "existing_group_count": 2,
+    "existing_groups": [
+      "1100000 - ASSETS - ROA",
+      "2104000 - INTERCOMPANY PAYABLES - ROA"
+    ],
+    "groups_to_create": [
+      {
+        "account_name": "Current Assets",
+        "account_number": null,
+        "parent_account": "1100000 - ASSETS - ROA",
+        "root_type": "Asset",
+        "is_group": 1,
+        "expected_docname": "Current Assets - ROA",
+        "rationale": "S238 Phase 1-T1 needs this parent for Input VAT - BKI Inter-Co leaf. account_name BARE per BARE-NAME convention. Reuses target-store's existing Asset root.",
+        "create_order": 1
+      },
+      {
+        "account_name": "Stock Assets",
+        "account_number": null,
+        "parent_account": "Current Assets - ROA",
+        "root_type": "Asset",
+        "is_group": 1,
+        "expected_docname": "Stock Assets - ROA",
+        "rationale": "S238 Phase 1-T1 needs this parent for Inventory-from-Commissary leaf. account_name BARE; chains under new Current Assets per canonical pattern.",
+        "create_order": 2
+      },
+      {
+        "account_name": "Accounts Payable",
+        "account_number": null,
+        "parent_account": "2104000 - INTERCOMPANY PAYABLES - ROA",
+        "root_type": "Liability",
+        "is_group": 1,
+        "expected_docname": "Accounts Payable - ROA",
+        "rationale": "S238 Phase 1-T1 needs this parent for AP-Trade-BKI leaf. Parented to existing 2104000 - INTERCOMPANY PAYABLES - <ABBR> because Frappe rejects 2nd top-level Liability root (each Company has exactly one Liability root). Taxonomic compromise: AP appears as sub-category of IC PAYABLES on these 4 stores; S238 lookup by account_name unaffected.",
+        "create_order": 3
+      }
+    ]
+  },
+  "SMM": {
+    "abbr": "SMM",
+    "company": "SM MANILA - BEBANG ENTERPRISE INC.",
+    "existing_group_count": 2,
+    "existing_groups": [
+      "1100000 - ASSETS - SMM",
+      "2104000 - INTERCOMPANY PAYABLES - SMM"
+    ],
+    "groups_to_create": [
+      {
+        "account_name": "Current Assets",
+        "account_number": null,
+        "parent_account": "1100000 - ASSETS - SMM",
+        "root_type": "Asset",
+        "is_group": 1,
+        "expected_docname": "Current Assets - SMM",
+        "rationale": "S238 Phase 1-T1 needs this parent for Input VAT - BKI Inter-Co leaf.",
+        "create_order": 1
+      },
+      {
+        "account_name": "Stock Assets",
+        "account_number": null,
+        "parent_account": "Current Assets - SMM",
+        "root_type": "Asset",
+        "is_group": 1,
+        "expected_docname": "Stock Assets - SMM",
+        "rationale": "S238 Phase 1-T1 needs this parent for Inventory-from-Commissary leaf.",
+        "create_order": 2
+      },
+      {
+        "account_name": "Accounts Payable",
+        "account_number": null,
+        "parent_account": "2104000 - INTERCOMPANY PAYABLES - SMM",
+        "root_type": "Liability",
+        "is_group": 1,
+        "expected_docname": "Accounts Payable - SMM",
+        "rationale": "S238 Phase 1-T1 needs this parent for AP-Trade-BKI leaf. Parented to existing 2104000 - INTERCOMPANY PAYABLES - <ABBR> because Frappe rejects 2nd top-level Liability root (each Company has exactly one Liability root). Taxonomic compromise: AP appears as sub-category of IC PAYABLES on these 4 stores; S238 lookup by account_name unaffected.",
+        "create_order": 3
+      }
+    ]
+  },
+  "SMMM": {
+    "abbr": "SMMM",
+    "company": "SM MEGAMALL - BEBANG ENTERPRISE INC.",
+    "existing_group_count": 2,
+    "existing_groups": [
+      "1100000 - ASSETS - SMMM",
+      "2104000 - INTERCOMPANY PAYABLES - SMMM"
+    ],
+    "groups_to_create": [
+      {
+        "account_name": "Current Assets",
+        "account_number": null,
+        "parent_account": "1100000 - ASSETS - SMMM",
+        "root_type": "Asset",
+        "is_group": 1,
+        "expected_docname": "Current Assets - SMMM",
+        "rationale": "S238 Phase 1-T1 needs this parent for Input VAT - BKI Inter-Co leaf.",
+        "create_order": 1
+      },
+      {
+        "account_name": "Stock Assets",
+        "account_number": null,
+        "parent_account": "Current Assets - SMMM",
+        "root_type": "Asset",
+        "is_group": 1,
+        "expected_docname": "Stock Assets - SMMM",
+        "rationale": "S238 Phase 1-T1 needs this parent for Inventory-from-Commissary leaf.",
+        "create_order": 2
+      },
+      {
+        "account_name": "Accounts Payable",
+        "account_number": null,
+        "parent_account": "2104000 - INTERCOMPANY PAYABLES - SMMM",
+        "root_type": "Liability",
+        "is_group": 1,
+        "expected_docname": "Accounts Payable - SMMM",
+        "rationale": "S238 Phase 1-T1 needs this parent for AP-Trade-BKI leaf. Parented to existing 2104000 - INTERCOMPANY PAYABLES - <ABBR> because Frappe rejects 2nd top-level Liability root (each Company has exactly one Liability root). Taxonomic compromise: AP appears as sub-category of IC PAYABLES on these 4 stores; S238 lookup by account_name unaffected.",
+        "create_order": 3
+      }
+    ]
+  },
+  "SMS": {
+    "abbr": "SMS",
+    "company": "SM SOUTHMALL - BEBANG ENTERPRISE INC.",
+    "existing_group_count": 2,
+    "existing_groups": [
+      "1100000 - ASSETS - SMS",
+      "2104000 - INTERCOMPANY PAYABLES - SMS"
+    ],
+    "groups_to_create": [
+      {
+        "account_name": "Current Assets",
+        "account_number": null,
+        "parent_account": "1100000 - ASSETS - SMS",
+        "root_type": "Asset",
+        "is_group": 1,
+        "expected_docname": "Current Assets - SMS",
+        "rationale": "S238 Phase 1-T1 needs this parent for Input VAT - BKI Inter-Co leaf.",
+        "create_order": 1
+      },
+      {
+        "account_name": "Stock Assets",
+        "account_number": null,
+        "parent_account": "Current Assets - SMS",
+        "root_type": "Asset",
+        "is_group": 1,
+        "expected_docname": "Stock Assets - SMS",
+        "rationale": "S238 Phase 1-T1 needs this parent for Inventory-from-Commissary leaf.",
+        "create_order": 2
+      },
+      {
+        "account_name": "Accounts Payable",
+        "account_number": null,
+        "parent_account": "2104000 - INTERCOMPANY PAYABLES - SMS",
+        "root_type": "Liability",
+        "is_group": 1,
+        "expected_docname": "Accounts Payable - SMS",
+        "rationale": "S238 Phase 1-T1 needs this parent for AP-Trade-BKI leaf. Parented to existing 2104000 - INTERCOMPANY PAYABLES - <ABBR> because Frappe rejects 2nd top-level Liability root (each Company has exactly one Liability root). Taxonomic compromise: AP appears as sub-category of IC PAYABLES on these 4 stores; S238 lookup by account_name unaffected.",
+        "create_order": 3
+      }
+    ]
+  },
+  "summary": {
+    "total_groups_to_create": 12,
+    "groups_per_store": 3,
+    "all_within_hb1_limit": true,
+    "all_account_names_in_allowed_set": true,
+    "allowed_account_names": [
+      "Stock Assets",
+      "Accounts Payable",
+      "Current Assets"
+    ]
+  },
+  "hb_check": {
+    "HB1_max_4_per_store": "PASS (3 per store)",
+    "HB2_5_sampled_consistent": "PASS (reference_bare_name_coa.json convention_consistent: true)",
+    "HB3_AP_parent_resolvable": "PASS (parent_account=2104000 - INTERCOMPANY PAYABLES - <ABBR>; existing top-level Liability group on each target store)",
+    "HB4_no_docname_collision_with_existing": "PASS (target stores' existing groups use number-prefix naming; new BARE-NAME docnames cannot collide)"
+  }
+}

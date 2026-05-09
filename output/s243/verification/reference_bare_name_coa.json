@@ -1,0 +1,1351 @@
+{
+  "sprint": "S243",
+  "phase": "1-T1",
+  "task": "BARE-NAME reference probe (5 stores)",
+  "timestamp_utc": "2026-05-09T05:46:52.153293Z",
+  "sampled_abbrs": [
+    "AMM",
+    "AFT",
+    "AYEVO",
+    "UPTC",
+    "AYSOL"
+  ],
+  "convention_consistent": true,
+  "stores": {
+    "AMM": {
+      "company": "AYALA MARKET MARKET - BEBANG MARKET MARKET INC.",
+      "parent_company": "BEBANG ENTERPRISE INC.",
+      "abbr": "AMM",
+      "group_count": 33,
+      "all_groups_sample": [
+        {
+          "name": "Accounts Receivable - AMM",
+          "account_name": "Accounts Receivable",
+          "account_number": "",
+          "parent_account": "Current Assets - AMM",
+          "root_type": "Asset"
+        },
+        {
+          "name": "Application of Funds (Assets) - AMM",
+          "account_name": "Application of Funds (Assets)",
+          "account_number": "",
+          "parent_account": null,
+          "root_type": "Asset"
+        },
+        {
+          "name": "Bank Accounts - AMM",
+          "account_name": "Bank Accounts",
+          "account_number": "",
+          "parent_account": "Current Assets - AMM",
+          "root_type": "Asset"
+        },
+        {
+          "name": "Cash In Hand - AMM",
+          "account_name": "Cash In Hand",
+          "account_number": "",
+          "parent_account": "Current Assets - AMM",
+          "root_type": "Asset"
+        },
+        {
+          "name": "Current Assets - AMM",
+          "account_name": "Current Assets",
+          "account_number": "",
+          "parent_account": "Application of Funds (Assets) - AMM",
+          "root_type": "Asset"
+        },
+        {
+          "name": "Fixed Assets - AMM",
+          "account_name": "Fixed Assets",
+          "account_number": "",
+          "parent_account": "Application of Funds (Assets) - AMM",
+          "root_type": "Asset"
+        },
+        {
+          "name": "Investments - AMM",
+          "account_name": "Investments",
+          "account_number": "",
+          "parent_account": "Application of Funds (Assets) - AMM",
+          "root_type": "Asset"
+        },
+        {
+          "name": "Loans and Advances (Assets) - AMM",
+          "account_name": "Loans and Advances (Assets)",
+          "account_number": "",
+          "parent_account": "Current Assets - AMM",
+          "root_type": "Asset"
+        },
+        {
+          "name": "Securities and Deposits - AMM",
+          "account_name": "Securities and Deposits",
+          "account_number": "",
+          "parent_account": "Current Assets - AMM",
+          "root_type": "Asset"
+        },
+        {
+          "name": "Stock Assets - AMM",
+          "account_name": "Stock Assets",
+          "account_number": "",
+          "parent_account": "Current Assets - AMM",
+          "root_type": "Asset"
+        },
+        {
+          "name": "Tax Assets - AMM",
+          "account_name": "Tax Assets",
+          "account_number": "",
+          "parent_account": "Current Assets - AMM",
+          "root_type": "Asset"
+        },
+        {
+          "name": "Temporary Accounts - AMM",
+          "account_name": "Temporary Accounts",
+          "account_number": "",
+          "parent_account": "Application of Funds (Assets) - AMM",
+          "root_type": "Asset"
+        },
+        {
+          "name": "Equity - AMM",
+          "account_name": "Equity",
+          "account_number": "",
+          "parent_account": null,
+          "root_type": "Equity"
+        },
+        {
+          "name": "Direct Expenses - AMM",
+          "account_name": "Direct Expenses",
+          "account_number": "",
+          "parent_account": "Expenses - AMM",
+          "root_type": "Expense"
+        },
+        {
+          "name": "Expenses - AMM",
+          "account_name": "Expenses",
+          "account_number": "",
+          "parent_account": null,
+          "root_type": "Expense"
+        },
+        {
+          "name": "Indirect Expenses - AMM",
+          "account_name": "Indirect Expenses",
+          "account_number": "",
+          "parent_account": "Expenses - AMM",
+          "root_type": "Expense"
+        },
+        {
+          "name": "Stock Expenses - AMM",
+          "account_name": "Stock Expenses",
+          "account_number": "",
+          "parent_account": "Direct Expenses - AMM",
+          "root_type": "Expense"
+        },
+        {
+          "name": "Direct Income - AMM",
+          "account_name": "Direct Income",
+          "account_number": "",
+          "parent_account": "Income - AMM",
+          "root_type": "Income"
+        },
+        {
+          "name": "Income - AMM",
+          "account_name": "Income",
+          "account_number": "",
+          "parent_account": null,
+          "root_type": "Income"
+        },
+        {
+          "name": "Indirect Income - AMM",
+          "account_name": "Indirect Income",
+          "account_number": "",
+          "parent_account": "Income - AMM",
+          "root_type": "Income"
+        },
+        {
+          "name": "4000000 - SALES - AMM",
+          "account_name": "SALES",
+          "account_number": "4000000",
+          "parent_account": null,
+          "root_type": "Income"
+        },
+        {
+          "name": "4000100 - STORE SALES - AMM",
+          "account_name": "STORE SALES",
+          "account_number": "4000100",
+          "parent_account": "4000000 - SALES - AMM",
+          "root_type": "Income"
+        },
+        {
+          "name": "4000120 - ONLINE SALES - AMM",
+          "account_name": "ONLINE SALES",
+          "account_number": "4000120",
+          "parent_account": "4000100 - STORE SALES - AMM",
+          "root_type": "Income"
+        },
+        {
+          "name": "4000200 - BKI SALES - AMM",
+          "account_name": "BKI SALES",
+          "account_number": "4000200",
+          "parent_account": "4000000 - SALES - AMM",
+          "root_type": "Income"
+        },
+        {
+          "name": "4000220 - LOGISTICS - AMM",
+          "account_name": "LOGISTICS",
+          "account_number": "4000220",
+          "parent_account": "4000200 - BKI SALES - AMM",
+          "root_type": "Income"
+        },
+        {
+          "name": "4000230 - FEES - AMM",
+          "account_name": "FEES",
+          "account_number": "4000230",
+          "parent_account": "4000000 - SALES - AMM",
+          "root_type": "Income"
+        },
+        {
+          "name": "4000900 - DISCOUNTS AND PROMO - AMM",
+          "account_name": "DISCOUNTS AND PROMO",
+          "account_number": "4000900",
+          "parent_account": "4000000 - SALES - AMM",
+          "root_type": "Income"
+        },
+        {
+          "name": "Accounts Payable - AMM",
+          "account_name": "Accounts Payable",
+          "account_number": "",
+          "parent_account": "Current Liabilities - AMM",
+          "root_type": "Liability"
+        },
+        {
+          "name": "Current Liabilities - AMM",
+          "account_name": "Current Liabilities",
+          "account_number": "",
+          "parent_account": "Source of Funds (Liabilities) - AMM",
+          "root_type": "Liability"
+        },
+        {
+          "name": "Duties and Taxes - AMM",
+          "account_name": "Duties and Taxes",
+          "account_number": "",
+          "parent_account": "Current Liabilities - AMM",
+          "root_type": "Liability"
+        }
+      ],
+      "target_groups_resolved": {
+        "Stock Assets": {
+          "bare_match_count": 1,
+          "bare_match": [
+            {
+              "name": "Stock Assets - AMM",
+              "account_name": "Stock Assets",
+              "account_number": "",
+              "parent_account": "Current Assets - AMM",
+              "root_type": "Asset"
+            }
+          ],
+          "upper_match_count": 0,
+          "upper_match": []
+        },
+        "Accounts Payable": {
+          "bare_match_count": 1,
+          "bare_match": [
+            {
+              "name": "Accounts Payable - AMM",
+              "account_name": "Accounts Payable",
+              "account_number": "",
+              "parent_account": "Current Liabilities - AMM",
+              "root_type": "Liability"
+            }
+          ],
+          "upper_match_count": 0,
+          "upper_match": []
+        },
+        "Current Assets": {
+          "bare_match_count": 1,
+          "bare_match": [
+            {
+              "name": "Current Assets - AMM",
+              "account_name": "Current Assets",
+              "account_number": "",
+              "parent_account": "Application of Funds (Assets) - AMM",
+              "root_type": "Asset"
+            }
+          ],
+          "upper_match_count": 0,
+          "upper_match": []
+        }
+      }
+    },
+    "AFT": {
+      "company": "AYALA FAIRVIEW TERRACES - BEBANG FT INC.",
+      "parent_company": "BEBANG ENTERPRISE INC.",
+      "abbr": "AFT",
+      "group_count": 33,
+      "all_groups_sample": [
+        {
+          "name": "Accounts Receivable - AFT",
+          "account_name": "Accounts Receivable",
+          "account_number": "",
+          "parent_account": "Current Assets - AFT",
+          "root_type": "Asset"
+        },
+        {
+          "name": "Application of Funds (Assets) - AFT",
+          "account_name": "Application of Funds (Assets)",
+          "account_number": "",
+          "parent_account": null,
+          "root_type": "Asset"
+        },
+        {
+          "name": "Bank Accounts - AFT",
+          "account_name": "Bank Accounts",
+          "account_number": "",
+          "parent_account": "Current Assets - AFT",
+          "root_type": "Asset"
+        },
+        {
+          "name": "Cash In Hand - AFT",
+          "account_name": "Cash In Hand",
+          "account_number": "",
+          "parent_account": "Current Assets - AFT",
+          "root_type": "Asset"
+        },
+        {
+          "name": "Current Assets - AFT",
+          "account_name": "Current Assets",
+          "account_number": "",
+          "parent_account": "Application of Funds (Assets) - AFT",
+          "root_type": "Asset"
+        },
+        {
+          "name": "Fixed Assets - AFT",
+          "account_name": "Fixed Assets",
+          "account_number": "",
+          "parent_account": "Application of Funds (Assets) - AFT",
+          "root_type": "Asset"
+        },
+        {
+          "name": "Investments - AFT",
+          "account_name": "Investments",
+          "account_number": "",
+          "parent_account": "Application of Funds (Assets) - AFT",
+          "root_type": "Asset"
+        },
+        {
+          "name": "Loans and Advances (Assets) - AFT",
+          "account_name": "Loans and Advances (Assets)",
+          "account_number": "",
+          "parent_account": "Current Assets - AFT",
+          "root_type": "Asset"
+        },
+        {
+          "name": "Securities and Deposits - AFT",
+          "account_name": "Securities and Deposits",
+          "account_number": "",
+          "parent_account": "Current Assets - AFT",
+          "root_type": "Asset"
+        },
+        {
+          "name": "Stock Assets - AFT",
+          "account_name": "Stock Assets",
+          "account_number": "",
+          "parent_account": "Current Assets - AFT",
+          "root_type": "Asset"
+        },
+        {
+          "name": "Tax Assets - AFT",
+          "account_name": "Tax Assets",
+          "account_number": "",
+          "parent_account": "Current Assets - AFT",
+          "root_type": "Asset"
+        },
+        {
+          "name": "Temporary Accounts - AFT",
+          "account_name": "Temporary Accounts",
+          "account_number": "",
+          "parent_account": "Application of Funds (Assets) - AFT",
+          "root_type": "Asset"
+        },
+        {
+          "name": "Equity - AFT",
+          "account_name": "Equity",
+          "account_number": "",
+          "parent_account": null,
+          "root_type": "Equity"
+        },
+        {
+          "name": "Direct Expenses - AFT",
+          "account_name": "Direct Expenses",
+          "account_number": "",
+          "parent_account": "Expenses - AFT",
+          "root_type": "Expense"
+        },
+        {
+          "name": "Expenses - AFT",
+          "account_name": "Expenses",
+          "account_number": "",
+          "parent_account": null,
+          "root_type": "Expense"
+        },
+        {
+          "name": "Indirect Expenses - AFT",
+          "account_name": "Indirect Expenses",
+          "account_number": "",
+          "parent_account": "Expenses - AFT",
+          "root_type": "Expense"
+        },
+        {
+          "name": "Stock Expenses - AFT",
+          "account_name": "Stock Expenses",
+          "account_number": "",
+          "parent_account": "Direct Expenses - AFT",
+          "root_type": "Expense"
+        },
+        {
+          "name": "Direct Income - AFT",
+          "account_name": "Direct Income",
+          "account_number": "",
+          "parent_account": "Income - AFT",
+          "root_type": "Income"
+        },
+        {
+          "name": "Income - AFT",
+          "account_name": "Income",
+          "account_number": "",
+          "parent_account": null,
+          "root_type": "Income"
+        },
+        {
+          "name": "Indirect Income - AFT",
+          "account_name": "Indirect Income",
+          "account_number": "",
+          "parent_account": "Income - AFT",
+          "root_type": "Income"
+        },
+        {
+          "name": "4000000 - SALES - AFT",
+          "account_name": "SALES",
+          "account_number": "4000000",
+          "parent_account": null,
+          "root_type": "Income"
+        },
+        {
+          "name": "4000100 - STORE SALES - AFT",
+          "account_name": "STORE SALES",
+          "account_number": "4000100",
+          "parent_account": "4000000 - SALES - AFT",
+          "root_type": "Income"
+        },
+        {
+          "name": "4000120 - ONLINE SALES - AFT",
+          "account_name": "ONLINE SALES",
+          "account_number": "4000120",
+          "parent_account": "4000100 - STORE SALES - AFT",
+          "root_type": "Income"
+        },
+        {
+          "name": "4000200 - BKI SALES - AFT",
+          "account_name": "BKI SALES",
+          "account_number": "4000200",
+          "parent_account": "4000000 - SALES - AFT",
+          "root_type": "Income"
+        },
+        {
+          "name": "4000220 - LOGISTICS - AFT",
+          "account_name": "LOGISTICS",
+          "account_number": "4000220",
+          "parent_account": "4000200 - BKI SALES - AFT",
+          "root_type": "Income"
+        },
+        {
+          "name": "4000230 - FEES - AFT",
+          "account_name": "FEES",
+          "account_number": "4000230",
+          "parent_account": "4000000 - SALES - AFT",
+          "root_type": "Income"
+        },
+        {
+          "name": "4000900 - DISCOUNTS AND PROMO - AFT",
+          "account_name": "DISCOUNTS AND PROMO",
+          "account_number": "4000900",
+          "parent_account": "4000000 - SALES - AFT",
+          "root_type": "Income"
+        },
+        {
+          "name": "Accounts Payable - AFT",
+          "account_name": "Accounts Payable",
+          "account_number": "",
+          "parent_account": "Current Liabilities - AFT",
+          "root_type": "Liability"
+        },
+        {
+          "name": "Current Liabilities - AFT",
+          "account_name": "Current Liabilities",
+          "account_number": "",
+          "parent_account": "Source of Funds (Liabilities) - AFT",
+          "root_type": "Liability"
+        },
+        {
+          "name": "Duties and Taxes - AFT",
+          "account_name": "Duties and Taxes",
+          "account_number": "",
+          "parent_account": "Current Liabilities - AFT",
+          "root_type": "Liability"
+        }
+      ],
+      "target_groups_resolved": {
+        "Stock Assets": {
+          "bare_match_count": 1,
+          "bare_match": [
+            {
+              "name": "Stock Assets - AFT",
+              "account_name": "Stock Assets",
+              "account_number": "",
+              "parent_account": "Current Assets - AFT",
+              "root_type": "Asset"
+            }
+          ],
+          "upper_match_count": 0,
+          "upper_match": []
+        },
+        "Accounts Payable": {
+          "bare_match_count": 1,
+          "bare_match": [
+            {
+              "name": "Accounts Payable - AFT",
+              "account_name": "Accounts Payable",
+              "account_number": "",
+              "parent_account": "Current Liabilities - AFT",
+              "root_type": "Liability"
+            }
+          ],
+          "upper_match_count": 0,
+          "upper_match": []
+        },
+        "Current Assets": {
+          "bare_match_count": 1,
+          "bare_match": [
+            {
+              "name": "Current Assets - AFT",
+              "account_name": "Current Assets",
+              "account_number": "",
+              "parent_account": "Application of Funds (Assets) - AFT",
+              "root_type": "Asset"
+            }
+          ],
+          "upper_match_count": 0,
+          "upper_match": []
+        }
+      }
+    },
+    "AYEVO": {
+      "company": "AYALA EVO CITY - BEBANG MEGA INC.",
+      "parent_company": "BEBANG MEGA INC.",
+      "abbr": "AYEVO",
+      "group_count": 33,
+      "all_groups_sample": [
+        {
+          "name": "Accounts Receivable - AYEVO",
+          "account_name": "Accounts Receivable",
+          "account_number": "",
+          "parent_account": "Current Assets - AYEVO",
+          "root_type": "Asset"
+        },
+        {
+          "name": "Application of Funds (Assets) - AYEVO",
+          "account_name": "Application of Funds (Assets)",
+          "account_number": "",
+          "parent_account": null,
+          "root_type": "Asset"
+        },
+        {
+          "name": "Bank Accounts - AYEVO",
+          "account_name": "Bank Accounts",
+          "account_number": "",
+          "parent_account": "Current Assets - AYEVO",
+          "root_type": "Asset"
+        },
+        {
+          "name": "Cash In Hand - AYEVO",
+          "account_name": "Cash In Hand",
+          "account_number": "",
+          "parent_account": "Current Assets - AYEVO",
+          "root_type": "Asset"
+        },
+        {
+          "name": "Current Assets - AYEVO",
+          "account_name": "Current Assets",
+          "account_number": "",
+          "parent_account": "Application of Funds (Assets) - AYEVO",
+          "root_type": "Asset"
+        },
+        {
+          "name": "Fixed Assets - AYEVO",
+          "account_name": "Fixed Assets",
+          "account_number": "",
+          "parent_account": "Application of Funds (Assets) - AYEVO",
+          "root_type": "Asset"
+        },
+        {
+          "name": "Investments - AYEVO",
+          "account_name": "Investments",
+          "account_number": "",
+          "parent_account": "Application of Funds (Assets) - AYEVO",
+          "root_type": "Asset"
+        },
+        {
+          "name": "Loans and Advances (Assets) - AYEVO",
+          "account_name": "Loans and Advances (Assets)",
+          "account_number": "",
+          "parent_account": "Current Assets - AYEVO",
+          "root_type": "Asset"
+        },
+        {
+          "name": "Securities and Deposits - AYEVO",
+          "account_name": "Securities and Deposits",
+          "account_number": "",
+          "parent_account": "Current Assets - AYEVO",
+          "root_type": "Asset"
+        },
+        {
+          "name": "Stock Assets - AYEVO",
+          "account_name": "Stock Assets",
+          "account_number": "",
+          "parent_account": "Current Assets - AYEVO",
+          "root_type": "Asset"
+        },
+        {
+          "name": "Tax Assets - AYEVO",
+          "account_name": "Tax Assets",
+          "account_number": "",
+          "parent_account": "Current Assets - AYEVO",
+          "root_type": "Asset"
+        },
+        {
+          "name": "Temporary Accounts - AYEVO",
+          "account_name": "Temporary Accounts",
+          "account_number": "",
+          "parent_account": "Application of Funds (Assets) - AYEVO",
+          "root_type": "Asset"
+        },
+        {
+          "name": "Equity - AYEVO",
+          "account_name": "Equity",
+          "account_number": "",
+          "parent_account": null,
+          "root_type": "Equity"
+        },
+        {
+          "name": "Direct Expenses - AYEVO",
+          "account_name": "Direct Expenses",
+          "account_number": "",
+          "parent_account": "Expenses - AYEVO",
+          "root_type": "Expense"
+        },
+        {
+          "name": "Expenses - AYEVO",
+          "account_name": "Expenses",
+          "account_number": "",
+          "parent_account": null,
+          "root_type": "Expense"
+        },
+        {
+          "name": "Indirect Expenses - AYEVO",
+          "account_name": "Indirect Expenses",
+          "account_number": "",
+          "parent_account": "Expenses - AYEVO",
+          "root_type": "Expense"
+        },
+        {
+          "name": "Stock Expenses - AYEVO",
+          "account_name": "Stock Expenses",
+          "account_number": "",
+          "parent_account": "Direct Expenses - AYEVO",
+          "root_type": "Expense"
+        },
+        {
+          "name": "Direct Income - AYEVO",
+          "account_name": "Direct Income",
+          "account_number": "",
+          "parent_account": "Income - AYEVO",
+          "root_type": "Income"
+        },
+        {
+          "name": "Income - AYEVO",
+          "account_name": "Income",
+          "account_number": "",
+          "parent_account": null,
+          "root_type": "Income"
+        },
+        {
+          "name": "Indirect Income - AYEVO",
+          "account_name": "Indirect Income",
+          "account_number": "",
+          "parent_account": "Income - AYEVO",
+          "root_type": "Income"
+        },
+        {
+          "name": "4000000 - SALES - AYEVO",
+          "account_name": "SALES",
+          "account_number": "4000000",
+          "parent_account": null,
+          "root_type": "Income"
+        },
+        {
+          "name": "4000100 - STORE SALES - AYEVO",
+          "account_name": "STORE SALES",
+          "account_number": "4000100",
+          "parent_account": "4000000 - SALES - AYEVO",
+          "root_type": "Income"
+        },
+        {
+          "name": "4000120 - ONLINE SALES - AYEVO",
+          "account_name": "ONLINE SALES",
+          "account_number": "4000120",
+          "parent_account": "4000100 - STORE SALES - AYEVO",
+          "root_type": "Income"
+        },
+        {
+          "name": "4000200 - BKI SALES - AYEVO",
+          "account_name": "BKI SALES",
+          "account_number": "4000200",
+          "parent_account": "4000000 - SALES - AYEVO",
+          "root_type": "Income"
+        },
+        {
+          "name": "4000220 - LOGISTICS - AYEVO",
+          "account_name": "LOGISTICS",
+          "account_number": "4000220",
+          "parent_account": "4000200 - BKI SALES - AYEVO",
+          "root_type": "Income"
+        },
+        {
+          "name": "4000230 - FEES - AYEVO",
+          "account_name": "FEES",
+          "account_number": "4000230",
+          "parent_account": "4000000 - SALES - AYEVO",
+          "root_type": "Income"
+        },
+        {
+          "name": "4000900 - DISCOUNTS AND PROMO - AYEVO",
+          "account_name": "DISCOUNTS AND PROMO",
+          "account_number": "4000900",
+          "parent_account": "4000000 - SALES - AYEVO",
+          "root_type": "Income"
+        },
+        {
+          "name": "Accounts Payable - AYEVO",
+          "account_name": "Accounts Payable",
+          "account_number": "",
+          "parent_account": "Current Liabilities - AYEVO",
+          "root_type": "Liability"
+        },
+        {
+          "name": "Current Liabilities - AYEVO",
+          "account_name": "Current Liabilities",
+          "account_number": "",
+          "parent_account": "Source of Funds (Liabilities) - AYEVO",
+          "root_type": "Liability"
+        },
+        {
+          "name": "Duties and Taxes - AYEVO",
+          "account_name": "Duties and Taxes",
+          "account_number": "",
+          "parent_account": "Current Liabilities - AYEVO",
+          "root_type": "Liability"
+        }
+      ],
+      "target_groups_resolved": {
+        "Stock Assets": {
+          "bare_match_count": 1,
+          "bare_match": [
+            {
+              "name": "Stock Assets - AYEVO",
+              "account_name": "Stock Assets",
+              "account_number": "",
+              "parent_account": "Current Assets - AYEVO",
+              "root_type": "Asset"
+            }
+          ],
+          "upper_match_count": 0,
+          "upper_match": []
+        },
+        "Accounts Payable": {
+          "bare_match_count": 1,
+          "bare_match": [
+            {
+              "name": "Accounts Payable - AYEVO",
+              "account_name": "Accounts Payable",
+              "account_number": "",
+              "parent_account": "Current Liabilities - AYEVO",
+              "root_type": "Liability"
+            }
+          ],
+          "upper_match_count": 0,
+          "upper_match": []
+        },
+        "Current Assets": {
+          "bare_match_count": 1,
+          "bare_match": [
+            {
+              "name": "Current Assets - AYEVO",
+              "account_name": "Current Assets",
+              "account_number": "",
+              "parent_account": "Application of Funds (Assets) - AYEVO",
+              "root_type": "Asset"
+            }
+          ],
+          "upper_match_count": 0,
+          "upper_match": []
+        }
+      }
+    },
+    "UPTC": {
+      "company": "AYALA UP TOWN CENTER - BEBANG UP TOWN CENTER INC.",
+      "parent_company": "BEBANG ENTERPRISE INC.",
+      "abbr": "UPTC",
+      "group_count": 33,
+      "all_groups_sample": [
+        {
+          "name": "Accounts Receivable - UPTC",
+          "account_name": "Accounts Receivable",
+          "account_number": "",
+          "parent_account": "Current Assets - UPTC",
+          "root_type": "Asset"
+        },
+        {
+          "name": "Application of Funds (Assets) - UPTC",
+          "account_name": "Application of Funds (Assets)",
+          "account_number": "",
+          "parent_account": null,
+          "root_type": "Asset"
+        },
+        {
+          "name": "Bank Accounts - UPTC",
+          "account_name": "Bank Accounts",
+          "account_number": "",
+          "parent_account": "Current Assets - UPTC",
+          "root_type": "Asset"
+        },
+        {
+          "name": "Cash In Hand - UPTC",
+          "account_name": "Cash In Hand",
+          "account_number": "",
+          "parent_account": "Current Assets - UPTC",
+          "root_type": "Asset"
+        },
+        {
+          "name": "Current Assets - UPTC",
+          "account_name": "Current Assets",
+          "account_number": "",
+          "parent_account": "Application of Funds (Assets) - UPTC",
+          "root_type": "Asset"
+        },
+        {
+          "name": "Fixed Assets - UPTC",
+          "account_name": "Fixed Assets",
+          "account_number": "",
+          "parent_account": "Application of Funds (Assets) - UPTC",
+          "root_type": "Asset"
+        },
+        {
+          "name": "Investments - UPTC",
+          "account_name": "Investments",
+          "account_number": "",
+          "parent_account": "Application of Funds (Assets) - UPTC",
+          "root_type": "Asset"
+        },
+        {
+          "name": "Loans and Advances (Assets) - UPTC",
+          "account_name": "Loans and Advances (Assets)",
+          "account_number": "",
+          "parent_account": "Current Assets - UPTC",
+          "root_type": "Asset"
+        },
+        {
+          "name": "Securities and Deposits - UPTC",
+          "account_name": "Securities and Deposits",
+          "account_number": "",
+          "parent_account": "Current Assets - UPTC",
+          "root_type": "Asset"
+        },
+        {
+          "name": "Stock Assets - UPTC",
+          "account_name": "Stock Assets",
+          "account_number": "",
+          "parent_account": "Current Assets - UPTC",
+          "root_type": "Asset"
+        },
+        {
+          "name": "Tax Assets - UPTC",
+          "account_name": "Tax Assets",
+          "account_number": "",
+          "parent_account": "Current Assets - UPTC",
+          "root_type": "Asset"
+        },
+        {
+          "name": "Temporary Accounts - UPTC",
+          "account_name": "Temporary Accounts",
+          "account_number": "",
+          "parent_account": "Application of Funds (Assets) - UPTC",
+          "root_type": "Asset"
+        },
+        {
+          "name": "Equity - UPTC",
+          "account_name": "Equity",
+          "account_number": "",
+          "parent_account": null,
+          "root_type": "Equity"
+        },
+        {
+          "name": "Direct Expenses - UPTC",
+          "account_name": "Direct Expenses",
+          "account_number": "",
+          "parent_account": "Expenses - UPTC",
+          "root_type": "Expense"
+        },
+        {
+          "name": "Expenses - UPTC",
+          "account_name": "Expenses",
+          "account_number": "",
+          "parent_account": null,
+          "root_type": "Expense"
+        },
+        {
+          "name": "Indirect Expenses - UPTC",
+          "account_name": "Indirect Expenses",
+          "account_number": "",
+          "parent_account": "Expenses - UPTC",
+          "root_type": "Expense"
+        },
+        {
+          "name": "Stock Expenses - UPTC",
+          "account_name": "Stock Expenses",
+          "account_number": "",
+          "parent_account": "Direct Expenses - UPTC",
+          "root_type": "Expense"
+        },
+        {
+          "name": "Direct Income - UPTC",
+          "account_name": "Direct Income",
+          "account_number": "",
+          "parent_account": "Income - UPTC",
+          "root_type": "Income"
+        },
+        {
+          "name": "Income - UPTC",
+          "account_name": "Income",
+          "account_number": "",
+          "parent_account": null,
+          "root_type": "Income"
+        },
+        {
+          "name": "Indirect Income - UPTC",
+          "account_name": "Indirect Income",
+          "account_number": "",
+          "parent_account": "Income - UPTC",
+          "root_type": "Income"
+        },
+        {
+          "name": "4000000 - SALES - UPTC",
+          "account_name": "SALES",
+          "account_number": "4000000",
+          "parent_account": null,
+          "root_type": "Income"
+        },
+        {
+          "name": "4000100 - STORE SALES - UPTC",
+          "account_name": "STORE SALES",
+          "account_number": "4000100",
+          "parent_account": "4000000 - SALES - UPTC",
+          "root_type": "Income"
+        },
+        {
+          "name": "4000120 - ONLINE SALES - UPTC",
+          "account_name": "ONLINE SALES",
+          "account_number": "4000120",
+          "parent_account": "4000100 - STORE SALES - UPTC",
+          "root_type": "Income"
+        },
+        {
+          "name": "4000200 - BKI SALES - UPTC",
+          "account_name": "BKI SALES",
+          "account_number": "4000200",
+          "parent_account": "4000000 - SALES - UPTC",
+          "root_type": "Income"
+        },
+        {
+          "name": "4000220 - LOGISTICS - UPTC",
+          "account_name": "LOGISTICS",
+          "account_number": "4000220",
+          "parent_account": "4000200 - BKI SALES - UPTC",
+          "root_type": "Income"
+        },
+        {
+          "name": "4000230 - FEES - UPTC",
+          "account_name": "FEES",
+          "account_number": "4000230",
+          "parent_account": "4000000 - SALES - UPTC",
+          "root_type": "Income"
+        },
+        {
+          "name": "4000900 - DISCOUNTS AND PROMO - UPTC",
+          "account_name": "DISCOUNTS AND PROMO",
+          "account_number": "4000900",
+          "parent_account": "4000000 - SALES - UPTC",
+          "root_type": "Income"
+        },
+        {
+          "name": "Accounts Payable - UPTC",
+          "account_name": "Accounts Payable",
+          "account_number": "",
+          "parent_account": "Current Liabilities - UPTC",
+          "root_type": "Liability"
+        },
+        {
+          "name": "Current Liabilities - UPTC",
+          "account_name": "Current Liabilities",
+          "account_number": "",
+          "parent_account": "Source of Funds (Liabilities) - UPTC",
+          "root_type": "Liability"
+        },
+        {
+          "name": "Duties and Taxes - UPTC",
+          "account_name": "Duties and Taxes",
+          "account_number": "",
+          "parent_account": "Current Liabilities - UPTC",
+          "root_type": "Liability"
+        }
+      ],
+      "target_groups_resolved": {
+        "Stock Assets": {
+          "bare_match_count": 1,
+          "bare_match": [
+            {
+              "name": "Stock Assets - UPTC",
+              "account_name": "Stock Assets",
+              "account_number": "",
+              "parent_account": "Current Assets - UPTC",
+              "root_type": "Asset"
+            }
+          ],
+          "upper_match_count": 0,
+          "upper_match": []
+        },
+        "Accounts Payable": {
+          "bare_match_count": 1,
+          "bare_match": [
+            {
+              "name": "Accounts Payable - UPTC",
+              "account_name": "Accounts Payable",
+              "account_number": "",
+              "parent_account": "Current Liabilities - UPTC",
+              "root_type": "Liability"
+            }
+          ],
+          "upper_match_count": 0,
+          "upper_match": []
+        },
+        "Current Assets": {
+          "bare_match_count": 1,
+          "bare_match": [
+            {
+              "name": "Current Assets - UPTC",
+              "account_name": "Current Assets",
+              "account_number": "",
+              "parent_account": "Application of Funds (Assets) - UPTC",
+              "root_type": "Asset"
+            }
+          ],
+          "upper_match_count": 0,
+          "upper_match": []
+        }
+      }
+    },
+    "AYSOL": {
+      "company": "AYALA SOLENAD - HFFM SOLENAD FOOD SERVICES INC.",
+      "parent_company": null,
+      "abbr": "AYSOL",
+      "group_count": 33,
+      "all_groups_sample": [
+        {
+          "name": "Accounts Receivable - AYSOL",
+          "account_name": "Accounts Receivable",
+          "account_number": "",
+          "parent_account": "Current Assets - AYSOL",
+          "root_type": "Asset"
+        },
+        {
+          "name": "Application of Funds (Assets) - AYSOL",
+          "account_name": "Application of Funds (Assets)",
+          "account_number": "",
+          "parent_account": null,
+          "root_type": "Asset"
+        },
+        {
+          "name": "Bank Accounts - AYSOL",
+          "account_name": "Bank Accounts",
+          "account_number": "",
+          "parent_account": "Current Assets - AYSOL",
+          "root_type": "Asset"
+        },
+        {
+          "name": "Cash In Hand - AYSOL",
+          "account_name": "Cash In Hand",
+          "account_number": "",
+          "parent_account": "Current Assets - AYSOL",
+          "root_type": "Asset"
+        },
+        {
+          "name": "Current Assets - AYSOL",
+          "account_name": "Current Assets",
+          "account_number": "",
+          "parent_account": "Application of Funds (Assets) - AYSOL",
+          "root_type": "Asset"
+        },
+        {
+          "name": "Fixed Assets - AYSOL",
+          "account_name": "Fixed Assets",
+          "account_number": "",
+          "parent_account": "Application of Funds (Assets) - AYSOL",
+          "root_type": "Asset"
+        },
+        {
+          "name": "Investments - AYSOL",
+          "account_name": "Investments",
+          "account_number": "",
+          "parent_account": "Application of Funds (Assets) - AYSOL",
+          "root_type": "Asset"
+        },
+        {
+          "name": "Loans and Advances (Assets) - AYSOL",
+          "account_name": "Loans and Advances (Assets)",
+          "account_number": "",
+          "parent_account": "Current Assets - AYSOL",
+          "root_type": "Asset"
+        },
+        {
+          "name": "Securities and Deposits - AYSOL",
+          "account_name": "Securities and Deposits",
+          "account_number": "",
+          "parent_account": "Current Assets - AYSOL",
+          "root_type": "Asset"
+        },
+        {
+          "name": "Stock Assets - AYSOL",
+          "account_name": "Stock Assets",
+          "account_number": "",
+          "parent_account": "Current Assets - AYSOL",
+          "root_type": "Asset"
+        },
+        {
+          "name": "Tax Assets - AYSOL",
+          "account_name": "Tax Assets",
+          "account_number": "",
+          "parent_account": "Current Assets - AYSOL",
+          "root_type": "Asset"
+        },
+        {
+          "name": "Temporary Accounts - AYSOL",
+          "account_name": "Temporary Accounts",
+          "account_number": "",
+          "parent_account": "Application of Funds (Assets) - AYSOL",
+          "root_type": "Asset"
+        },
+        {
+          "name": "Equity - AYSOL",
+          "account_name": "Equity",
+          "account_number": "",
+          "parent_account": null,
+          "root_type": "Equity"
+        },
+        {
+          "name": "Direct Expenses - AYSOL",
+          "account_name": "Direct Expenses",
+          "account_number": "",
+          "parent_account": "Expenses - AYSOL",
+          "root_type": "Expense"
+        },
+        {
+          "name": "Expenses - AYSOL",
+          "account_name": "Expenses",
+          "account_number": "",
+          "parent_account": null,
+          "root_type": "Expense"
+        },
+        {
+          "name": "Indirect Expenses - AYSOL",
+          "account_name": "Indirect Expenses",
+          "account_number": "",
+          "parent_account": "Expenses - AYSOL",
+          "root_type": "Expense"
+        },
+        {
+          "name": "Stock Expenses - AYSOL",
+          "account_name": "Stock Expenses",
+          "account_number": "",
+          "parent_account": "Direct Expenses - AYSOL",
+          "root_type": "Expense"
+        },
+        {
+          "name": "Direct Income - AYSOL",
+          "account_name": "Direct Income",
+          "account_number": "",
+          "parent_account": "Income - AYSOL",
+          "root_type": "Income"
+        },
+        {
+          "name": "Income - AYSOL",
+          "account_name": "Income",
+          "account_number": "",
+          "parent_account": null,
+          "root_type": "Income"
+        },
+        {
+          "name": "Indirect Income - AYSOL",
+          "account_name": "Indirect Income",
+          "account_number": "",
+          "parent_account": "Income - AYSOL",
+          "root_type": "Income"
+        },
+        {
+          "name": "4000000 - SALES - AYSOL",
+          "account_name": "SALES",
+          "account_number": "4000000",
+          "parent_account": null,
+          "root_type": "Income"
+        },
+        {
+          "name": "4000100 - STORE SALES - AYSOL",
+          "account_name": "STORE SALES",
+          "account_number": "4000100",
+          "parent_account": "4000000 - SALES - AYSOL",
+          "root_type": "Income"
+        },
+        {
+          "name": "4000120 - ONLINE SALES - AYSOL",
+          "account_name": "ONLINE SALES",
+          "account_number": "4000120",
+          "parent_account": "4000100 - STORE SALES - AYSOL",
+          "root_type": "Income"
+        },
+        {
+          "name": "4000200 - BKI SALES - AYSOL",
+          "account_name": "BKI SALES",
+          "account_number": "4000200",
+          "parent_account": "4000000 - SALES - AYSOL",
+          "root_type": "Income"
+        },
+        {
+          "name": "4000220 - LOGISTICS - AYSOL",
+          "account_name": "LOGISTICS",
+          "account_number": "4000220",
+          "parent_account": "4000200 - BKI SALES - AYSOL",
+          "root_type": "Income"
+        },
+        {
+          "name": "4000230 - FEES - AYSOL",
+          "account_name": "FEES",
+          "account_number": "4000230",
+          "parent_account": "4000000 - SALES - AYSOL",
+          "root_type": "Income"
+        },
+        {
+          "name": "4000900 - DISCOUNTS AND PROMO - AYSOL",
+          "account_name": "DISCOUNTS AND PROMO",
+          "account_number": "4000900",
+          "parent_account": "4000000 - SALES - AYSOL",
+          "root_type": "Income"
+        },
+        {
+          "name": "Accounts Payable - AYSOL",
+          "account_name": "Accounts Payable",
+          "account_number": "",
+          "parent_account": "Current Liabilities - AYSOL",
+          "root_type": "Liability"
+        },
+        {
+          "name": "Current Liabilities - AYSOL",
+          "account_name": "Current Liabilities",
+          "account_number": "",
+          "parent_account": "Source of Funds (Liabilities) - AYSOL",
+          "root_type": "Liability"
+        },
+        {
+          "name": "Duties and Taxes - AYSOL",
+          "account_name": "Duties and Taxes",
+          "account_number": "",
+          "parent_account": "Current Liabilities - AYSOL",
+          "root_type": "Liability"
+        }
+      ],
+      "target_groups_resolved": {
+        "Stock Assets": {
+          "bare_match_count": 1,
+          "bare_match": [
+            {
+              "name": "Stock Assets - AYSOL",
+              "account_name": "Stock Assets",
+              "account_number": "",
+              "parent_account": "Current Assets - AYSOL",
+              "root_type": "Asset"
+            }
+          ],
+          "upper_match_count": 0,
+          "upper_match": []
+        },
+        "Accounts Payable": {
+          "bare_match_count": 1,
+          "bare_match": [
+            {
+              "name": "Accounts Payable - AYSOL",
+              "account_name": "Accounts Payable",
+              "account_number": "",
+              "parent_account": "Current Liabilities - AYSOL",
+              "root_type": "Liability"
+            }
+          ],
+          "upper_match_count": 0,
+          "upper_match": []
+        },
+        "Current Assets": {
+          "bare_match_count": 1,
+          "bare_match": [
+            {
+              "name": "Current Assets - AYSOL",
+              "account_name": "Current Assets",
+              "account_number": "",
+              "parent_account": "Application of Funds (Assets) - AYSOL",
+              "root_type": "Asset"
+            }
+          ],
+          "upper_match_count": 0,
+          "upper_match": []
+        }
+      }
+    }
+  },
+  "sample_parent_chains_from": "AMM",
+  "sample_parent_chains": {
+    "Stock Assets": {
+      "name": "Stock Assets - AMM",
+      "account_name": "Stock Assets",
+      "account_number": "",
+      "parent_account": "Current Assets - AMM",
+      "root_type": "Asset"
+    },
+    "Accounts Payable": {
+      "name": "Accounts Payable - AMM",
+      "account_name": "Accounts Payable",
+      "account_number": "",
+      "parent_account": "Current Liabilities - AMM",
+      "root_type": "Liability"
+    },
+    "Current Assets": {
+      "name": "Current Assets - AMM",
+      "account_name": "Current Assets",
+      "account_number": "",
+      "parent_account": "Application of Funds (Assets) - AMM",
+      "root_type": "Asset"
+    }
+  },
+  "status": "OK"
+}
