@@ -1,0 +1,22 @@
+{
+  "sprint": "S242",
+  "branch": "s242-pos-natural-key-channel-discriminator",
+  "worktree": "F:/Dropbox/Projects/BEI-ERP-s242",
+  "claimed": [
+    "pos_orders_bill_number_natural_key",
+    "scripts/sync_pos_to_supabase.py",
+    "hrms/api/mosaic_webhook.py",
+    "hrms/utils/pos_order_reconciliation.py"
+  ],
+  "started_at": "2026-05-09T15:00:00+08:00",
+  "released_at": null,
+  "phase_status": {
+    "phase_0": "in_progress",
+    "phase_1": "pending",
+    "phase_2": "pending",
+    "phase_3": "pending",
+    "phase_4": "pending",
+    "phase_5": "pending",
+    "phase_6": "pending"
+  }
+}
