@@ -1,0 +1,205 @@
+{
+  "sprint": "S238",
+  "phase": "5-regression",
+  "timestamp_utc": "2026-05-09T16:17:19.151307Z",
+  "s206_internal_customer_count": 57,
+  "s206_internal_supplier_count": 60,
+  "sample_5_stores": {
+    "ARANETA GATEWAY - TUNGSTEN CAPITAL HOLDINGS OPC": {
+      "company": "ARANETA GATEWAY - TUNGSTEN CAPITAL HOLDINGS OPC",
+      "abbr": "ARGW",
+      "total_accounts": 114,
+      "s238_leaves": {
+        "1104210": {
+          "name": "1104210 - 1104210 - Inventory-from-Commissary - ARGW",
+          "parent_account": "Stock Assets - ARGW",
+          "account_type": "Stock"
+        },
+        "1106210": {
+          "name": "1106210 - 1106210 - Input VAT - BKI Inter-Co - ARGW",
+          "parent_account": "Current Assets - ARGW",
+          "account_type": "Tax"
+        },
+        "2103210": {
+          "name": "2103210 - 2103210 - AP-Trade-BKI - ARGW",
+          "parent_account": "Accounts Payable - ARGW",
+          "account_type": "Payable"
+        }
+      },
+      "s206_internal_customer": "ARANETA GATEWAY (Internal)"
+    },
+    "AYALA EVO - BEBANG MEGA INC.": {
+      "company": "AYALA EVO - BEBANG MEGA INC.",
+      "abbr": null,
+      "total_accounts": 0,
+      "s238_leaves": {
+        "1104210": null,
+        "1106210": null,
+        "2103210": null
+      },
+      "s206_internal_customer": null
+    },
+    "ROBINSONS ANTIPOLO - BEBANG ENTERPRISE INC.": {
+      "company": "ROBINSONS ANTIPOLO - BEBANG ENTERPRISE INC.",
+      "abbr": "ROA",
+      "total_accounts": 11,
+      "s238_leaves": {
+        "1104210": {
+          "name": "1104210 - 1104210 - Inventory-from-Commissary - ROA",
+          "parent_account": "Stock Assets - ROA",
+          "account_type": "Stock"
+        },
+        "1106210": {
+          "name": "1106210 - 1106210 - Input VAT - BKI Inter-Co - ROA",
+          "parent_account": "Current Assets - ROA",
+          "account_type": "Tax"
+        },
+        "2103210": {
+          "name": "2103210 - 2103210 - AP-Trade-BKI - ROA",
+          "parent_account": "Accounts Payable - ROA",
+          "account_type": "Payable"
+        }
+      },
+      "s206_internal_customer": "ROBINSONS ANTIPOLO (Internal)"
+    },
+    "SM MEGAMALL - BEBANG ENTERPRISE INC.": {
+      "company": "SM MEGAMALL - BEBANG ENTERPRISE INC.",
+      "abbr": "SMMM",
+      "total_accounts": 11,
+      "s238_leaves": {
+        "1104210": {
+          "name": "1104210 - 1104210 - Inventory-from-Commissary - SMMM",
+          "parent_account": "Stock Assets - SMMM",
+          "account_type": "Stock"
+        },
+        "1106210": {
+          "name": "1106210 - 1106210 - Input VAT - BKI Inter-Co - SMMM",
+          "parent_account": "Current Assets - SMMM",
+          "account_type": "Tax"
+        },
+        "2103210": {
+          "name": "2103210 - 2103210 - AP-Trade-BKI - SMMM",
+          "parent_account": "Accounts Payable - SMMM",
+          "account_type": "Payable"
+        }
+      },
+      "s206_internal_customer": "SM MEGAMALL (Internal)"
+    },
+    "UP TOWN MALL BGC - DMD HOLDINGS INC.": {
+      "company": "UP TOWN MALL BGC - DMD HOLDINGS INC.",
+      "abbr": "UMBGC",
+      "total_accounts": 114,
+      "s238_leaves": {
+        "1104210": {
+          "name": "1104210 - 1104210 - Inventory-from-Commissary - UMBGC",
+          "parent_account": "Stock Assets - UMBGC",
+          "account_type": "Stock"
+        },
+        "1106210": {
+          "name": "1106210 - 1106210 - Input VAT - BKI Inter-Co - UMBGC",
+          "parent_account": "Current Assets - UMBGC",
+          "account_type": "Tax"
+        },
+        "2103210": {
+          "name": "2103210 - 2103210 - AP-Trade-BKI - UMBGC",
+          "parent_account": "Accounts Payable - UMBGC",
+          "account_type": "Payable"
+        }
+      },
+      "s206_internal_customer": "DMD HOLDINGS INC."
+    }
+  },
+  "recent_bki_si_7d": [
+    {
+      "name": "ACC-SINV-2026-00903",
+      "customer": "XENTROMALL MONTALBAN - PERPETUAL FOOD CORP.",
+      "posting_date": "2026-05-04",
+      "naming_series": "ACC-SINV-.YYYY.-",
+      "docstatus": 1,
+      "modified": "2026-05-04 15:32:19.312826"
+    },
+    {
+      "name": "ACC-SINV-2026-00902",
+      "customer": "VISTA MALL TAGUIG - TRICERN FOOD CORP.",
+      "posting_date": "2026-05-04",
+      "naming_series": "ACC-SINV-.YYYY.-",
+      "docstatus": 1,
+      "modified": "2026-05-04 15:30:48.828835"
+    },
+    {
+      "name": "ACC-SINV-2026-00901",
+      "customer": "UP TOWN MALL BGC - DMD HOLDINGS INC.",
+      "posting_date": "2026-05-04",
+      "naming_series": "ACC-SINV-.YYYY.-",
+      "docstatus": 1,
+      "modified": "2026-05-04 15:29:33.214719"
+    },
+    {
+      "name": "ACC-SINV-2026-00900",
+      "customer": "THE TERMINAL - BEBANG STARMALL ALABANG INC.",
+      "posting_date": "2026-05-04",
+      "naming_series": "ACC-SINV-.YYYY.-",
+      "docstatus": 1,
+      "modified": "2026-05-04 15:28:17.224729"
+    },
+    {
+      "name": "ACC-SINV-2026-00899",
+      "customer": "THE GRID ROCKWELL - TASTECARTEL CORP.",
+      "posting_date": "2026-05-04",
+      "naming_series": "ACC-SINV-.YYYY.-",
+      "docstatus": 1,
+      "modified": "2026-05-04 15:27:01.467998"
+    },
+    {
+      "name": "ACC-SINV-2026-00898",
+      "customer": "STA. LUCIA EAST GRAND MALL - BEBANG SM MARIKINA INC.",
+      "posting_date": "2026-05-04",
+      "naming_series": "ACC-SINV-.YYYY.-",
+      "docstatus": 1,
+      "modified": "2026-05-04 15:25:44.701907"
+    },
+    {
+      "name": "ACC-SINV-2026-00897",
+      "customer": "SM VALENZUELA - BEBANG SMV INC.",
+      "posting_date": "2026-05-04",
+      "naming_series": "ACC-SINV-.YYYY.-",
+      "docstatus": 1,
+      "modified": "2026-05-04 15:24:28.451026"
+    },
+    {
+      "name": "ACC-SINV-2026-00896",
+      "customer": "SM TAYTAY - DAY ONES FOOD AND DRINK ESTABLISHMENTS CORP.",
+      "posting_date": "2026-05-04",
+      "naming_series": "ACC-SINV-.YYYY.-",
+      "docstatus": 1,
+      "modified": "2026-05-04 15:23:12.313507"
+    },
+    {
+      "name": "ACC-SINV-2026-00895",
+      "customer": "SM TANZA - BEBANG MEGA INC.",
+      "posting_date": "2026-05-04",
+      "naming_series": "ACC-SINV-.YYYY.-",
+      "docstatus": 1,
+      "modified": "2026-05-04 15:21:53.103571"
+    },
+    {
+      "name": "ACC-SINV-2026-00894",
+      "customer": "SM STA. ROSA - SWEET HARMONY FOOD CORP.",
+      "posting_date": "2026-05-04",
+      "naming_series": "ACC-SINV-.YYYY.-",
+      "docstatus": 1,
+      "modified": "2026-05-04 15:20:07.179079"
+    }
+  ],
+  "recent_bki_si_count": 10,
+  "s206_labor_je_14d": [],
+  "s206_labor_je_14d_count": 0,
+  "si_errors_since_deploy": [],
+  "si_errors_since_deploy_count": 0,
+  "pi_errors_since_deploy": [],
+  "pi_errors_since_deploy_count": 0,
+  "receiving_errors_since_deploy": [],
+  "receiving_errors_since_deploy_count": 0,
+  "recent_bki_se_3d": [],
+  "status": "OK"
+}

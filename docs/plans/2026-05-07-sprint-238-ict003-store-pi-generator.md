@@ -2,15 +2,34 @@
 sprint_id: S238
 sprint_title: ICT-003 Store-Side Purchase Invoice Generator
 plan_branch: s238-ict003-store-pi-generator
-execute_branch: s238-execute
-status: EXECUTING_v2_2
+execute_branch: s238-execute-build
+status: COMPLETED
 version: 2.2
 created_date: 2026-05-07
 revised_date: 2026-05-08
+completed_date: 2026-05-10
 audit_pr: 729
 prior_amendment_pr: 730
 v2_1_amendment_pr: 733
 v2_2_amendment_inline: true
+build_pr: 738
+execution_summary: |
+  S238 v2.2 executed end-to-end across 2 sessions (2026-05-09 to 2026-05-10).
+  All 7 phases complete. PR #738 (Phases 0-3 build) merged + deployed at
+  98bbbe89f677. Production state: 147 leaf accounts created, 1 Trade Supplier
+  + 49 companies, 2 Custom Fields installed, 5 hooks registered (4 doc events
+  + 1 weekly scheduler), kill-switch toggle armed. Phase 4 production-safe
+  verification confirmed: modules importable, all functions present, all hooks
+  registered, custom fields visible, 147 leaf accounts on 49 stores. Phase 5
+  regression: 0 SI errors, 0 PI errors, 0 receiving errors since deploy; 57+60
+  internal customer/supplier infrastructure intact. Live-fire validation
+  pending first organic BKI SI submission post-deploy (production trial of
+  test SI is forbidden per plan — consumes BIR ATP serials). Weekly drift
+  scheduler ran 2026-05-10 00:02 UTC and flagged historical pre-hook SIs
+  (informational, expected). All 15 CRITs from v1+v2+v2.1 audit chain preserved
+  in deployed code; adversarial fact-check on v2.1 audit found 0 hallucinations.
+  Follow-up sprints S244+: 42 historical SI VAT recovery; canonical verifier
+  CoA-completeness extension; full canonical CoA harmonization for 4 BEI stores.
 amendment_branch: s238-ict003-pi-generator-amendment-v2-1
 canonical_scope: in
 canonical_model_reference: docs/STORE_COMPANY_CANONICAL.md
