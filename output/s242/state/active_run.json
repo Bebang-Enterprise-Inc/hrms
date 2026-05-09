@@ -9,14 +9,16 @@
     "hrms/utils/pos_order_reconciliation.py"
   ],
   "started_at": "2026-05-09T15:00:00+08:00",
-  "released_at": null,
+  "released_at": "2026-05-09T15:10:00+08:00",
+  "pr_number": 737,
+  "pr_url": "https://github.com/Bebang-Enterprise-Inc/hrms/pull/737",
   "phase_status": {
-    "phase_0": "in_progress",
-    "phase_1": "pending",
-    "phase_2": "pending",
-    "phase_3": "pending",
-    "phase_4": "pending",
-    "phase_5": "pending",
-    "phase_6": "pending"
+    "phase_0": "completed",
+    "phase_1": "completed",
+    "phase_2": "completed",
+    "phase_3": "completed",
+    "phase_4": "completed",
+    "phase_5": "completed",
+    "phase_6": "completed"
   }
 }
