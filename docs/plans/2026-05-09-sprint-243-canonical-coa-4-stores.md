@@ -2,9 +2,11 @@
 sprint_id: S243
 sprint_title: Canonical CoA Backfill — 4 BEBANG ENTERPRISE INC. Stores
 plan_branch: s243-canonical-coa-4-stores
-status: PLANNED
-version: 1.0
+status: PLANNED_AUDITED_v1_1
+version: 1.1
 created_date: 2026-05-09
+revised_date: 2026-05-09
+audit_pr: 735
 canonical_scope: in
 canonical_model_reference: docs/STORE_COMPANY_CANONICAL.md
 canonical_preflight: required
@@ -25,13 +27,72 @@ evidence_transient:
   - tmp/s243/seed_dry_run_*.log
   - tmp/s243/diff_*.txt
 sprint_registry_row: |
-  | `S243` | Sprint 243 | `s243-canonical-coa-4-stores` | TBD | PLANNED 2026-05-09 — Canonical CoA Backfill (4 BEBANG ENTERPRISE INC. stores) to unblock S238 Phase 0-T4. ~22 work units. | `docs/plans/2026-05-09-sprint-243-canonical-coa-4-stores.md` |
+  | `S243` | Sprint 243 | `s243-canonical-coa-4-stores` | #735 | PLANNED_AUDITED_v1_1 2026-05-09 — Canonical CoA Backfill (4 BEBANG ENTERPRISE INC. stores) to unblock S238 Phase 0-T4. v1.1 = 8 CRITICAL audit fixes applied (BARE-NAME canonical, ignore_root_company_validation flag, account_name shape, dry-run outer savepoint, evidence regen, Phase 4 gates, PR checklist). ~24 work units. | `docs/plans/2026-05-09-sprint-243-canonical-coa-4-stores.md` |
 ---
 
-# S243 — Canonical CoA Backfill — 4 BEBANG ENTERPRISE INC. Stores
+# S243 — Canonical CoA Backfill — 4 BEBANG ENTERPRISE INC. Stores (v1.1 — Audited)
 
 > **Canonical model reference:** `docs/STORE_COMPANY_CANONICAL.md`
 > **Unblocks:** S238 Phase 0-T4 CoA-completeness gate.
+
+---
+
+## v1 → v1.1 Audit Amendments (2026-05-09)
+
+`/audit-plan-bei-erp` ran 7 parallel domain auditors + code verifier + adversarial fact-checker on v1 (PR #735). 8 CRITICAL blockers + 10 WARNINGs surfaced. 0 hallucinations detected by adversarial fact-check. Full audit evidence: `output/plan-audit/s243-canonical-coa-4-stores/{frappe-backend,ph-finance,deployment-qa,system-arch,zero-skip,cold-start,team-orchestration}_findings.md` + `code_verification.md` + `fact_check_verification.md` + `verified_blockers.md`.
+
+**v1.1 applies the 8 CRITICAL fixes WITHOUT changing scope.** Architectural goal is preserved exactly: targeted seeder, 4 named target Companies, group accounts only, no leaf accounts, no other surface mutations. The amendments are correctness fixes within that scope.
+
+### CRITICAL fixes applied (8)
+
+| # | v1 Bug | v1.1 Fix |
+|---|---|---|
+| **B1** | Plan picked XMM as canonical reference. Code-verifier cross-check of `tmp/s238/phase0_probe_result.json` showed XMM is a 2/45 outlier for AP and Current Assets parents (uses number-prefix style). 43 of 45 complete stores use BARE-NAME convention (`Stock Assets - <ABBR>`, `Accounts Payable - <ABBR>`, `Current Assets - <ABBR>` with `account_number = NULL`, Title Case). XMM-style would propagate the minority convention. | Adopt **43-store BARE-NAME convention** as canonical. Phase 1-T1 reference probe samples 5 stores from `{AMM, AFT, AYEVO, UPTC, AYSOL}` (all bare-name), not XMM. Phase 1-T2 example sets `account_name = "Stock Assets"` (BARE), `account_number = NULL`. The `1100000` collision panic dissolves automatically. |
+| **B2** | `ignore_root_company_validation` flag missing. s206 sets it at line 358 because every Frappe `Account.insert()` on a child Company throws "Please add the account to root level Company" without it. All 4 target stores have `parent_company = "BEBANG ENTERPRISE INC."`. | Phase 2-T1 helper wraps the per-Company loop with `frappe.local.flags.ignore_root_company_validation = True` (restored on exit). Pattern mirrors s206 lines 358-359 + 452. |
+| **B3** | Phase 1-T2 example set `account_name = "Stock Assets - ROA"` (docname shape). Frappe stores `account_name` BARE; abbr is only on `name` column. Phase 3-T3 verification probe queries `account_name = "Stock Assets"` (exact match), so v1 example would break the verifier. Verified in `tmp/s238/followup_4stores_result.json` lines 11-12 (`"name": "1100000 - ASSETS - ROA"`, `"account_name": "1100000 - ASSETS"`). | Phase 1-T2 example explicitly distinguishes `account_name` (BARE = `"Stock Assets"`) from `name` (docname = `"Stock Assets - ROA"`, auto-constructed by Frappe). Phase 2-T1 helper passes `account_name` BARE to `frappe.get_doc()`. |
+| **B4** | Dry-run rollback ambiguous. s206's per-company `frappe.db.savepoint(sp)` + `release_savepoint(sp)` then outer `frappe.db.commit()` pattern doesn't roll back; releases are markers, not commits, but the outer commit persists everything. Plan said "ROLLBACK savepoint" without specifying which. Phase 2-T5 verification (post-dry-run state == pre-state) would fail. | Phase 2-T3 specifies dry-run = wrap entire loop in OUTER savepoint `s243_dry_run_outer`, run per-company inserts, **skip the outer `frappe.db.commit()`**, issue `frappe.db.rollback(save_point=s243_dry_run_outer)` at end. Commit-mode = same flow but with outer commit at end. |
+| **B5** | `tmp/s238/*` evidence files cited 5+ times but `tmp/` is gitignored — files exist only in main checkout, NOT in worktree. | Phase 0-T4 expanded: agent **regenerates** the probes inline by running `tmp/s238/probe_phase0_state.py` and `tmp/s238/probe_4_incomplete_stores.py` patterns via SSM as part of S243 Phase 0. Evidence written to `tmp/s243/probe_*.json` (worktree-local). Plan body now refers to `tmp/s243/` paths, not `tmp/s238/`. |
+| **B6** | Phase 4-T3 SUMMARY.md had no MUST_MODIFY/MUST_CONTAIN gate. Phase 4 verify only checked `os.path.exists` — could be 1 byte and pass. Asymmetric with Phases 0-3. | Phase 4-T3 adds MUST_MODIFY + MUST_CONTAIN gates symmetric to Phases 0-3. SUMMARY.md must contain the Requirements Regression Checklist as a PASS/FAIL table (each check ✓ or ✗). |
+| **B7** | PR description = `cat SUMMARY.md` with no task-by-task gate. Requirements Regression Checklist existed in plan body but wasn't enforced as PR content. | Phase 4-T3 requires Requirements Regression Checklist embedded in SUMMARY.md as PASS/FAIL table. Phase 4-T4 PR body includes it via `cat SUMMARY.md`. Phase 4 verify confirms the table is present. |
+| **B8** | Canonical verifier blind to CoA-completeness gap. `scripts/verify_canonical_structure.py` checks Company/Warehouse/Customer identity but never `tabAccount` completeness. Same skeleton-CoA bug fires next time a per-store Company is created. | **OUT OF SCOPE for S243** (avoid scope-creep into architectural change). Closeout SUMMARY records this as a follow-up sprint candidate (S244 or later) so it's not lost. The recurrence prevention angle is documented; S243 stays focused on the 4-store fix. |
+
+### WARNINGs applied
+
+- **W5 (rebase-before-push)**: Phase 4 adds `git fetch origin --prune && git rebase origin/production` step before push.
+- **W6 (`git add -f output/`)**: Phase 4-T2 includes `git add -f output/s243/` to stage gitignored evidence files.
+- **W1 (idempotency check key)**: Phase 2-T1 helper specifies `frappe.db.exists("Account", final_docname)` where `final_docname` follows the BARE convention.
+- **W2 (topological ordering)**: Phase 2-T1 helper orders `groups_to_create` by parent depth (ancestors first).
+- **W4 (account dict shape)**: Phase 2-T1 helper enumerates the exact dict passed to `frappe.get_doc({})` (no `account_type` for groups; `account_currency = "PHP"`).
+
+### Findings dropped as STALE / FALSE POSITIVE (4)
+
+- **CS-5** (savepoint API claim) — STALE: s206 uses real `frappe.db.savepoint()` API. Plan's MUST_CONTAIN `"frappe.db.savepoint"` is correct.
+- **TO-W2** (probe filename) — STALE: file `probe_4_incomplete_stores.py` exists at `F:\Dropbox\Projects\BEI-ERP\tmp\s238\probe_4_incomplete_stores.py`.
+- **DQ-9** — duplicate of FB-12 (frappe.log_error).
+- **SA-9** — `bki_sales_naming_series` change is S238's surface, not S243's.
+
+### Findings DOWNGRADED to WARNING (3)
+
+- **B5 (`_ensure_account` is_group=0)** — mitigated: plan's MUST_CONTAIN requires NEW helper `_ensure_group_account`; plan body now explicitly says "do NOT call s206's `_ensure_account` directly".
+- **B7 (`frappe-bulk-edits` not in worktree)** — mitigated: Skill tool registry surfaces it globally; plan now says "invoke `Skill(skill='frappe-bulk-edits')` not `Read` of file path".
+- **B8 (SSM boilerplate not inlined)** — mitigated: plan now explicitly inlines the 4 log-dir creation pattern in Phase 2-T1.
+
+### Phase budget impact
+
+| Phase | v1 | v1.1 | Δ rationale |
+|---|---:|---:|---|
+| Phase 0 — Boot, preflight, pre-state probe | 4 | 5 | +1: regenerate `tmp/s238` evidence as `tmp/s243/probe_*.json` (B5) |
+| Phase 1 — Reference mapping & gap analysis | 5 | 5 | unchanged (sample 5 BARE-NAME stores instead of just XMM) |
+| Phase 2 — Seeder + dry-run + rollback proof | 6 | 8 | +2: inline SSM boilerplate, `ignore_root_company_validation` flag wrapping, outer-savepoint scoping for dry-run, exact dict shape (W1, W2, W4, B2, B4) |
+| Phase 3 — Commit-mode seed + 49/49 verify | 4 | 4 | unchanged |
+| Phase 4 — Closeout + PR | 3 | 4 | +1: SUMMARY.md MUST_MODIFY/MUST_CONTAIN gates, Requirements Regression Checklist PASS/FAIL embed, rebase-before-push, `git add -f output/` (B6, B7, W5, W6) |
+| **Total** | **22** | **26** | **+4 units (8 CRITICAL fixes + 5 WARNINGs)** |
+
+26 units — well under 80-unit ceiling. No phase exceeds 12-unit preferred-split threshold. Single-session executable.
+
+### One v1 finding REFUTED by adversarial fact-check (Blocker 1 framing)
+
+The fact-checker noted Blocker 1's framing was slightly overstated: XMM is **not** an outlier for `Stock Assets` parent (XMM uses bare `Stock Assets - XMM` matching all 45 stores). XMM is an outlier ONLY for `Accounts Payable` and `Current Assets` parents (uses number-prefix where 43 others use bare). ROBDA shares the same outlier pattern. The substance — that the plan's "match XMM exactly" rule would propagate the minority convention to AP and Current Assets — stands. The v1.1 amendment uses the dominant 43-store BARE-NAME convention for ALL three groups (Stock Assets, Accounts Payable, Current Assets) on the 4 target stores.
 
 ---
 
@@ -188,9 +249,9 @@ If the seeder fails mid-run, the savepoint pattern from s206 rolls back the part
 
 ## Phases
 
-### Phase 0 — Boot, Worktree Confirm, Canonical Preflight, Pre-State Probe (4 units)
+### Phase 0 — Boot, Worktree Confirm, Canonical Preflight, Pre-State Probe (5 units — v1.1)
 
-**0-T1** Read this plan fully. Read `data/_CLEANROOM/2026-04-09_s175_coa_restructure/01_CANONICAL_COA_TEMPLATE.md` for canonical CoA shape reference.
+**0-T1 (v1.1)** Read this plan fully — including the v1 → v1.1 Audit Amendments section above. **Do NOT read** `data/_CLEANROOM/2026-04-09_s175_coa_restructure/01_CANONICAL_COA_TEMPLATE.md` for canonical reference (audit W7: that file is the S175 Sales-tree template; it does not define `Stock Assets` / `Accounts Payable` / `Current Assets` group structure). The canonical reference for this sprint is **the existing 43 bare-name complete stores in production**, sampled in Phase 1-T1.
 
 **0-T2** Confirm worktree:
 ```bash
@@ -206,15 +267,20 @@ python scripts/verify_canonical_structure.py 2>&1 | tee tmp/s243/canonical_prefl
 ```
 Must show `ALL CANONICAL`. If violations, STOP.
 
-**0-T4** Probe full account inventory for the 4 target stores via SSM. Reuse the probe pattern from `tmp/s238/probe_4_incomplete_stores.py`. Write `output/s243/verification/before_state.json` with:
-- For each of 4 stores: `total_accounts`, `group_accounts`, `leaf_accounts`, all `is_group=1` rows with full fields, all leaf rows
-- Their billing Customer existence + name
-- Their Warehouse(s)
-- Their `parent_company` and `abbr`
-- BKI SI counts (from `tabSales Invoice WHERE company='BEBANG KITCHEN INC.' AND customer=<store>`)
+**0-T4 (v1.1)** Probe full account inventory for the 4 target stores via SSM and write `output/s243/verification/before_state.json`. **HARD BLOCKER (audit B5):** the plan body originally cited `tmp/s238/probe_4_incomplete_stores.py` and `tmp/s238/phase0_probe_result.json` as starting evidence — those files exist only in the main checkout (`F:/Dropbox/Projects/BEI-ERP/tmp/s238/`), NOT in this worktree. **DO NOT** attempt to read them via relative paths. Instead, **regenerate** the probes as part of S243 Phase 0:
 
-**MUST_MODIFY:** `output/s243/verification/before_state.json`
-**MUST_CONTAIN:** `"ROBINSONS ANTIPOLO"`, `"SM MANILA"`, `"SM MEGAMALL"`, `"SM SOUTHMALL"`, `"all_group_accounts"`, `"total_accounts"`, `"abbr"`
+1. Author `tmp/s243/probe_phase0_state.py` (NEW — clone-and-adapt the s238 pattern). Required behavior:
+   - Frappe init boilerplate: create 4 log directories (`/home/frappe/logs`, `/home/frappe/frappe-bench/logs`, `/home/frappe/frappe-bench/hq.bebang.ph/logs`, `/home/frappe/frappe-bench/sites/hq.bebang.ph/logs`) BEFORE `import frappe`.
+   - For each of 4 target stores: query all `tabAccount` rows (group + leaf), `parent_company` from `tabCompany`, billing Customer name, Warehouse list, BKI SI counts (`tabSales Invoice WHERE company='BEBANG KITCHEN INC.' AND customer=<billing_customer>`).
+   - Emit between `S243_PHASE0_BEGIN` / `S243_PHASE0_END` markers.
+
+2. SSM-execute via `Skill(skill='frappe-bulk-edits')` pattern (NOT `Read` of skill file path). Capture log to `tmp/s243/phase0_probe_run.log`.
+
+3. Parse output to `output/s243/verification/before_state.json`.
+
+**MUST_MODIFY:** `tmp/s243/probe_phase0_state.py` (NEW), `output/s243/verification/before_state.json`
+**MUST_CONTAIN (in before_state.json):** `"ROBINSONS ANTIPOLO"`, `"SM MANILA"`, `"SM MEGAMALL"`, `"SM SOUTHMALL"`, `"all_group_accounts"`, `"total_accounts"`, `"abbr"`, `"parent_company"`, `"BKI_si_counts"`
+**MUST_CONTAIN (in probe_phase0_state.py):** `os.makedirs`, `frappe.init`, `frappe.connect`, `S243_PHASE0_BEGIN`, all 4 target store names
 
 **Phase 0 verify:**
 ```python
@@ -239,20 +305,22 @@ sys.exit(0 if not errs else 1)
 
 ---
 
-### Phase 1 — Reference Mapping & Gap Analysis (5 units)
+### Phase 1 — Reference Mapping & Gap Analysis (5 units — v1.1: BARE-NAME convention)
 
-**1-T1** Probe XENTROMALL MONTALBAN (canonical reference store) full CoA via SSM. Write `output/s243/verification/reference_xmm_coa.json`:
-- All `tabAccount` rows for `company='XENTROMALL MONTALBAN - PERPETUAL FOOD CORP.'`
-- For each row: `name`, `account_name`, `account_number`, `parent_account`, `is_group`, `root_type`, `account_type`
-- Group-only subset: every `is_group=1` row organized by `root_type` (Asset/Liability/Equity/Income/Expense)
+**1-T1 (v1.1 — REPLACES "XMM probe")** Sample 5 BARE-NAME complete stores as canonical reference (NOT XMM). Per audit B1 + adversarial fact-check: 43 of 45 complete stores use the bare-name convention (`Stock Assets - <ABBR>`, `Accounts Payable - <ABBR>`, `Current Assets - <ABBR>` with `account_number = NULL`, Title Case). XMM and ROBDA are the 2/45 outliers (use number-prefix style for AP and Current Assets). The dominant bare-name pattern is canonical.
 
-**MUST_MODIFY:** `output/s243/verification/reference_xmm_coa.json`
-**MUST_CONTAIN:** `"Stock Assets"`, `"Current Assets"`, `"Accounts Payable"`, `"XMM"`, `"groups_by_root_type"`
+Sample 5 of these stores: `AMM`, `AFT`, `AYEVO`, `UPTC`, `AYSOL` (any 5 from the 43 will work; if any is unavailable, substitute another BARE-NAME store from `before_state.json`'s implied universe).
 
-**1-T2** Build the gap-analysis: compare each of the 4 incomplete stores against XMM's group structure. For each `(target_store, root_type)`, compute:
-- Group accounts XMM has under this root_type that the target store lacks (matched by `account_name` after stripping the abbr suffix)
-- The exact `account_number` and `parent_account` chain XMM uses
-- Whether intermediate ancestor groups need creation first (e.g., if XMM has `Stock Assets - XMM` parented to `1100000 - ASSETS - XMM` and the target store also has its own `1100000 - ASSETS - <ABBR>`, the chain is reusable; otherwise create ancestors top-down)
+For each sampled store, probe its full `tabAccount` rows via SSM. Write `output/s243/verification/reference_bare_name_coa.json`:
+- For each sampled store: all `tabAccount` rows where `is_group=1` (only group accounts, that's all S243 needs)
+- Confirm convention is consistent: `account_name` BARE (no abbr), `account_number` NULL or matching the existing target-store pattern, Title Case naming
+
+**MUST_MODIFY:** `output/s243/verification/reference_bare_name_coa.json`
+**MUST_CONTAIN:** `"Stock Assets"`, `"Current Assets"`, `"Accounts Payable"`, all 5 sampled abbreviations, `"groups_by_root_type"`, `"convention_consistent": true`
+
+If `convention_consistent` is false (i.e., the 5 sampled stores disagree among themselves), STOP — present to Sam with the disagreement detail.
+
+**1-T2 (v1.1)** Build the gap-analysis: compare each of the 4 incomplete stores against the BARE-NAME canonical convention. For each `(target_store, missing_group)`, compute the exact group account to create.
 
 Output: `output/s243/verification/coa_gap_analysis.json`:
 ```json
@@ -262,28 +330,54 @@ Output: `output/s243/verification/coa_gap_analysis.json`:
     "existing_group_count": 2,
     "groups_to_create": [
       {
-        "account_number": "<from XMM>",
-        "account_name": "Stock Assets - ROA",
+        "account_name": "Stock Assets",
+        "account_number": null,
         "parent_account": "1100000 - ASSETS - ROA",
         "root_type": "Asset",
-        "rationale": "S238 Phase 1-T1 needs this parent for Inventory-from-Commissary leaf"
+        "is_group": 1,
+        "expected_docname": "Stock Assets - ROA",
+        "rationale": "S238 Phase 1-T1 needs this parent for Inventory-from-Commissary leaf; reuses target-store's existing Asset root"
       },
-      ...
+      {
+        "account_name": "Current Assets",
+        "account_number": null,
+        "parent_account": "1100000 - ASSETS - ROA",
+        "root_type": "Asset",
+        "is_group": 1,
+        "expected_docname": "Current Assets - ROA",
+        "rationale": "S238 Phase 1-T1 needs this parent for Input VAT - BKI Inter-Co leaf"
+      },
+      {
+        "account_name": "Accounts Payable",
+        "account_number": null,
+        "parent_account": "<existing root liability group on ROA, e.g. '2 - Liability - ROA' if Frappe-default exists, OR '2104000 - INTERCOMPANY PAYABLES - ROA' as fallback>",
+        "root_type": "Liability",
+        "is_group": 1,
+        "expected_docname": "Accounts Payable - ROA",
+        "rationale": "S238 Phase 1-T1 needs this parent for AP-Trade-BKI leaf"
+      }
     ]
-  },
-  ...
+  }
 }
 ```
 
-**1-T3** **HARD BLOCKER:** if any of these conditions are true, STOP and present to Sam:
+**Critical convention notes (audit B3 fix):**
+- `account_name` = BARE (e.g., `"Stock Assets"`, no abbr suffix). Frappe stores `account_name` BARE; abbr is on `name` only.
+- `account_number = NULL` (BARE-NAME convention has no number prefix).
+- `expected_docname` = `"<account_name> - <abbr>"` — Frappe auto-constructs this on insert from `account_name` + Company.abbr.
+- `parent_account` for `Stock Assets` and `Current Assets` reuses the target store's EXISTING `1100000 - ASSETS - <ABBR>` Asset root group (visible in `before_state.json`).
+- `parent_account` for `Accounts Payable` uses the target store's existing root Liability group (probe `before_state.json` to determine name; typical shape `"2 - Liability - <ABBR>"` or `"2104000 - INTERCOMPANY PAYABLES - <ABBR>"`).
+
+**1-T3 (v1.1)** **HARD BLOCKER:** STOP and present to Sam if any of these conditions are true:
 1. The gap analysis suggests creating MORE than 4 group accounts per store. Means the gap is wider than expected; needs scope discussion.
-2. XMM's parent chain references group accounts that don't exist on target stores AND can't be reused from existing target-store ancestors. Means we'd need to create intermediate groups; quantify and decide.
-3. The 4 target stores' existing `1100000 - ASSETS - <ABBR>` and `2104000 - INTERCOMPANY PAYABLES - <ABBR>` groups conflict with XMM's account-number scheme (e.g., XMM uses `1100000` for `CURRENT ASSETS`, not `ASSETS`). Means we need a naming/numbering reconciliation decision before proceeding.
+2. The 5 sampled BARE-NAME stores' conventions disagree among themselves (1-T1's `convention_consistent` is false).
+3. A target store has NO root Liability group at all (i.e., `Accounts Payable`'s `parent_account` cannot be resolved from `before_state.json`). Means we need to create the root Liability group first; quantify and decide.
+4. A `groups_to_create` entry would conflict on `expected_docname` with an existing account on that target store. (Should not happen with BARE-NAME convention since target stores' existing accounts use number-prefix style — but check defensively.)
 
 **1-T4** Write summary of gap to conversation + present to Sam if any HARD BLOCKER from 1-T3 fires. Otherwise proceed to Phase 2.
 
 **MUST_MODIFY:** `output/s243/verification/coa_gap_analysis.json`
-**MUST_CONTAIN:** `"groups_to_create"`, all 4 abbreviations (`"ROA"`, `"SMM"`, `"SMMM"`, `"SMS"`), `"rationale"`
+**MUST_CONTAIN:** `"groups_to_create"`, all 4 abbreviations (`"ROA"`, `"SMM"`, `"SMMM"`, `"SMS"`), `"account_name": "Stock Assets"` (BARE — no abbr), `"account_number": null`, `"expected_docname"`, `"is_group": 1`, `"rationale"`
 
 **Phase 1 verify:**
 ```python
@@ -302,58 +396,253 @@ sys.exit(0 if not errs else 1)
 
 ---
 
-### Phase 2 — Seeder Script + Dry-Run (6 units)
+### Phase 2 — Seeder Script + Dry-Run (8 units — v1.1)
 
-**2-T1** Write `scripts/s243/seed_canonical_coa_for_4_stores.py` (NEW). Structure mirrors `hrms/on_demand/s206_seed_intercompany_accounts.py`:
+**2-T1 (v1.1 — full code skeleton, replaces v1 prose)** Write `scripts/s243/seed_canonical_coa_for_4_stores.py` (NEW). All v1 audit fixes (B2, B3, B4, B5/W1/W2/W4) inlined:
 
 ```python
 #!/usr/bin/env python3
 """S243 — Canonical CoA backfill for 4 BEBANG ENTERPRISE INC. stores.
 
-Reads gap analysis from output/s243/verification/coa_gap_analysis.json,
-creates the missing parent group accounts on the 4 target stores via Frappe
-ORM (preserves lft/rgt account-tree integrity), savepoint-wrapped, idempotent.
+Adopts the 43-store BARE-NAME convention (audit B1):
+  account_name  = "Stock Assets" / "Accounts Payable" / "Current Assets"  (BARE — no abbr)
+  account_number = NULL
+  is_group = 1
+  Frappe constructs name = "<account_name> - <abbr>" automatically
 
-Strictly scoped to:
-  TARGET_COMPANIES = [
-      "ROBINSONS ANTIPOLO - BEBANG ENTERPRISE INC.",
-      "SM MANILA - BEBANG ENTERPRISE INC.",
-      "SM MEGAMALL - BEBANG ENTERPRISE INC.",
-      "SM SOUTHMALL - BEBANG ENTERPRISE INC.",
-  ]
+Strictly scoped to 4 target Companies. If asked to create on any other Company,
+raises ValueError. No leaf accounts (S238's Phase 1 deliverable).
 
-If asked to create on any other Company, raise — do not silently expand scope.
+Audit fixes baked in:
+  B2: ignore_root_company_validation flag wraps loop (s206 lines 358-359 pattern)
+  B3: account_name passed BARE to frappe.get_doc; abbr handled by Frappe
+  B4: outer-savepoint scoping for dry-run mode (skips outer commit on dry-run)
+  W1: idempotency check key = frappe.db.exists("Account", expected_docname)
+  W2: groups_to_create sorted by parent depth (ancestors first)
+  W4: account dict shape enumerated explicitly (no account_type/currency for groups)
 
-Reuses helpers conceptually from s206_seed_intercompany_accounts.py:
-  - _ensure_account(...) — idempotent INSERT-or-skip (line 194 reference)
-  - savepoint pattern (s206 SAVEPOINT_NAME line 45)
-  - report-style return value (s206 _write_report line 317)
-
-Run on production via SSM:
-  python tmp/s243/run_seeder.py [--dry-run]
+Reference pattern (NOT a callable): hrms/on_demand/s206_seed_intercompany_accounts.py.
+Do NOT call s206._ensure_account directly — it hardcodes is_group=0 for leaves.
 """
+from __future__ import annotations
+
+# v1.1-B5: SSM boilerplate inlined — log dirs MUST exist before import frappe
+import os
+for _d in [
+    "/home/frappe/logs",
+    "/home/frappe/frappe-bench/logs",
+    "/home/frappe/frappe-bench/hq.bebang.ph/logs",
+    "/home/frappe/frappe-bench/sites/hq.bebang.ph/logs",
+]:
+    os.makedirs(_d, exist_ok=True)
+
+import json
+import sys
+import traceback
+from datetime import datetime
+from pathlib import Path
+
+import frappe  # type: ignore
+
+OUTER_SAVEPOINT = "s243_seed_outer"
+GAP_PATH = "output/s243/verification/coa_gap_analysis.json"
+LEDGER_PATH = "output/s243/verification/seed_ledger.json"
+
+TARGET_COMPANIES = frozenset({
+    "ROBINSONS ANTIPOLO - BEBANG ENTERPRISE INC.",
+    "SM MANILA - BEBANG ENTERPRISE INC.",
+    "SM MEGAMALL - BEBANG ENTERPRISE INC.",
+    "SM SOUTHMALL - BEBANG ENTERPRISE INC.",
+})
+
+ALLOWED_ACCOUNT_NAMES = frozenset({
+    "Stock Assets",
+    "Accounts Payable",
+    "Current Assets",
+})
+
+
+def _validate_target_company(company: str) -> None:
+    """v1.1-B2 + W4: refuse out-of-scope companies."""
+    if company not in TARGET_COMPANIES:
+        raise ValueError(
+            f"S243: refusing to create accounts on out-of-scope Company {company!r}; "
+            f"target list = {sorted(TARGET_COMPANIES)}"
+        )
+
+
+def _validate_gap_entry(entry: dict, company: str) -> None:
+    """Anti-scope-creep gates (v1.1-B1)."""
+    if entry.get("is_group") != 1:
+        raise ValueError(f"S243: only group accounts allowed (is_group=1); got {entry}")
+    if entry.get("account_name") not in ALLOWED_ACCOUNT_NAMES:
+        raise ValueError(
+            f"S243: account_name {entry.get('account_name')!r} not in {sorted(ALLOWED_ACCOUNT_NAMES)}"
+        )
+    if entry.get("account_number") not in (None, ""):
+        raise ValueError(
+            f"S243: BARE-NAME convention requires account_number=NULL; got {entry.get('account_number')}"
+        )
+
+
+def _load_gap_analysis() -> dict:
+    """v1.1: read + validate Phase 1 gap analysis."""
+    gap = json.loads(Path(GAP_PATH).read_text(encoding="utf-8"))
+    expected = {"ROA", "SMM", "SMMM", "SMS"}
+    if set(gap.keys()) - expected or not expected.issubset(gap.keys()):
+        raise ValueError(f"S243: gap analysis abbr keys mismatch; got {sorted(gap.keys())}")
+    for abbr, store_data in gap.items():
+        if len(store_data.get("groups_to_create", [])) > 4:
+            raise ValueError(
+                f"S243: {abbr} requests {len(store_data['groups_to_create'])} groups, max=4"
+            )
+    return gap
+
+
+def _topological_sort(groups: list[dict]) -> list[dict]:
+    """v1.1-W2: order ancestors first (parents before children)."""
+    # For S243's 3 group accounts per store, parent_account always references
+    # an EXISTING account on the target store (per Phase 1-T2 design).
+    # No inter-group dependencies, so input order is fine.
+    # Defensive sort: groups with shorter parent_account string first.
+    return sorted(groups, key=lambda g: len(g.get("parent_account", "")))
+
+
+def _ensure_group_account(
+    company: str, account_name: str, parent_account: str, root_type: str
+) -> tuple[str, str]:
+    """Idempotent INSERT for a group account. Returns (docname, status).
+
+    status ∈ {"created", "existed"}. Raises on validation/insert failure.
+    """
+    abbr = frappe.db.get_value("Company", company, "abbr")
+    if not abbr:
+        raise ValueError(f"S243: Company {company} has no abbr")
+    expected_docname = f"{account_name} - {abbr}"
+
+    # v1.1-W1: idempotency check by docname
+    if frappe.db.exists("Account", expected_docname):
+        return expected_docname, "existed"
+
+    # v1.1-W4: explicit dict shape — no account_type, no account_currency for groups
+    # v1.1-B3: account_name BARE, no abbr suffix; Frappe auto-constructs name from account_name + Company.abbr
+    doc = frappe.get_doc({
+        "doctype": "Account",
+        "account_name": account_name,           # BARE
+        "parent_account": parent_account,       # full docname of existing parent
+        "company": company,
+        "is_group": 1,                          # GROUP ONLY
+        "root_type": root_type,                 # Asset / Liability
+    })
+    doc.insert(ignore_permissions=True)
+    if doc.name != expected_docname:
+        # Defensive: Frappe may have appended a counter on collision
+        raise ValueError(
+            f"S243: docname mismatch — expected {expected_docname!r}, got {doc.name!r}"
+        )
+    return doc.name, "created"
+
+
+def execute(dry_run: bool = False) -> dict:
+    """Main entry. dry_run=True: outer savepoint + skip outer commit + final rollback.
+    dry_run=False: outer savepoint + outer commit (release savepoint after).
+    """
+    frappe.set_user("Administrator")
+    gap = _load_gap_analysis()
+
+    ledger: dict = {
+        "mode": "dry-run" if dry_run else "commit",
+        "timestamp_utc": datetime.utcnow().isoformat() + "Z",
+        "stores": {},
+        "errors": [],
+        "total_created": 0,
+        "total_existed": 0,
+        "total_errors": 0,
+    }
+
+    # v1.1-B2: bypass parent_company root-account validator for child Companies
+    original_root_flag = getattr(frappe.local.flags, "ignore_root_company_validation", False)
+    frappe.local.flags.ignore_root_company_validation = True
+
+    # v1.1-B4: OUTER savepoint wraps entire 4-store loop
+    frappe.db.savepoint(OUTER_SAVEPOINT)
+
+    try:
+        for abbr, store_data in gap.items():
+            company = store_data["company"]  # full docname e.g. "ROBINSONS ANTIPOLO - BEBANG ENTERPRISE INC."
+            _validate_target_company(company)
+
+            store_ledger: dict = {"abbr": abbr, "result": []}
+            for entry in _topological_sort(store_data["groups_to_create"]):
+                _validate_gap_entry(entry, company)
+                try:
+                    docname, status = _ensure_group_account(
+                        company=company,
+                        account_name=entry["account_name"],
+                        parent_account=entry["parent_account"],
+                        root_type=entry["root_type"],
+                    )
+                    store_ledger["result"].append({
+                        "name": docname,
+                        "account_name": entry["account_name"],
+                        "status": status,
+                    })
+                    if status == "created":
+                        ledger["total_created"] += 1
+                    else:
+                        ledger["total_existed"] += 1
+                except Exception as exc:
+                    frappe.log_error(
+                        title=f"S243 seed failed for {company} / {entry.get('account_name')}",
+                        message=traceback.format_exc()[:1500],
+                    )
+                    store_ledger["result"].append({
+                        "account_name": entry.get("account_name"),
+                        "status": "error",
+                        "error": str(exc)[:300],
+                    })
+                    ledger["errors"].append({
+                        "company": company,
+                        "account_name": entry.get("account_name"),
+                        "error": str(exc)[:300],
+                    })
+                    ledger["total_errors"] += 1
+
+            ledger["stores"][abbr] = store_ledger
+
+        # v1.1-B4: dry-run = rollback outer savepoint (NEVER commit)
+        if dry_run:
+            frappe.db.rollback(save_point=OUTER_SAVEPOINT)
+        else:
+            frappe.db.release_savepoint(OUTER_SAVEPOINT)
+            frappe.db.commit()
+
+    finally:
+        frappe.local.flags.ignore_root_company_validation = original_root_flag
+
+    return ledger
 ```
 
-Required helpers in the script:
-- `_load_gap_analysis()` — read `output/s243/verification/coa_gap_analysis.json`; assert all 4 stores present
-- `_ensure_group_account(company, account_number, account_name, parent_account, root_type)` — return `(name, status)` where status ∈ `{created, existed, error}`. Use `frappe.new_doc("Account")` + `.insert()`; idempotent on duplicate-name (look up existing first).
-- `_validate_target_company(company)` — assert in `TARGET_COMPANIES`; raise `ValueError` otherwise.
-- `execute(dry_run: bool = False) -> dict` — main entry; loops the 4 companies × their gap; returns ledger dict.
-
 **MUST_MODIFY:** `scripts/s243/seed_canonical_coa_for_4_stores.py` (NEW)
-**MUST_CONTAIN:** `TARGET_COMPANIES`, `_ensure_group_account`, `_load_gap_analysis`, `_validate_target_company`, `frappe.db.savepoint`, `BEBANG ENTERPRISE INC.`, `s243_seed_canonical_coa`
+**MUST_CONTAIN:** `TARGET_COMPANIES`, `_ensure_group_account`, `_load_gap_analysis`, `_validate_target_company`, `_validate_gap_entry`, `_topological_sort`, `frappe.db.savepoint`, `frappe.db.rollback(save_point=`, `frappe.db.release_savepoint`, `frappe.db.commit`, `frappe.local.flags.ignore_root_company_validation`, `is_group=1` OR `"is_group": 1`, `BEBANG ENTERPRISE INC.`, `os.makedirs`, `s243_seed_outer`
+**MUST_NOT_CONTAIN:** `_ensure_account(` (s206's leaf-only helper — must NOT be reused), `is_group=0`, `is_group: 0`, `account_number = "1100000"`, `"Stock Assets - "` followed by abbr in account_name (BARE only)
 
-**2-T2** **HARD BLOCKER:** the seeder MUST refuse to run if the gap analysis JSON requests:
+**2-T2** **HARD BLOCKER:** the seeder's `_validate_target_company` and `_validate_gap_entry` raise `ValueError` if the gap analysis JSON requests:
 - An account on a Company NOT in `TARGET_COMPANIES`
-- An account with `is_group=0` (this sprint creates only group accounts)
-- An account whose name doesn't follow `<canonical group name> - <ABBR>` pattern
-- More than 4 accounts per Company (anti-scope-creep)
+- An account with `is_group=0` (only groups allowed)
+- An account_name not in `ALLOWED_ACCOUNT_NAMES = {"Stock Assets", "Accounts Payable", "Current Assets"}`
+- A non-NULL `account_number` (BARE-NAME requires NULL)
+- More than 4 accounts per Company
 
-If any of the above, raise `ValueError(f"S243: refusing to create out-of-scope account: ...")` and exit non-zero.
+These validators run BEFORE any insert. Errors abort the seeder run.
 
-**2-T3** Wire SSM execution: `tmp/s243/run_seeder.py` (uses the boilerplate from `frappe-bulk-edits` skill). Two modes:
-- `--dry-run`: opens savepoint, creates accounts, writes ledger to `tmp/s243/seed_dry_run_<timestamp>.log`, ROLLBACK savepoint, exits with status info
-- (default): same but COMMIT savepoint, write final ledger to `output/s243/verification/seed_ledger.json`
+**2-T3 (v1.1)** Wire SSM execution: `tmp/s243/run_seeder.py` (gitignored, transient).
+
+Per audit B7+B8 mitigation: invoke `Skill(skill='frappe-bulk-edits')` to obtain the canonical SSM boilerplate; do NOT `Read` the SKILL.md file directly. The boilerplate logs dirs are already inlined in `seed_canonical_coa_for_4_stores.py` (so no additional steps needed). The SSM wrapper just base64-encodes the seeder, docker-cps to the backend container, and runs it.
+
+Two modes:
+- `--dry-run`: invokes `seed_canonical_coa_for_4_stores.execute(dry_run=True)`. Per the seeder design, this opens outer savepoint, runs all inserts, **rolls back outer savepoint at end**, **never calls `frappe.db.commit()`**. Result: production state unchanged. Writes ledger to `tmp/s243/seed_dry_run_<timestamp>.log` (transient).
+- (default): invokes `seed_canonical_coa_for_4_stores.execute(dry_run=False)`. Per the seeder design, this opens outer savepoint, runs all inserts, releases savepoint, **calls `frappe.db.commit()`**. Writes final ledger to `output/s243/verification/seed_ledger.json` (committed).
 
 **2-T4** Run dry-run for `ROA` only (single-store smoke). Capture log to `tmp/s243/seed_dry_run_roa.log`. Verify:
 - All requested accounts created OR existed (no errors)
@@ -475,7 +764,7 @@ sys.exit(0 if not errs else 1)
 
 ---
 
-### Phase 4 — Closeout (3 units)
+### Phase 4 — Closeout (4 units — v1.1)
 
 **4-T1** Run canonical post-check:
 ```bash
@@ -483,34 +772,105 @@ python scripts/verify_canonical_structure.py 2>&1 | tee output/s243/verification
 ```
 Must show `ALL CANONICAL` (same baseline as Phase 0). If new violations, STOP — the seeder introduced drift.
 
-**4-T2** Update plan YAML metadata in this file:
-- `status: PLANNED` → `status: COMPLETED`
+**4-T2 (v1.1 — adds rebase + output/ git add -f)** Update plan YAML metadata + registry, then stage all closeout artifacts:
+
+```bash
+# Plan + Registry (docs/ gitignored)
+git add -f docs/plans/2026-05-09-sprint-243-canonical-coa-4-stores.md
+git add -f docs/plans/SPRINT_REGISTRY.md
+
+# v1.1-W6: output/ is also gitignored — closeout evidence files need -f too
+git add -f output/s243/
+
+# v1.1-W5: rebase against current production before pushing
+git fetch origin --prune
+git rebase origin/production
+# If conflicts: resolve, do NOT --force --skip; if blocked, STOP and present to Sam.
+```
+
+Plan YAML edits:
+- `status: PLANNED_AUDITED_v1_1` → `status: COMPLETED`
 - Add `completed_date: 2026-05-XX`
 - Add `pr: <PR#>`
 - Add `execution_summary: <one-paragraph result>`
 
-Update `docs/plans/SPRINT_REGISTRY.md` S243 row:
-- Status: `PLANNED` → `COMPLETED`
+Registry S243 row edits:
+- Status: `PLANNED_AUDITED_v1_1` → `COMPLETED`
 - PR field filled
 - Execution summary appended
 
-`git add -f` for both files (docs/ is gitignored).
+**4-T3 (v1.1 — adds MUST_MODIFY + MUST_CONTAIN + embedded Requirements Regression Checklist)** Write `output/s243/SUMMARY.md` with the EXACT structure below:
 
-**4-T3** Write `output/s243/SUMMARY.md` with:
-- Pre-state vs post-state comparison (account counts per store, before/after diff)
-- Number of accounts created (total + per-store)
-- Confirmation that `complete_stores: 49` post-seed
-- Reference to `output/s243/verification/seed_ledger.json` for the full audit trail
-- Note: 42 historical Submitted BKI SIs (₱483K) on these 4 stores remain WITHOUT a store-side PI mirror — that's a separate Q1 Input VAT recovery sprint, not S243's scope.
-- Note: S238 Phase 0-T4 gate is now unblocked — agent can resume S238 from Phase 0-T1 in a fresh session.
+```markdown
+# S243 Closeout Summary
+
+## Pre-state vs post-state
+
+| Store | Abbr | Pre accounts | Post accounts | Created | Existed |
+|---|---|---:|---:|---:|---:|
+| ROBINSONS ANTIPOLO - BEBANG ENTERPRISE INC. | ROA | 5 | <N> | <N> | <N> |
+| SM MANILA - BEBANG ENTERPRISE INC. | SMM | 5 | <N> | <N> | <N> |
+| SM MEGAMALL - BEBANG ENTERPRISE INC. | SMMM | 5 | <N> | <N> | <N> |
+| SM SOUTHMALL - BEBANG ENTERPRISE INC. | SMS | 5 | <N> | <N> | <N> |
+| **Total** | | **20** | **<N>** | **<N>** | **<N>** |
+
+`coa_complete_count` post-seed: **49 / 49** ✓
+
+## Requirements Regression Checklist (PASS/FAIL)
+
+Each item below MUST be checked ✓ or marked ✗ with reason. v1.1 audit-fix items:
+
+- [ ] **A1 (BARE-NAME convention)**: All created accounts use `account_name` BARE (no abbr); `account_number = NULL`; Title Case. Verified by post-state probe (`tmp/s243/probe_phase0_state.py` re-run shows the new groups have `account_name` BARE matching the 43-store dominant convention).
+- [ ] **A2 (ignore_root_company_validation)**: Seeder used `frappe.local.flags.ignore_root_company_validation = True` during inserts and restored on exit. Confirmed via `grep -c "ignore_root_company_validation" scripts/s243/seed_canonical_coa_for_4_stores.py` ≥ 2.
+- [ ] **A3 (account_name shape)**: Seeder passed `account_name` BARE to `frappe.get_doc({})`; Frappe constructed `name = "<account_name> - <abbr>"` automatically. Confirmed via `seed_ledger.json` showing each created account's `name` matches `expected_docname` from `coa_gap_analysis.json`.
+- [ ] **A4 (outer-savepoint dry-run)**: Phase 2-T5 dry-run report shows `rollback_confirmed: true` and `post_dry_run_account_counts` for all 4 stores equal pre-state.
+- [ ] **A5 (evidence regen)**: `tmp/s243/probe_phase0_state.py` exists in worktree (NOT cited from `tmp/s238/`); `output/s243/verification/before_state.json` was produced by this script.
+- [ ] **A6 (Phase 4-T3 gates)**: This SUMMARY.md exists with the Requirements Regression Checklist as a PASS/FAIL table (this very section).
+- [ ] **A7 (PR description gate)**: PR body = this SUMMARY.md (via `cat output/s243/SUMMARY.md`); Requirements Regression Checklist visible in PR.
+- [ ] **A8 (`git add -f output/`)**: Closeout staged `output/s243/` evidence files via `git add -f`.
+
+Original v1 regression items (must all PASS):
+
+- [ ] Canonical preflight passed pre-execute (Phase 0)
+- [ ] Canonical preflight passed post-execute (Phase 4)
+- [ ] No new canonical violations introduced
+- [ ] Only the 4 named target Companies received account inserts (per `seed_ledger.json`)
+- [ ] All inserted accounts have `is_group=1` (no leaf accounts created)
+- [ ] All inserted accounts follow BARE-NAME convention (verified A1)
+- [ ] Pre-existing accounts on the 4 target stores preserved untouched
+- [ ] No accounts created on any of the 45 complete stores
+- [ ] No accounts created on `BEBANG KITCHEN INC.`, `BEBANG ENTERPRISE INC.`, or any parent legal entity
+- [ ] `tabCompany`, `tabWarehouse`, `tabCustomer`, `tabSupplier` unchanged
+- [ ] No SI / PI / GL / SLE mutations
+- [ ] `coa_complete_count: 49 / 49` post-seed (per `coa_complete_count.json`)
+- [ ] S238 `_find_parent_group_for(company, "Stock Assets")` returns non-null for all 4 target stores post-seed
+- [ ] Same for `Accounts Payable` and `Current Assets` parent lookups
+- [ ] Plan YAML status updated to COMPLETED
+- [ ] SPRINT_REGISTRY.md S243 row updated to COMPLETED + PR# filled
+
+## Follow-up sprint candidates (out-of-scope for S243, recorded for S244+)
+
+1. **Q1 Input VAT recovery for the 42 historical Submitted BKI SIs (~PHP 51,765 input VAT)** on these 4 stores. Q1 2550Q deadline (2026-04-25) has passed; recoverable via Q2 carry-forward (deadline 2026-07-25). PH Finance audit PH-3.
+2. **Extend `scripts/verify_canonical_structure.py` with a CoA-completeness rule** (e.g., `COA_INCOMPLETE_<root>`) so the same skeleton-CoA gap on a future per-store Company creation surfaces at canonical-preflight time, not via a separate S238-style probe. Architectural blocker B8 from S243 audit.
+3. **Full canonical CoA harmonization for the 4 stores** (Sales tree, COGS, Expense, Equity hierarchy). S243 only created the 3 group accounts S238 needs.
+
+## S238 unblock confirmation
+
+S238 Phase 0-T4 CoA-completeness gate is now passable for all 49 stores. S238 can resume from Phase 0-T1 in a fresh session.
+```
+
+**MUST_MODIFY:** `output/s243/SUMMARY.md`
+**MUST_CONTAIN:** `"Requirements Regression Checklist"`, `"A1 (BARE-NAME convention)"`, `"A2 (ignore_root_company_validation)"`, `"A3 (account_name shape)"`, `"A4 (outer-savepoint dry-run)"`, `"A5 (evidence regen)"`, `"A6 (Phase 4-T3 gates)"`, `"A7 (PR description gate)"`, `"A8 (`git add -f output/`)"`, `"S238 unblock confirmation"`, `"Follow-up sprint candidates"`, `"49 / 49"`
 
 **4-T4** Create PR:
 ```bash
 GH_TOKEN="" gh pr create --repo Bebang-Enterprise-Inc/hrms \
   --base production --head s243-canonical-coa-4-stores \
-  --title "S243: Canonical CoA Backfill — 4 BEBANG ENTERPRISE INC. Stores" \
+  --title "S243: Canonical CoA Backfill — 4 BEBANG ENTERPRISE INC. Stores (v1.1)" \
   --body "$(cat output/s243/SUMMARY.md)"
 ```
+
+PR body = entire SUMMARY.md including the Requirements Regression Checklist (audit B7 fix). Reviewer (Sam) sees the full PASS/FAIL table in the PR description.
 
 **4-T5** Worktree exit clean:
 ```bash
@@ -520,56 +880,129 @@ cd F:/Dropbox/Projects/BEI-ERP
 git worktree remove F:/Dropbox/Projects/BEI-ERP-s243-canonical-coa-4-stores
 ```
 
-**Phase 4 verify:**
+**Phase 4 verify (v1.1 — comprehensive):**
 ```python
-import os, json, sys, re
+import os, json, sys, re, subprocess
 errs = []
-for f in [
+
+# Required artifacts
+required_files = [
     "output/s243/SUMMARY.md",
     "output/s243/verification/canonical_post_check.log",
-]:
+    "output/s243/verification/before_state.json",
+    "output/s243/verification/reference_bare_name_coa.json",
+    "output/s243/verification/coa_gap_analysis.json",
+    "output/s243/verification/seed_dry_run_report.json",
+    "output/s243/verification/after_state.json",
+    "output/s243/verification/seed_ledger.json",
+    "output/s243/verification/coa_complete_count.json",
+    "scripts/s243/seed_canonical_coa_for_4_stores.py",
+    "tmp/s243/probe_phase0_state.py",  # v1.1-B5
+]
+for f in required_files:
     if not os.path.exists(f): errs.append(f"MISSING: {f}")
+
+# Canonical post-check clean
 log = open("output/s243/verification/canonical_post_check.log", encoding="utf-8", errors="replace").read()
 if "ALL CANONICAL" not in log: errs.append("post-check not clean")
+
+# Plan YAML closed
 plan = open("docs/plans/2026-05-09-sprint-243-canonical-coa-4-stores.md", encoding="utf-8").read()
 if "status: COMPLETED" not in plan: errs.append("plan YAML status not updated to COMPLETED")
+
+# v1.1-B6/B7: SUMMARY.md must contain Requirements Regression Checklist
+summary = open("output/s243/SUMMARY.md", encoding="utf-8").read()
+required_summary_strings = [
+    "Requirements Regression Checklist",
+    "A1 (BARE-NAME convention)",
+    "A2 (ignore_root_company_validation)",
+    "A3 (account_name shape)",
+    "A4 (outer-savepoint dry-run)",
+    "A5 (evidence regen)",
+    "A6 (Phase 4-T3 gates)",
+    "A7 (PR description gate)",
+    "A8 (`git add -f output/`)",
+    "S238 unblock confirmation",
+    "49 / 49",
+]
+for s in required_summary_strings:
+    if s not in summary: errs.append(f"SUMMARY.md missing: {s}")
+
+# v1.1-A1 enforce: seeder must use BARE convention + flag
+seeder = open("scripts/s243/seed_canonical_coa_for_4_stores.py", encoding="utf-8").read()
+for s in ["TARGET_COMPANIES", "ignore_root_company_validation", "is_group=1", "frappe.db.savepoint",
+          "frappe.db.rollback(save_point=", "_validate_target_company", "_ensure_group_account",
+          "ALLOWED_ACCOUNT_NAMES", "Stock Assets", "Accounts Payable", "Current Assets"]:
+    if s not in seeder: errs.append(f"seeder missing: {s}")
+forbidden_in_seeder = [
+    'is_group=0', 'is_group: 0',
+    '_ensure_account(',  # do NOT call s206's leaf helper
+]
+for s in forbidden_in_seeder:
+    if s in seeder: errs.append(f"seeder must NOT contain: {s}")
+
+# Coa completeness
+counts = json.load(open("output/s243/verification/coa_complete_count.json"))
+if counts.get("complete_stores") != 49: errs.append(f"only {counts.get('complete_stores')} stores complete (expected 49)")
+if counts.get("incomplete_stores"): errs.append(f"still incomplete: {counts['incomplete_stores']}")
+
+# Ledger sanity
+ledger = json.load(open("output/s243/verification/seed_ledger.json"))
+if ledger.get("total_errors", 1) != 0: errs.append(f"seeder had errors: {ledger.get('errors')}")
+
+# Registry updated
+registry = open("docs/plans/SPRINT_REGISTRY.md", encoding="utf-8").read()
+if "| `S243` |" not in registry: errs.append("SPRINT_REGISTRY missing S243 row")
+
+# Worktree status (best-effort — only check if git is reachable here)
+try:
+    out = subprocess.check_output(["git", "status", "--short"], encoding="utf-8")
+    if out.strip(): errs.append(f"worktree dirty: {out!r}")
+except Exception:
+    pass
+
 print("PASS" if not errs else "\n".join(errs))
 sys.exit(0 if not errs else 1)
 ```
 
 ---
 
-## Phase Budget Contract
+## Phase Budget Contract (v1.1 — audit-amended)
 
-| Phase | Units | Notes |
-|---|---:|---|
-| Phase 0 — Boot, preflight, pre-state probe | 4 | Worktree confirm + canonical preflight + 4-store before_state |
-| Phase 1 — Reference mapping & gap analysis | 5 | XMM probe + comparison + gap JSON + HARD BLOCKER eval |
-| Phase 2 — Seeder script + dry-run | 6 | Script writing + dry-run on 1 store + dry-run on all 4 + rollback proof |
-| Phase 3 — Apply seeder + verify | 4 | Commit-mode seed + after-state probe + coa_complete_count probe |
-| Phase 4 — Closeout | 3 | Post-check + SUMMARY + plan/registry update + PR + worktree remove |
-| **Total** | **22** | well under 80-unit ceiling; no phase exceeds 12-unit preferred-split threshold |
+| Phase | v1 | v1.1 | v1.1 Δ rationale |
+|---|---:|---:|---|
+| Phase 0 — Boot, preflight, pre-state probe | 4 | 5 | +1: regenerate `tmp/s238` evidence as `tmp/s243/probe_*.json` (B5) |
+| Phase 1 — Reference mapping & gap analysis | 5 | 5 | unchanged (sample 5 BARE-NAME stores instead of just XMM; B1 framing fix) |
+| Phase 2 — Seeder script + dry-run | 6 | 8 | +2: inline SSM boilerplate, `ignore_root_company_validation` flag, outer-savepoint dry-run scoping, exact dict shape (B2/B3/B4, W1/W2/W4) |
+| Phase 3 — Apply seeder + verify | 4 | 4 | unchanged |
+| Phase 4 — Closeout | 3 | 4 | +1: SUMMARY.md MUST_MODIFY/MUST_CONTAIN gates, embedded Requirements Regression Checklist, rebase-before-push, `git add -f output/` (B6/B7, W5/W6) |
+| **Total** | **22** | **26** | **+4 units (8 CRITICAL fixes + 5 WARNINGs)** |
+
+**v1.1 total: 26 units** — well under 80-unit ceiling. No phase exceeds 12-unit preferred-split threshold. Single-session executable.
 
 ---
 
-## Surface Ownership Matrix (S087)
+## Surface Ownership Matrix (S087, v1.1)
 
 | Surface | Owner | Allowed mutations |
 |---|---|---|
-| `scripts/s243/seed_canonical_coa_for_4_stores.py` | S243 | NEW file |
+| `scripts/s243/seed_canonical_coa_for_4_stores.py` | S243 | NEW file (v1.1: inlined SSM boilerplate, `ignore_root_company_validation` flag, outer-savepoint dry-run scoping, BARE-NAME convention, exact dict shape) |
+| `tmp/s243/probe_phase0_state.py` | S243 | **NEW (v1.1-B5)** — regenerates Phase 0 probes (replaces `tmp/s238/probe_4_incomplete_stores.py` which is gitignored / not in worktree) |
 | `tmp/s243/run_seeder.py` | S243 | NEW (transient — gitignored, SSM execution wrapper) |
-| `tabAccount` (4 target Companies only) | S243 | INSERT — group accounts only (`is_group=1`); strictly scoped to ROA/SMM/SMMM/SMS |
-| `output/s243/verification/*.json` | S243 | NEW evidence files |
-| `output/s243/SUMMARY.md` | S243 | NEW closeout summary |
-| `docs/plans/2026-05-09-sprint-243-canonical-coa-4-stores.md` | S243 | UPDATE (closeout YAML) |
+| `tabAccount` (4 target Companies only) | S243 | INSERT — group accounts only (`is_group=1`, BARE-NAME convention, `account_number=NULL`); strictly scoped to ROA/SMM/SMMM/SMS |
+| `output/s243/verification/*.json` | S243 | NEW evidence files (`before_state`, `reference_bare_name_coa`, `coa_gap_analysis`, `seed_dry_run_report`, `after_state`, `seed_ledger`, `coa_complete_count`, `canonical_post_check`) |
+| `output/s243/SUMMARY.md` | S243 | NEW closeout summary (v1.1: MUST_MODIFY + MUST_CONTAIN gates, embedded Requirements Regression Checklist as PASS/FAIL table) |
+| `docs/plans/2026-05-09-sprint-243-canonical-coa-4-stores.md` | S243 | UPDATE (audit amendment v1.1, then closeout YAML) |
 | `docs/plans/SPRINT_REGISTRY.md` | S243 | UPDATE (S243 row + Next Sprint Reservation bump to S244) |
 | `tabCompany` / `tabWarehouse` / `tabCustomer` / `tabSupplier` | NOT S243 | UNCHANGED |
 | `tabAccount` (45 complete stores OR BEBANG KITCHEN INC. OR BEBANG ENTERPRISE INC. parent) | NOT S243 | UNCHANGED |
 | `tabAccount` leaf accounts on the 4 target stores | NOT S243 (S238's job) | UNCHANGED |
+| `tabAccount` existing groups on 4 target stores (`1100000 - ASSETS - <ABBR>`, `2104000 - INTERCOMPANY PAYABLES - <ABBR>`, root types) | NOT S243 | UNCHANGED — preserved untouched |
 | `hrms/api/*.py` | NOT S243 | UNCHANGED |
 | `hrms/utils/*.py` | NOT S243 | UNCHANGED |
-| `hrms/on_demand/s206_seed_intercompany_accounts.py` | NOT S243 (referenced as pattern only) | UNCHANGED |
-| Existing 42 BKI SIs to these 4 stores | NOT S243 (separate VAT recovery sprint) | UNCHANGED |
+| `hrms/on_demand/s206_seed_intercompany_accounts.py` | NOT S243 (referenced as pattern only; do NOT call `_ensure_account` directly per audit B5) | UNCHANGED |
+| `scripts/verify_canonical_structure.py` | NOT S243 (architectural extension OUT OF SCOPE per audit B8 — recorded as follow-up sprint candidate) | UNCHANGED |
+| Existing 42 BKI SIs to these 4 stores | NOT S243 (separate Q1/Q2 Input VAT recovery sprint per audit PH-3) | UNCHANGED |
 
 ---
 
@@ -587,7 +1020,22 @@ sys.exit(0 if not errs else 1)
 
 ---
 
-## Requirements Regression Checklist
+## Requirements Regression Checklist (v1.1)
+
+### NEW v1.1 audit-fix checks (must all pass)
+
+- [ ] **A1 (BARE-NAME convention)**: All inserted accounts have `account_name` BARE (no abbr suffix), `account_number = NULL`, Title Case. `grep -c "account_name BARE" scripts/s243/seed_canonical_coa_for_4_stores.py` ≥ 1 (or equivalent inline comment); `grep -c "is_group=0" scripts/s243/...` returns 0; `grep -c "_ensure_account(" scripts/s243/...` returns 0 (must use NEW `_ensure_group_account`).
+- [ ] **A2 (ignore_root_company_validation)**: Seeder has `frappe.local.flags.ignore_root_company_validation = True` set before inserts and restored on exit. `grep -c "ignore_root_company_validation"` ≥ 2.
+- [ ] **A3 (account_name shape)**: Phase 1-T2's `coa_gap_analysis.json` has `account_name` BARE (e.g., `"Stock Assets"`, NOT `"Stock Assets - ROA"`). Phase 2-T1 seeder passes the BARE value to `frappe.get_doc({})` and lets Frappe construct `name`. Verified by `seed_ledger.json` showing each created account's `name` = `"<account_name> - <abbr>"` matching `expected_docname`.
+- [ ] **A4 (outer-savepoint dry-run)**: Seeder's `execute(dry_run=True)` opens outer savepoint, runs all inserts, calls `frappe.db.rollback(save_point=OUTER_SAVEPOINT)` at end, NEVER calls `frappe.db.commit()`. Phase 2-T5 dry-run report shows `rollback_confirmed: true` and `post_dry_run_account_counts` for all 4 stores equal pre-state.
+- [ ] **A5 (evidence regen, NOT cited from `tmp/s238/`)**: Phase 0-T4 produced `tmp/s243/probe_phase0_state.py` (NEW file in the worktree); plan body refers to `tmp/s243/` paths (NOT `tmp/s238/`); `output/s243/verification/before_state.json` was generated by this script.
+- [ ] **A6 (Phase 4-T3 SUMMARY.md gates)**: SUMMARY.md exists with the Requirements Regression Checklist as a PASS/FAIL table (per Phase 4-T3 MUST_CONTAIN list).
+- [ ] **A7 (PR description gate)**: PR body = `cat output/s243/SUMMARY.md`; Requirements Regression Checklist visible in PR description.
+- [ ] **A8 (`git add -f output/`)**: Closeout staged `output/s243/` evidence files via `git add -f` so they appear in the PR diff.
+- [ ] **W5 (rebase-before-push)**: Phase 4-T2 ran `git fetch origin --prune && git rebase origin/production` before push.
+- [ ] **A9 (B8 follow-up recorded)**: SUMMARY.md "Follow-up sprint candidates" section names extending `verify_canonical_structure.py` with a CoA-completeness rule as a future S244+ sprint.
+
+### Original v1 checks (must all pass)
 
 Before calling this sprint COMPLETED, verify:
 
