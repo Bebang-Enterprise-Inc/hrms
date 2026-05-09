@@ -2,16 +2,29 @@
 sprint_id: S243
 sprint_title: Canonical CoA Backfill — 4 BEBANG ENTERPRISE INC. Stores
 plan_branch: s243-canonical-coa-4-stores
-status: PLANNED_AUDITED_v1_1
+status: COMPLETED
 version: 1.1
 created_date: 2026-05-09
 revised_date: 2026-05-09
+completed_date: 2026-05-09
 audit_pr: 735
+pr: 735
 canonical_scope: in
 canonical_model_reference: docs/STORE_COMPANY_CANONICAL.md
 canonical_preflight: required
 depends_on: none
 unblocks: S238 (Phase 0-T4 CoA-completeness gate)
+execution_summary: |
+  S243 v1.1 executed end-to-end 2026-05-09 in worktree
+  F:/Dropbox/Projects/BEI-ERP-s243-execute on branch s243-canonical-coa-4-stores.
+  All 5 phases complete: 12 group accounts created (3 per store * 4 stores)
+  using BARE-NAME convention. coa_complete_count post-seed: 49/49.
+  Canonical post-check ALL CANONICAL (0 new violations vs pre-execute baseline).
+  S238 Phase 0-T4 gate unblocked.
+  Iteration finding: AP could not be parented to NULL (Frappe rejects 2nd
+  Liability root); parented to existing 2104000 - INTERCOMPANY PAYABLES - <ABBR>
+  instead. Follow-up sprint candidate logged for full canonical CoA
+  harmonization + verify_canonical_structure.py CoA-completeness extension.
 evidence_committed:
   - output/s243/SUMMARY.md
   - output/s243/verification/before_state.json
