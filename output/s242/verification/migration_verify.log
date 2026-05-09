@@ -1,0 +1,27 @@
+# S242 Phase 3 verifier — 2026-05-09T06:35:32.043575+00:00
+
+[3.2.3] Verify new index DDL contains channel...
+  Index DDL: CREATE UNIQUE INDEX pos_orders_bill_number_natural_key ON public.pos_orders USING btree (location_id, business_date, bill_number, channel) WHERE ((bill_number IS NOT NULL) AND (is_duplicate = false))
+  OK: contains (location_id, business_date, bill_number, channel)
+
+[3.2.5] Paseo bill 39966 — both rows must be is_duplicate=false...
+  id=51234586 channel=       POS gross=  228.00 is_duplicate=False
+  id=51234223 channel= FoodPanda gross=  704.00 is_duplicate=False
+  OK: 2 live rows, channels={'POS','FoodPanda'}
+
+[3.2.6] Same-channel tombstones must remain ~307 (±20)...
+  same_channel_count_after=307 gross=117475.93
+  OK: within ±20 tolerance band of 307
+
+[3.2.4] Idempotency — re-running UPDATE; expect 0 restores...
+  second_run_restored_count=0
+  OK: idempotent (0 additional restores)
+
+[3.2.7] Full after-state snapshot...
+  channel_distinct_tombstones_remaining=0
+  same_channel_tombstones_count=307
+  total_live_with_bill=1715675
+  OK: 0 channel-distinct tombstones remaining
+
+============================================================
+VERIFY OK: all assertions passed

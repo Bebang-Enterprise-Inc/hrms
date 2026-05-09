@@ -1,0 +1,12 @@
+S242 v1.1 Phase 2 — Cron workflow disable log
+==============================================
+Disabled at: 2026-05-09 14:30 PHT
+
+pos-sync-5min: disabled_manually (workflow id 261712520, "POS Sync (10-Minute Interval)")
+daily-pos-sync: disabled_manually (workflow id 234136621, "Daily POS & Web Orders Sync")
+
+Verification: `gh workflow list --repo Bebang-Enterprise-Inc/hrms` no longer
+shows either workflow in the active list. Both will not run scheduled triggers
+until Phase 4.A re-enables them.
+
+Estimated downtime: 30 minutes (Phase 3 schema migration + Phase 4 verification)

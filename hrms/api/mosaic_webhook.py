@@ -44,6 +44,10 @@ from pathlib import Path
 import frappe
 import requests
 
+from hrms.utils.pos_order_reconciliation import (
+    _resolve_id_collisions,
+    reconcile_existing_ids,
+)
 from hrms.utils.sentry import set_backend_observability_context
 from hrms.utils.supabase import SUPABASE_URL, get_service_key, supabase_query_sql
 
@@ -487,18 +491,71 @@ def _upsert_completed_order(order: dict) -> None:
 
     order_row = _map_order_row(order)
     bill_number = order_row.get("bill_number")
+    item_rows = _map_order_items(order)
+    payment_rows: list[dict] = []  # webhook payload doesn't carry payments
 
-    # S232: bill_number twin pre-check (Phase 1.5b — future-proofing for if
-    # order.completed webhook is re-registered with Mosaic vendor)
+    # S242: pre-upsert reconciliation. The webhook is an INDEPENDENT writer
+    # to pos_orders; before S242 it bypassed the dedup/reconcile logic that
+    # the polling sync uses. After S242 extends the partial unique index with
+    # `channel`, any same-(loc, date, bill, channel) tuple where Mosaic
+    # delivers a NEW id for an existing live row would 23505 here. Reuse the
+    # shared reconciliation module to remap the incoming id back to the
+    # canonical existing id and clear stale child rows.
+    if bill_number is not None:
+        order_rows_for_reconcile = [order_row]
+        try:
+            with requests.Session() as session:
+                stats = reconcile_existing_ids(
+                    session,
+                    order_row["location_id"],
+                    order_row["business_date"],
+                    order_rows_for_reconcile,
+                    item_rows,
+                    payment_rows,
+                    supabase_url=SUPABASE_URL,
+                    headers_fn=lambda: headers,
+                    delete_children_fn=_delete_children_for_webhook,
+                )
+            # Single-row webhook: dedup-within-batch is a no-op; reconcile
+            # remap is the critical step. Resolve id collisions for symmetry
+            # with the polling path.
+            _resolve_id_collisions(
+                order_rows_for_reconcile, item_rows, payment_rows,
+                stats.get("protected_ids", set()),
+            )
+            if stats.get("remapped"):
+                frappe.logger().info(
+                    "[mosaic_webhook S242] reconciled bill=%s ch=%s remap=%d",
+                    bill_number, order_row.get("channel"), stats["remapped"],
+                )
+        except Exception as e:
+            # Don't fail the webhook on reconcile error — fall through to the
+            # direct upsert (which may then 23505 and route to pos_duplicates
+            # via the existing race_409 handler). Sentry captures via
+            # frappe.log_error.
+            frappe.log_error(
+                title="mosaic_webhook S242 reconcile error",
+                message=(
+                    f"reconcile failed for bill={bill_number} "
+                    f"ch={order_row.get('channel')}: {e}"
+                ),
+            )
+
+    # S232 + S242: bill_number twin pre-check, now CHANNEL-AWARE so
+    # legitimate parallel bills (Pickup + FoodPanda sharing bill 39966)
+    # don't route each other to pos_duplicates. After S242, the partial
+    # unique index keys on (loc, date, bill, channel) — a twin only exists
+    # within the SAME channel.
     if bill_number is not None:
         twin_id = _find_bill_number_twin(
             order_row["location_id"],
             order_row["business_date"],
             bill_number,
             headers,
+            channel=order_row.get("channel"),
         )
         if twin_id is not None and twin_id != order_row["id"]:
-            # Route to pos_duplicates instead of pos_orders
+            # Same-channel duplicate — route to pos_duplicates audit.
             _write_pos_duplicate_webhook(order, twin_id, "bill_number_twin", headers)
             return
 
@@ -513,20 +570,21 @@ def _upsert_completed_order(order: dict) -> None:
         timeout=15,
     )
     if r_order.status_code == 409 and bill_number is not None:
-        # S232: race against the unique partial index. Look up the kept twin
-        # and route this row to pos_duplicates with reason='race_409'.
+        # S232 + S242: race against the unique partial index. Look up the
+        # kept SAME-CHANNEL twin and route this row to pos_duplicates with
+        # reason='race_409'.
         twin_id = _find_bill_number_twin(
             order_row["location_id"],
             order_row["business_date"],
             bill_number,
             headers,
+            channel=order_row.get("channel"),
         )
         if twin_id is not None:
             _write_pos_duplicate_webhook(order, twin_id, "race_409", headers)
             return
     r_order.raise_for_status()
 
-    item_rows = _map_order_items(order)
     if item_rows:
         r_items = requests.post(
             f"{SUPABASE_URL}/rest/v1/pos_order_items?on_conflict=order_id,product_id,line_number",
@@ -537,28 +595,79 @@ def _upsert_completed_order(order: dict) -> None:
         r_items.raise_for_status()
 
 
-def _find_bill_number_twin(location_id: int, business_date: str, bill_number: int,
-                            headers: dict) -> int | None:
-    """S232: look up an existing non-duplicate pos_orders.id matching the natural key.
+def _delete_children_for_webhook(client: requests.Session, order_ids: list) -> None:
+    """S242: cascade-delete pos_order_items + pos_order_payments rows for the
+    given order_ids. Used by reconcile_existing_ids when remapping a webhook
+    delivery to an existing canonical id — clears stale child rows so the
+    re-insert (with the same order_id) doesn't conflict on the items'
+    (order_id, product_id, line_number) unique constraint.
+    """
+    if not order_ids:
+        return
+    key = get_service_key()
+    headers = {
+        "apikey": key,
+        "Authorization": f"Bearer {key}",
+        "Prefer": "return=minimal",
+    }
+    for chunk in [order_ids[i:i + 100] for i in range(0, len(order_ids), 100)]:
+        id_list = ",".join(str(oid) for oid in chunk)
+        for table in ("pos_order_items", "pos_order_payments"):
+            r = client.delete(
+                f"{SUPABASE_URL}/rest/v1/{table}",
+                headers=headers,
+                params={"order_id": f"in.({id_list})"},
+                timeout=15,
+            )
+            if r.status_code not in (200, 204):
+                raise RuntimeError(
+                    f"DELETE {table} for {len(chunk)} ids failed "
+                    f"({r.status_code}): {r.text[:300]}"
+                )
 
-    Returns the kept twin's id if one exists, else None. bill_number is None
-    fallback (cluster-window match) is NOT implemented in the webhook path —
-    NULL bill_number is rare on aggregator orders and the partial index handles
-    them by allowing multiple NULL-bill rows to coexist without unique violation.
+
+def _find_bill_number_twin(
+    location_id: int,
+    business_date: str,
+    bill_number: int,
+    headers: dict,
+    *,
+    channel: str | None = None,
+) -> int | None:
+    """S232 + S242: look up an existing non-duplicate pos_orders.id matching the
+    natural key. After S242 the natural key is
+    ``(location_id, business_date, bill_number, channel)`` — pass ``channel``
+    so legitimate parallel bills from different terminals (Pickup + FoodPanda
+    sharing bill 39966) don't route each other to pos_duplicates.
+
+    Returns the kept twin's id if one exists, else None. ``bill_number`` is
+    ``None`` fallback (cluster-window match) is NOT implemented in the webhook
+    path — NULL bill_number is rare on aggregator orders and the partial index
+    handles them by allowing multiple NULL-bill rows to coexist without unique
+    violation.
+
+    The ``channel`` parameter defaults to ``None`` for backwards compatibility,
+    but post-S242 callers should ALWAYS pass it. Without channel filtering,
+    the lookup may return a different-channel parallel bill and incorrectly
+    classify a real new order as a duplicate.
     """
     if bill_number is None:
         return None
     try:
+        params = {
+            "select": "id",
+            "location_id": f"eq.{location_id}",
+            "business_date": f"eq.{business_date}",
+            "bill_number": f"eq.{bill_number}",
+            "is_duplicate": "is.false",
+            "limit": "1",
+        }
+        if channel:
+            # S242: filter by channel so parallel bills don't conflict.
+            params["channel"] = f"eq.{channel}"
         r = requests.get(
             f"{SUPABASE_URL}/rest/v1/pos_orders",
-            params={
-                "select": "id",
-                "location_id": f"eq.{location_id}",
-                "business_date": f"eq.{business_date}",
-                "bill_number": f"eq.{bill_number}",
-                "is_duplicate": "is.false",
-                "limit": "1",
-            },
+            params=params,
             headers=headers,
             timeout=10,
         )

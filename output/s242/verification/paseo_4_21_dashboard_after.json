@@ -1,0 +1,19 @@
+{
+  "store": "Megaworld Paseo Center",
+  "location_id": 2177,
+  "business_date": "2026-04-21",
+  "transactions": 176,
+  "sum_original_gross_sales": 121722.0,
+  "sum_gross_sales_post_discount": 118027.03,
+  "sum_net_sales": 105601.94,
+  "pos_xlsx_gross": 121722.0,
+  "pos_xlsx_net": 105601.94,
+  "mv_pos_gross_sales": 118027.03,
+  "mv_total_gross_sales": 118027.03,
+  "gross_within_tolerance": true,
+  "tolerance_basis": "POS XLSX Gross column (PHP 121,722) maps to Supabase original_gross_sales (pre-discount) per S232 paseo_comparison_report.md column mapping fix. Dashboard MV pos_gross_sales tracks post-discount gross_sales = PHP 118,027.03. Both views CONSISTENT with XLSX after S242 migration: original_gross delta 121,722 - 121,494 (pre-migration) = +228 = PHP 228 restored Pickup row.",
+  "pre_migration_dashboard_gross": 121494.0,
+  "post_migration_dashboard_gross": 121722.0,
+  "restoration_delta": 228.0,
+  "matches_xlsx_to_the_centavo": true
+}

@@ -1,0 +1,24 @@
+{
+  "sprint": "S242",
+  "branch": "s242-pos-natural-key-channel-discriminator",
+  "worktree": "F:/Dropbox/Projects/BEI-ERP-s242",
+  "claimed": [
+    "pos_orders_bill_number_natural_key",
+    "scripts/sync_pos_to_supabase.py",
+    "hrms/api/mosaic_webhook.py",
+    "hrms/utils/pos_order_reconciliation.py"
+  ],
+  "started_at": "2026-05-09T15:00:00+08:00",
+  "released_at": "2026-05-09T15:10:00+08:00",
+  "pr_number": 737,
+  "pr_url": "https://github.com/Bebang-Enterprise-Inc/hrms/pull/737",
+  "phase_status": {
+    "phase_0": "completed",
+    "phase_1": "completed",
+    "phase_2": "completed",
+    "phase_3": "completed",
+    "phase_4": "completed",
+    "phase_5": "completed",
+    "phase_6": "completed"
+  }
+}

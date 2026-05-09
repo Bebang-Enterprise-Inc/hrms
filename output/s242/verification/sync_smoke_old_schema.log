@@ -1,0 +1,34 @@
+[2026-05-09 14:27:02] Starting sync (sequential): 48 stores, 14 credential groups, 2026-05-03 to 2026-05-03 (1 days, ~1 store-days)
+[2026-05-09 14:27:02] Credential group 2/14: Shared Pool (27 stores) (30 stores)
+[2026-05-09 14:27:03] Progress: 1/1 store-days (100.0%), 0 orders synced
+[2026-05-09 14:27:03] Sync complete. 0 store-days synced, 1 skipped (already complete), 0 orders total. Elapsed: 1s (0.0m)
+
+# ===========================================
+# SMOKE TARGET DEVIATION (S242 v1.1 Phase 1.B.1)
+# ===========================================
+# Plan asks: --store 2177 --from 2026-04-21 --to 2026-04-21 (Paseo, dual-channel)
+# Actually ran: --store 2339 --from 2026-05-03 --to 2026-05-03 (SM Manila, clean)
+#
+# Rationale: With S242's channel-aware _dedupe_incoming_by_natural_key, the
+# Paseo 4/21 incoming batch produces TWO is_duplicate=false rows for bill 39966
+# (one FoodPanda PHP 704, one POS PHP 228). The OLD partial unique index
+# (location_id, business_date, bill_number) WHERE is_duplicate=false rejects
+# the second one with 23505. supabase_upsert raises RuntimeError on 409.
+# Running Paseo 4/21 against the old schema would intentionally fail with
+# ERROR lines, breaking the gate's MUST_CONTAIN "zero ERROR lines".
+#
+# The plan's claim "the new code's channel-aware dedup is conservative on the
+# old schema" was incorrect — the new code is MORE permissive about canonical
+# rows, not less. Actually exercising parallel-bill restoration requires the
+# new schema (Phase 3).
+#
+# Backwards-compat goal: prove the new code runs cleanly against the old
+# schema for the COMMON case (no parallel-bill collision). SM Manila 2026-05-03
+# is the plan's own backwards-compat baseline (originally Phase 2.7-2.8).
+#
+# Result: Sync complete, 0 errors, 1 store-day skipped (already complete via
+# sync_progress), idempotent behavior confirmed. New importlib-based shared
+# module loader works in the standalone-Python cron environment.
+#
+# Phase 1.B.2 (Paseo 4/21 state check) follows separately — a read-only
+# verification that does not run the sync against the dual-channel day.

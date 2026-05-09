@@ -1,0 +1,7 @@
+{
+  "restored_count_checked": 74,
+  "orphan_restored_rows": 0,
+  "orphans": [],
+  "pass_criteria": "orphan_restored_rows == 0",
+  "verdict": "PASS"
+}
