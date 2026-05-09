@@ -172,19 +172,30 @@ def _resolve_per_store_cost_center(buyer_company, buyer_warehouse):
 	Frappe's `Cost Center.company == doc.company` validation, and the
 	savepoint try/except would silently swallow the error -> 0 PIs created.
 
+	v2.2-hotfix (2026-05-10): the `Warehouse.custom_cost_center` Custom Field
+	cited in the plan (pattern from store.py:5278) does NOT exist on production.
+	The existing call site `store.py:_get_store_cost_center` is dead code (would
+	throw 'Unknown column' if exercised). Guard the lookup with
+	`frappe.get_meta().has_field()` so this function falls back to
+	`Company.cost_center` cleanly when the field is absent.
+
 	Resolution order:
-	  1. `Warehouse.custom_cost_center` (pattern from store.py:5276-5281)
-	  2. `Company.cost_center` default
+	  1. `Warehouse.custom_cost_center` IF the Custom Field exists
+	  2. `Company.cost_center` default (always works — set on every Company)
 	  3. Throw if neither set — fail loud, not silent.
 	"""
-	cc = frappe.db.get_value("Warehouse", buyer_warehouse, "custom_cost_center")
+	cc = None
+	# v2.2-hotfix: only query if the Custom Field actually exists on Warehouse
+	if frappe.get_meta("Warehouse").has_field("custom_cost_center"):
+		cc = frappe.db.get_value("Warehouse", buyer_warehouse, "custom_cost_center")
 	if not cc:
 		cc = frappe.db.get_value("Company", buyer_company, "cost_center")
 	if not cc:
 		frappe.throw(_(
 			f"S238: per-store Cost Center not found for {buyer_company}. "
-			f"Set either Warehouse({buyer_warehouse}).custom_cost_center OR "
-			f"Company({buyer_company}).cost_center."
+			f"Set Company({buyer_company}).cost_center "
+			f"(or install Warehouse.custom_cost_center Custom Field if per-warehouse "
+			f"granularity is needed)."
 		))
 	return cc
 
