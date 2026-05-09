@@ -217,6 +217,23 @@ doc_events = {
 		"on_update": "hrms.utils.sales_location_mapping.clear_cache",
 		"on_trash": "hrms.utils.sales_location_mapping.clear_cache",
 	},
+	"Sales Invoice": {
+		# S238 v2.2 — autoname BKI SIs as BKI-SI-{YYYY}-{order-tail}-{n}
+		# embedding the originating BEI Store Order # for traceability.
+		# No-op for non-BKI SIs (Frappe falls back to naming_series).
+		"autoname": "hrms.api.bki_si_naming.set_bki_si_name",
+		# S238 — generate paired Draft PI on per-store Co's books when BKI SI submits.
+		# Implements ICT-003 paired-document model.
+		"on_submit": "hrms.api.bki_store_pi_generator.maybe_generate_store_pi",
+		# S238 v2-B3 — cascade to paired PI when BKI SI cancelled.
+		# Draft PI -> delete; Submitted PI -> Comment alert (manual review).
+		"on_cancel": "hrms.api.bki_store_pi_generator.cascade_cancel_store_pi",
+	},
+	"Purchase Invoice": {
+		# S238 v2-B8 — lock posting_date on auto-generated paired PIs
+		# (must match BKI SI's posting_date per ICT-007 + PFRS 15).
+		"validate": "hrms.api.bki_store_pi_generator.lock_posting_date_on_bki_paired_pi",
+	},
 	"Branch": {
 		# S201 — invalidate branch->Company resolver cache when Branch docs change
 		"on_update": "hrms.utils.company_lookup.clear_cache",
@@ -495,7 +512,12 @@ scheduler_events = {
 		"hrms.hr.utils.generate_leave_encashment",
 		"hrms.hr.utils.allocate_earned_leaves",
 	],
-	"weekly": ["hrms.controllers.employee_reminders.send_reminders_in_advance_weekly"],
+	"weekly": [
+		"hrms.controllers.employee_reminders.send_reminders_in_advance_weekly",
+		# S238 v2.1-W9 — drift detection: flag BKI SIs without paired PIs.
+		# Read-only; logs to Sentry via frappe.log_error if drift found.
+		"hrms.api.bki_store_pi_generator.run_si_pi_pairing_check",
+	],
 	"monthly": ["hrms.controllers.employee_reminders.send_reminders_in_advance_monthly"],
 }
 
