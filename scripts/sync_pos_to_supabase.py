@@ -27,6 +27,36 @@ from typing import Any, Optional
 
 import httpx
 
+# S242: shared reconciliation logic — imported by both this polling sync
+# AND hrms/api/mosaic_webhook.py so both write paths stay in sync with the
+# pos_orders_bill_number_natural_key (location_id, business_date,
+# bill_number, channel) partial unique index.
+#
+# The webhook path imports via the normal `from hrms.utils.pos_order_reconciliation
+# import ...` (Frappe bench has hrms on sys.path).
+#
+# The polling cron path runs as a bare `python scripts/sync_pos_to_supabase.py`
+# under GitHub Actions where Frappe is NOT installed — going through
+# `hrms/__init__.py` would fail at `import frappe`. Instead we load the
+# pos_order_reconciliation.py file DIRECTLY via importlib.util — the file has
+# no Frappe-dependent imports, only `httpx` + stdlib.
+import importlib.util as _ilu
+_RECON_PATH = (
+    Path(__file__).resolve().parent.parent
+    / "hrms" / "utils" / "pos_order_reconciliation.py"
+)
+_RECON_SPEC = _ilu.spec_from_file_location(
+    "_pos_order_reconciliation", _RECON_PATH
+)
+_recon = _ilu.module_from_spec(_RECON_SPEC)  # type: ignore[arg-type]
+sys.modules["_pos_order_reconciliation"] = _recon
+_RECON_SPEC.loader.exec_module(_recon)  # type: ignore[union-attr]
+_canonical_score = _recon._canonical_score
+_dedupe_incoming_by_natural_key = _recon._dedupe_incoming_by_natural_key
+_resolve_id_collisions = _recon._resolve_id_collisions
+_synthetic_id_from_natural_key = _recon._synthetic_id_from_natural_key
+_reconcile_existing_ids_shared = _recon.reconcile_existing_ids
+
 # ---------------------------------------------------------------------------
 # Constants
 # ---------------------------------------------------------------------------
@@ -263,228 +293,21 @@ def delete_children_by_order_ids(
                 )
 
 
-def _synthetic_id_from_natural_key(row: dict) -> int:
-    """Generate a deterministic NEGATIVE bigint id from natural-key fields.
-
-    Used when Mosaic's `id` for a new bill collides with an existing stable
-    id for a different bill in our DB. Negative range avoids any collision
-    with Mosaic's positive ids. SHA-256 of the natural-key tuple keeps the
-    id stable across re-syncs of the same bill, so subsequent reconciliations
-    look up the synthetic id by natural key and remap correctly.
-
-    Postgres bigint range: -2^63 (≈ -9.22e18) .. +2^63-1. We take 14 hex
-    chars (~56 bits) and negate, which fits comfortably and leaves head room.
-    """
-    key = "|".join([
-        "synth-poll",
-        str(row.get("location_id")),
-        str(row.get("business_date")),
-        str(row.get("bill_number") or ""),
-        str(row.get("billed_at") or ""),
-        str(row.get("paid_at") or ""),
-        str(row.get("receipt_number") or ""),
-    ])
-    h = hashlib.sha256(key.encode("utf-8")).hexdigest()
-    return -int(h[:14], 16)
-
-
-def _resolve_id_collisions(
-    order_rows: list[dict],
-    item_rows: list[dict],
-    payment_rows: list[dict],
-    protected_ids: set,
-) -> int:
-    """Detect and resolve in-batch id collisions.
-
-    Mosaic occasionally reuses an `id` value across distinct bills (i.e., the
-    same numeric id is assigned to one bill on one fetch and to a DIFFERENT
-    bill on a later fetch). Combined with our reconciliation that REUSES
-    existing stable ids for matched natural keys, the incoming batch can end
-    up with two rows sharing the same `id` — Postgres rejects this with
-    `ON CONFLICT DO UPDATE command cannot affect row a second time`.
-
-    Resolution: when a collision is detected, the row that holds a PROTECTED
-    id (an existing stable id from natural-key reconciliation) MUST be kept
-    so the upsert UPDATEs the right existing row. The other row(s) get a
-    deterministic synthetic negative id (stable across re-syncs of the same
-    bill). Child rows are cloned for the reassigned rows so the relationship
-    is preserved.
-
-    Args:
-        order_rows: incoming order dicts (will be mutated).
-        item_rows: incoming item dicts (may be appended to).
-        payment_rows: incoming payment dicts (may be appended to).
-        protected_ids: set of ids that MUST NOT be reassigned (the result of
-            successful natural-key reconciliation — those ids point to
-            existing stable rows in the DB).
-
-    Returns: number of rows reassigned.
-    """
-    if not order_rows:
-        return 0
-    # Build id -> [row indices]
-    id_groups: dict[Any, list[int]] = {}
-    for idx, row in enumerate(order_rows):
-        id_groups.setdefault(row["id"], []).append(idx)
-
-    reassigned = 0
-    # Snapshot the items first so we can safely mutate id_groups inside the loop.
-    for row_id, indices in list(id_groups.items()):
-        if len(indices) <= 1:
-            continue
-        # Pick keeper: prefer a row whose id is in protected_ids; among those,
-        # highest canonical score. If none are protected, just take the highest
-        # canonical score.
-        protected_indices = [i for i in indices if order_rows[i]["id"] in protected_ids]
-        candidates = protected_indices or indices
-        keeper = max(candidates, key=lambda i: _canonical_score(order_rows[i]))
-        losers = [i for i in indices if i != keeper]
-
-        # Cache children of the original colliding id BEFORE we mutate ids.
-        old_id = row_id
-        old_items = [it for it in item_rows if it["order_id"] == old_id]
-        old_pmts = [pm for pm in payment_rows if pm["order_id"] == old_id]
-
-        for idx in losers:
-            new_id = _synthetic_id_from_natural_key(order_rows[idx])
-            # If the synthetic id ALSO collides (extremely rare), append a salt.
-            salt = 0
-            while new_id in id_groups and id_groups[new_id] != [idx]:
-                salt += 1
-                bumped = order_rows[idx].copy()
-                bumped["__salt__"] = salt
-                new_id = _synthetic_id_from_natural_key(bumped)
-            order_rows[idx]["id"] = new_id
-            id_groups.setdefault(new_id, []).append(idx)
-            # Clone children to point at the new id (the keeper retains old_id's
-            # children intact). For the loser, ALL of old_id's children are
-            # cloned — without distinguishing original vs cloned, this slightly
-            # over-counts items if they were unique to the loser, but ensures
-            # no child rows are orphaned. This case is rare (<1% of bills).
-            for it in old_items:
-                item_rows.append({**it, "order_id": new_id})
-            for pm in old_pmts:
-                payment_rows.append({**pm, "order_id": new_id})
-            reassigned += 1
-    return reassigned
-
-
-def _canonical_score(row: dict) -> tuple:
-    """Score for picking the canonical version when Mosaic returns multiple
-    orders sharing the same (loc, date, bill_number). Higher tuple wins.
-
-    Priority:
-      1. payment_status = 'PAID' beats VOIDED beats other
-      2. cancelled_at IS NULL beats cancelled
-      3. higher gross_sales (the real sale, not a void)
-      4. latest paid_at (most recent state)
-    """
-    paid = 1 if row.get("payment_status") == "PAID" else (0 if row.get("payment_status") == "VOIDED" else -1)
-    not_cancelled = 1 if row.get("cancelled_at") is None else 0
-    gross = float(row.get("gross_sales") or 0)
-    paid_at = str(row.get("paid_at") or "")
-    return (paid, not_cancelled, gross, paid_at)
-
-
-def _dedupe_incoming_by_natural_key(
-    order_rows: list[dict],
-    item_rows: list[dict],
-    payment_rows: list[dict],
-) -> tuple[list[dict], list[dict], list[dict], int, int]:
-    """Within an incoming batch, when multiple orders share the same
-    (location_id, business_date, bill_number), keep ONE canonical row as
-    is_duplicate=false and mark the others as is_duplicate=true.
-
-    Mosaic occasionally returns the same bill twice in one fetch (e.g.
-    PAID + VOIDED versions of the same receipt). The partial unique index
-    permits multiple is_duplicate=true rows for the same natural key, but
-    only ONE is_duplicate=false row. Without this dedupe, ON CONFLICT DO
-    UPDATE rejects the batch with `cannot affect row a second time`.
-
-    Returns: (cleaned_orders, items, payments, dupes_marked, dupes_dropped)
-
-    Items/payments are PRESERVED for all order versions (canonical + duplicates)
-    because the table FKs reference order_id only; duplicates' children stay in
-    place but are filtered out by joins to v_pos_orders_live.
-    """
-    if not order_rows:
-        return order_rows, item_rows, payment_rows, 0, 0
-
-    # Pre-step: dedupe by Mosaic `id`. When Mosaic returns the SAME order id
-    # multiple times in one fetch, map_order produces identical pos_orders rows
-    # AND map_order_items produces duplicate (order_id, product_id, line_number)
-    # tuples that violate pos_order_items's unique constraint. Keep one copy.
-    seen_ids: set = set()
-    deduped_orders = []
-    for r in order_rows:
-        rid = r.get("id")
-        if rid in seen_ids:
-            continue
-        seen_ids.add(rid)
-        deduped_orders.append(r)
-    if len(deduped_orders) != len(order_rows):
-        order_rows = deduped_orders
-
-    # ALWAYS dedupe items + payments by their full natural key — items may
-    # collide even when orders don't (e.g., when reconcile remaps multiple
-    # orders to share an existing id, or when child rows are cloned during
-    # collision resolution).
-    item_seen: set = set()
-    deduped_items = []
-    for it in item_rows:
-        key = (it.get("order_id"), it.get("product_id"), it.get("line_number"))
-        if key in item_seen:
-            continue
-        item_seen.add(key)
-        deduped_items.append(it)
-    item_rows[:] = deduped_items
-    pay_seen: set = set()
-    deduped_pays = []
-    for pm in payment_rows:
-        key = (pm.get("order_id"), pm.get("payment_type"), pm.get("line_number"))
-        if key in pay_seen:
-            continue
-        pay_seen.add(key)
-        deduped_pays.append(pm)
-    payment_rows[:] = deduped_pays
-
-    # Group by natural key (rows without bill_number can't conflict — pass thru)
-    groups: dict[tuple, list[dict]] = {}
-    pass_thru: list[dict] = []
-    for row in order_rows:
-        bn = row.get("bill_number")
-        if bn is None:
-            pass_thru.append(row)
-            continue
-        key = (row.get("location_id"), str(row.get("business_date")), str(bn))
-        groups.setdefault(key, []).append(row)
-
-    cleaned: list[dict] = list(pass_thru)
-    dupes_marked = 0
-    has_dupes = any(len(g) > 1 for g in groups.values())
-    for key, group in groups.items():
-        if len(group) == 1:
-            row = group[0]
-            # When the batch will contain dupes, every row needs is_duplicate
-            # so PostgREST sees a uniform key schema across the batch.
-            if has_dupes and "is_duplicate" not in row:
-                row["is_duplicate"] = False
-            cleaned.append(row)
-            continue
-        # Pick canonical = highest score; mark rest as is_duplicate=true.
-        ranked = sorted(group, key=_canonical_score, reverse=True)
-        canonical = ranked[0]
-        canonical["is_duplicate"] = False
-        cleaned.append(canonical)
-        for dup in ranked[1:]:
-            dup["is_duplicate"] = True
-            cleaned.append(dup)
-            dupes_marked += 1
-    if has_dupes:
-        for row in pass_thru:
-            if "is_duplicate" not in row:
-                row["is_duplicate"] = False
-    return cleaned, item_rows, payment_rows, dupes_marked, 0
+# ---------------------------------------------------------------------------
+# S242: reconciliation logic moved to hrms/utils/pos_order_reconciliation.py
+# ---------------------------------------------------------------------------
+# The following 5 functions were authored in S232 (sync hardening) and
+# refactored into a shared module in S242 v1.1 so that hrms/api/mosaic_webhook.py
+# (an independent writer to pos_orders) can reuse the same dedup/reconcile/
+# collision logic. Both write paths now key the natural-key tuple on
+# (location_id, business_date, bill_number, channel) — the channel discriminator
+# added in S242 to allow legitimate parallel bills from different terminals
+# to coexist as live rows. See:
+#   - hrms/utils/pos_order_reconciliation.py
+#   - docs/plans/2026-05-08-sprint-242-pos-natural-key-channel-discriminator.md
+#
+# Local thin wrappers preserve the original call signature so existing call
+# sites (line 954 below) keep working without modification.
 
 
 def reconcile_existing_ids(
@@ -495,123 +318,22 @@ def reconcile_existing_ids(
     item_rows: list[dict],
     payment_rows: list[dict],
 ) -> dict:
-    """Reconcile incoming Mosaic orders against existing live rows by natural key.
-
-    Mosaic returns the same (location_id, business_date, bill_number) with a
-    DIFFERENT `id` on subsequent fetches, AND occasionally returns the same
-    bill twice within a single fetch. The script's `on_conflict=id` upsert
-    cannot resolve either case against the partial unique index
-    `pos_orders_bill_number_natural_key (location_id, business_date, bill_number)
-    WHERE bill_number IS NOT NULL AND is_duplicate = false`.
-
-    Two fixes applied here:
-    1. **Dedupe within the incoming batch**: when Mosaic returns multiple
-       versions of the same bill, keep ONE canonical version
-       (PAID > VOIDED, non-cancelled > cancelled, higher gross, latest paid_at)
-       as is_duplicate=false and mark the rest as is_duplicate=true.
-    2. **Reuse existing stable ids**: for each unique natural key, look up
-       the existing live row and rewrite the incoming `id` to match. Child
-       rows (items + payments) are remapped and replaced via delete-then-insert.
-
-    Together these make sync fully idempotent: any number of re-runs converge
-    on the same set of stable ids and produce zero duplicates while still
-    updating order details when Mosaic state changes.
-
-    Returns: stats dict for observability. Includes `protected_ids` — the set
-    of stable existing ids that were reused via natural-key remap; callers
-    should pass this set into `_resolve_id_collisions` so collision losers
-    don't overwrite reconciled rows.
-    """
-    stats: dict = {
-        "looked_up": 0,
-        "matched_existing": 0,
-        "remapped": 0,
-        "incoming_dupes_marked": 0,
-        "items_remapped": 0,
-        "payments_remapped": 0,
-        "children_cleared": 0,
-        "protected_ids": set(),
-    }
-    if not order_rows:
-        return stats
-
-    # ---- Step 1: dedupe within incoming batch by natural key ----
-    order_rows[:], item_rows[:], payment_rows[:], dupes_marked, _ = (
-        _dedupe_incoming_by_natural_key(order_rows, item_rows, payment_rows)
+    """S242 channel discriminator wrapper: delegate to the shared module
+    while binding the module-level helpers (_supabase_headers,
+    delete_children_by_order_ids, SUPABASE_URL)."""
+    return _reconcile_existing_ids_shared(
+        client,
+        location_id,
+        business_date,
+        order_rows,
+        item_rows,
+        payment_rows,
+        supabase_url=SUPABASE_URL,
+        headers_fn=_supabase_headers,
+        delete_children_fn=delete_children_by_order_ids,
     )
-    stats["incoming_dupes_marked"] = dupes_marked
 
-    # Only the canonical (is_duplicate=false) rows participate in
-    # natural-key reconciliation. is_duplicate=true rows are exempt from the
-    # partial unique index and need no remapping.
-    canonical_rows = [r for r in order_rows if not r.get("is_duplicate")]
-    if not canonical_rows:
-        return stats
 
-    # ---- Step 2: collect bill_numbers from canonical batch ----
-    bill_numbers = sorted(
-        {str(r["bill_number"]) for r in canonical_rows if r.get("bill_number") is not None}
-    )
-    if not bill_numbers:
-        return stats
-    stats["looked_up"] = len(bill_numbers)
-
-    # ---- Step 3: look up existing live rows by natural key ----
-    existing_by_bill: dict[str, Any] = {}
-    for chunk in [bill_numbers[i : i + 100] for i in range(0, len(bill_numbers), 100)]:
-        r = client.get(
-            f"{SUPABASE_URL}/rest/v1/pos_orders",
-            headers=_supabase_headers(),
-            params={
-                "select": "id,bill_number",
-                "location_id": f"eq.{location_id}",
-                "business_date": f"eq.{business_date}",
-                "is_duplicate": "eq.false",
-                "bill_number": f"in.({','.join(chunk)})",
-            },
-            timeout=30,
-        )
-        if r.status_code != 200:
-            raise RuntimeError(
-                f"reconcile lookup failed ({r.status_code}): {r.text[:300]}"
-            )
-        for row in r.json():
-            existing_by_bill[str(row["bill_number"])] = row["id"]
-    stats["matched_existing"] = len(existing_by_bill)
-    if not existing_by_bill:
-        return stats
-
-    # ---- Step 4: build remap and rewrite canonical incoming ids ----
-    remap: dict[Any, Any] = {}
-    for row in canonical_rows:
-        bn = row.get("bill_number")
-        if bn is None:
-            continue
-        existing_id = existing_by_bill.get(str(bn))
-        if existing_id is None:
-            continue
-        # Even if Mosaic returned the same id we already have, mark it
-        # protected so the collision resolver doesn't reassign it.
-        stats["protected_ids"].add(existing_id)
-        if row["id"] != existing_id:
-            remap[row["id"]] = existing_id
-            row["id"] = existing_id
-    stats["remapped"] = len(remap)
-    if not remap:
-        return stats
-
-    # ---- Step 5: remap child rows and clear stale children ----
-    for it in item_rows:
-        if it["order_id"] in remap:
-            it["order_id"] = remap[it["order_id"]]
-            stats["items_remapped"] += 1
-    for pm in payment_rows:
-        if pm["order_id"] in remap:
-            pm["order_id"] = remap[pm["order_id"]]
-            stats["payments_remapped"] += 1
-    delete_children_by_order_ids(client, list(remap.values()))
-    stats["children_cleared"] = len(remap)
-    return stats
 
 
 # ---------------------------------------------------------------------------
