@@ -135,9 +135,24 @@ def build_store_pi(si, buyer_company):
 	# v2.1-CRIT-2: resolve per-store cost_center BEFORE building items.
 	buyer_cost_center = _resolve_per_store_cost_center(buyer_company, buyer_warehouse)
 
+	# v2.2-currency-hotfix (2026-05-10): explicitly resolve currency from buyer Company.
+	# `frappe.new_doc("Purchase Invoice")` initializes currency to the system default
+	# (INR for fresh ERPNext) regardless of Supplier.default_currency. Without this
+	# line, ERPNext's `validate_party_account_currency` throws:
+	#   "Party Account ... currency (PHP) and document currency (INR) should be same"
+	# because the AP-Trade-BKI account is PHP but the doc currency is still INR.
+	# Discovered during PR #740 post-deploy smoke test (2026-05-10).
+	buyer_currency = (
+		frappe.db.get_value("Company", buyer_company, "default_currency") or "PHP"
+	)
+
 	pi = frappe.new_doc("Purchase Invoice")
 	pi.company = buyer_company
 	pi.supplier = BKI_TRADE_SUPPLIER
+	pi.currency = buyer_currency                          # v2.2-currency-hotfix
+	pi.conversion_rate = 1.0                              # PHP-to-PHP, no conversion
+	pi.price_list_currency = buyer_currency               # v2.2-currency-hotfix
+	pi.plc_conversion_rate = 1.0                          # PHP-to-PHP
 	pi.posting_date = si.posting_date
 	# v2-B8: mirror posting_time so SLE lands at SI's exact timestamp
 	pi.set_posting_time = 1
