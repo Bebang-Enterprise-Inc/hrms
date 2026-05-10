@@ -1,0 +1,80 @@
+{
+  "sprint": "S238",
+  "phase": "smoke-test",
+  "timestamp_utc": "2026-05-10T06:58:58.301141Z",
+  "stages": {
+    "pre": {
+      "phase": "pre",
+      "hotfix_present": true,
+      "existing_si_count_for_order": 1,
+      "expected_new_si_name": "BKI-SI-2026-00981-2",
+      "araneta_company_default_cc": "Main - ARGW",
+      "araneta_acct_1104210": "1104210 - 1104210 - Inventory-from-Commissary - ARGW",
+      "araneta_acct_1106210": "1106210 - 1106210 - Input VAT - BKI Inter-Co - ARGW",
+      "araneta_acct_2103210": "2103210 - 2103210 - AP-Trade-BKI - ARGW",
+      "trade_supplier_exists": true
+    },
+    "create_submit": {
+      "phase": "create+submit",
+      "si_name_after_insert": "BKI-SI-2026-00981-2",
+      "si_docstatus_after_insert": 0,
+      "si_name_after_submit": "BKI-SI-2026-00981-2",
+      "si_docstatus_after_submit": 1,
+      "si_grand_total": 1.12,
+      "si_naming_series_field": "BKI-SI-.YYYY.-.#####"
+    },
+    "assert_pi": {
+      "phase": "assert_pi",
+      "pi_name": "ACC-PINV-2026-00700",
+      "pi_created": true,
+      "pi_company": "ARANETA GATEWAY - TUNGSTEN CAPITAL HOLDINGS OPC",
+      "pi_supplier": "BEBANG KITCHEN INC. - Trade",
+      "pi_docstatus": 0,
+      "pi_bill_no": "BKI-SI-2026-00981-2",
+      "pi_bki_si_reference": "BKI-SI-2026-00981-2",
+      "pi_inter_company_invoice_reference": null,
+      "pi_posting_date": "2026-05-10",
+      "pi_credit_to": "2103210 - 2103210 - AP-Trade-BKI - ARGW",
+      "pi_update_stock": 1,
+      "pi_set_warehouse": "ARANETA GATEWAY - TUNGSTEN CAPITAL HOLDINGS OPC",
+      "pi_bei_legal_entity": "ARANETA GATEWAY - TUNGSTEN CAPITAL HOLDINGS OPC",
+      "pi_bei_store_label": "ARANETA GATEWAY",
+      "pi_grand_total": 1.12,
+      "pi_items": [
+        {
+          "item_code": "PM003",
+          "qty": 1.0,
+          "rate": 1.0,
+          "expense_account": "1104210 - 1104210 - Inventory-from-Commissary - ARGW",
+          "warehouse": "ARANETA GATEWAY - TUNGSTEN CAPITAL HOLDINGS OPC",
+          "cost_center": "Main - ARGW"
+        }
+      ],
+      "pi_taxes": [
+        {
+          "account_head": "1106210 - 1106210 - Input VAT - BKI Inter-Co - ARGW",
+          "tax_amount": 0.12,
+          "cost_center": "Main - ARGW",
+          "charge_type": "Actual"
+        }
+      ]
+    },
+    "cancel": {
+      "phase": "cancel",
+      "si_docstatus_after_cancel": 2,
+      "pi_still_exists": false
+    },
+    "delete": {
+      "phase": "delete",
+      "si_deleted": true,
+      "si_still_exists": false
+    }
+  },
+  "status": "OK",
+  "cleanup_log": [],
+  "created_artifacts": {
+    "si_name": "BKI-SI-2026-00981-2",
+    "si_pre_autoname": "BKI-SI-2026-00981-2",
+    "pi_name": "ACC-PINV-2026-00700"
+  }
+}
