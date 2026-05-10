@@ -160,8 +160,18 @@ def build_store_pi(si, buyer_company):
 	pi.bill_no = si.name
 	pi.bill_date = si.posting_date
 	pi.bki_si_reference = si.name
-	# v2-W (G-046 dashboard): also set the standard ERPNext IC ref
-	pi.inter_company_invoice_reference = si.name
+	# v2.2-icref-hotfix (2026-05-10): the original v2-W intent was to set the
+	# standard ERPNext `inter_company_invoice_reference` field for G-046
+	# dashboard support. But ERPNext's `validate_inter_company_party` in
+	# sales_invoice.py:2095 throws "Invalid Supplier for Inter Company
+	# Transaction" when this field is set AND `pi.supplier.is_internal_supplier=0`.
+	# Per ICT-001..006 (CFO Butch's separate-legal-entity stance), the BKI Trade
+	# Supplier MUST be `is_internal_supplier=0` — which is incompatible with
+	# `inter_company_invoice_reference`. The two are mutually exclusive in
+	# ERPNext's model. We use the new `bki_si_reference` Custom Field (set above)
+	# as the authoritative cross-doc link instead. G-046 dashboard updates to
+	# query `bki_si_reference` instead of `inter_company_invoice_reference` are
+	# a separate follow-up sprint candidate.
 	pi.update_stock = 1
 	pi.set_warehouse = buyer_warehouse                    # v2-B2
 	pi.credit_to = ap_account
