@@ -1,0 +1,66 @@
+{
+  "captured_at": "2026-05-11 PHT — post-S244 writes",
+  "ssm_command_ids": [
+    "60529163-fb47-4de4-ac39-45fea344f5d5 (pre-write audit)",
+    "9acdadd6-8a28-42a4-9fa9-6a60a6c92cf8 (W1 allowlist + W5 restart + W7 logs; W2 SQL had cp1252 issue rolled back)",
+    "4a13aad8-27eb-4d90-81ad-0fc85a2f9731 (W2 retry with UTF-8 + W4 ACK verify)"
+  ],
+  "server_allowlist": {
+    "lines_before": 52,
+    "lines_after": 53,
+    "line_53": "53,ALABANG TOWN CENTER,alabangtowncenter,Alabang Town Center,store,ATC,EXACT_NAME,user_clarification,ZKTeco MB10-VL,UDP3254701583,Active,5/11/2026,,"
+  },
+  "device_mapping_py": {
+    "entries_before": 49,
+    "entries_after": 50,
+    "new_entry": "'UDP3254701583': 'ALABANG TOWN CENTER'"
+  },
+  "clusters_md_local_only": {
+    "c6_devices_before": 5,
+    "c6_devices_after": 6,
+    "new_row": "D6  UDP3254701583   Alabang Town Center  # S244 2026-05-11"
+  },
+  "adms_device_cmd_inserts": {
+    "total_userinfo": 48,
+    "id_range_observed": "12171-12218 approx (48 contiguous)",
+    "scope": "8 employees x 6 C6 devices full cluster cross-enrollment",
+    "tab_byte_validation": "min=2, max=2 across all 48",
+    "utf8_validation": "Ñ in NAÑOS (PIN 9001861) verified c391 hex bytes; initial cp1252 encoding caused ROLLBACK on first SQL attempt, fixed with explicit UTF-8 Python script then re-executed cleanly",
+    "ack_status_at_+30s": {
+      "ACKED": 48,
+      "PENDING": 0,
+      "ack_rate_percent": 100.0
+    },
+    "per_device_ack": {
+      "UDP3251600317": "8/8 ACKED (SM Bicutan)",
+      "UDP3251600215": "8/8 ACKED (BF Homes)",
+      "CNYG242061718": "8/8 ACKED (The Terminal)",
+      "UDP3251200195": "8/8 ACKED (Festival Mall)",
+      "CNYG242061620": "8/8 ACKED (SM Southmall)",
+      "UDP3254701583": "8/8 ACKED (ATC — NEW)"
+    }
+  },
+  "receiver_restart": {
+    "executed_at_utc": "2026-05-11 23:15:19",
+    "container": "adms_receiver_adms-api_1",
+    "post_restart_heartbeat": "UDP3254701583 first 200 OK at 23:15:50 (had been 403 Forbidden every ~15s since 2026-05-08)"
+  },
+  "master_csv_updates": {
+    "rows_updated": 7,
+    "field": "bio_device_name",
+    "from": "(blank)",
+    "to": "ALABANG TOWN CENTER",
+    "pins": ["9001854","9001855","9001856","9001858","9001861","9001862","9001863"],
+    "ramal_9000490_unchanged": "bio_device_name=BF HOMES preserved (roving AS, ATC is cluster cross-enrollment not home)",
+    "backup": "tmp/s243_atc_enrollment/EMPLOYEE_MASTER_pre_s243_backup.csv"
+  },
+  "change_log_appends": {
+    "delta": 16,
+    "breakdown": {
+      "DEVICE_REGISTER": 1,
+      "ADMS ENROLL (one per employee, 6 SNs in new_value)": 8,
+      "EMPLOYEE_MASTER UPDATE (bio_device_name)": 7
+    }
+  },
+  "sprint_renaming_note": "Originally branched as s243-atc-device-enrollment then renamed to s244-atc-device-enrollment when SPRINT_REGISTRY.md showed S243 was already consumed by canonical-coa-4-stores (PR #735 merged 2026-05-09). All file content references S244; tmp/ directory path name still 's243_atc_enrollment' (pre-rename artifact, content references S244)."
+}
