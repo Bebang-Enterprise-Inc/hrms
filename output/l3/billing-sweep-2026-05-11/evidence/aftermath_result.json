@@ -1,0 +1,53 @@
+{
+  "timestamp_utc": "2026-05-11T05:31:00.766616Z",
+  "error_log_count": 34,
+  "unique_error_samples": [
+    {
+      "name": "70424dnb6c",
+      "creation": "2026-05-11 13:29:23.667944",
+      "full_error": "S238: PI generation failed for SI BKI-SI-2026-01023-2: Traceback (most recent call last):\n  File \"apps/hrms/hrms/api/bki_store_pi_ge..."
+    },
+    {
+      "name": "6vu08nj2bb",
+      "creation": "2026-05-11 13:29:23.084962",
+      "full_error": "S238: PI generation failed for SI BKI-SI-2026-01018-2: Traceback (most recent call last):\n  File \"apps/hrms/hrms/api/bki_store_pi_ge..."
+    },
+    {
+      "name": "6vppa5tmig",
+      "creation": "2026-05-11 13:29:22.501137",
+      "full_error": "S238: PI generation failed for SI BKI-SI-2026-01015-2: Traceback (most recent call last):\n  File \"apps/hrms/hrms/api/bki_store_pi_ge..."
+    },
+    {
+      "name": "6vj9vnm4pj",
+      "creation": "2026-05-11 13:29:21.907756",
+      "full_error": "S238: PI generation failed for SI BKI-SI-2026-01002-2: Traceback (most recent call last):\n  File \"apps/hrms/hrms/api/bki_store_pi_ge..."
+    },
+    {
+      "name": "6v5piucp87",
+      "creation": "2026-05-11 13:29:20.543811",
+      "full_error": "S238: PI generation failed for SI BKI-SI-2026-01032-2: Traceback (most recent call last):\n  File \"apps/hrms/hrms/api/bki_store_pi_ge..."
+    },
+    {
+      "name": "6uuftk768c",
+      "creation": "2026-05-11 13:29:19.871842",
+      "full_error": "S238: PI generation failed for SI BKI-SI-2026-01031-2: Traceback (most recent call last):\n  File \"apps/hrms/hrms/api/bki_store_pi_ge..."
+    },
+    {
+      "name": "6un9qjt4hf",
+      "creation": "2026-05-11 13:29:19.197336",
+      "full_error": "S238: PI generation failed for SI BKI-SI-2026-01030-2: Traceback (most recent call last):\n  File \"apps/hrms/hrms/api/bki_store_pi_ge..."
+    },
+    {
+      "name": "6uhagsvnqv",
+      "creation": "2026-05-11 13:29:18.537854",
+      "full_error": "S238: PI generation failed for SI BKI-SI-2026-01029-2: Traceback (most recent call last):\n  File \"apps/hrms/hrms/api/bki_store_pi_ge..."
+    }
+  ],
+  "leftover_si_count": 0,
+  "leftover_si": [],
+  "leftover_pi_count": 0,
+  "leftover_pi": [],
+  "orphan_pi_count": 0,
+  "orphan_pi_sample": [],
+  "status": "OK"
+}

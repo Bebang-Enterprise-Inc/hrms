@@ -1,0 +1,2524 @@
+{
+  "sweep": "billing-sweep-2026-05-11",
+  "timestamp_utc": "2026-05-11T05:28:43.268882Z",
+  "stores_ready_count": 45,
+  "stores_broken_count": 4,
+  "results": [
+    {
+      "idx": 1,
+      "company": "ARANETA GATEWAY - TUNGSTEN CAPITAL HOLDINGS OPC",
+      "phase": "READY",
+      "store_label": "ARANETA GATEWAY",
+      "order_no": "BEI-ORD-2026-00981",
+      "abbr": "ARGW",
+      "stages": {
+        "create_submit": {
+          "ok": true,
+          "si_name_pre_autoname": "BKI-SI-2026-00981-2",
+          "si_name_post_autoname": "BKI-SI-2026-00981-2",
+          "expected_autoname": "BKI-SI-2026-00981-2",
+          "expected_autoname_prefix": "BKI-SI-2026-00981-",
+          "autoname_matches_pattern": true,
+          "autoname_exact_match": true,
+          "grand_total": 1.12
+        },
+        "assert_pi": {
+          "pi_name": "ACC-PINV-2026-00700",
+          "pi_exists": true,
+          "pi_company": "ARANETA GATEWAY - TUNGSTEN CAPITAL HOLDINGS OPC",
+          "pi_company_matches_buyer": true,
+          "pi_supplier": "BEBANG KITCHEN INC. - Trade",
+          "pi_supplier_is_bki_trade": true,
+          "pi_docstatus": 0,
+          "pi_is_draft": true,
+          "pi_currency": "PHP",
+          "pi_currency_is_php": true,
+          "pi_conversion_rate": 1.0,
+          "pi_bill_no": "BKI-SI-2026-00981-2",
+          "pi_bill_no_matches_si": true,
+          "pi_bki_si_reference": "BKI-SI-2026-00981-2",
+          "pi_bki_si_reference_matches": true,
+          "pi_inter_company_invoice_reference": null,
+          "pi_update_stock": 1,
+          "pi_set_warehouse": "ARANETA GATEWAY - TUNGSTEN CAPITAL HOLDINGS OPC",
+          "pi_set_warehouse_matches_buyer": true,
+          "pi_credit_to": "2103210 - 2103210 - AP-Trade-BKI - ARGW",
+          "pi_credit_to_is_2103210": true,
+          "pi_bei_legal_entity": "ARANETA GATEWAY - TUNGSTEN CAPITAL HOLDINGS OPC",
+          "pi_bei_legal_entity_is_buyer": true,
+          "pi_bei_store_label": "ARANETA GATEWAY",
+          "pi_grand_total": 1.12,
+          "pi_items_count": 1,
+          "pi_taxes_count": 1,
+          "pi_item0_code": "PM003",
+          "pi_item0_qty": 1.0,
+          "pi_item0_rate": 1.0,
+          "pi_item0_expense_account": "1104210 - 1104210 - Inventory-from-Commissary - ARGW",
+          "pi_item0_expense_is_1104210": true,
+          "pi_item0_warehouse": "ARANETA GATEWAY - TUNGSTEN CAPITAL HOLDINGS OPC",
+          "pi_item0_warehouse_matches_buyer": true,
+          "pi_item0_cost_center": "Main - ARGW",
+          "pi_tax0_account": "1106210 - 1106210 - Input VAT - BKI Inter-Co - ARGW",
+          "pi_tax0_account_is_1106210": true,
+          "pi_tax0_charge_type": "Actual",
+          "pi_tax0_cost_center": "Main - ARGW"
+        },
+        "cancel": {
+          "ok": true,
+          "si_docstatus": 2,
+          "pi_still_exists_after_cancel": false,
+          "cascade_worked": true
+        },
+        "delete": {
+          "ok": true,
+          "si_still_exists": false
+        }
+      },
+      "verdict": "PASS"
+    },
+    {
+      "idx": 2,
+      "company": "AYALA EVO CITY - BEBANG MEGA INC.",
+      "phase": "READY",
+      "store_label": "AYALA EVO CITY",
+      "order_no": "BEI-ORD-2026-00982",
+      "abbr": "AYEVO",
+      "stages": {
+        "create_submit": {
+          "ok": true,
+          "si_name_pre_autoname": "BKI-SI-2026-00982-2",
+          "si_name_post_autoname": "BKI-SI-2026-00982-2",
+          "expected_autoname": "BKI-SI-2026-00982-2",
+          "expected_autoname_prefix": "BKI-SI-2026-00982-",
+          "autoname_matches_pattern": true,
+          "autoname_exact_match": true,
+          "grand_total": 1.12
+        },
+        "assert_pi": {
+          "pi_name": "ACC-PINV-2026-00700",
+          "pi_exists": true,
+          "pi_company": "AYALA EVO CITY - BEBANG MEGA INC.",
+          "pi_company_matches_buyer": true,
+          "pi_supplier": "BEBANG KITCHEN INC. - Trade",
+          "pi_supplier_is_bki_trade": true,
+          "pi_docstatus": 0,
+          "pi_is_draft": true,
+          "pi_currency": "PHP",
+          "pi_currency_is_php": true,
+          "pi_conversion_rate": 1.0,
+          "pi_bill_no": "BKI-SI-2026-00982-2",
+          "pi_bill_no_matches_si": true,
+          "pi_bki_si_reference": "BKI-SI-2026-00982-2",
+          "pi_bki_si_reference_matches": true,
+          "pi_inter_company_invoice_reference": null,
+          "pi_update_stock": 1,
+          "pi_set_warehouse": "AYALA EVO CITY - BEBANG MEGA INC.",
+          "pi_set_warehouse_matches_buyer": true,
+          "pi_credit_to": "2103210 - 2103210 - AP-Trade-BKI - AYEVO",
+          "pi_credit_to_is_2103210": true,
+          "pi_bei_legal_entity": "AYALA EVO CITY - BEBANG MEGA INC.",
+          "pi_bei_legal_entity_is_buyer": true,
+          "pi_bei_store_label": "AYALA EVO CITY",
+          "pi_grand_total": 1.12,
+          "pi_items_count": 1,
+          "pi_taxes_count": 1,
+          "pi_item0_code": "PM003",
+          "pi_item0_qty": 1.0,
+          "pi_item0_rate": 1.0,
+          "pi_item0_expense_account": "1104210 - 1104210 - Inventory-from-Commissary - AYEVO",
+          "pi_item0_expense_is_1104210": true,
+          "pi_item0_warehouse": "AYALA EVO CITY - BEBANG MEGA INC.",
+          "pi_item0_warehouse_matches_buyer": true,
+          "pi_item0_cost_center": "Main - AYEVO",
+          "pi_tax0_account": "1106210 - 1106210 - Input VAT - BKI Inter-Co - AYEVO",
+          "pi_tax0_account_is_1106210": true,
+          "pi_tax0_charge_type": "Actual",
+          "pi_tax0_cost_center": "Main - AYEVO"
+        },
+        "cancel": {
+          "ok": true,
+          "si_docstatus": 2,
+          "pi_still_exists_after_cancel": false,
+          "cascade_worked": true
+        },
+        "delete": {
+          "ok": true,
+          "si_still_exists": false
+        }
+      },
+      "verdict": "PASS"
+    },
+    {
+      "idx": 3,
+      "company": "AYALA FAIRVIEW TERRACES - BEBANG FT INC.",
+      "phase": "READY",
+      "store_label": "AYALA FAIRVIEW TERRACES",
+      "order_no": "BEI-ORD-2026-00983",
+      "abbr": "AFT",
+      "stages": {
+        "create_submit": {
+          "ok": true,
+          "si_name_pre_autoname": "BKI-SI-2026-00983-2",
+          "si_name_post_autoname": "BKI-SI-2026-00983-2",
+          "expected_autoname": "BKI-SI-2026-00983-2",
+          "expected_autoname_prefix": "BKI-SI-2026-00983-",
+          "autoname_matches_pattern": true,
+          "autoname_exact_match": true,
+          "grand_total": 1.12
+        },
+        "assert_pi": {
+          "pi_name": null,
+          "pi_exists": false,
+          "recent_error_logs": [
+            {
+              "name": "6m6srpid58",
+              "creation": "2026-05-11 13:28:51.881206",
+              "preview": "S238: PI generation failed for SI BKI-SI-2026-00983-2: Traceback (most recent call last):\n  File \"apps/hrms/hrms/api/bki_store_pi_ge..."
+            }
+          ]
+        },
+        "cancel": {
+          "ok": true,
+          "si_docstatus": 2,
+          "pi_still_exists_after_cancel": false,
+          "cascade_worked": true
+        },
+        "delete": {
+          "ok": true,
+          "si_still_exists": false
+        }
+      },
+      "verdict": "FAIL"
+    },
+    {
+      "idx": 4,
+      "company": "AYALA MARKET MARKET - BEBANG MARKET MARKET INC.",
+      "phase": "READY",
+      "store_label": "AYALA MARKET MARKET",
+      "order_no": "BEI-ORD-2026-00984",
+      "abbr": "AMM",
+      "stages": {
+        "create_submit": {
+          "ok": true,
+          "si_name_pre_autoname": "BKI-SI-2026-00984-2",
+          "si_name_post_autoname": "BKI-SI-2026-00984-2",
+          "expected_autoname": "BKI-SI-2026-00984-2",
+          "expected_autoname_prefix": "BKI-SI-2026-00984-",
+          "autoname_matches_pattern": true,
+          "autoname_exact_match": true,
+          "grand_total": 1.12
+        },
+        "assert_pi": {
+          "pi_name": null,
+          "pi_exists": false,
+          "recent_error_logs": [
+            {
+              "name": "6mdon22u06",
+              "creation": "2026-05-11 13:28:52.528417",
+              "preview": "S238: PI generation failed for SI BKI-SI-2026-00984-2: Traceback (most recent call last):\n  File \"apps/hrms/hrms/api/bki_store_pi_ge..."
+            }
+          ]
+        },
+        "cancel": {
+          "ok": true,
+          "si_docstatus": 2,
+          "pi_still_exists_after_cancel": false,
+          "cascade_worked": true
+        },
+        "delete": {
+          "ok": true,
+          "si_still_exists": false
+        }
+      },
+      "verdict": "FAIL"
+    },
+    {
+      "idx": 5,
+      "company": "AYALA SOLENAD - HFFM SOLENAD FOOD SERVICES INC.",
+      "phase": "READY",
+      "store_label": "AYALA SOLENAD",
+      "order_no": "BEI-ORD-2026-00985",
+      "abbr": "AYSOL",
+      "stages": {
+        "create_submit": {
+          "ok": true,
+          "si_name_pre_autoname": "BKI-SI-2026-00985-2",
+          "si_name_post_autoname": "BKI-SI-2026-00985-2",
+          "expected_autoname": "BKI-SI-2026-00985-2",
+          "expected_autoname_prefix": "BKI-SI-2026-00985-",
+          "autoname_matches_pattern": true,
+          "autoname_exact_match": true,
+          "grand_total": 1.12
+        },
+        "assert_pi": {
+          "pi_name": null,
+          "pi_exists": false,
+          "recent_error_logs": [
+            {
+              "name": "6mjakest9a",
+              "creation": "2026-05-11 13:28:53.198396",
+              "preview": "S238: PI generation failed for SI BKI-SI-2026-00985-2: Traceback (most recent call last):\n  File \"apps/hrms/hrms/api/bki_store_pi_ge..."
+            }
+          ]
+        },
+        "cancel": {
+          "ok": true,
+          "si_docstatus": 2,
+          "pi_still_exists_after_cancel": false,
+          "cascade_worked": true
+        },
+        "delete": {
+          "ok": true,
+          "si_still_exists": false
+        }
+      },
+      "verdict": "FAIL"
+    },
+    {
+      "idx": 6,
+      "company": "AYALA UP TOWN CENTER - BEBANG UP TOWN CENTER INC.",
+      "phase": "READY",
+      "store_label": "AYALA UP TOWN CENTER",
+      "order_no": "BEI-ORD-2026-00986",
+      "abbr": "UPTC",
+      "stages": {
+        "create_submit": {
+          "ok": true,
+          "si_name_pre_autoname": "BKI-SI-2026-00986-2",
+          "si_name_post_autoname": "BKI-SI-2026-00986-2",
+          "expected_autoname": "BKI-SI-2026-00986-2",
+          "expected_autoname_prefix": "BKI-SI-2026-00986-",
+          "autoname_matches_pattern": true,
+          "autoname_exact_match": true,
+          "grand_total": 1.12
+        },
+        "assert_pi": {
+          "pi_name": null,
+          "pi_exists": false,
+          "recent_error_logs": [
+            {
+              "name": "6mq1re60s0",
+              "creation": "2026-05-11 13:28:53.859030",
+              "preview": "S238: PI generation failed for SI BKI-SI-2026-00986-2: Traceback (most recent call last):\n  File \"apps/hrms/hrms/api/bki_store_pi_ge..."
+            }
+          ]
+        },
+        "cancel": {
+          "ok": true,
+          "si_docstatus": 2,
+          "pi_still_exists_after_cancel": false,
+          "cascade_worked": true
+        },
+        "delete": {
+          "ok": true,
+          "si_still_exists": false
+        }
+      },
+      "verdict": "FAIL"
+    },
+    {
+      "idx": 7,
+      "company": "AYALA VERMOSA - BEBANG MEGA INC.",
+      "phase": "READY",
+      "store_label": "AYALA VERMOSA",
+      "order_no": "BEI-ORD-2026-00988",
+      "abbr": "AYVER",
+      "stages": {
+        "create_submit": {
+          "ok": true,
+          "si_name_pre_autoname": "BKI-SI-2026-00988-1",
+          "si_name_post_autoname": "BKI-SI-2026-00988-1",
+          "expected_autoname": "BKI-SI-2026-00988-1",
+          "expected_autoname_prefix": "BKI-SI-2026-00988-",
+          "autoname_matches_pattern": true,
+          "autoname_exact_match": true,
+          "grand_total": 1.12
+        },
+        "assert_pi": {
+          "pi_name": "ACC-PINV-2026-00700",
+          "pi_exists": true,
+          "pi_company": "AYALA VERMOSA - BEBANG MEGA INC.",
+          "pi_company_matches_buyer": true,
+          "pi_supplier": "BEBANG KITCHEN INC. - Trade",
+          "pi_supplier_is_bki_trade": true,
+          "pi_docstatus": 0,
+          "pi_is_draft": true,
+          "pi_currency": "PHP",
+          "pi_currency_is_php": true,
+          "pi_conversion_rate": 1.0,
+          "pi_bill_no": "BKI-SI-2026-00988-1",
+          "pi_bill_no_matches_si": true,
+          "pi_bki_si_reference": "BKI-SI-2026-00988-1",
+          "pi_bki_si_reference_matches": true,
+          "pi_inter_company_invoice_reference": null,
+          "pi_update_stock": 1,
+          "pi_set_warehouse": "AYALA VERMOSA - BEBANG MEGA INC.",
+          "pi_set_warehouse_matches_buyer": true,
+          "pi_credit_to": "2103210 - 2103210 - AP-Trade-BKI - AYVER",
+          "pi_credit_to_is_2103210": true,
+          "pi_bei_legal_entity": "AYALA VERMOSA - BEBANG MEGA INC.",
+          "pi_bei_legal_entity_is_buyer": true,
+          "pi_bei_store_label": "AYALA VERMOSA",
+          "pi_grand_total": 1.12,
+          "pi_items_count": 1,
+          "pi_taxes_count": 1,
+          "pi_item0_code": "PM003",
+          "pi_item0_qty": 1.0,
+          "pi_item0_rate": 1.0,
+          "pi_item0_expense_account": "1104210 - 1104210 - Inventory-from-Commissary - AYVER",
+          "pi_item0_expense_is_1104210": true,
+          "pi_item0_warehouse": "AYALA VERMOSA - BEBANG MEGA INC.",
+          "pi_item0_warehouse_matches_buyer": true,
+          "pi_item0_cost_center": "Main - AYVER",
+          "pi_tax0_account": "1106210 - 1106210 - Input VAT - BKI Inter-Co - AYVER",
+          "pi_tax0_account_is_1106210": true,
+          "pi_tax0_charge_type": "Actual",
+          "pi_tax0_cost_center": "Main - AYVER"
+        },
+        "cancel": {
+          "ok": true,
+          "si_docstatus": 2,
+          "pi_still_exists_after_cancel": false,
+          "cascade_worked": true
+        },
+        "delete": {
+          "ok": true,
+          "si_still_exists": false
+        }
+      },
+      "verdict": "PASS"
+    },
+    {
+      "idx": 8,
+      "company": "BF HOMES - BEBANG BF HOMES INC.",
+      "phase": "READY",
+      "store_label": "BF HOMES",
+      "order_no": "BEI-ORD-2026-00989",
+      "abbr": "BFH",
+      "stages": {
+        "create_submit": {
+          "ok": true,
+          "si_name_pre_autoname": "BKI-SI-2026-00989-2",
+          "si_name_post_autoname": "BKI-SI-2026-00989-2",
+          "expected_autoname": "BKI-SI-2026-00989-2",
+          "expected_autoname_prefix": "BKI-SI-2026-00989-",
+          "autoname_matches_pattern": true,
+          "autoname_exact_match": true,
+          "grand_total": 1.12
+        },
+        "assert_pi": {
+          "pi_name": null,
+          "pi_exists": false,
+          "recent_error_logs": [
+            {
+              "name": "6n9of2nsfg",
+              "creation": "2026-05-11 13:28:55.331806",
+              "preview": "S238: PI generation failed for SI BKI-SI-2026-00989-2: Traceback (most recent call last):\n  File \"apps/hrms/hrms/api/bki_store_pi_ge..."
+            }
+          ]
+        },
+        "cancel": {
+          "ok": true,
+          "si_docstatus": 2,
+          "pi_still_exists_after_cancel": false,
+          "cascade_worked": true
+        },
+        "delete": {
+          "ok": true,
+          "si_still_exists": false
+        }
+      },
+      "verdict": "FAIL"
+    },
+    {
+      "idx": 9,
+      "company": "CTTM TOMAS MORATO - B CUBED VENTURES CORP.",
+      "phase": "READY",
+      "store_label": "CTTM TOMAS MORATO",
+      "order_no": "BEI-ORD-2026-00990",
+      "abbr": "CTTM",
+      "stages": {
+        "create_submit": {
+          "ok": true,
+          "si_name_pre_autoname": "BKI-SI-2026-00990-2",
+          "si_name_post_autoname": "BKI-SI-2026-00990-2",
+          "expected_autoname": "BKI-SI-2026-00990-2",
+          "expected_autoname_prefix": "BKI-SI-2026-00990-",
+          "autoname_matches_pattern": true,
+          "autoname_exact_match": true,
+          "grand_total": 1.12
+        },
+        "assert_pi": {
+          "pi_name": null,
+          "pi_exists": false,
+          "recent_error_logs": [
+            {
+              "name": "6nflmfvees",
+              "creation": "2026-05-11 13:28:55.988085",
+              "preview": "S238: PI generation failed for SI BKI-SI-2026-00990-2: Traceback (most recent call last):\n  File \"apps/hrms/hrms/api/bki_store_pi_ge..."
+            }
+          ]
+        },
+        "cancel": {
+          "ok": true,
+          "si_docstatus": 2,
+          "pi_still_exists_after_cancel": false,
+          "cascade_worked": true
+        },
+        "delete": {
+          "ok": true,
+          "si_still_exists": false
+        }
+      },
+      "verdict": "FAIL"
+    },
+    {
+      "idx": 10,
+      "company": "D'VERDE CALAMBA - TAJ FOOD CORP.",
+      "phase": "READY",
+      "store_label": "D'VERDE CALAMBA",
+      "order_no": "BEI-ORD-2026-00991",
+      "abbr": "DVCAL",
+      "stages": {
+        "create_submit": {
+          "ok": true,
+          "si_name_pre_autoname": "BKI-SI-2026-00991-2",
+          "si_name_post_autoname": "BKI-SI-2026-00991-2",
+          "expected_autoname": "BKI-SI-2026-00991-2",
+          "expected_autoname_prefix": "BKI-SI-2026-00991-",
+          "autoname_matches_pattern": true,
+          "autoname_exact_match": true,
+          "grand_total": 1.12
+        },
+        "assert_pi": {
+          "pi_name": "ACC-PINV-2026-00700",
+          "pi_exists": true,
+          "pi_company": "D'VERDE CALAMBA - TAJ FOOD CORP.",
+          "pi_company_matches_buyer": true,
+          "pi_supplier": "BEBANG KITCHEN INC. - Trade",
+          "pi_supplier_is_bki_trade": true,
+          "pi_docstatus": 0,
+          "pi_is_draft": true,
+          "pi_currency": "PHP",
+          "pi_currency_is_php": true,
+          "pi_conversion_rate": 1.0,
+          "pi_bill_no": "BKI-SI-2026-00991-2",
+          "pi_bill_no_matches_si": true,
+          "pi_bki_si_reference": "BKI-SI-2026-00991-2",
+          "pi_bki_si_reference_matches": true,
+          "pi_inter_company_invoice_reference": null,
+          "pi_update_stock": 1,
+          "pi_set_warehouse": "D'VERDE CALAMBA - TAJ FOOD CORP.",
+          "pi_set_warehouse_matches_buyer": true,
+          "pi_credit_to": "2103210 - 2103210 - AP-Trade-BKI - DVCAL",
+          "pi_credit_to_is_2103210": true,
+          "pi_bei_legal_entity": "D'VERDE CALAMBA - TAJ FOOD CORP.",
+          "pi_bei_legal_entity_is_buyer": true,
+          "pi_bei_store_label": "D'VERDE CALAMBA",
+          "pi_grand_total": 1.12,
+          "pi_items_count": 1,
+          "pi_taxes_count": 1,
+          "pi_item0_code": "PM003",
+          "pi_item0_qty": 1.0,
+          "pi_item0_rate": 1.0,
+          "pi_item0_expense_account": "1104210 - 1104210 - Inventory-from-Commissary - DVCAL",
+          "pi_item0_expense_is_1104210": true,
+          "pi_item0_warehouse": "D'VERDE CALAMBA - TAJ FOOD CORP.",
+          "pi_item0_warehouse_matches_buyer": true,
+          "pi_item0_cost_center": "Main - DVCAL",
+          "pi_tax0_account": "1106210 - 1106210 - Input VAT - BKI Inter-Co - DVCAL",
+          "pi_tax0_account_is_1106210": true,
+          "pi_tax0_charge_type": "Actual",
+          "pi_tax0_cost_center": "Main - DVCAL"
+        },
+        "cancel": {
+          "ok": true,
+          "si_docstatus": 2,
+          "pi_still_exists_after_cancel": false,
+          "cascade_worked": true
+        },
+        "delete": {
+          "ok": true,
+          "si_still_exists": false
+        }
+      },
+      "verdict": "PASS"
+    },
+    {
+      "idx": 11,
+      "company": "EVER COMMONWEALTH - DLS DESSERT CRAFT INC.",
+      "phase": "READY",
+      "store_label": "EVER COMMONWEALTH",
+      "order_no": "BEI-ORD-2026-00992",
+      "abbr": "EGC",
+      "stages": {
+        "create_submit": {
+          "ok": true,
+          "si_name_pre_autoname": "BKI-SI-2026-00992-2",
+          "si_name_post_autoname": "BKI-SI-2026-00992-2",
+          "expected_autoname": "BKI-SI-2026-00992-2",
+          "expected_autoname_prefix": "BKI-SI-2026-00992-",
+          "autoname_matches_pattern": true,
+          "autoname_exact_match": true,
+          "grand_total": 1.12
+        },
+        "assert_pi": {
+          "pi_name": null,
+          "pi_exists": false,
+          "recent_error_logs": [
+            {
+              "name": "6ntktpc0do",
+              "creation": "2026-05-11 13:28:57.383046",
+              "preview": "S238: PI generation failed for SI BKI-SI-2026-00992-2: Traceback (most recent call last):\n  File \"apps/hrms/hrms/api/bki_store_pi_ge..."
+            }
+          ]
+        },
+        "cancel": {
+          "ok": true,
+          "si_docstatus": 2,
+          "pi_still_exists_after_cancel": false,
+          "cascade_worked": true
+        },
+        "delete": {
+          "ok": true,
+          "si_still_exists": false
+        }
+      },
+      "verdict": "FAIL"
+    },
+    {
+      "idx": 12,
+      "company": "FESTIVAL MALL ALABANG - BEBANG FESTIVAL INC.",
+      "phase": "READY",
+      "store_label": "FESTIVAL MALL ALABANG",
+      "order_no": "BEI-ORD-2026-00993",
+      "abbr": "FMA",
+      "stages": {
+        "create_submit": {
+          "ok": true,
+          "si_name_pre_autoname": "BKI-SI-2026-00993-2",
+          "si_name_post_autoname": "BKI-SI-2026-00993-2",
+          "expected_autoname": "BKI-SI-2026-00993-2",
+          "expected_autoname_prefix": "BKI-SI-2026-00993-",
+          "autoname_matches_pattern": true,
+          "autoname_exact_match": true,
+          "grand_total": 1.12
+        },
+        "assert_pi": {
+          "pi_name": null,
+          "pi_exists": false,
+          "recent_error_logs": [
+            {
+              "name": "6o4jfp6l3c",
+              "creation": "2026-05-11 13:28:58.072569",
+              "preview": "S238: PI generation failed for SI BKI-SI-2026-00993-2: Traceback (most recent call last):\n  File \"apps/hrms/hrms/api/bki_store_pi_ge..."
+            }
+          ]
+        },
+        "cancel": {
+          "ok": true,
+          "si_docstatus": 2,
+          "pi_still_exists_after_cancel": false,
+          "cascade_worked": true
+        },
+        "delete": {
+          "ok": true,
+          "si_still_exists": false
+        }
+      },
+      "verdict": "FAIL"
+    },
+    {
+      "idx": 13,
+      "company": "LUCKY CHINATOWN - BEBANG LCT INC.",
+      "phase": "READY",
+      "store_label": "LUCKY CHINATOWN",
+      "order_no": "BEI-ORD-2026-00994",
+      "abbr": "LCT",
+      "stages": {
+        "create_submit": {
+          "ok": true,
+          "si_name_pre_autoname": "BKI-SI-2026-00994-2",
+          "si_name_post_autoname": "BKI-SI-2026-00994-2",
+          "expected_autoname": "BKI-SI-2026-00994-2",
+          "expected_autoname_prefix": "BKI-SI-2026-00994-",
+          "autoname_matches_pattern": true,
+          "autoname_exact_match": true,
+          "grand_total": 1.12
+        },
+        "assert_pi": {
+          "pi_name": null,
+          "pi_exists": false,
+          "recent_error_logs": [
+            {
+              "name": "6ob3fvj2e9",
+              "creation": "2026-05-11 13:28:58.728022",
+              "preview": "S238: PI generation failed for SI BKI-SI-2026-00994-2: Traceback (most recent call last):\n  File \"apps/hrms/hrms/api/bki_store_pi_ge..."
+            }
+          ]
+        },
+        "cancel": {
+          "ok": true,
+          "si_docstatus": 2,
+          "pi_still_exists_after_cancel": false,
+          "cascade_worked": true
+        },
+        "delete": {
+          "ok": true,
+          "si_still_exists": false
+        }
+      },
+      "verdict": "FAIL"
+    },
+    {
+      "idx": 14,
+      "company": "MEGAWIDE PITX - BEBANG PITX INC.",
+      "phase": "READY",
+      "store_label": "MEGAWIDE PITX",
+      "order_no": "BEI-ORD-2026-00995",
+      "abbr": "PTX",
+      "stages": {
+        "create_submit": {
+          "ok": true,
+          "si_name_pre_autoname": "BKI-SI-2026-00995-2",
+          "si_name_post_autoname": "BKI-SI-2026-00995-2",
+          "expected_autoname": "BKI-SI-2026-00995-2",
+          "expected_autoname_prefix": "BKI-SI-2026-00995-",
+          "autoname_matches_pattern": true,
+          "autoname_exact_match": true,
+          "grand_total": 1.12
+        },
+        "assert_pi": {
+          "pi_name": null,
+          "pi_exists": false,
+          "recent_error_logs": [
+            {
+              "name": "6ohv9mgd2g",
+              "creation": "2026-05-11 13:28:59.387695",
+              "preview": "S238: PI generation failed for SI BKI-SI-2026-00995-2: Traceback (most recent call last):\n  File \"apps/hrms/hrms/api/bki_store_pi_ge..."
+            }
+          ]
+        },
+        "cancel": {
+          "ok": true,
+          "si_docstatus": 2,
+          "pi_still_exists_after_cancel": false,
+          "cascade_worked": true
+        },
+        "delete": {
+          "ok": true,
+          "si_still_exists": false
+        }
+      },
+      "verdict": "FAIL"
+    },
+    {
+      "idx": 15,
+      "company": "MEGAWORLD PASEO CENTER - BEBANG PASEO INC.",
+      "phase": "READY",
+      "store_label": "MEGAWORLD PASEO CENTER",
+      "order_no": "BEI-ORD-2026-00997",
+      "abbr": "MPD",
+      "stages": {
+        "create_submit": {
+          "ok": true,
+          "si_name_pre_autoname": "BKI-SI-2026-00997-1",
+          "si_name_post_autoname": "BKI-SI-2026-00997-1",
+          "expected_autoname": "BKI-SI-2026-00997-1",
+          "expected_autoname_prefix": "BKI-SI-2026-00997-",
+          "autoname_matches_pattern": true,
+          "autoname_exact_match": true,
+          "grand_total": 1.12
+        },
+        "assert_pi": {
+          "pi_name": null,
+          "pi_exists": false,
+          "recent_error_logs": [
+            {
+              "name": "6ooqrp44mp",
+              "creation": "2026-05-11 13:29:00.078942",
+              "preview": "S238: PI generation failed for SI BKI-SI-2026-00997-1: Traceback (most recent call last):\n  File \"apps/hrms/hrms/api/bki_store_pi_ge..."
+            }
+          ]
+        },
+        "cancel": {
+          "ok": true,
+          "si_docstatus": 2,
+          "pi_still_exists_after_cancel": false,
+          "cascade_worked": true
+        },
+        "delete": {
+          "ok": true,
+          "si_still_exists": false
+        }
+      },
+      "verdict": "FAIL"
+    },
+    {
+      "idx": 16,
+      "company": "MEGAWORLD VENICE GRAND CANAL - BEBANG VENICE GRAND CANAL INC.",
+      "phase": "READY",
+      "store_label": "MEGAWORLD VENICE GRAND CANAL",
+      "order_no": "BEI-ORD-2026-00998",
+      "abbr": "VGC",
+      "stages": {
+        "create_submit": {
+          "ok": true,
+          "si_name_pre_autoname": "BKI-SI-2026-00998-2",
+          "si_name_post_autoname": "BKI-SI-2026-00998-2",
+          "expected_autoname": "BKI-SI-2026-00998-2",
+          "expected_autoname_prefix": "BKI-SI-2026-00998-",
+          "autoname_matches_pattern": true,
+          "autoname_exact_match": true,
+          "grand_total": 1.12
+        },
+        "assert_pi": {
+          "pi_name": null,
+          "pi_exists": false,
+          "recent_error_logs": [
+            {
+              "name": "6ov8h7lpl4",
+              "creation": "2026-05-11 13:29:00.746038",
+              "preview": "S238: PI generation failed for SI BKI-SI-2026-00998-2: Traceback (most recent call last):\n  File \"apps/hrms/hrms/api/bki_store_pi_ge..."
+            }
+          ]
+        },
+        "cancel": {
+          "ok": true,
+          "si_docstatus": 2,
+          "pi_still_exists_after_cancel": false,
+          "cascade_worked": true
+        },
+        "delete": {
+          "ok": true,
+          "si_still_exists": false
+        }
+      },
+      "verdict": "FAIL"
+    },
+    {
+      "idx": 17,
+      "company": "NAIA T3 - HALO-HALO TERMINAL FOOD CORP.",
+      "phase": "READY",
+      "store_label": "NAIA T3",
+      "order_no": "BEI-ORD-2026-00999",
+      "abbr": "NAIA",
+      "stages": {
+        "create_submit": {
+          "ok": true,
+          "si_name_pre_autoname": "BKI-SI-2026-00999-2",
+          "si_name_post_autoname": "BKI-SI-2026-00999-2",
+          "expected_autoname": "BKI-SI-2026-00999-2",
+          "expected_autoname_prefix": "BKI-SI-2026-00999-",
+          "autoname_matches_pattern": true,
+          "autoname_exact_match": true,
+          "grand_total": 1.12
+        },
+        "assert_pi": {
+          "pi_name": "ACC-PINV-2026-00700",
+          "pi_exists": true,
+          "pi_company": "NAIA T3 - HALO-HALO TERMINAL FOOD CORP.",
+          "pi_company_matches_buyer": true,
+          "pi_supplier": "BEBANG KITCHEN INC. - Trade",
+          "pi_supplier_is_bki_trade": true,
+          "pi_docstatus": 0,
+          "pi_is_draft": true,
+          "pi_currency": "PHP",
+          "pi_currency_is_php": true,
+          "pi_conversion_rate": 1.0,
+          "pi_bill_no": "BKI-SI-2026-00999-2",
+          "pi_bill_no_matches_si": true,
+          "pi_bki_si_reference": "BKI-SI-2026-00999-2",
+          "pi_bki_si_reference_matches": true,
+          "pi_inter_company_invoice_reference": null,
+          "pi_update_stock": 1,
+          "pi_set_warehouse": "NAIA T3 - HALO-HALO TERMINAL FOOD CORP.",
+          "pi_set_warehouse_matches_buyer": true,
+          "pi_credit_to": "2103210 - 2103210 - AP-Trade-BKI - NAIA",
+          "pi_credit_to_is_2103210": true,
+          "pi_bei_legal_entity": "NAIA T3 - HALO-HALO TERMINAL FOOD CORP.",
+          "pi_bei_legal_entity_is_buyer": true,
+          "pi_bei_store_label": "NAIA T3",
+          "pi_grand_total": 1.12,
+          "pi_items_count": 1,
+          "pi_taxes_count": 1,
+          "pi_item0_code": "PM003",
+          "pi_item0_qty": 1.0,
+          "pi_item0_rate": 1.0,
+          "pi_item0_expense_account": "1104210 - 1104210 - Inventory-from-Commissary - NAIA",
+          "pi_item0_expense_is_1104210": true,
+          "pi_item0_warehouse": "NAIA T3 - HALO-HALO TERMINAL FOOD CORP.",
+          "pi_item0_warehouse_matches_buyer": true,
+          "pi_item0_cost_center": "Main - NAIA",
+          "pi_tax0_account": "1106210 - 1106210 - Input VAT - BKI Inter-Co - NAIA",
+          "pi_tax0_account_is_1106210": true,
+          "pi_tax0_charge_type": "Actual",
+          "pi_tax0_cost_center": "Main - NAIA"
+        },
+        "cancel": {
+          "ok": true,
+          "si_docstatus": 2,
+          "pi_still_exists_after_cancel": false,
+          "cascade_worked": true
+        },
+        "delete": {
+          "ok": true,
+          "si_still_exists": false
+        }
+      },
+      "verdict": "PASS"
+    },
+    {
+      "idx": 18,
+      "company": "ORTIGAS ESTANCIA - BB ESTANCIA FOOD CORP.",
+      "phase": "READY",
+      "store_label": "ORTIGAS ESTANCIA",
+      "order_no": "BEI-ORD-2026-01000",
+      "abbr": "ESM",
+      "stages": {
+        "create_submit": {
+          "ok": true,
+          "si_name_pre_autoname": "BKI-SI-2026-01000-2",
+          "si_name_post_autoname": "BKI-SI-2026-01000-2",
+          "expected_autoname": "BKI-SI-2026-01000-2",
+          "expected_autoname_prefix": "BKI-SI-2026-01000-",
+          "autoname_matches_pattern": true,
+          "autoname_exact_match": true,
+          "grand_total": 1.12
+        },
+        "assert_pi": {
+          "pi_name": "ACC-PINV-2026-00700",
+          "pi_exists": true,
+          "pi_company": "ORTIGAS ESTANCIA - BB ESTANCIA FOOD CORP.",
+          "pi_company_matches_buyer": true,
+          "pi_supplier": "BEBANG KITCHEN INC. - Trade",
+          "pi_supplier_is_bki_trade": true,
+          "pi_docstatus": 0,
+          "pi_is_draft": true,
+          "pi_currency": "PHP",
+          "pi_currency_is_php": true,
+          "pi_conversion_rate": 1.0,
+          "pi_bill_no": "BKI-SI-2026-01000-2",
+          "pi_bill_no_matches_si": true,
+          "pi_bki_si_reference": "BKI-SI-2026-01000-2",
+          "pi_bki_si_reference_matches": true,
+          "pi_inter_company_invoice_reference": null,
+          "pi_update_stock": 1,
+          "pi_set_warehouse": "ORTIGAS ESTANCIA - BB ESTANCIA FOOD CORP.",
+          "pi_set_warehouse_matches_buyer": true,
+          "pi_credit_to": "2103210 - 2103210 - AP-Trade-BKI - ESM",
+          "pi_credit_to_is_2103210": true,
+          "pi_bei_legal_entity": "ORTIGAS ESTANCIA - BB ESTANCIA FOOD CORP.",
+          "pi_bei_legal_entity_is_buyer": true,
+          "pi_bei_store_label": "ORTIGAS ESTANCIA",
+          "pi_grand_total": 1.12,
+          "pi_items_count": 1,
+          "pi_taxes_count": 1,
+          "pi_item0_code": "PM003",
+          "pi_item0_qty": 1.0,
+          "pi_item0_rate": 1.0,
+          "pi_item0_expense_account": "1104210 - 1104210 - Inventory-from-Commissary - ESM",
+          "pi_item0_expense_is_1104210": true,
+          "pi_item0_warehouse": "ORTIGAS ESTANCIA - BB ESTANCIA FOOD CORP.",
+          "pi_item0_warehouse_matches_buyer": true,
+          "pi_item0_cost_center": "Main - ESM",
+          "pi_tax0_account": "1106210 - 1106210 - Input VAT - BKI Inter-Co - ESM",
+          "pi_tax0_account_is_1106210": true,
+          "pi_tax0_charge_type": "Actual",
+          "pi_tax0_cost_center": "Main - ESM"
+        },
+        "cancel": {
+          "ok": true,
+          "si_docstatus": 2,
+          "pi_still_exists_after_cancel": false,
+          "cascade_worked": true
+        },
+        "delete": {
+          "ok": true,
+          "si_still_exists": false
+        }
+      },
+      "verdict": "PASS"
+    },
+    {
+      "idx": 19,
+      "company": "ORTIGAS GREENHILLS - BEIFRANCHISE FOOD OPC",
+      "phase": "READY",
+      "store_label": "ORTIGAS GREENHILLS",
+      "order_no": "BEI-ORD-2026-01001",
+      "abbr": "GHO",
+      "stages": {
+        "create_submit": {
+          "ok": true,
+          "si_name_pre_autoname": "BKI-SI-2026-01001-2",
+          "si_name_post_autoname": "BKI-SI-2026-01001-2",
+          "expected_autoname": "BKI-SI-2026-01001-2",
+          "expected_autoname_prefix": "BKI-SI-2026-01001-",
+          "autoname_matches_pattern": true,
+          "autoname_exact_match": true,
+          "grand_total": 1.12
+        },
+        "assert_pi": {
+          "pi_name": "ACC-PINV-2026-00700",
+          "pi_exists": true,
+          "pi_company": "ORTIGAS GREENHILLS - BEIFRANCHISE FOOD OPC",
+          "pi_company_matches_buyer": true,
+          "pi_supplier": "BEBANG KITCHEN INC. - Trade",
+          "pi_supplier_is_bki_trade": true,
+          "pi_docstatus": 0,
+          "pi_is_draft": true,
+          "pi_currency": "PHP",
+          "pi_currency_is_php": true,
+          "pi_conversion_rate": 1.0,
+          "pi_bill_no": "BKI-SI-2026-01001-2",
+          "pi_bill_no_matches_si": true,
+          "pi_bki_si_reference": "BKI-SI-2026-01001-2",
+          "pi_bki_si_reference_matches": true,
+          "pi_inter_company_invoice_reference": null,
+          "pi_update_stock": 1,
+          "pi_set_warehouse": "ORTIGAS GREENHILLS - BEIFRANCHISE FOOD OPC",
+          "pi_set_warehouse_matches_buyer": true,
+          "pi_credit_to": "2103210 - 2103210 - AP-Trade-BKI - GHO",
+          "pi_credit_to_is_2103210": true,
+          "pi_bei_legal_entity": "ORTIGAS GREENHILLS - BEIFRANCHISE FOOD OPC",
+          "pi_bei_legal_entity_is_buyer": true,
+          "pi_bei_store_label": "ORTIGAS GREENHILLS",
+          "pi_grand_total": 1.12,
+          "pi_items_count": 1,
+          "pi_taxes_count": 1,
+          "pi_item0_code": "PM003",
+          "pi_item0_qty": 1.0,
+          "pi_item0_rate": 1.0,
+          "pi_item0_expense_account": "Stock In Hand - GHO",
+          "pi_item0_expense_is_1104210": false,
+          "pi_item0_warehouse": "ORTIGAS GREENHILLS - BEIFRANCHISE FOOD OPC",
+          "pi_item0_warehouse_matches_buyer": true,
+          "pi_item0_cost_center": "Main - GHO",
+          "pi_tax0_account": "1106210 - 1106210 - Input VAT - BKI Inter-Co - GHO",
+          "pi_tax0_account_is_1106210": true,
+          "pi_tax0_charge_type": "Actual",
+          "pi_tax0_cost_center": "Main - GHO"
+        },
+        "cancel": {
+          "ok": true,
+          "si_docstatus": 2,
+          "pi_still_exists_after_cancel": false,
+          "cascade_worked": true
+        },
+        "delete": {
+          "ok": true,
+          "si_still_exists": false
+        }
+      },
+      "verdict": "FAIL"
+    },
+    {
+      "idx": 20,
+      "company": "ROBINSONS GALLERIA SOUTH - TUNGSTEN CAPITAL HOLDINGS OPC",
+      "phase": "READY",
+      "store_label": "ROBINSONS GALLERIA SOUTH",
+      "order_no": "BEI-ORD-2026-01003",
+      "abbr": "ROBGS",
+      "stages": {
+        "create_submit": {
+          "ok": true,
+          "si_name_pre_autoname": "BKI-SI-2026-01003-2",
+          "si_name_post_autoname": "BKI-SI-2026-01003-2",
+          "expected_autoname": "BKI-SI-2026-01003-2",
+          "expected_autoname_prefix": "BKI-SI-2026-01003-",
+          "autoname_matches_pattern": true,
+          "autoname_exact_match": true,
+          "grand_total": 1.12
+        },
+        "assert_pi": {
+          "pi_name": null,
+          "pi_exists": false,
+          "recent_error_logs": [
+            {
+              "name": "6puqufduop",
+              "creation": "2026-05-11 13:29:03.833485",
+              "preview": "S238: PI generation failed for SI BKI-SI-2026-01003-2: Traceback (most recent call last):\n  File \"apps/hrms/hrms/api/bki_store_pi_ge..."
+            }
+          ]
+        },
+        "cancel": {
+          "ok": true,
+          "si_docstatus": 2,
+          "pi_still_exists_after_cancel": false,
+          "cascade_worked": true
+        },
+        "delete": {
+          "ok": true,
+          "si_still_exists": false
+        }
+      },
+      "verdict": "FAIL"
+    },
+    {
+      "idx": 21,
+      "company": "ROBINSONS GENERAL TRIAS - BEBANG MEGA INC.",
+      "phase": "READY",
+      "store_label": "ROBINSONS GENERAL TRIAS",
+      "order_no": "BEI-ORD-2026-01005",
+      "abbr": "ROBGT",
+      "stages": {
+        "create_submit": {
+          "ok": true,
+          "si_name_pre_autoname": "BKI-SI-2026-01005-1",
+          "si_name_post_autoname": "BKI-SI-2026-01005-1",
+          "expected_autoname": "BKI-SI-2026-01005-1",
+          "expected_autoname_prefix": "BKI-SI-2026-01005-",
+          "autoname_matches_pattern": true,
+          "autoname_exact_match": true,
+          "grand_total": 1.12
+        },
+        "assert_pi": {
+          "pi_name": "ACC-PINV-2026-00700",
+          "pi_exists": true,
+          "pi_company": "ROBINSONS GENERAL TRIAS - BEBANG MEGA INC.",
+          "pi_company_matches_buyer": true,
+          "pi_supplier": "BEBANG KITCHEN INC. - Trade",
+          "pi_supplier_is_bki_trade": true,
+          "pi_docstatus": 0,
+          "pi_is_draft": true,
+          "pi_currency": "PHP",
+          "pi_currency_is_php": true,
+          "pi_conversion_rate": 1.0,
+          "pi_bill_no": "BKI-SI-2026-01005-1",
+          "pi_bill_no_matches_si": true,
+          "pi_bki_si_reference": "BKI-SI-2026-01005-1",
+          "pi_bki_si_reference_matches": true,
+          "pi_inter_company_invoice_reference": null,
+          "pi_update_stock": 1,
+          "pi_set_warehouse": "ROBINSONS GENERAL TRIAS - BEBANG MEGA INC.",
+          "pi_set_warehouse_matches_buyer": true,
+          "pi_credit_to": "2103210 - 2103210 - AP-Trade-BKI - ROBGT",
+          "pi_credit_to_is_2103210": true,
+          "pi_bei_legal_entity": "ROBINSONS GENERAL TRIAS - BEBANG MEGA INC.",
+          "pi_bei_legal_entity_is_buyer": true,
+          "pi_bei_store_label": "ROBINSONS GENERAL TRIAS",
+          "pi_grand_total": 1.12,
+          "pi_items_count": 1,
+          "pi_taxes_count": 1,
+          "pi_item0_code": "PM003",
+          "pi_item0_qty": 1.0,
+          "pi_item0_rate": 1.0,
+          "pi_item0_expense_account": "1104210 - 1104210 - Inventory-from-Commissary - ROBGT",
+          "pi_item0_expense_is_1104210": true,
+          "pi_item0_warehouse": "ROBINSONS GENERAL TRIAS - BEBANG MEGA INC.",
+          "pi_item0_warehouse_matches_buyer": true,
+          "pi_item0_cost_center": "Main - ROBGT",
+          "pi_tax0_account": "1106210 - 1106210 - Input VAT - BKI Inter-Co - ROBGT",
+          "pi_tax0_account_is_1106210": true,
+          "pi_tax0_charge_type": "Actual",
+          "pi_tax0_cost_center": "Main - ROBGT"
+        },
+        "cancel": {
+          "ok": true,
+          "si_docstatus": 2,
+          "pi_still_exists_after_cancel": false,
+          "cascade_worked": true
+        },
+        "delete": {
+          "ok": true,
+          "si_still_exists": false
+        }
+      },
+      "verdict": "PASS"
+    },
+    {
+      "idx": 22,
+      "company": "ROBINSONS IMUS - BEBANG MEGA INC.",
+      "phase": "READY",
+      "store_label": "ROBINSONS IMUS",
+      "order_no": "BEI-ORD-2026-01007",
+      "abbr": "ROBIM",
+      "stages": {
+        "create_submit": {
+          "ok": true,
+          "si_name_pre_autoname": "BKI-SI-2026-01007-1",
+          "si_name_post_autoname": "BKI-SI-2026-01007-1",
+          "expected_autoname": "BKI-SI-2026-01007-1",
+          "expected_autoname_prefix": "BKI-SI-2026-01007-",
+          "autoname_matches_pattern": true,
+          "autoname_exact_match": true,
+          "grand_total": 1.12
+        },
+        "assert_pi": {
+          "pi_name": "ACC-PINV-2026-00700",
+          "pi_exists": true,
+          "pi_company": "ROBINSONS IMUS - BEBANG MEGA INC.",
+          "pi_company_matches_buyer": true,
+          "pi_supplier": "BEBANG KITCHEN INC. - Trade",
+          "pi_supplier_is_bki_trade": true,
+          "pi_docstatus": 0,
+          "pi_is_draft": true,
+          "pi_currency": "PHP",
+          "pi_currency_is_php": true,
+          "pi_conversion_rate": 1.0,
+          "pi_bill_no": "BKI-SI-2026-01007-1",
+          "pi_bill_no_matches_si": true,
+          "pi_bki_si_reference": "BKI-SI-2026-01007-1",
+          "pi_bki_si_reference_matches": true,
+          "pi_inter_company_invoice_reference": null,
+          "pi_update_stock": 1,
+          "pi_set_warehouse": "ROBINSONS IMUS - BEBANG MEGA INC.",
+          "pi_set_warehouse_matches_buyer": true,
+          "pi_credit_to": "2103210 - 2103210 - AP-Trade-BKI - ROBIM",
+          "pi_credit_to_is_2103210": true,
+          "pi_bei_legal_entity": "ROBINSONS IMUS - BEBANG MEGA INC.",
+          "pi_bei_legal_entity_is_buyer": true,
+          "pi_bei_store_label": "ROBINSONS IMUS",
+          "pi_grand_total": 1.12,
+          "pi_items_count": 1,
+          "pi_taxes_count": 1,
+          "pi_item0_code": "PM003",
+          "pi_item0_qty": 1.0,
+          "pi_item0_rate": 1.0,
+          "pi_item0_expense_account": "1104210 - 1104210 - Inventory-from-Commissary - ROBIM",
+          "pi_item0_expense_is_1104210": true,
+          "pi_item0_warehouse": "ROBINSONS IMUS - BEBANG MEGA INC.",
+          "pi_item0_warehouse_matches_buyer": true,
+          "pi_item0_cost_center": "Main - ROBIM",
+          "pi_tax0_account": "1106210 - 1106210 - Input VAT - BKI Inter-Co - ROBIM",
+          "pi_tax0_account_is_1106210": true,
+          "pi_tax0_charge_type": "Actual",
+          "pi_tax0_cost_center": "Main - ROBIM"
+        },
+        "cancel": {
+          "ok": true,
+          "si_docstatus": 2,
+          "pi_still_exists_after_cancel": false,
+          "cascade_worked": true
+        },
+        "delete": {
+          "ok": true,
+          "si_still_exists": false
+        }
+      },
+      "verdict": "PASS"
+    },
+    {
+      "idx": 23,
+      "company": "ROBINSONS PLACE DASMARINAS - FREEZE DELIGHT INC.",
+      "phase": "READY",
+      "store_label": "ROBINSONS PLACE DASMARINAS",
+      "order_no": "BEI-ORD-2026-01008",
+      "abbr": "ROBDA",
+      "stages": {
+        "create_submit": {
+          "ok": true,
+          "si_name_pre_autoname": "BKI-SI-2026-01008-2",
+          "si_name_post_autoname": "BKI-SI-2026-01008-2",
+          "expected_autoname": "BKI-SI-2026-01008-2",
+          "expected_autoname_prefix": "BKI-SI-2026-01008-",
+          "autoname_matches_pattern": true,
+          "autoname_exact_match": true,
+          "grand_total": 1.12
+        },
+        "assert_pi": {
+          "pi_name": "ACC-PINV-2026-00700",
+          "pi_exists": true,
+          "pi_company": "ROBINSONS PLACE DASMARINAS - FREEZE DELIGHT INC.",
+          "pi_company_matches_buyer": true,
+          "pi_supplier": "BEBANG KITCHEN INC. - Trade",
+          "pi_supplier_is_bki_trade": true,
+          "pi_docstatus": 0,
+          "pi_is_draft": true,
+          "pi_currency": "PHP",
+          "pi_currency_is_php": true,
+          "pi_conversion_rate": 1.0,
+          "pi_bill_no": "BKI-SI-2026-01008-2",
+          "pi_bill_no_matches_si": true,
+          "pi_bki_si_reference": "BKI-SI-2026-01008-2",
+          "pi_bki_si_reference_matches": true,
+          "pi_inter_company_invoice_reference": null,
+          "pi_update_stock": 1,
+          "pi_set_warehouse": "ROBINSONS PLACE DASMARINAS - FREEZE DELIGHT INC.",
+          "pi_set_warehouse_matches_buyer": true,
+          "pi_credit_to": "2103210 - 2103210 - AP-Trade-BKI - ROBDA",
+          "pi_credit_to_is_2103210": true,
+          "pi_bei_legal_entity": "ROBINSONS PLACE DASMARINAS - FREEZE DELIGHT INC.",
+          "pi_bei_legal_entity_is_buyer": true,
+          "pi_bei_store_label": "ROBINSONS PLACE DASMARINAS",
+          "pi_grand_total": 1.12,
+          "pi_items_count": 1,
+          "pi_taxes_count": 1,
+          "pi_item0_code": "PM003",
+          "pi_item0_qty": 1.0,
+          "pi_item0_rate": 1.0,
+          "pi_item0_expense_account": "1104210 - 1104210 - Inventory-from-Commissary - ROBDA",
+          "pi_item0_expense_is_1104210": true,
+          "pi_item0_warehouse": "ROBINSONS PLACE DASMARINAS - FREEZE DELIGHT INC.",
+          "pi_item0_warehouse_matches_buyer": true,
+          "pi_item0_cost_center": "Main - ROBDA",
+          "pi_tax0_account": "1106210 - 1106210 - Input VAT - BKI Inter-Co - ROBDA",
+          "pi_tax0_account_is_1106210": true,
+          "pi_tax0_charge_type": "Actual",
+          "pi_tax0_cost_center": "Main - ROBDA"
+        },
+        "cancel": {
+          "ok": true,
+          "si_docstatus": 2,
+          "pi_still_exists_after_cancel": false,
+          "cascade_worked": true
+        },
+        "delete": {
+          "ok": true,
+          "si_still_exists": false
+        }
+      },
+      "verdict": "PASS"
+    },
+    {
+      "idx": 24,
+      "company": "SM BICUTAN - BEBANG SM BICUTAN INC.",
+      "phase": "READY",
+      "store_label": "SM BICUTAN",
+      "order_no": "BEI-ORD-2026-01009",
+      "abbr": "SMBIC",
+      "stages": {
+        "create_submit": {
+          "ok": true,
+          "si_name_pre_autoname": "BKI-SI-2026-01009-2",
+          "si_name_post_autoname": "BKI-SI-2026-01009-2",
+          "expected_autoname": "BKI-SI-2026-01009-2",
+          "expected_autoname_prefix": "BKI-SI-2026-01009-",
+          "autoname_matches_pattern": true,
+          "autoname_exact_match": true,
+          "grand_total": 1.12
+        },
+        "assert_pi": {
+          "pi_name": null,
+          "pi_exists": false,
+          "recent_error_logs": [
+            {
+              "name": "6qs3hg07v8",
+              "creation": "2026-05-11 13:29:06.860333",
+              "preview": "S238: PI generation failed for SI BKI-SI-2026-01009-2: Traceback (most recent call last):\n  File \"apps/hrms/hrms/api/bki_store_pi_ge..."
+            }
+          ]
+        },
+        "cancel": {
+          "ok": true,
+          "si_docstatus": 2,
+          "pi_still_exists_after_cancel": false,
+          "cascade_worked": true
+        },
+        "delete": {
+          "ok": true,
+          "si_still_exists": false
+        }
+      },
+      "verdict": "FAIL"
+    },
+    {
+      "idx": 25,
+      "company": "SM CALOOCAN - TAJ FOOD CORP.",
+      "phase": "READY",
+      "store_label": "SM CALOOCAN",
+      "order_no": "BEI-ORD-2026-01010",
+      "abbr": "SMCAL",
+      "stages": {
+        "create_submit": {
+          "ok": true,
+          "si_name_pre_autoname": "BKI-SI-2026-01010-2",
+          "si_name_post_autoname": "BKI-SI-2026-01010-2",
+          "expected_autoname": "BKI-SI-2026-01010-2",
+          "expected_autoname_prefix": "BKI-SI-2026-01010-",
+          "autoname_matches_pattern": true,
+          "autoname_exact_match": true,
+          "grand_total": 1.12
+        },
+        "assert_pi": {
+          "pi_name": null,
+          "pi_exists": false,
+          "recent_error_logs": [
+            {
+              "name": "6r3ai3hcvv",
+              "creation": "2026-05-11 13:29:07.522976",
+              "preview": "S238: PI generation failed for SI BKI-SI-2026-01010-2: Traceback (most recent call last):\n  File \"apps/hrms/hrms/api/bki_store_pi_ge..."
+            }
+          ]
+        },
+        "cancel": {
+          "ok": true,
+          "si_docstatus": 2,
+          "pi_still_exists_after_cancel": false,
+          "cascade_worked": true
+        },
+        "delete": {
+          "ok": true,
+          "si_still_exists": false
+        }
+      },
+      "verdict": "FAIL"
+    },
+    {
+      "idx": 26,
+      "company": "SM CLARK - RED TALDAWA FOODS OPC",
+      "phase": "READY",
+      "store_label": "SM CLARK",
+      "order_no": "BEI-ORD-2026-01011",
+      "abbr": "SMCLK",
+      "stages": {
+        "create_submit": {
+          "ok": true,
+          "si_name_pre_autoname": "BKI-SI-2026-01011-2",
+          "si_name_post_autoname": "BKI-SI-2026-01011-2",
+          "expected_autoname": "BKI-SI-2026-01011-2",
+          "expected_autoname_prefix": "BKI-SI-2026-01011-",
+          "autoname_matches_pattern": true,
+          "autoname_exact_match": true,
+          "grand_total": 1.12
+        },
+        "assert_pi": {
+          "pi_name": null,
+          "pi_exists": false,
+          "recent_error_logs": [
+            {
+              "name": "6r9mho7a1t",
+              "creation": "2026-05-11 13:29:08.160860",
+              "preview": "S238: PI generation failed for SI BKI-SI-2026-01011-2: Traceback (most recent call last):\n  File \"apps/hrms/hrms/api/bki_store_pi_ge..."
+            }
+          ]
+        },
+        "cancel": {
+          "ok": true,
+          "si_docstatus": 2,
+          "pi_still_exists_after_cancel": false,
+          "cascade_worked": true
+        },
+        "delete": {
+          "ok": true,
+          "si_still_exists": false
+        }
+      },
+      "verdict": "FAIL"
+    },
+    {
+      "idx": 27,
+      "company": "SM EAST ORTIGAS - BEBANG SMEO INC.",
+      "phase": "READY",
+      "store_label": "SM EAST ORTIGAS",
+      "order_no": "BEI-ORD-2026-01012",
+      "abbr": "SMEO",
+      "stages": {
+        "create_submit": {
+          "ok": true,
+          "si_name_pre_autoname": "BKI-SI-2026-01012-2",
+          "si_name_post_autoname": "BKI-SI-2026-01012-2",
+          "expected_autoname": "BKI-SI-2026-01012-2",
+          "expected_autoname_prefix": "BKI-SI-2026-01012-",
+          "autoname_matches_pattern": true,
+          "autoname_exact_match": true,
+          "grand_total": 1.12
+        },
+        "assert_pi": {
+          "pi_name": null,
+          "pi_exists": false,
+          "recent_error_logs": [
+            {
+              "name": "6rgrrrd30t",
+              "creation": "2026-05-11 13:29:08.820589",
+              "preview": "S238: PI generation failed for SI BKI-SI-2026-01012-2: Traceback (most recent call last):\n  File \"apps/hrms/hrms/api/bki_store_pi_ge..."
+            }
+          ]
+        },
+        "cancel": {
+          "ok": true,
+          "si_docstatus": 2,
+          "pi_still_exists_after_cancel": false,
+          "cascade_worked": true
+        },
+        "delete": {
+          "ok": true,
+          "si_still_exists": false
+        }
+      },
+      "verdict": "FAIL"
+    },
+    {
+      "idx": 28,
+      "company": "SM GRAND CENTRAL - BEBANG GRAND CENTRAL INC.",
+      "phase": "READY",
+      "store_label": "SM GRAND CENTRAL",
+      "order_no": "BEI-ORD-2026-01013",
+      "abbr": "SMGC",
+      "stages": {
+        "create_submit": {
+          "ok": true,
+          "si_name_pre_autoname": "BKI-SI-2026-01013-2",
+          "si_name_post_autoname": "BKI-SI-2026-01013-2",
+          "expected_autoname": "BKI-SI-2026-01013-2",
+          "expected_autoname_prefix": "BKI-SI-2026-01013-",
+          "autoname_matches_pattern": true,
+          "autoname_exact_match": true,
+          "grand_total": 1.12
+        },
+        "assert_pi": {
+          "pi_name": null,
+          "pi_exists": false,
+          "recent_error_logs": [
+            {
+              "name": "6rm5oafsbp",
+              "creation": "2026-05-11 13:29:09.490543",
+              "preview": "S238: PI generation failed for SI BKI-SI-2026-01013-2: Traceback (most recent call last):\n  File \"apps/hrms/hrms/api/bki_store_pi_ge..."
+            }
+          ]
+        },
+        "cancel": {
+          "ok": true,
+          "si_docstatus": 2,
+          "pi_still_exists_after_cancel": false,
+          "cascade_worked": true
+        },
+        "delete": {
+          "ok": true,
+          "si_still_exists": false
+        }
+      },
+      "verdict": "FAIL"
+    },
+    {
+      "idx": 29,
+      "company": "SM MALL OF ASIA - BEBANG SMOA INC.",
+      "phase": "READY",
+      "store_label": "SM MALL OF ASIA",
+      "order_no": "BEI-ORD-2026-01014",
+      "abbr": "SMMOA",
+      "stages": {
+        "create_submit": {
+          "ok": true,
+          "si_name_pre_autoname": "BKI-SI-2026-01014-2",
+          "si_name_post_autoname": "BKI-SI-2026-01014-2",
+          "expected_autoname": "BKI-SI-2026-01014-2",
+          "expected_autoname_prefix": "BKI-SI-2026-01014-",
+          "autoname_matches_pattern": true,
+          "autoname_exact_match": true,
+          "grand_total": 1.12
+        },
+        "assert_pi": {
+          "pi_name": null,
+          "pi_exists": false,
+          "recent_error_logs": [
+            {
+              "name": "6rtq0no58f",
+              "creation": "2026-05-11 13:29:10.156768",
+              "preview": "S238: PI generation failed for SI BKI-SI-2026-01014-2: Traceback (most recent call last):\n  File \"apps/hrms/hrms/api/bki_store_pi_ge..."
+            }
+          ]
+        },
+        "cancel": {
+          "ok": true,
+          "si_docstatus": 2,
+          "pi_still_exists_after_cancel": false,
+          "cascade_worked": true
+        },
+        "delete": {
+          "ok": true,
+          "si_still_exists": false
+        }
+      },
+      "verdict": "FAIL"
+    },
+    {
+      "idx": 30,
+      "company": "SM MARIKINA - BEBANG SM MARIKINA INC.",
+      "phase": "READY",
+      "store_label": "SM MARIKINA",
+      "order_no": "BEI-ORD-2026-01016",
+      "abbr": "SMK",
+      "stages": {
+        "create_submit": {
+          "ok": true,
+          "si_name_pre_autoname": "BKI-SI-2026-01016-2",
+          "si_name_post_autoname": "BKI-SI-2026-01016-2",
+          "expected_autoname": "BKI-SI-2026-01016-2",
+          "expected_autoname_prefix": "BKI-SI-2026-01016-",
+          "autoname_matches_pattern": true,
+          "autoname_exact_match": true,
+          "grand_total": 1.12
+        },
+        "assert_pi": {
+          "pi_name": "ACC-PINV-2026-00700",
+          "pi_exists": true,
+          "pi_company": "SM MARIKINA - BEBANG SM MARIKINA INC.",
+          "pi_company_matches_buyer": true,
+          "pi_supplier": "BEBANG KITCHEN INC. - Trade",
+          "pi_supplier_is_bki_trade": true,
+          "pi_docstatus": 0,
+          "pi_is_draft": true,
+          "pi_currency": "PHP",
+          "pi_currency_is_php": true,
+          "pi_conversion_rate": 1.0,
+          "pi_bill_no": "BKI-SI-2026-01016-2",
+          "pi_bill_no_matches_si": true,
+          "pi_bki_si_reference": "BKI-SI-2026-01016-2",
+          "pi_bki_si_reference_matches": true,
+          "pi_inter_company_invoice_reference": null,
+          "pi_update_stock": 1,
+          "pi_set_warehouse": "SM MARIKINA - BEBANG SM MARIKINA INC.",
+          "pi_set_warehouse_matches_buyer": true,
+          "pi_credit_to": "2103210 - 2103210 - AP-Trade-BKI - SMK",
+          "pi_credit_to_is_2103210": true,
+          "pi_bei_legal_entity": "SM MARIKINA - BEBANG SM MARIKINA INC.",
+          "pi_bei_legal_entity_is_buyer": true,
+          "pi_bei_store_label": "SM MARIKINA",
+          "pi_grand_total": 1.12,
+          "pi_items_count": 1,
+          "pi_taxes_count": 1,
+          "pi_item0_code": "PM003",
+          "pi_item0_qty": 1.0,
+          "pi_item0_rate": 1.0,
+          "pi_item0_expense_account": "Stock In Hand - SMK",
+          "pi_item0_expense_is_1104210": false,
+          "pi_item0_warehouse": "SM MARIKINA - BEBANG SM MARIKINA INC.",
+          "pi_item0_warehouse_matches_buyer": true,
+          "pi_item0_cost_center": "Main - SMK",
+          "pi_tax0_account": "1106210 - 1106210 - Input VAT - BKI Inter-Co - SMK",
+          "pi_tax0_account_is_1106210": true,
+          "pi_tax0_charge_type": "Actual",
+          "pi_tax0_cost_center": "Main - SMK"
+        },
+        "cancel": {
+          "ok": true,
+          "si_docstatus": 2,
+          "pi_still_exists_after_cancel": false,
+          "cascade_worked": true
+        },
+        "delete": {
+          "ok": true,
+          "si_still_exists": false
+        }
+      },
+      "verdict": "FAIL"
+    },
+    {
+      "idx": 31,
+      "company": "SM MARILAO - BEBANG MARILAO INC.",
+      "phase": "READY",
+      "store_label": "SM MARILAO",
+      "order_no": "BEI-ORD-2026-01017",
+      "abbr": "SMMAR",
+      "stages": {
+        "create_submit": {
+          "ok": true,
+          "si_name_pre_autoname": "BKI-SI-2026-01017-2",
+          "si_name_post_autoname": "BKI-SI-2026-01017-2",
+          "expected_autoname": "BKI-SI-2026-01017-2",
+          "expected_autoname_prefix": "BKI-SI-2026-01017-",
+          "autoname_matches_pattern": true,
+          "autoname_exact_match": true,
+          "grand_total": 1.12
+        },
+        "assert_pi": {
+          "pi_name": null,
+          "pi_exists": false,
+          "recent_error_logs": [
+            {
+              "name": "6sbsa59i9t",
+              "creation": "2026-05-11 13:29:11.578091",
+              "preview": "S238: PI generation failed for SI BKI-SI-2026-01017-2: Traceback (most recent call last):\n  File \"apps/hrms/hrms/api/bki_store_pi_ge..."
+            }
+          ]
+        },
+        "cancel": {
+          "ok": true,
+          "si_docstatus": 2,
+          "pi_still_exists_after_cancel": false,
+          "cascade_worked": true
+        },
+        "delete": {
+          "ok": true,
+          "si_still_exists": false
+        }
+      },
+      "verdict": "FAIL"
+    },
+    {
+      "idx": 32,
+      "company": "SM NORTH EDSA - BEBANG NORTH EDSA INC.",
+      "phase": "READY",
+      "store_label": "SM NORTH EDSA",
+      "order_no": "BEI-ORD-2026-01019",
+      "abbr": "SMNE",
+      "stages": {
+        "create_submit": {
+          "ok": true,
+          "si_name_pre_autoname": "BKI-SI-2026-01019-2",
+          "si_name_post_autoname": "BKI-SI-2026-01019-2",
+          "expected_autoname": "BKI-SI-2026-01019-2",
+          "expected_autoname_prefix": "BKI-SI-2026-01019-",
+          "autoname_matches_pattern": true,
+          "autoname_exact_match": true,
+          "grand_total": 1.12
+        },
+        "assert_pi": {
+          "pi_name": null,
+          "pi_exists": false,
+          "recent_error_logs": [
+            {
+              "name": "6sitncg5mf",
+              "creation": "2026-05-11 13:29:12.271082",
+              "preview": "S238: PI generation failed for SI BKI-SI-2026-01019-2: Traceback (most recent call last):\n  File \"apps/hrms/hrms/api/bki_store_pi_ge..."
+            }
+          ]
+        },
+        "cancel": {
+          "ok": true,
+          "si_docstatus": 2,
+          "pi_still_exists_after_cancel": false,
+          "cascade_worked": true
+        },
+        "delete": {
+          "ok": true,
+          "si_still_exists": false
+        }
+      },
+      "verdict": "FAIL"
+    },
+    {
+      "idx": 33,
+      "company": "SM PULILAN - BEBANG SMM INC.",
+      "phase": "READY",
+      "store_label": "SM PULILAN",
+      "order_no": "BEI-ORD-2026-01020",
+      "abbr": "SMPUL",
+      "stages": {
+        "create_submit": {
+          "ok": true,
+          "si_name_pre_autoname": "BKI-SI-2026-01020-2",
+          "si_name_post_autoname": "BKI-SI-2026-01020-2",
+          "expected_autoname": "BKI-SI-2026-01020-2",
+          "expected_autoname_prefix": "BKI-SI-2026-01020-",
+          "autoname_matches_pattern": true,
+          "autoname_exact_match": true,
+          "grand_total": 1.12
+        },
+        "assert_pi": {
+          "pi_name": null,
+          "pi_exists": false,
+          "recent_error_logs": [
+            {
+              "name": "6spgua4lca",
+              "creation": "2026-05-11 13:29:12.906284",
+              "preview": "S238: PI generation failed for SI BKI-SI-2026-01020-2: Traceback (most recent call last):\n  File \"apps/hrms/hrms/api/bki_store_pi_ge..."
+            }
+          ]
+        },
+        "cancel": {
+          "ok": true,
+          "si_docstatus": 2,
+          "pi_still_exists_after_cancel": false,
+          "cascade_worked": true
+        },
+        "delete": {
+          "ok": true,
+          "si_still_exists": false
+        }
+      },
+      "verdict": "FAIL"
+    },
+    {
+      "idx": 34,
+      "company": "SM SAN JOSE DEL MONTE - JL TRADE OPC",
+      "phase": "READY",
+      "store_label": "SM SAN JOSE DEL MONTE",
+      "order_no": "BEI-ORD-2026-01021",
+      "abbr": "SJDM",
+      "stages": {
+        "create_submit": {
+          "ok": true,
+          "si_name_pre_autoname": "BKI-SI-2026-01021-2",
+          "si_name_post_autoname": "BKI-SI-2026-01021-2",
+          "expected_autoname": "BKI-SI-2026-01021-2",
+          "expected_autoname_prefix": "BKI-SI-2026-01021-",
+          "autoname_matches_pattern": true,
+          "autoname_exact_match": true,
+          "grand_total": 1.12
+        },
+        "assert_pi": {
+          "pi_name": null,
+          "pi_exists": false,
+          "recent_error_logs": [
+            {
+              "name": "6svermilvc",
+              "creation": "2026-05-11 13:29:13.559889",
+              "preview": "S238: PI generation failed for SI BKI-SI-2026-01021-2: Traceback (most recent call last):\n  File \"apps/hrms/hrms/api/bki_store_pi_ge..."
+            }
+          ]
+        },
+        "cancel": {
+          "ok": true,
+          "si_docstatus": 2,
+          "pi_still_exists_after_cancel": false,
+          "cascade_worked": true
+        },
+        "delete": {
+          "ok": true,
+          "si_still_exists": false
+        }
+      },
+      "verdict": "FAIL"
+    },
+    {
+      "idx": 35,
+      "company": "SM SANGANDAAN - TUNGSTEN CAPITAL HOLDINGS OPC",
+      "phase": "READY",
+      "store_label": "SM SANGANDAAN",
+      "order_no": "BEI-ORD-2026-01022",
+      "abbr": "SMSDN",
+      "stages": {
+        "create_submit": {
+          "ok": true,
+          "si_name_pre_autoname": "BKI-SI-2026-01022-2",
+          "si_name_post_autoname": "BKI-SI-2026-01022-2",
+          "expected_autoname": "BKI-SI-2026-01022-2",
+          "expected_autoname_prefix": "BKI-SI-2026-01022-",
+          "autoname_matches_pattern": true,
+          "autoname_exact_match": true,
+          "grand_total": 1.12
+        },
+        "assert_pi": {
+          "pi_name": null,
+          "pi_exists": false,
+          "recent_error_logs": [
+            {
+              "name": "6t6saeuss9",
+              "creation": "2026-05-11 13:29:14.214298",
+              "preview": "S238: PI generation failed for SI BKI-SI-2026-01022-2: Traceback (most recent call last):\n  File \"apps/hrms/hrms/api/bki_store_pi_ge..."
+            }
+          ]
+        },
+        "cancel": {
+          "ok": true,
+          "si_docstatus": 2,
+          "pi_still_exists_after_cancel": false,
+          "cascade_worked": true
+        },
+        "delete": {
+          "ok": true,
+          "si_still_exists": false
+        }
+      },
+      "verdict": "FAIL"
+    },
+    {
+      "idx": 36,
+      "company": "SM STA. ROSA - SWEET HARMONY FOOD CORP.",
+      "phase": "READY",
+      "store_label": "SM STA. ROSA",
+      "order_no": "BEI-ORD-2026-01024",
+      "abbr": "SMSTR",
+      "stages": {
+        "create_submit": {
+          "ok": true,
+          "si_name_pre_autoname": "BKI-SI-2026-01024-2",
+          "si_name_post_autoname": "BKI-SI-2026-01024-2",
+          "expected_autoname": "BKI-SI-2026-01024-2",
+          "expected_autoname_prefix": "BKI-SI-2026-01024-",
+          "autoname_matches_pattern": true,
+          "autoname_exact_match": true,
+          "grand_total": 1.12
+        },
+        "assert_pi": {
+          "pi_name": "ACC-PINV-2026-00700",
+          "pi_exists": true,
+          "pi_company": "SM STA. ROSA - SWEET HARMONY FOOD CORP.",
+          "pi_company_matches_buyer": true,
+          "pi_supplier": "BEBANG KITCHEN INC. - Trade",
+          "pi_supplier_is_bki_trade": true,
+          "pi_docstatus": 0,
+          "pi_is_draft": true,
+          "pi_currency": "PHP",
+          "pi_currency_is_php": true,
+          "pi_conversion_rate": 1.0,
+          "pi_bill_no": "BKI-SI-2026-01024-2",
+          "pi_bill_no_matches_si": true,
+          "pi_bki_si_reference": "BKI-SI-2026-01024-2",
+          "pi_bki_si_reference_matches": true,
+          "pi_inter_company_invoice_reference": null,
+          "pi_update_stock": 1,
+          "pi_set_warehouse": "SM STA. ROSA - SWEET HARMONY FOOD CORP.",
+          "pi_set_warehouse_matches_buyer": true,
+          "pi_credit_to": "2103210 - 2103210 - AP-Trade-BKI - SMSTR",
+          "pi_credit_to_is_2103210": true,
+          "pi_bei_legal_entity": "SM STA. ROSA - SWEET HARMONY FOOD CORP.",
+          "pi_bei_legal_entity_is_buyer": true,
+          "pi_bei_store_label": "SM STA. ROSA",
+          "pi_grand_total": 1.12,
+          "pi_items_count": 1,
+          "pi_taxes_count": 1,
+          "pi_item0_code": "PM003",
+          "pi_item0_qty": 1.0,
+          "pi_item0_rate": 1.0,
+          "pi_item0_expense_account": "1104210 - 1104210 - Inventory-from-Commissary - SMSTR",
+          "pi_item0_expense_is_1104210": true,
+          "pi_item0_warehouse": "SM STA. ROSA - SWEET HARMONY FOOD CORP.",
+          "pi_item0_warehouse_matches_buyer": true,
+          "pi_item0_cost_center": "Main - SMSTR",
+          "pi_tax0_account": "1106210 - 1106210 - Input VAT - BKI Inter-Co - SMSTR",
+          "pi_tax0_account_is_1106210": true,
+          "pi_tax0_charge_type": "Actual",
+          "pi_tax0_cost_center": "Main - SMSTR"
+        },
+        "cancel": {
+          "ok": true,
+          "si_docstatus": 2,
+          "pi_still_exists_after_cancel": false,
+          "cascade_worked": true
+        },
+        "delete": {
+          "ok": true,
+          "si_still_exists": false
+        }
+      },
+      "verdict": "PASS"
+    },
+    {
+      "idx": 37,
+      "company": "SM TANZA - BEBANG MEGA INC.",
+      "phase": "READY",
+      "store_label": "SM TANZA",
+      "order_no": "BEI-ORD-2026-01025",
+      "abbr": "SMTZ",
+      "stages": {
+        "create_submit": {
+          "ok": true,
+          "si_name_pre_autoname": "BKI-SI-2026-01025-2",
+          "si_name_post_autoname": "BKI-SI-2026-01025-2",
+          "expected_autoname": "BKI-SI-2026-01025-2",
+          "expected_autoname_prefix": "BKI-SI-2026-01025-",
+          "autoname_matches_pattern": true,
+          "autoname_exact_match": true,
+          "grand_total": 1.12
+        },
+        "assert_pi": {
+          "pi_name": "ACC-PINV-2026-00700",
+          "pi_exists": true,
+          "pi_company": "SM TANZA - BEBANG MEGA INC.",
+          "pi_company_matches_buyer": true,
+          "pi_supplier": "BEBANG KITCHEN INC. - Trade",
+          "pi_supplier_is_bki_trade": true,
+          "pi_docstatus": 0,
+          "pi_is_draft": true,
+          "pi_currency": "PHP",
+          "pi_currency_is_php": true,
+          "pi_conversion_rate": 1.0,
+          "pi_bill_no": "BKI-SI-2026-01025-2",
+          "pi_bill_no_matches_si": true,
+          "pi_bki_si_reference": "BKI-SI-2026-01025-2",
+          "pi_bki_si_reference_matches": true,
+          "pi_inter_company_invoice_reference": null,
+          "pi_update_stock": 1,
+          "pi_set_warehouse": "SM TANZA - BEBANG MEGA INC.",
+          "pi_set_warehouse_matches_buyer": true,
+          "pi_credit_to": "2103210 - 2103210 - AP-Trade-BKI - SMTZ",
+          "pi_credit_to_is_2103210": true,
+          "pi_bei_legal_entity": "SM TANZA - BEBANG MEGA INC.",
+          "pi_bei_legal_entity_is_buyer": true,
+          "pi_bei_store_label": "SM TANZA",
+          "pi_grand_total": 1.12,
+          "pi_items_count": 1,
+          "pi_taxes_count": 1,
+          "pi_item0_code": "PM003",
+          "pi_item0_qty": 1.0,
+          "pi_item0_rate": 1.0,
+          "pi_item0_expense_account": "1104210 - 1104210 - Inventory-from-Commissary - SMTZ",
+          "pi_item0_expense_is_1104210": true,
+          "pi_item0_warehouse": "SM TANZA - BEBANG MEGA INC.",
+          "pi_item0_warehouse_matches_buyer": true,
+          "pi_item0_cost_center": "Main - SMTZ",
+          "pi_tax0_account": "1106210 - 1106210 - Input VAT - BKI Inter-Co - SMTZ",
+          "pi_tax0_account_is_1106210": true,
+          "pi_tax0_charge_type": "Actual",
+          "pi_tax0_cost_center": "Main - SMTZ"
+        },
+        "cancel": {
+          "ok": true,
+          "si_docstatus": 2,
+          "pi_still_exists_after_cancel": false,
+          "cascade_worked": true
+        },
+        "delete": {
+          "ok": true,
+          "si_still_exists": false
+        }
+      },
+      "verdict": "PASS"
+    },
+    {
+      "idx": 38,
+      "company": "SM TAYTAY - DAY ONES FOOD AND DRINK ESTABLISHMENTS CORP.",
+      "phase": "READY",
+      "store_label": "SM TAYTAY",
+      "order_no": "BEI-ORD-2026-01026",
+      "abbr": "SMTAY",
+      "stages": {
+        "create_submit": {
+          "ok": true,
+          "si_name_pre_autoname": "BKI-SI-2026-01026-2",
+          "si_name_post_autoname": "BKI-SI-2026-01026-2",
+          "expected_autoname": "BKI-SI-2026-01026-2",
+          "expected_autoname_prefix": "BKI-SI-2026-01026-",
+          "autoname_matches_pattern": true,
+          "autoname_exact_match": true,
+          "grand_total": 1.12
+        },
+        "assert_pi": {
+          "pi_name": null,
+          "pi_exists": false,
+          "recent_error_logs": [
+            {
+              "name": "6ts5jbfl0j",
+              "creation": "2026-05-11 13:29:16.418420",
+              "preview": "S238: PI generation failed for SI BKI-SI-2026-01026-2: Traceback (most recent call last):\n  File \"apps/hrms/hrms/api/bki_store_pi_ge..."
+            }
+          ]
+        },
+        "cancel": {
+          "ok": true,
+          "si_docstatus": 2,
+          "pi_still_exists_after_cancel": false,
+          "cascade_worked": true
+        },
+        "delete": {
+          "ok": true,
+          "si_still_exists": false
+        }
+      },
+      "verdict": "FAIL"
+    },
+    {
+      "idx": 39,
+      "company": "SM VALENZUELA - BEBANG SMV INC.",
+      "phase": "READY",
+      "store_label": "SM VALENZUELA",
+      "order_no": "BEI-ORD-2026-01027",
+      "abbr": "SMV",
+      "stages": {
+        "create_submit": {
+          "ok": true,
+          "si_name_pre_autoname": "BKI-SI-2026-01027-2",
+          "si_name_post_autoname": "BKI-SI-2026-01027-2",
+          "expected_autoname": "BKI-SI-2026-01027-2",
+          "expected_autoname_prefix": "BKI-SI-2026-01027-",
+          "autoname_matches_pattern": true,
+          "autoname_exact_match": true,
+          "grand_total": 1.12
+        },
+        "assert_pi": {
+          "pi_name": null,
+          "pi_exists": false,
+          "recent_error_logs": [
+            {
+              "name": "6u2rptt4qm",
+              "creation": "2026-05-11 13:29:17.096889",
+              "preview": "S238: PI generation failed for SI BKI-SI-2026-01027-2: Traceback (most recent call last):\n  File \"apps/hrms/hrms/api/bki_store_pi_ge..."
+            }
+          ]
+        },
+        "cancel": {
+          "ok": true,
+          "si_docstatus": 2,
+          "pi_still_exists_after_cancel": false,
+          "cascade_worked": true
+        },
+        "delete": {
+          "ok": true,
+          "si_still_exists": false
+        }
+      },
+      "verdict": "FAIL"
+    },
+    {
+      "idx": 40,
+      "company": "STA. LUCIA EAST GRAND MALL - BEBANG SM MARIKINA INC.",
+      "phase": "READY",
+      "store_label": "STA. LUCIA EAST GRAND MALL",
+      "order_no": "BEI-ORD-2026-01028",
+      "abbr": "SLGM",
+      "stages": {
+        "create_submit": {
+          "ok": true,
+          "si_name_pre_autoname": "BKI-SI-2026-01028-2",
+          "si_name_post_autoname": "BKI-SI-2026-01028-2",
+          "expected_autoname": "BKI-SI-2026-01028-2",
+          "expected_autoname_prefix": "BKI-SI-2026-01028-",
+          "autoname_matches_pattern": true,
+          "autoname_exact_match": true,
+          "grand_total": 1.12
+        },
+        "assert_pi": {
+          "pi_name": "ACC-PINV-2026-00700",
+          "pi_exists": true,
+          "pi_company": "STA. LUCIA EAST GRAND MALL - BEBANG SM MARIKINA INC.",
+          "pi_company_matches_buyer": true,
+          "pi_supplier": "BEBANG KITCHEN INC. - Trade",
+          "pi_supplier_is_bki_trade": true,
+          "pi_docstatus": 0,
+          "pi_is_draft": true,
+          "pi_currency": "PHP",
+          "pi_currency_is_php": true,
+          "pi_conversion_rate": 1.0,
+          "pi_bill_no": "BKI-SI-2026-01028-2",
+          "pi_bill_no_matches_si": true,
+          "pi_bki_si_reference": "BKI-SI-2026-01028-2",
+          "pi_bki_si_reference_matches": true,
+          "pi_inter_company_invoice_reference": null,
+          "pi_update_stock": 1,
+          "pi_set_warehouse": "STA. LUCIA EAST GRAND MALL - BEBANG SM MARIKINA INC.",
+          "pi_set_warehouse_matches_buyer": true,
+          "pi_credit_to": "2103210 - 2103210 - AP-Trade-BKI - SLGM",
+          "pi_credit_to_is_2103210": true,
+          "pi_bei_legal_entity": "STA. LUCIA EAST GRAND MALL - BEBANG SM MARIKINA INC.",
+          "pi_bei_legal_entity_is_buyer": true,
+          "pi_bei_store_label": "STA. LUCIA EAST GRAND MALL",
+          "pi_grand_total": 1.12,
+          "pi_items_count": 1,
+          "pi_taxes_count": 1,
+          "pi_item0_code": "PM003",
+          "pi_item0_qty": 1.0,
+          "pi_item0_rate": 1.0,
+          "pi_item0_expense_account": "1104210 - 1104210 - Inventory-from-Commissary - SLGM",
+          "pi_item0_expense_is_1104210": true,
+          "pi_item0_warehouse": "STA. LUCIA EAST GRAND MALL - BEBANG SM MARIKINA INC.",
+          "pi_item0_warehouse_matches_buyer": true,
+          "pi_item0_cost_center": "Main - SLGM",
+          "pi_tax0_account": "1106210 - 1106210 - Input VAT - BKI Inter-Co - SLGM",
+          "pi_tax0_account_is_1106210": true,
+          "pi_tax0_charge_type": "Actual",
+          "pi_tax0_cost_center": "Main - SLGM"
+        },
+        "cancel": {
+          "ok": true,
+          "si_docstatus": 2,
+          "pi_still_exists_after_cancel": false,
+          "cascade_worked": true
+        },
+        "delete": {
+          "ok": true,
+          "si_still_exists": false
+        }
+      },
+      "verdict": "PASS"
+    },
+    {
+      "idx": 41,
+      "company": "THE GRID ROCKWELL - TASTECARTEL CORP.",
+      "phase": "READY",
+      "store_label": "THE GRID ROCKWELL",
+      "order_no": "BEI-ORD-2026-01029",
+      "abbr": "TGR",
+      "stages": {
+        "create_submit": {
+          "ok": true,
+          "si_name_pre_autoname": "BKI-SI-2026-01029-2",
+          "si_name_post_autoname": "BKI-SI-2026-01029-2",
+          "expected_autoname": "BKI-SI-2026-01029-2",
+          "expected_autoname_prefix": "BKI-SI-2026-01029-",
+          "autoname_matches_pattern": true,
+          "autoname_exact_match": true,
+          "grand_total": 1.12
+        },
+        "assert_pi": {
+          "pi_name": null,
+          "pi_exists": false,
+          "recent_error_logs": [
+            {
+              "name": "6uhagsvnqv",
+              "creation": "2026-05-11 13:29:18.537854",
+              "preview": "S238: PI generation failed for SI BKI-SI-2026-01029-2: Traceback (most recent call last):\n  File \"apps/hrms/hrms/api/bki_store_pi_ge..."
+            }
+          ]
+        },
+        "cancel": {
+          "ok": true,
+          "si_docstatus": 2,
+          "pi_still_exists_after_cancel": false,
+          "cascade_worked": true
+        },
+        "delete": {
+          "ok": true,
+          "si_still_exists": false
+        }
+      },
+      "verdict": "FAIL"
+    },
+    {
+      "idx": 42,
+      "company": "THE TERMINAL - BEBANG STARMALL ALABANG INC.",
+      "phase": "READY",
+      "store_label": "THE TERMINAL",
+      "order_no": "BEI-ORD-2026-01030",
+      "abbr": "TTA",
+      "stages": {
+        "create_submit": {
+          "ok": true,
+          "si_name_pre_autoname": "BKI-SI-2026-01030-2",
+          "si_name_post_autoname": "BKI-SI-2026-01030-2",
+          "expected_autoname": "BKI-SI-2026-01030-2",
+          "expected_autoname_prefix": "BKI-SI-2026-01030-",
+          "autoname_matches_pattern": true,
+          "autoname_exact_match": true,
+          "grand_total": 1.12
+        },
+        "assert_pi": {
+          "pi_name": null,
+          "pi_exists": false,
+          "recent_error_logs": [
+            {
+              "name": "6un9qjt4hf",
+              "creation": "2026-05-11 13:29:19.197336",
+              "preview": "S238: PI generation failed for SI BKI-SI-2026-01030-2: Traceback (most recent call last):\n  File \"apps/hrms/hrms/api/bki_store_pi_ge..."
+            }
+          ]
+        },
+        "cancel": {
+          "ok": true,
+          "si_docstatus": 2,
+          "pi_still_exists_after_cancel": false,
+          "cascade_worked": true
+        },
+        "delete": {
+          "ok": true,
+          "si_still_exists": false
+        }
+      },
+      "verdict": "FAIL"
+    },
+    {
+      "idx": 43,
+      "company": "UP TOWN MALL BGC - DMD HOLDINGS INC.",
+      "phase": "READY",
+      "store_label": "UP TOWN MALL BGC",
+      "order_no": "BEI-ORD-2026-01031",
+      "abbr": "UMBGC",
+      "stages": {
+        "create_submit": {
+          "ok": true,
+          "si_name_pre_autoname": "BKI-SI-2026-01031-2",
+          "si_name_post_autoname": "BKI-SI-2026-01031-2",
+          "expected_autoname": "BKI-SI-2026-01031-2",
+          "expected_autoname_prefix": "BKI-SI-2026-01031-",
+          "autoname_matches_pattern": true,
+          "autoname_exact_match": true,
+          "grand_total": 1.12
+        },
+        "assert_pi": {
+          "pi_name": null,
+          "pi_exists": false,
+          "recent_error_logs": [
+            {
+              "name": "6uuftk768c",
+              "creation": "2026-05-11 13:29:19.871842",
+              "preview": "S238: PI generation failed for SI BKI-SI-2026-01031-2: Traceback (most recent call last):\n  File \"apps/hrms/hrms/api/bki_store_pi_ge..."
+            }
+          ]
+        },
+        "cancel": {
+          "ok": true,
+          "si_docstatus": 2,
+          "pi_still_exists_after_cancel": false,
+          "cascade_worked": true
+        },
+        "delete": {
+          "ok": true,
+          "si_still_exists": false
+        }
+      },
+      "verdict": "FAIL"
+    },
+    {
+      "idx": 44,
+      "company": "VISTA MALL TAGUIG - TRICERN FOOD CORP.",
+      "phase": "READY",
+      "store_label": "VISTA MALL TAGUIG",
+      "order_no": "BEI-ORD-2026-01032",
+      "abbr": "VMTAG",
+      "stages": {
+        "create_submit": {
+          "ok": true,
+          "si_name_pre_autoname": "BKI-SI-2026-01032-2",
+          "si_name_post_autoname": "BKI-SI-2026-01032-2",
+          "expected_autoname": "BKI-SI-2026-01032-2",
+          "expected_autoname_prefix": "BKI-SI-2026-01032-",
+          "autoname_matches_pattern": true,
+          "autoname_exact_match": true,
+          "grand_total": 1.12
+        },
+        "assert_pi": {
+          "pi_name": null,
+          "pi_exists": false,
+          "recent_error_logs": [
+            {
+              "name": "6v5piucp87",
+              "creation": "2026-05-11 13:29:20.543811",
+              "preview": "S238: PI generation failed for SI BKI-SI-2026-01032-2: Traceback (most recent call last):\n  File \"apps/hrms/hrms/api/bki_store_pi_ge..."
+            }
+          ]
+        },
+        "cancel": {
+          "ok": true,
+          "si_docstatus": 2,
+          "pi_still_exists_after_cancel": false,
+          "cascade_worked": true
+        },
+        "delete": {
+          "ok": true,
+          "si_still_exists": false
+        }
+      },
+      "verdict": "FAIL"
+    },
+    {
+      "idx": 45,
+      "company": "XENTROMALL MONTALBAN - PERPETUAL FOOD CORP.",
+      "phase": "READY",
+      "store_label": "XENTROMALL MONTALBAN",
+      "order_no": "BEI-ORD-2026-01033",
+      "abbr": "XMM",
+      "stages": {
+        "create_submit": {
+          "ok": true,
+          "si_name_pre_autoname": "BKI-SI-2026-01033-2",
+          "si_name_post_autoname": "BKI-SI-2026-01033-2",
+          "expected_autoname": "BKI-SI-2026-01033-2",
+          "expected_autoname_prefix": "BKI-SI-2026-01033-",
+          "autoname_matches_pattern": true,
+          "autoname_exact_match": true,
+          "grand_total": 1.12
+        },
+        "assert_pi": {
+          "pi_name": "ACC-PINV-2026-00700",
+          "pi_exists": true,
+          "pi_company": "XENTROMALL MONTALBAN - PERPETUAL FOOD CORP.",
+          "pi_company_matches_buyer": true,
+          "pi_supplier": "BEBANG KITCHEN INC. - Trade",
+          "pi_supplier_is_bki_trade": true,
+          "pi_docstatus": 0,
+          "pi_is_draft": true,
+          "pi_currency": "PHP",
+          "pi_currency_is_php": true,
+          "pi_conversion_rate": 1.0,
+          "pi_bill_no": "BKI-SI-2026-01033-2",
+          "pi_bill_no_matches_si": true,
+          "pi_bki_si_reference": "BKI-SI-2026-01033-2",
+          "pi_bki_si_reference_matches": true,
+          "pi_inter_company_invoice_reference": null,
+          "pi_update_stock": 1,
+          "pi_set_warehouse": "XENTROMALL MONTALBAN - PERPETUAL FOOD CORP.",
+          "pi_set_warehouse_matches_buyer": true,
+          "pi_credit_to": "2103210 - 2103210 - AP-Trade-BKI - XMM",
+          "pi_credit_to_is_2103210": true,
+          "pi_bei_legal_entity": "XENTROMALL MONTALBAN - PERPETUAL FOOD CORP.",
+          "pi_bei_legal_entity_is_buyer": true,
+          "pi_bei_store_label": "XENTROMALL MONTALBAN",
+          "pi_grand_total": 1.12,
+          "pi_items_count": 1,
+          "pi_taxes_count": 1,
+          "pi_item0_code": "PM003",
+          "pi_item0_qty": 1.0,
+          "pi_item0_rate": 1.0,
+          "pi_item0_expense_account": "1104210 - 1104210 - Inventory-from-Commissary - XMM",
+          "pi_item0_expense_is_1104210": true,
+          "pi_item0_warehouse": "XENTROMALL MONTALBAN - PERPETUAL FOOD CORP.",
+          "pi_item0_warehouse_matches_buyer": true,
+          "pi_item0_cost_center": "Main - XMM",
+          "pi_tax0_account": "1106210 - 1106210 - Input VAT - BKI Inter-Co - XMM",
+          "pi_tax0_account_is_1106210": true,
+          "pi_tax0_charge_type": "Actual",
+          "pi_tax0_cost_center": "Main - XMM"
+        },
+        "cancel": {
+          "ok": true,
+          "si_docstatus": 2,
+          "pi_still_exists_after_cancel": false,
+          "cascade_worked": true
+        },
+        "delete": {
+          "ok": true,
+          "si_still_exists": false
+        }
+      },
+      "verdict": "PASS"
+    },
+    {
+      "idx": 46,
+      "company": "ROBINSONS ANTIPOLO - BEBANG ENTERPRISE INC.",
+      "phase": "BROKEN",
+      "store_label": "ROBINSONS ANTIPOLO",
+      "order_no": "BEI-ORD-2026-01002",
+      "abbr": "ROA",
+      "stages": {
+        "create_submit": {
+          "ok": true,
+          "si_name_pre_autoname": "BKI-SI-2026-01002-2",
+          "si_name_post_autoname": "BKI-SI-2026-01002-2",
+          "expected_autoname": "BKI-SI-2026-01002-2",
+          "expected_autoname_prefix": "BKI-SI-2026-01002-",
+          "autoname_matches_pattern": true,
+          "autoname_exact_match": true,
+          "grand_total": 1.12
+        },
+        "assert_pi": {
+          "pi_name": null,
+          "pi_exists": false,
+          "recent_error_logs": [
+            {
+              "name": "6vj9vnm4pj",
+              "creation": "2026-05-11 13:29:21.907756",
+              "preview": "S238: PI generation failed for SI BKI-SI-2026-01002-2: Traceback (most recent call last):\n  File \"apps/hrms/hrms/api/bki_store_pi_ge..."
+            }
+          ]
+        },
+        "cancel": {
+          "ok": true,
+          "si_docstatus": 2,
+          "pi_still_exists_after_cancel": false,
+          "cascade_worked": true
+        },
+        "delete": {
+          "ok": true,
+          "si_still_exists": false
+        }
+      },
+      "verdict": "DEFECT_CONFIRMED"
+    },
+    {
+      "idx": 47,
+      "company": "SM MANILA - BEBANG ENTERPRISE INC.",
+      "phase": "BROKEN",
+      "store_label": "SM MANILA",
+      "order_no": "BEI-ORD-2026-01015",
+      "abbr": "SMM",
+      "stages": {
+        "create_submit": {
+          "ok": true,
+          "si_name_pre_autoname": "BKI-SI-2026-01015-2",
+          "si_name_post_autoname": "BKI-SI-2026-01015-2",
+          "expected_autoname": "BKI-SI-2026-01015-2",
+          "expected_autoname_prefix": "BKI-SI-2026-01015-",
+          "autoname_matches_pattern": true,
+          "autoname_exact_match": true,
+          "grand_total": 1.12
+        },
+        "assert_pi": {
+          "pi_name": null,
+          "pi_exists": false,
+          "recent_error_logs": [
+            {
+              "name": "6vppa5tmig",
+              "creation": "2026-05-11 13:29:22.501137",
+              "preview": "S238: PI generation failed for SI BKI-SI-2026-01015-2: Traceback (most recent call last):\n  File \"apps/hrms/hrms/api/bki_store_pi_ge..."
+            }
+          ]
+        },
+        "cancel": {
+          "ok": true,
+          "si_docstatus": 2,
+          "pi_still_exists_after_cancel": false,
+          "cascade_worked": true
+        },
+        "delete": {
+          "ok": true,
+          "si_still_exists": false
+        }
+      },
+      "verdict": "DEFECT_CONFIRMED"
+    },
+    {
+      "idx": 48,
+      "company": "SM MEGAMALL - BEBANG ENTERPRISE INC.",
+      "phase": "BROKEN",
+      "store_label": "SM MEGAMALL",
+      "order_no": "BEI-ORD-2026-01018",
+      "abbr": "SMMM",
+      "stages": {
+        "create_submit": {
+          "ok": true,
+          "si_name_pre_autoname": "BKI-SI-2026-01018-2",
+          "si_name_post_autoname": "BKI-SI-2026-01018-2",
+          "expected_autoname": "BKI-SI-2026-01018-2",
+          "expected_autoname_prefix": "BKI-SI-2026-01018-",
+          "autoname_matches_pattern": true,
+          "autoname_exact_match": true,
+          "grand_total": 1.12
+        },
+        "assert_pi": {
+          "pi_name": null,
+          "pi_exists": false,
+          "recent_error_logs": [
+            {
+              "name": "6vu08nj2bb",
+              "creation": "2026-05-11 13:29:23.084962",
+              "preview": "S238: PI generation failed for SI BKI-SI-2026-01018-2: Traceback (most recent call last):\n  File \"apps/hrms/hrms/api/bki_store_pi_ge..."
+            }
+          ]
+        },
+        "cancel": {
+          "ok": true,
+          "si_docstatus": 2,
+          "pi_still_exists_after_cancel": false,
+          "cascade_worked": true
+        },
+        "delete": {
+          "ok": true,
+          "si_still_exists": false
+        }
+      },
+      "verdict": "DEFECT_CONFIRMED"
+    },
+    {
+      "idx": 49,
+      "company": "SM SOUTHMALL - BEBANG ENTERPRISE INC.",
+      "phase": "BROKEN",
+      "store_label": "SM SOUTHMALL",
+      "order_no": "BEI-ORD-2026-01023",
+      "abbr": "SMS",
+      "stages": {
+        "create_submit": {
+          "ok": true,
+          "si_name_pre_autoname": "BKI-SI-2026-01023-2",
+          "si_name_post_autoname": "BKI-SI-2026-01023-2",
+          "expected_autoname": "BKI-SI-2026-01023-2",
+          "expected_autoname_prefix": "BKI-SI-2026-01023-",
+          "autoname_matches_pattern": true,
+          "autoname_exact_match": true,
+          "grand_total": 1.12
+        },
+        "assert_pi": {
+          "pi_name": null,
+          "pi_exists": false,
+          "recent_error_logs": [
+            {
+              "name": "70424dnb6c",
+              "creation": "2026-05-11 13:29:23.667944",
+              "preview": "S238: PI generation failed for SI BKI-SI-2026-01023-2: Traceback (most recent call last):\n  File \"apps/hrms/hrms/api/bki_store_pi_ge..."
+            }
+          ]
+        },
+        "cancel": {
+          "ok": true,
+          "si_docstatus": 2,
+          "pi_still_exists_after_cancel": false,
+          "cascade_worked": true
+        },
+        "delete": {
+          "ok": true,
+          "si_still_exists": false
+        }
+      },
+      "verdict": "DEFECT_CONFIRMED"
+    }
+  ],
+  "cleanup_log": [],
+  "status": "OK",
+  "remaining_in_tracker": [],
+  "verdict_counts": {
+    "PASS": 13,
+    "FAIL": 32,
+    "DEFECT_CONFIRMED": 4
+  }
+}

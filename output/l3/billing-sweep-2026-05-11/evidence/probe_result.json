@@ -1,0 +1,2061 @@
+{
+  "sprint": "billing-sweep-2026-05-11",
+  "purpose": "BKI->Store PI generator per-store readiness",
+  "timestamp_utc": "2026-05-11T05:03:40.877244Z",
+  "global": {
+    "enable_bki_store_pi_generator": true,
+    "bki_sales_naming_series": "BKI-SI-.YYYY.-.#####",
+    "bki_company_exists": true,
+    "bki_trade_supplier_exists": true,
+    "bki_trade_supplier_attrs": {
+      "disabled": 0,
+      "is_internal_supplier": 0,
+      "supplier_group": "Services",
+      "default_currency": "PHP"
+    },
+    "custom_fields": [
+      {
+        "doctype": "Sales Invoice",
+        "field": "custom_bei_store_order",
+        "present": true
+      },
+      {
+        "doctype": "Purchase Invoice",
+        "field": "custom_bei_store_order",
+        "present": false
+      },
+      {
+        "doctype": "Purchase Invoice",
+        "field": "custom_bki_paired_si",
+        "present": false
+      },
+      {
+        "doctype": "Purchase Invoice",
+        "field": "bki_si_reference",
+        "present": true
+      }
+    ],
+    "si_autoname_hooks": [
+      "hrms.api.bki_si_naming.set_bki_si_name"
+    ],
+    "si_on_submit_hooks": [
+      "erpnext.regional.create_transaction_log",
+      "erpnext.regional.italy.utils.sales_invoice_on_submit",
+      "hrms.api.bki_store_pi_generator.maybe_generate_store_pi"
+    ],
+    "si_on_cancel_hooks": [
+      "erpnext.regional.italy.utils.sales_invoice_on_cancel",
+      "hrms.api.bki_store_pi_generator.cascade_cancel_store_pi"
+    ],
+    "pi_validate_hooks": [
+      "erpnext.regional.united_arab_emirates.utils.update_grand_total_for_rcm",
+      "erpnext.regional.united_arab_emirates.utils.validate_returns",
+      "hrms.api.bki_store_pi_generator.lock_posting_date_on_bki_paired_pi"
+    ]
+  },
+  "stores": [
+    {
+      "company": "ARANETA GATEWAY - TUNGSTEN CAPITAL HOLDINGS OPC",
+      "abbr": "ARGW",
+      "default_currency": "PHP",
+      "default_currency_is_php": true,
+      "cost_center": "Main - ARGW",
+      "cost_center_set": true,
+      "parent_company": "TUNGSTEN CAPITAL HOLDINGS OPC",
+      "customer_exists_with_same_name": true,
+      "warehouse_exists_with_same_name": true,
+      "accounts": {
+        "1104210": {
+          "name": "1104210 - 1104210 - Inventory-from-Commissary - ARGW",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Asset",
+          "account_currency": "PHP"
+        },
+        "1106210": {
+          "name": "1106210 - 1106210 - Input VAT - BKI Inter-Co - ARGW",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Asset",
+          "account_currency": "PHP"
+        },
+        "2103210": {
+          "name": "2103210 - 2103210 - AP-Trade-BKI - ARGW",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Liability",
+          "account_currency": "PHP"
+        }
+      },
+      "all_accounts_present": true,
+      "bki_supplier_account_set": false,
+      "bki_supplier_account_value": null,
+      "ready_for_pi_generation": true
+    },
+    {
+      "company": "AYALA EVO CITY - BEBANG MEGA INC.",
+      "abbr": "AYEVO",
+      "default_currency": "PHP",
+      "default_currency_is_php": true,
+      "cost_center": "Main - AYEVO",
+      "cost_center_set": true,
+      "parent_company": "BEBANG MEGA INC.",
+      "customer_exists_with_same_name": true,
+      "warehouse_exists_with_same_name": true,
+      "accounts": {
+        "1104210": {
+          "name": "1104210 - 1104210 - Inventory-from-Commissary - AYEVO",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Asset",
+          "account_currency": "PHP"
+        },
+        "1106210": {
+          "name": "1106210 - 1106210 - Input VAT - BKI Inter-Co - AYEVO",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Asset",
+          "account_currency": "PHP"
+        },
+        "2103210": {
+          "name": "2103210 - 2103210 - AP-Trade-BKI - AYEVO",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Liability",
+          "account_currency": "PHP"
+        }
+      },
+      "all_accounts_present": true,
+      "bki_supplier_account_set": false,
+      "bki_supplier_account_value": null,
+      "ready_for_pi_generation": true
+    },
+    {
+      "company": "AYALA FAIRVIEW TERRACES - BEBANG FT INC.",
+      "abbr": "AFT",
+      "default_currency": "PHP",
+      "default_currency_is_php": true,
+      "cost_center": "Main - AFT",
+      "cost_center_set": true,
+      "parent_company": "BEBANG ENTERPRISE INC.",
+      "customer_exists_with_same_name": true,
+      "warehouse_exists_with_same_name": true,
+      "accounts": {
+        "1104210": {
+          "name": "1104210 - 1104210 - Inventory-from-Commissary - AFT",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Asset",
+          "account_currency": "PHP"
+        },
+        "1106210": {
+          "name": "1106210 - 1106210 - Input VAT - BKI Inter-Co - AFT",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Asset",
+          "account_currency": "PHP"
+        },
+        "2103210": {
+          "name": "2103210 - 2103210 - AP-Trade-BKI - AFT",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Liability",
+          "account_currency": "PHP"
+        }
+      },
+      "all_accounts_present": true,
+      "bki_supplier_account_set": false,
+      "bki_supplier_account_value": null,
+      "ready_for_pi_generation": true
+    },
+    {
+      "company": "AYALA MARKET MARKET - BEBANG MARKET MARKET INC.",
+      "abbr": "AMM",
+      "default_currency": "PHP",
+      "default_currency_is_php": true,
+      "cost_center": "Main - AMM",
+      "cost_center_set": true,
+      "parent_company": "BEBANG ENTERPRISE INC.",
+      "customer_exists_with_same_name": true,
+      "warehouse_exists_with_same_name": true,
+      "accounts": {
+        "1104210": {
+          "name": "1104210 - 1104210 - Inventory-from-Commissary - AMM",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Asset",
+          "account_currency": "PHP"
+        },
+        "1106210": {
+          "name": "1106210 - 1106210 - Input VAT - BKI Inter-Co - AMM",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Asset",
+          "account_currency": "PHP"
+        },
+        "2103210": {
+          "name": "2103210 - 2103210 - AP-Trade-BKI - AMM",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Liability",
+          "account_currency": "PHP"
+        }
+      },
+      "all_accounts_present": true,
+      "bki_supplier_account_set": false,
+      "bki_supplier_account_value": null,
+      "ready_for_pi_generation": true
+    },
+    {
+      "company": "AYALA SOLENAD - HFFM SOLENAD FOOD SERVICES INC.",
+      "abbr": "AYSOL",
+      "default_currency": "PHP",
+      "default_currency_is_php": true,
+      "cost_center": "Main - AYSOL",
+      "cost_center_set": true,
+      "parent_company": null,
+      "customer_exists_with_same_name": true,
+      "warehouse_exists_with_same_name": true,
+      "accounts": {
+        "1104210": {
+          "name": "1104210 - 1104210 - Inventory-from-Commissary - AYSOL",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Asset",
+          "account_currency": "PHP"
+        },
+        "1106210": {
+          "name": "1106210 - 1106210 - Input VAT - BKI Inter-Co - AYSOL",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Asset",
+          "account_currency": "PHP"
+        },
+        "2103210": {
+          "name": "2103210 - 2103210 - AP-Trade-BKI - AYSOL",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Liability",
+          "account_currency": "PHP"
+        }
+      },
+      "all_accounts_present": true,
+      "bki_supplier_account_set": false,
+      "bki_supplier_account_value": null,
+      "ready_for_pi_generation": true
+    },
+    {
+      "company": "AYALA UP TOWN CENTER - BEBANG UP TOWN CENTER INC.",
+      "abbr": "UPTC",
+      "default_currency": "PHP",
+      "default_currency_is_php": true,
+      "cost_center": "Main - UPTC",
+      "cost_center_set": true,
+      "parent_company": "BEBANG ENTERPRISE INC.",
+      "customer_exists_with_same_name": true,
+      "warehouse_exists_with_same_name": true,
+      "accounts": {
+        "1104210": {
+          "name": "1104210 - 1104210 - Inventory-from-Commissary - UPTC",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Asset",
+          "account_currency": "PHP"
+        },
+        "1106210": {
+          "name": "1106210 - 1106210 - Input VAT - BKI Inter-Co - UPTC",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Asset",
+          "account_currency": "PHP"
+        },
+        "2103210": {
+          "name": "2103210 - 2103210 - AP-Trade-BKI - UPTC",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Liability",
+          "account_currency": "PHP"
+        }
+      },
+      "all_accounts_present": true,
+      "bki_supplier_account_set": false,
+      "bki_supplier_account_value": null,
+      "ready_for_pi_generation": true
+    },
+    {
+      "company": "AYALA VERMOSA - BEBANG MEGA INC.",
+      "abbr": "AYVER",
+      "default_currency": "PHP",
+      "default_currency_is_php": true,
+      "cost_center": "Main - AYVER",
+      "cost_center_set": true,
+      "parent_company": "BEBANG MEGA INC.",
+      "customer_exists_with_same_name": true,
+      "warehouse_exists_with_same_name": true,
+      "accounts": {
+        "1104210": {
+          "name": "1104210 - 1104210 - Inventory-from-Commissary - AYVER",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Asset",
+          "account_currency": "PHP"
+        },
+        "1106210": {
+          "name": "1106210 - 1106210 - Input VAT - BKI Inter-Co - AYVER",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Asset",
+          "account_currency": "PHP"
+        },
+        "2103210": {
+          "name": "2103210 - 2103210 - AP-Trade-BKI - AYVER",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Liability",
+          "account_currency": "PHP"
+        }
+      },
+      "all_accounts_present": true,
+      "bki_supplier_account_set": false,
+      "bki_supplier_account_value": null,
+      "ready_for_pi_generation": true
+    },
+    {
+      "company": "BEBANG FRANCHISE CORP.",
+      "abbr": "BFC",
+      "default_currency": "PHP",
+      "default_currency_is_php": true,
+      "cost_center": "Main - BFC",
+      "cost_center_set": true,
+      "parent_company": null,
+      "customer_exists_with_same_name": false,
+      "warehouse_exists_with_same_name": false,
+      "accounts": {
+        "1104210": {
+          "missing": true
+        },
+        "1106210": {
+          "missing": true
+        },
+        "2103210": {
+          "missing": true
+        }
+      },
+      "all_accounts_present": false,
+      "bki_supplier_account_set": false,
+      "bki_supplier_account_value": null,
+      "ready_for_pi_generation": false
+    },
+    {
+      "company": "BF HOMES - BEBANG BF HOMES INC.",
+      "abbr": "BFH",
+      "default_currency": "PHP",
+      "default_currency_is_php": true,
+      "cost_center": "Main - BFH",
+      "cost_center_set": true,
+      "parent_company": "BEBANG ENTERPRISE INC.",
+      "customer_exists_with_same_name": true,
+      "warehouse_exists_with_same_name": true,
+      "accounts": {
+        "1104210": {
+          "name": "1104210 - 1104210 - Inventory-from-Commissary - BFH",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Asset",
+          "account_currency": "PHP"
+        },
+        "1106210": {
+          "name": "1106210 - 1106210 - Input VAT - BKI Inter-Co - BFH",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Asset",
+          "account_currency": "PHP"
+        },
+        "2103210": {
+          "name": "2103210 - 2103210 - AP-Trade-BKI - BFH",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Liability",
+          "account_currency": "PHP"
+        }
+      },
+      "all_accounts_present": true,
+      "bki_supplier_account_set": false,
+      "bki_supplier_account_value": null,
+      "ready_for_pi_generation": true
+    },
+    {
+      "company": "CTTM TOMAS MORATO - B CUBED VENTURES CORP.",
+      "abbr": "CTTM",
+      "default_currency": "PHP",
+      "default_currency_is_php": true,
+      "cost_center": "Main - CTTM",
+      "cost_center_set": true,
+      "parent_company": null,
+      "customer_exists_with_same_name": true,
+      "warehouse_exists_with_same_name": true,
+      "accounts": {
+        "1104210": {
+          "name": "1104210 - 1104210 - Inventory-from-Commissary - CTTM",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Asset",
+          "account_currency": "PHP"
+        },
+        "1106210": {
+          "name": "1106210 - 1106210 - Input VAT - BKI Inter-Co - CTTM",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Asset",
+          "account_currency": "PHP"
+        },
+        "2103210": {
+          "name": "2103210 - 2103210 - AP-Trade-BKI - CTTM",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Liability",
+          "account_currency": "PHP"
+        }
+      },
+      "all_accounts_present": true,
+      "bki_supplier_account_set": false,
+      "bki_supplier_account_value": null,
+      "ready_for_pi_generation": true
+    },
+    {
+      "company": "D'VERDE CALAMBA - TAJ FOOD CORP.",
+      "abbr": "DVCAL",
+      "default_currency": "PHP",
+      "default_currency_is_php": true,
+      "cost_center": "Main - DVCAL",
+      "cost_center_set": true,
+      "parent_company": "TAJ FOOD CORP.",
+      "customer_exists_with_same_name": true,
+      "warehouse_exists_with_same_name": true,
+      "accounts": {
+        "1104210": {
+          "name": "1104210 - 1104210 - Inventory-from-Commissary - DVCAL",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Asset",
+          "account_currency": "PHP"
+        },
+        "1106210": {
+          "name": "1106210 - 1106210 - Input VAT - BKI Inter-Co - DVCAL",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Asset",
+          "account_currency": "PHP"
+        },
+        "2103210": {
+          "name": "2103210 - 2103210 - AP-Trade-BKI - DVCAL",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Liability",
+          "account_currency": "PHP"
+        }
+      },
+      "all_accounts_present": true,
+      "bki_supplier_account_set": false,
+      "bki_supplier_account_value": null,
+      "ready_for_pi_generation": true
+    },
+    {
+      "company": "EVER COMMONWEALTH - DLS DESSERT CRAFT INC.",
+      "abbr": "EGC",
+      "default_currency": "PHP",
+      "default_currency_is_php": true,
+      "cost_center": "Main - EGC",
+      "cost_center_set": true,
+      "parent_company": null,
+      "customer_exists_with_same_name": true,
+      "warehouse_exists_with_same_name": true,
+      "accounts": {
+        "1104210": {
+          "name": "1104210 - 1104210 - Inventory-from-Commissary - EGC",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Asset",
+          "account_currency": "PHP"
+        },
+        "1106210": {
+          "name": "1106210 - 1106210 - Input VAT - BKI Inter-Co - EGC",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Asset",
+          "account_currency": "PHP"
+        },
+        "2103210": {
+          "name": "2103210 - 2103210 - AP-Trade-BKI - EGC",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Liability",
+          "account_currency": "PHP"
+        }
+      },
+      "all_accounts_present": true,
+      "bki_supplier_account_set": false,
+      "bki_supplier_account_value": null,
+      "ready_for_pi_generation": true
+    },
+    {
+      "company": "FESTIVAL MALL ALABANG - BEBANG FESTIVAL INC.",
+      "abbr": "FMA",
+      "default_currency": "PHP",
+      "default_currency_is_php": true,
+      "cost_center": "Main - FMA",
+      "cost_center_set": true,
+      "parent_company": "BEBANG ENTERPRISE INC.",
+      "customer_exists_with_same_name": true,
+      "warehouse_exists_with_same_name": true,
+      "accounts": {
+        "1104210": {
+          "name": "1104210 - 1104210 - Inventory-from-Commissary - FMA",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Asset",
+          "account_currency": "PHP"
+        },
+        "1106210": {
+          "name": "1106210 - 1106210 - Input VAT - BKI Inter-Co - FMA",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Asset",
+          "account_currency": "PHP"
+        },
+        "2103210": {
+          "name": "2103210 - 2103210 - AP-Trade-BKI - FMA",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Liability",
+          "account_currency": "PHP"
+        }
+      },
+      "all_accounts_present": true,
+      "bki_supplier_account_set": false,
+      "bki_supplier_account_value": null,
+      "ready_for_pi_generation": true
+    },
+    {
+      "company": "LEGACY77 FOOD CORP.",
+      "abbr": "L77",
+      "default_currency": "PHP",
+      "default_currency_is_php": true,
+      "cost_center": "Main - L77",
+      "cost_center_set": true,
+      "parent_company": null,
+      "customer_exists_with_same_name": true,
+      "warehouse_exists_with_same_name": false,
+      "accounts": {
+        "1104210": {
+          "missing": true
+        },
+        "1106210": {
+          "missing": true
+        },
+        "2103210": {
+          "missing": true
+        }
+      },
+      "all_accounts_present": false,
+      "bki_supplier_account_set": false,
+      "bki_supplier_account_value": null,
+      "ready_for_pi_generation": false
+    },
+    {
+      "company": "LUCKY CHINATOWN - BEBANG LCT INC.",
+      "abbr": "LCT",
+      "default_currency": "PHP",
+      "default_currency_is_php": true,
+      "cost_center": "Main - LCT",
+      "cost_center_set": true,
+      "parent_company": "BEBANG ENTERPRISE INC.",
+      "customer_exists_with_same_name": true,
+      "warehouse_exists_with_same_name": true,
+      "accounts": {
+        "1104210": {
+          "name": "1104210 - 1104210 - Inventory-from-Commissary - LCT",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Asset",
+          "account_currency": "PHP"
+        },
+        "1106210": {
+          "name": "1106210 - 1106210 - Input VAT - BKI Inter-Co - LCT",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Asset",
+          "account_currency": "PHP"
+        },
+        "2103210": {
+          "name": "2103210 - 2103210 - AP-Trade-BKI - LCT",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Liability",
+          "account_currency": "PHP"
+        }
+      },
+      "all_accounts_present": true,
+      "bki_supplier_account_set": false,
+      "bki_supplier_account_value": null,
+      "ready_for_pi_generation": true
+    },
+    {
+      "company": "MEGAWIDE PITX - BEBANG PITX INC.",
+      "abbr": "PTX",
+      "default_currency": "PHP",
+      "default_currency_is_php": true,
+      "cost_center": "Main - PTX",
+      "cost_center_set": true,
+      "parent_company": "BEBANG ENTERPRISE INC.",
+      "customer_exists_with_same_name": true,
+      "warehouse_exists_with_same_name": true,
+      "accounts": {
+        "1104210": {
+          "name": "1104210 - 1104210 - Inventory-from-Commissary - PTX",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Asset",
+          "account_currency": "PHP"
+        },
+        "1106210": {
+          "name": "1106210 - 1106210 - Input VAT - BKI Inter-Co - PTX",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Asset",
+          "account_currency": "PHP"
+        },
+        "2103210": {
+          "name": "2103210 - 2103210 - AP-Trade-BKI - PTX",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Liability",
+          "account_currency": "PHP"
+        }
+      },
+      "all_accounts_present": true,
+      "bki_supplier_account_set": false,
+      "bki_supplier_account_value": null,
+      "ready_for_pi_generation": true
+    },
+    {
+      "company": "MEGAWORLD PASEO CENTER - BEBANG PASEO INC.",
+      "abbr": "MPD",
+      "default_currency": "PHP",
+      "default_currency_is_php": true,
+      "cost_center": "Main - MPD",
+      "cost_center_set": true,
+      "parent_company": "BEBANG ENTERPRISE INC.",
+      "customer_exists_with_same_name": true,
+      "warehouse_exists_with_same_name": true,
+      "accounts": {
+        "1104210": {
+          "name": "1104210 - 1104210 - Inventory-from-Commissary - MPD",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Asset",
+          "account_currency": "PHP"
+        },
+        "1106210": {
+          "name": "1106210 - 1106210 - Input VAT - BKI Inter-Co - MPD",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Asset",
+          "account_currency": "PHP"
+        },
+        "2103210": {
+          "name": "2103210 - 2103210 - AP-Trade-BKI - MPD",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Liability",
+          "account_currency": "PHP"
+        }
+      },
+      "all_accounts_present": true,
+      "bki_supplier_account_set": false,
+      "bki_supplier_account_value": null,
+      "ready_for_pi_generation": true
+    },
+    {
+      "company": "MEGAWORLD VENICE GRAND CANAL - BEBANG VENICE GRAND CANAL INC.",
+      "abbr": "VGC",
+      "default_currency": "PHP",
+      "default_currency_is_php": true,
+      "cost_center": "Main - VGC",
+      "cost_center_set": true,
+      "parent_company": "BEBANG ENTERPRISE INC.",
+      "customer_exists_with_same_name": true,
+      "warehouse_exists_with_same_name": true,
+      "accounts": {
+        "1104210": {
+          "name": "1104210 - 1104210 - Inventory-from-Commissary - VGC",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Asset",
+          "account_currency": "PHP"
+        },
+        "1106210": {
+          "name": "1106210 - 1106210 - Input VAT - BKI Inter-Co - VGC",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Asset",
+          "account_currency": "PHP"
+        },
+        "2103210": {
+          "name": "2103210 - 2103210 - AP-Trade-BKI - VGC",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Liability",
+          "account_currency": "PHP"
+        }
+      },
+      "all_accounts_present": true,
+      "bki_supplier_account_set": false,
+      "bki_supplier_account_value": null,
+      "ready_for_pi_generation": true
+    },
+    {
+      "company": "NAIA T3 - HALO-HALO TERMINAL FOOD CORP.",
+      "abbr": "NAIA",
+      "default_currency": "PHP",
+      "default_currency_is_php": true,
+      "cost_center": "Main - NAIA",
+      "cost_center_set": true,
+      "parent_company": null,
+      "customer_exists_with_same_name": true,
+      "warehouse_exists_with_same_name": true,
+      "accounts": {
+        "1104210": {
+          "name": "1104210 - 1104210 - Inventory-from-Commissary - NAIA",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Asset",
+          "account_currency": "PHP"
+        },
+        "1106210": {
+          "name": "1106210 - 1106210 - Input VAT - BKI Inter-Co - NAIA",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Asset",
+          "account_currency": "PHP"
+        },
+        "2103210": {
+          "name": "2103210 - 2103210 - AP-Trade-BKI - NAIA",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Liability",
+          "account_currency": "PHP"
+        }
+      },
+      "all_accounts_present": true,
+      "bki_supplier_account_set": false,
+      "bki_supplier_account_value": null,
+      "ready_for_pi_generation": true
+    },
+    {
+      "company": "ORTIGAS ESTANCIA - BB ESTANCIA FOOD CORP.",
+      "abbr": "ESM",
+      "default_currency": "PHP",
+      "default_currency_is_php": true,
+      "cost_center": "Main - ESM",
+      "cost_center_set": true,
+      "parent_company": null,
+      "customer_exists_with_same_name": true,
+      "warehouse_exists_with_same_name": true,
+      "accounts": {
+        "1104210": {
+          "name": "1104210 - 1104210 - Inventory-from-Commissary - ESM",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Asset",
+          "account_currency": "PHP"
+        },
+        "1106210": {
+          "name": "1106210 - 1106210 - Input VAT - BKI Inter-Co - ESM",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Asset",
+          "account_currency": "PHP"
+        },
+        "2103210": {
+          "name": "2103210 - 2103210 - AP-Trade-BKI - ESM",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Liability",
+          "account_currency": "PHP"
+        }
+      },
+      "all_accounts_present": true,
+      "bki_supplier_account_set": false,
+      "bki_supplier_account_value": null,
+      "ready_for_pi_generation": true
+    },
+    {
+      "company": "ORTIGAS GREENHILLS - BEIFRANCHISE FOOD OPC",
+      "abbr": "GHO",
+      "default_currency": "PHP",
+      "default_currency_is_php": true,
+      "cost_center": "Main - GHO",
+      "cost_center_set": true,
+      "parent_company": null,
+      "customer_exists_with_same_name": true,
+      "warehouse_exists_with_same_name": true,
+      "accounts": {
+        "1104210": {
+          "name": "1104210 - 1104210 - Inventory-from-Commissary - GHO",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Asset",
+          "account_currency": "PHP"
+        },
+        "1106210": {
+          "name": "1106210 - 1106210 - Input VAT - BKI Inter-Co - GHO",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Asset",
+          "account_currency": "PHP"
+        },
+        "2103210": {
+          "name": "2103210 - 2103210 - AP-Trade-BKI - GHO",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Liability",
+          "account_currency": "PHP"
+        }
+      },
+      "all_accounts_present": true,
+      "bki_supplier_account_set": false,
+      "bki_supplier_account_value": null,
+      "ready_for_pi_generation": true
+    },
+    {
+      "company": "ROBINSONS ANTIPOLO - BEBANG ENTERPRISE INC.",
+      "abbr": "ROA",
+      "default_currency": "PHP",
+      "default_currency_is_php": true,
+      "cost_center": null,
+      "cost_center_set": false,
+      "parent_company": "BEBANG ENTERPRISE INC.",
+      "customer_exists_with_same_name": true,
+      "warehouse_exists_with_same_name": true,
+      "accounts": {
+        "1104210": {
+          "name": "1104210 - 1104210 - Inventory-from-Commissary - ROA",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Asset",
+          "account_currency": "PHP"
+        },
+        "1106210": {
+          "name": "1106210 - 1106210 - Input VAT - BKI Inter-Co - ROA",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Asset",
+          "account_currency": "PHP"
+        },
+        "2103210": {
+          "name": "2103210 - 2103210 - AP-Trade-BKI - ROA",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Liability",
+          "account_currency": "PHP"
+        }
+      },
+      "all_accounts_present": true,
+      "bki_supplier_account_set": false,
+      "bki_supplier_account_value": null,
+      "ready_for_pi_generation": false
+    },
+    {
+      "company": "ROBINSONS GALLERIA SOUTH - TUNGSTEN CAPITAL HOLDINGS OPC",
+      "abbr": "ROBGS",
+      "default_currency": "PHP",
+      "default_currency_is_php": true,
+      "cost_center": "Main - ROBGS",
+      "cost_center_set": true,
+      "parent_company": "TUNGSTEN CAPITAL HOLDINGS OPC",
+      "customer_exists_with_same_name": true,
+      "warehouse_exists_with_same_name": true,
+      "accounts": {
+        "1104210": {
+          "name": "1104210 - 1104210 - Inventory-from-Commissary - ROBGS",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Asset",
+          "account_currency": "PHP"
+        },
+        "1106210": {
+          "name": "1106210 - 1106210 - Input VAT - BKI Inter-Co - ROBGS",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Asset",
+          "account_currency": "PHP"
+        },
+        "2103210": {
+          "name": "2103210 - 2103210 - AP-Trade-BKI - ROBGS",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Liability",
+          "account_currency": "PHP"
+        }
+      },
+      "all_accounts_present": true,
+      "bki_supplier_account_set": false,
+      "bki_supplier_account_value": null,
+      "ready_for_pi_generation": true
+    },
+    {
+      "company": "ROBINSONS GENERAL TRIAS - BEBANG MEGA INC.",
+      "abbr": "ROBGT",
+      "default_currency": "PHP",
+      "default_currency_is_php": true,
+      "cost_center": "Main - ROBGT",
+      "cost_center_set": true,
+      "parent_company": "BEBANG MEGA INC.",
+      "customer_exists_with_same_name": true,
+      "warehouse_exists_with_same_name": true,
+      "accounts": {
+        "1104210": {
+          "name": "1104210 - 1104210 - Inventory-from-Commissary - ROBGT",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Asset",
+          "account_currency": "PHP"
+        },
+        "1106210": {
+          "name": "1106210 - 1106210 - Input VAT - BKI Inter-Co - ROBGT",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Asset",
+          "account_currency": "PHP"
+        },
+        "2103210": {
+          "name": "2103210 - 2103210 - AP-Trade-BKI - ROBGT",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Liability",
+          "account_currency": "PHP"
+        }
+      },
+      "all_accounts_present": true,
+      "bki_supplier_account_set": false,
+      "bki_supplier_account_value": null,
+      "ready_for_pi_generation": true
+    },
+    {
+      "company": "ROBINSONS IMUS - BEBANG MEGA INC.",
+      "abbr": "ROBIM",
+      "default_currency": "PHP",
+      "default_currency_is_php": true,
+      "cost_center": "Main - ROBIM",
+      "cost_center_set": true,
+      "parent_company": "BEBANG MEGA INC.",
+      "customer_exists_with_same_name": true,
+      "warehouse_exists_with_same_name": true,
+      "accounts": {
+        "1104210": {
+          "name": "1104210 - 1104210 - Inventory-from-Commissary - ROBIM",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Asset",
+          "account_currency": "PHP"
+        },
+        "1106210": {
+          "name": "1106210 - 1106210 - Input VAT - BKI Inter-Co - ROBIM",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Asset",
+          "account_currency": "PHP"
+        },
+        "2103210": {
+          "name": "2103210 - 2103210 - AP-Trade-BKI - ROBIM",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Liability",
+          "account_currency": "PHP"
+        }
+      },
+      "all_accounts_present": true,
+      "bki_supplier_account_set": false,
+      "bki_supplier_account_value": null,
+      "ready_for_pi_generation": true
+    },
+    {
+      "company": "ROBINSONS PLACE DASMARINAS - FREEZE DELIGHT INC.",
+      "abbr": "ROBDA",
+      "default_currency": "PHP",
+      "default_currency_is_php": true,
+      "cost_center": "Main - ROBDA",
+      "cost_center_set": true,
+      "parent_company": null,
+      "customer_exists_with_same_name": true,
+      "warehouse_exists_with_same_name": true,
+      "accounts": {
+        "1104210": {
+          "name": "1104210 - 1104210 - Inventory-from-Commissary - ROBDA",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Asset",
+          "account_currency": "PHP"
+        },
+        "1106210": {
+          "name": "1106210 - 1106210 - Input VAT - BKI Inter-Co - ROBDA",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Asset",
+          "account_currency": "PHP"
+        },
+        "2103210": {
+          "name": "2103210 - 2103210 - AP-Trade-BKI - ROBDA",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Liability",
+          "account_currency": "PHP"
+        }
+      },
+      "all_accounts_present": true,
+      "bki_supplier_account_set": false,
+      "bki_supplier_account_value": null,
+      "ready_for_pi_generation": true
+    },
+    {
+      "company": "SM BICUTAN - BEBANG SM BICUTAN INC.",
+      "abbr": "SMBIC",
+      "default_currency": "PHP",
+      "default_currency_is_php": true,
+      "cost_center": "Main - SMBIC",
+      "cost_center_set": true,
+      "parent_company": "BEBANG ENTERPRISE INC.",
+      "customer_exists_with_same_name": true,
+      "warehouse_exists_with_same_name": true,
+      "accounts": {
+        "1104210": {
+          "name": "1104210 - 1104210 - Inventory-from-Commissary - SMBIC",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Asset",
+          "account_currency": "PHP"
+        },
+        "1106210": {
+          "name": "1106210 - 1106210 - Input VAT - BKI Inter-Co - SMBIC",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Asset",
+          "account_currency": "PHP"
+        },
+        "2103210": {
+          "name": "2103210 - 2103210 - AP-Trade-BKI - SMBIC",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Liability",
+          "account_currency": "PHP"
+        }
+      },
+      "all_accounts_present": true,
+      "bki_supplier_account_set": false,
+      "bki_supplier_account_value": null,
+      "ready_for_pi_generation": true
+    },
+    {
+      "company": "SM CALOOCAN - TAJ FOOD CORP.",
+      "abbr": "SMCAL",
+      "default_currency": "PHP",
+      "default_currency_is_php": true,
+      "cost_center": "Main - SMCAL",
+      "cost_center_set": true,
+      "parent_company": "TAJ FOOD CORP.",
+      "customer_exists_with_same_name": true,
+      "warehouse_exists_with_same_name": true,
+      "accounts": {
+        "1104210": {
+          "name": "1104210 - 1104210 - Inventory-from-Commissary - SMCAL",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Asset",
+          "account_currency": "PHP"
+        },
+        "1106210": {
+          "name": "1106210 - 1106210 - Input VAT - BKI Inter-Co - SMCAL",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Asset",
+          "account_currency": "PHP"
+        },
+        "2103210": {
+          "name": "2103210 - 2103210 - AP-Trade-BKI - SMCAL",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Liability",
+          "account_currency": "PHP"
+        }
+      },
+      "all_accounts_present": true,
+      "bki_supplier_account_set": false,
+      "bki_supplier_account_value": null,
+      "ready_for_pi_generation": true
+    },
+    {
+      "company": "SM CLARK - RED TALDAWA FOODS OPC",
+      "abbr": "SMCLK",
+      "default_currency": "PHP",
+      "default_currency_is_php": true,
+      "cost_center": "Main - SMCLK",
+      "cost_center_set": true,
+      "parent_company": null,
+      "customer_exists_with_same_name": true,
+      "warehouse_exists_with_same_name": true,
+      "accounts": {
+        "1104210": {
+          "name": "1104210 - 1104210 - Inventory-from-Commissary - SMCLK",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Asset",
+          "account_currency": "PHP"
+        },
+        "1106210": {
+          "name": "1106210 - 1106210 - Input VAT - BKI Inter-Co - SMCLK",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Asset",
+          "account_currency": "PHP"
+        },
+        "2103210": {
+          "name": "2103210 - 2103210 - AP-Trade-BKI - SMCLK",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Liability",
+          "account_currency": "PHP"
+        }
+      },
+      "all_accounts_present": true,
+      "bki_supplier_account_set": false,
+      "bki_supplier_account_value": null,
+      "ready_for_pi_generation": true
+    },
+    {
+      "company": "SM EAST ORTIGAS - BEBANG SMEO INC.",
+      "abbr": "SMEO",
+      "default_currency": "PHP",
+      "default_currency_is_php": true,
+      "cost_center": "Main - SMEO",
+      "cost_center_set": true,
+      "parent_company": "BEBANG ENTERPRISE INC.",
+      "customer_exists_with_same_name": true,
+      "warehouse_exists_with_same_name": true,
+      "accounts": {
+        "1104210": {
+          "name": "1104210 - 1104210 - Inventory-from-Commissary - SMEO",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Asset",
+          "account_currency": "PHP"
+        },
+        "1106210": {
+          "name": "1106210 - 1106210 - Input VAT - BKI Inter-Co - SMEO",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Asset",
+          "account_currency": "PHP"
+        },
+        "2103210": {
+          "name": "2103210 - 2103210 - AP-Trade-BKI - SMEO",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Liability",
+          "account_currency": "PHP"
+        }
+      },
+      "all_accounts_present": true,
+      "bki_supplier_account_set": false,
+      "bki_supplier_account_value": null,
+      "ready_for_pi_generation": true
+    },
+    {
+      "company": "SM GRAND CENTRAL - BEBANG GRAND CENTRAL INC.",
+      "abbr": "SMGC",
+      "default_currency": "PHP",
+      "default_currency_is_php": true,
+      "cost_center": "Main - SMGC",
+      "cost_center_set": true,
+      "parent_company": "BEBANG ENTERPRISE INC.",
+      "customer_exists_with_same_name": true,
+      "warehouse_exists_with_same_name": true,
+      "accounts": {
+        "1104210": {
+          "name": "1104210 - 1104210 - Inventory-from-Commissary - SMGC",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Asset",
+          "account_currency": "PHP"
+        },
+        "1106210": {
+          "name": "1106210 - 1106210 - Input VAT - BKI Inter-Co - SMGC",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Asset",
+          "account_currency": "PHP"
+        },
+        "2103210": {
+          "name": "2103210 - 2103210 - AP-Trade-BKI - SMGC",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Liability",
+          "account_currency": "PHP"
+        }
+      },
+      "all_accounts_present": true,
+      "bki_supplier_account_set": false,
+      "bki_supplier_account_value": null,
+      "ready_for_pi_generation": true
+    },
+    {
+      "company": "SM MALL OF ASIA - BEBANG SMOA INC.",
+      "abbr": "SMMOA",
+      "default_currency": "PHP",
+      "default_currency_is_php": true,
+      "cost_center": "Main - SMMOA",
+      "cost_center_set": true,
+      "parent_company": "BEBANG ENTERPRISE INC.",
+      "customer_exists_with_same_name": true,
+      "warehouse_exists_with_same_name": true,
+      "accounts": {
+        "1104210": {
+          "name": "1104210 - 1104210 - Inventory-from-Commissary - SMMOA",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Asset",
+          "account_currency": "PHP"
+        },
+        "1106210": {
+          "name": "1106210 - 1106210 - Input VAT - BKI Inter-Co - SMMOA",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Asset",
+          "account_currency": "PHP"
+        },
+        "2103210": {
+          "name": "2103210 - 2103210 - AP-Trade-BKI - SMMOA",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Liability",
+          "account_currency": "PHP"
+        }
+      },
+      "all_accounts_present": true,
+      "bki_supplier_account_set": false,
+      "bki_supplier_account_value": null,
+      "ready_for_pi_generation": true
+    },
+    {
+      "company": "SM MANILA - BEBANG ENTERPRISE INC.",
+      "abbr": "SMM",
+      "default_currency": "PHP",
+      "default_currency_is_php": true,
+      "cost_center": null,
+      "cost_center_set": false,
+      "parent_company": "BEBANG ENTERPRISE INC.",
+      "customer_exists_with_same_name": true,
+      "warehouse_exists_with_same_name": true,
+      "accounts": {
+        "1104210": {
+          "name": "1104210 - 1104210 - Inventory-from-Commissary - SMM",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Asset",
+          "account_currency": "PHP"
+        },
+        "1106210": {
+          "name": "1106210 - 1106210 - Input VAT - BKI Inter-Co - SMM",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Asset",
+          "account_currency": "PHP"
+        },
+        "2103210": {
+          "name": "2103210 - 2103210 - AP-Trade-BKI - SMM",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Liability",
+          "account_currency": "PHP"
+        }
+      },
+      "all_accounts_present": true,
+      "bki_supplier_account_set": false,
+      "bki_supplier_account_value": null,
+      "ready_for_pi_generation": false
+    },
+    {
+      "company": "SM MARIKINA - BEBANG SM MARIKINA INC.",
+      "abbr": "SMK",
+      "default_currency": "PHP",
+      "default_currency_is_php": true,
+      "cost_center": "Main - SMK",
+      "cost_center_set": true,
+      "parent_company": "BEBANG ENTERPRISE INC.",
+      "customer_exists_with_same_name": true,
+      "warehouse_exists_with_same_name": true,
+      "accounts": {
+        "1104210": {
+          "name": "1104210 - 1104210 - Inventory-from-Commissary - SMK",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Asset",
+          "account_currency": "PHP"
+        },
+        "1106210": {
+          "name": "1106210 - 1106210 - Input VAT - BKI Inter-Co - SMK",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Asset",
+          "account_currency": "PHP"
+        },
+        "2103210": {
+          "name": "2103210 - 2103210 - AP-Trade-BKI - SMK",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Liability",
+          "account_currency": "PHP"
+        }
+      },
+      "all_accounts_present": true,
+      "bki_supplier_account_set": false,
+      "bki_supplier_account_value": null,
+      "ready_for_pi_generation": true
+    },
+    {
+      "company": "SM MARILAO - BEBANG MARILAO INC.",
+      "abbr": "SMMAR",
+      "default_currency": "PHP",
+      "default_currency_is_php": true,
+      "cost_center": "Main - SMMAR",
+      "cost_center_set": true,
+      "parent_company": "BEBANG ENTERPRISE INC.",
+      "customer_exists_with_same_name": true,
+      "warehouse_exists_with_same_name": true,
+      "accounts": {
+        "1104210": {
+          "name": "1104210 - 1104210 - Inventory-from-Commissary - SMMAR",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Asset",
+          "account_currency": "PHP"
+        },
+        "1106210": {
+          "name": "1106210 - 1106210 - Input VAT - BKI Inter-Co - SMMAR",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Asset",
+          "account_currency": "PHP"
+        },
+        "2103210": {
+          "name": "2103210 - 2103210 - AP-Trade-BKI - SMMAR",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Liability",
+          "account_currency": "PHP"
+        }
+      },
+      "all_accounts_present": true,
+      "bki_supplier_account_set": false,
+      "bki_supplier_account_value": null,
+      "ready_for_pi_generation": true
+    },
+    {
+      "company": "SM MEGAMALL - BEBANG ENTERPRISE INC.",
+      "abbr": "SMMM",
+      "default_currency": "PHP",
+      "default_currency_is_php": true,
+      "cost_center": null,
+      "cost_center_set": false,
+      "parent_company": "BEBANG ENTERPRISE INC.",
+      "customer_exists_with_same_name": true,
+      "warehouse_exists_with_same_name": true,
+      "accounts": {
+        "1104210": {
+          "name": "1104210 - 1104210 - Inventory-from-Commissary - SMMM",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Asset",
+          "account_currency": "PHP"
+        },
+        "1106210": {
+          "name": "1106210 - 1106210 - Input VAT - BKI Inter-Co - SMMM",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Asset",
+          "account_currency": "PHP"
+        },
+        "2103210": {
+          "name": "2103210 - 2103210 - AP-Trade-BKI - SMMM",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Liability",
+          "account_currency": "PHP"
+        }
+      },
+      "all_accounts_present": true,
+      "bki_supplier_account_set": false,
+      "bki_supplier_account_value": null,
+      "ready_for_pi_generation": false
+    },
+    {
+      "company": "SM NORTH EDSA - BEBANG NORTH EDSA INC.",
+      "abbr": "SMNE",
+      "default_currency": "PHP",
+      "default_currency_is_php": true,
+      "cost_center": "Main - SMNE",
+      "cost_center_set": true,
+      "parent_company": "BEBANG ENTERPRISE INC.",
+      "customer_exists_with_same_name": true,
+      "warehouse_exists_with_same_name": true,
+      "accounts": {
+        "1104210": {
+          "name": "1104210 - 1104210 - Inventory-from-Commissary - SMNE",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Asset",
+          "account_currency": "PHP"
+        },
+        "1106210": {
+          "name": "1106210 - 1106210 - Input VAT - BKI Inter-Co - SMNE",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Asset",
+          "account_currency": "PHP"
+        },
+        "2103210": {
+          "name": "2103210 - 2103210 - AP-Trade-BKI - SMNE",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Liability",
+          "account_currency": "PHP"
+        }
+      },
+      "all_accounts_present": true,
+      "bki_supplier_account_set": false,
+      "bki_supplier_account_value": null,
+      "ready_for_pi_generation": true
+    },
+    {
+      "company": "SM PULILAN - BEBANG SMM INC.",
+      "abbr": "SMPUL",
+      "default_currency": "PHP",
+      "default_currency_is_php": true,
+      "cost_center": "Main - SMPUL",
+      "cost_center_set": true,
+      "parent_company": "BEBANG ENTERPRISE INC.",
+      "customer_exists_with_same_name": true,
+      "warehouse_exists_with_same_name": true,
+      "accounts": {
+        "1104210": {
+          "name": "1104210 - 1104210 - Inventory-from-Commissary - SMPUL",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Asset",
+          "account_currency": "PHP"
+        },
+        "1106210": {
+          "name": "1106210 - 1106210 - Input VAT - BKI Inter-Co - SMPUL",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Asset",
+          "account_currency": "PHP"
+        },
+        "2103210": {
+          "name": "2103210 - 2103210 - AP-Trade-BKI - SMPUL",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Liability",
+          "account_currency": "PHP"
+        }
+      },
+      "all_accounts_present": true,
+      "bki_supplier_account_set": false,
+      "bki_supplier_account_value": null,
+      "ready_for_pi_generation": true
+    },
+    {
+      "company": "SM SAN JOSE DEL MONTE - JL TRADE OPC",
+      "abbr": "SJDM",
+      "default_currency": "PHP",
+      "default_currency_is_php": true,
+      "cost_center": "Main - SJDM",
+      "cost_center_set": true,
+      "parent_company": null,
+      "customer_exists_with_same_name": true,
+      "warehouse_exists_with_same_name": true,
+      "accounts": {
+        "1104210": {
+          "name": "1104210 - 1104210 - Inventory-from-Commissary - SJDM",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Asset",
+          "account_currency": "PHP"
+        },
+        "1106210": {
+          "name": "1106210 - 1106210 - Input VAT - BKI Inter-Co - SJDM",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Asset",
+          "account_currency": "PHP"
+        },
+        "2103210": {
+          "name": "2103210 - 2103210 - AP-Trade-BKI - SJDM",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Liability",
+          "account_currency": "PHP"
+        }
+      },
+      "all_accounts_present": true,
+      "bki_supplier_account_set": false,
+      "bki_supplier_account_value": null,
+      "ready_for_pi_generation": true
+    },
+    {
+      "company": "SM SANGANDAAN - TUNGSTEN CAPITAL HOLDINGS OPC",
+      "abbr": "SMSDN",
+      "default_currency": "PHP",
+      "default_currency_is_php": true,
+      "cost_center": "Main - SMSDN",
+      "cost_center_set": true,
+      "parent_company": "TUNGSTEN CAPITAL HOLDINGS OPC",
+      "customer_exists_with_same_name": true,
+      "warehouse_exists_with_same_name": true,
+      "accounts": {
+        "1104210": {
+          "name": "1104210 - 1104210 - Inventory-from-Commissary - SMSDN",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Asset",
+          "account_currency": "PHP"
+        },
+        "1106210": {
+          "name": "1106210 - 1106210 - Input VAT - BKI Inter-Co - SMSDN",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Asset",
+          "account_currency": "PHP"
+        },
+        "2103210": {
+          "name": "2103210 - 2103210 - AP-Trade-BKI - SMSDN",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Liability",
+          "account_currency": "PHP"
+        }
+      },
+      "all_accounts_present": true,
+      "bki_supplier_account_set": false,
+      "bki_supplier_account_value": null,
+      "ready_for_pi_generation": true
+    },
+    {
+      "company": "SM SOUTHMALL - BEBANG ENTERPRISE INC.",
+      "abbr": "SMS",
+      "default_currency": "PHP",
+      "default_currency_is_php": true,
+      "cost_center": null,
+      "cost_center_set": false,
+      "parent_company": "BEBANG ENTERPRISE INC.",
+      "customer_exists_with_same_name": true,
+      "warehouse_exists_with_same_name": true,
+      "accounts": {
+        "1104210": {
+          "name": "1104210 - 1104210 - Inventory-from-Commissary - SMS",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Asset",
+          "account_currency": "PHP"
+        },
+        "1106210": {
+          "name": "1106210 - 1106210 - Input VAT - BKI Inter-Co - SMS",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Asset",
+          "account_currency": "PHP"
+        },
+        "2103210": {
+          "name": "2103210 - 2103210 - AP-Trade-BKI - SMS",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Liability",
+          "account_currency": "PHP"
+        }
+      },
+      "all_accounts_present": true,
+      "bki_supplier_account_set": false,
+      "bki_supplier_account_value": null,
+      "ready_for_pi_generation": false
+    },
+    {
+      "company": "SM STA. ROSA - SWEET HARMONY FOOD CORP.",
+      "abbr": "SMSTR",
+      "default_currency": "PHP",
+      "default_currency_is_php": true,
+      "cost_center": "Main - SMSTR",
+      "cost_center_set": true,
+      "parent_company": null,
+      "customer_exists_with_same_name": true,
+      "warehouse_exists_with_same_name": true,
+      "accounts": {
+        "1104210": {
+          "name": "1104210 - 1104210 - Inventory-from-Commissary - SMSTR",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Asset",
+          "account_currency": "PHP"
+        },
+        "1106210": {
+          "name": "1106210 - 1106210 - Input VAT - BKI Inter-Co - SMSTR",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Asset",
+          "account_currency": "PHP"
+        },
+        "2103210": {
+          "name": "2103210 - 2103210 - AP-Trade-BKI - SMSTR",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Liability",
+          "account_currency": "PHP"
+        }
+      },
+      "all_accounts_present": true,
+      "bki_supplier_account_set": false,
+      "bki_supplier_account_value": null,
+      "ready_for_pi_generation": true
+    },
+    {
+      "company": "SM TANZA - BEBANG MEGA INC.",
+      "abbr": "SMTZ",
+      "default_currency": "PHP",
+      "default_currency_is_php": true,
+      "cost_center": "Main - SMTZ",
+      "cost_center_set": true,
+      "parent_company": "BEBANG MEGA INC.",
+      "customer_exists_with_same_name": true,
+      "warehouse_exists_with_same_name": true,
+      "accounts": {
+        "1104210": {
+          "name": "1104210 - 1104210 - Inventory-from-Commissary - SMTZ",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Asset",
+          "account_currency": "PHP"
+        },
+        "1106210": {
+          "name": "1106210 - 1106210 - Input VAT - BKI Inter-Co - SMTZ",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Asset",
+          "account_currency": "PHP"
+        },
+        "2103210": {
+          "name": "2103210 - 2103210 - AP-Trade-BKI - SMTZ",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Liability",
+          "account_currency": "PHP"
+        }
+      },
+      "all_accounts_present": true,
+      "bki_supplier_account_set": false,
+      "bki_supplier_account_value": null,
+      "ready_for_pi_generation": true
+    },
+    {
+      "company": "SM TAYTAY - DAY ONES FOOD AND DRINK ESTABLISHMENTS CORP.",
+      "abbr": "SMTAY",
+      "default_currency": "PHP",
+      "default_currency_is_php": true,
+      "cost_center": "Main - SMTAY",
+      "cost_center_set": true,
+      "parent_company": null,
+      "customer_exists_with_same_name": true,
+      "warehouse_exists_with_same_name": true,
+      "accounts": {
+        "1104210": {
+          "name": "1104210 - 1104210 - Inventory-from-Commissary - SMTAY",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Asset",
+          "account_currency": "PHP"
+        },
+        "1106210": {
+          "name": "1106210 - 1106210 - Input VAT - BKI Inter-Co - SMTAY",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Asset",
+          "account_currency": "PHP"
+        },
+        "2103210": {
+          "name": "2103210 - 2103210 - AP-Trade-BKI - SMTAY",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Liability",
+          "account_currency": "PHP"
+        }
+      },
+      "all_accounts_present": true,
+      "bki_supplier_account_set": false,
+      "bki_supplier_account_value": null,
+      "ready_for_pi_generation": true
+    },
+    {
+      "company": "SM VALENZUELA - BEBANG SMV INC.",
+      "abbr": "SMV",
+      "default_currency": "PHP",
+      "default_currency_is_php": true,
+      "cost_center": "Main - SMV",
+      "cost_center_set": true,
+      "parent_company": "BEBANG ENTERPRISE INC.",
+      "customer_exists_with_same_name": true,
+      "warehouse_exists_with_same_name": true,
+      "accounts": {
+        "1104210": {
+          "name": "1104210 - 1104210 - Inventory-from-Commissary - SMV",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Asset",
+          "account_currency": "PHP"
+        },
+        "1106210": {
+          "name": "1106210 - 1106210 - Input VAT - BKI Inter-Co - SMV",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Asset",
+          "account_currency": "PHP"
+        },
+        "2103210": {
+          "name": "2103210 - 2103210 - AP-Trade-BKI - SMV",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Liability",
+          "account_currency": "PHP"
+        }
+      },
+      "all_accounts_present": true,
+      "bki_supplier_account_set": false,
+      "bki_supplier_account_value": null,
+      "ready_for_pi_generation": true
+    },
+    {
+      "company": "STA. LUCIA EAST GRAND MALL - BEBANG SM MARIKINA INC.",
+      "abbr": "SLGM",
+      "default_currency": "PHP",
+      "default_currency_is_php": true,
+      "cost_center": "Main - SLGM",
+      "cost_center_set": true,
+      "parent_company": "SM MARIKINA - BEBANG SM MARIKINA INC.",
+      "customer_exists_with_same_name": true,
+      "warehouse_exists_with_same_name": true,
+      "accounts": {
+        "1104210": {
+          "name": "1104210 - 1104210 - Inventory-from-Commissary - SLGM",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Asset",
+          "account_currency": "PHP"
+        },
+        "1106210": {
+          "name": "1106210 - 1106210 - Input VAT - BKI Inter-Co - SLGM",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Asset",
+          "account_currency": "PHP"
+        },
+        "2103210": {
+          "name": "2103210 - 2103210 - AP-Trade-BKI - SLGM",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Liability",
+          "account_currency": "PHP"
+        }
+      },
+      "all_accounts_present": true,
+      "bki_supplier_account_set": false,
+      "bki_supplier_account_value": null,
+      "ready_for_pi_generation": true
+    },
+    {
+      "company": "THE GRID ROCKWELL - TASTECARTEL CORP.",
+      "abbr": "TGR",
+      "default_currency": "PHP",
+      "default_currency_is_php": true,
+      "cost_center": "Main - TGR",
+      "cost_center_set": true,
+      "parent_company": null,
+      "customer_exists_with_same_name": true,
+      "warehouse_exists_with_same_name": true,
+      "accounts": {
+        "1104210": {
+          "name": "1104210 - 1104210 - Inventory-from-Commissary - TGR",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Asset",
+          "account_currency": "PHP"
+        },
+        "1106210": {
+          "name": "1106210 - 1106210 - Input VAT - BKI Inter-Co - TGR",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Asset",
+          "account_currency": "PHP"
+        },
+        "2103210": {
+          "name": "2103210 - 2103210 - AP-Trade-BKI - TGR",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Liability",
+          "account_currency": "PHP"
+        }
+      },
+      "all_accounts_present": true,
+      "bki_supplier_account_set": false,
+      "bki_supplier_account_value": null,
+      "ready_for_pi_generation": true
+    },
+    {
+      "company": "THE TERMINAL - BEBANG STARMALL ALABANG INC.",
+      "abbr": "TTA",
+      "default_currency": "PHP",
+      "default_currency_is_php": true,
+      "cost_center": "Main - TTA",
+      "cost_center_set": true,
+      "parent_company": "BEBANG ENTERPRISE INC.",
+      "customer_exists_with_same_name": true,
+      "warehouse_exists_with_same_name": true,
+      "accounts": {
+        "1104210": {
+          "name": "1104210 - 1104210 - Inventory-from-Commissary - TTA",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Asset",
+          "account_currency": "PHP"
+        },
+        "1106210": {
+          "name": "1106210 - 1106210 - Input VAT - BKI Inter-Co - TTA",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Asset",
+          "account_currency": "PHP"
+        },
+        "2103210": {
+          "name": "2103210 - 2103210 - AP-Trade-BKI - TTA",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Liability",
+          "account_currency": "PHP"
+        }
+      },
+      "all_accounts_present": true,
+      "bki_supplier_account_set": false,
+      "bki_supplier_account_value": null,
+      "ready_for_pi_generation": true
+    },
+    {
+      "company": "UP TOWN MALL BGC - DMD HOLDINGS INC.",
+      "abbr": "UMBGC",
+      "default_currency": "PHP",
+      "default_currency_is_php": true,
+      "cost_center": "Main - UMBGC",
+      "cost_center_set": true,
+      "parent_company": null,
+      "customer_exists_with_same_name": true,
+      "warehouse_exists_with_same_name": true,
+      "accounts": {
+        "1104210": {
+          "name": "1104210 - 1104210 - Inventory-from-Commissary - UMBGC",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Asset",
+          "account_currency": "PHP"
+        },
+        "1106210": {
+          "name": "1106210 - 1106210 - Input VAT - BKI Inter-Co - UMBGC",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Asset",
+          "account_currency": "PHP"
+        },
+        "2103210": {
+          "name": "2103210 - 2103210 - AP-Trade-BKI - UMBGC",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Liability",
+          "account_currency": "PHP"
+        }
+      },
+      "all_accounts_present": true,
+      "bki_supplier_account_set": false,
+      "bki_supplier_account_value": null,
+      "ready_for_pi_generation": true
+    },
+    {
+      "company": "VISTA MALL TAGUIG - TRICERN FOOD CORP.",
+      "abbr": "VMTAG",
+      "default_currency": "PHP",
+      "default_currency_is_php": true,
+      "cost_center": "Main - VMTAG",
+      "cost_center_set": true,
+      "parent_company": null,
+      "customer_exists_with_same_name": true,
+      "warehouse_exists_with_same_name": true,
+      "accounts": {
+        "1104210": {
+          "name": "1104210 - 1104210 - Inventory-from-Commissary - VMTAG",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Asset",
+          "account_currency": "PHP"
+        },
+        "1106210": {
+          "name": "1106210 - 1106210 - Input VAT - BKI Inter-Co - VMTAG",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Asset",
+          "account_currency": "PHP"
+        },
+        "2103210": {
+          "name": "2103210 - 2103210 - AP-Trade-BKI - VMTAG",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Liability",
+          "account_currency": "PHP"
+        }
+      },
+      "all_accounts_present": true,
+      "bki_supplier_account_set": false,
+      "bki_supplier_account_value": null,
+      "ready_for_pi_generation": true
+    },
+    {
+      "company": "XENTROMALL MONTALBAN - PERPETUAL FOOD CORP.",
+      "abbr": "XMM",
+      "default_currency": "PHP",
+      "default_currency_is_php": true,
+      "cost_center": "Main - XMM",
+      "cost_center_set": true,
+      "parent_company": null,
+      "customer_exists_with_same_name": true,
+      "warehouse_exists_with_same_name": true,
+      "accounts": {
+        "1104210": {
+          "name": "1104210 - 1104210 - Inventory-from-Commissary - XMM",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Asset",
+          "account_currency": "PHP"
+        },
+        "1106210": {
+          "name": "1106210 - 1106210 - Input VAT - BKI Inter-Co - XMM",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Asset",
+          "account_currency": "PHP"
+        },
+        "2103210": {
+          "name": "2103210 - 2103210 - AP-Trade-BKI - XMM",
+          "disabled": 0,
+          "is_group": 0,
+          "root_type": "Liability",
+          "account_currency": "PHP"
+        }
+      },
+      "all_accounts_present": true,
+      "bki_supplier_account_set": false,
+      "bki_supplier_account_value": null,
+      "ready_for_pi_generation": true
+    }
+  ],
+  "history": {
+    "bki_si_total": 839,
+    "bki_si_draft": 49,
+    "bki_si_submitted": 560,
+    "bki_si_cancelled": 230
+  },
+  "seed_data": {
+    "pm003": {
+      "item_code": "PM003",
+      "item_name": "LONG SPOON GREEN W/ POUCH",
+      "is_stock_item": 1
+    }
+  },
+  "summary": {
+    "total_candidate_buyer_companies": 51,
+    "ready_for_pi_generation": 45,
+    "missing_customer": [
+      "BEBANG FRANCHISE CORP."
+    ],
+    "missing_warehouse": [
+      "BEBANG FRANCHISE CORP.",
+      "LEGACY77 FOOD CORP."
+    ],
+    "non_php_currency": [],
+    "missing_cost_center": [
+      "ROBINSONS ANTIPOLO - BEBANG ENTERPRISE INC.",
+      "SM MANILA - BEBANG ENTERPRISE INC.",
+      "SM MEGAMALL - BEBANG ENTERPRISE INC.",
+      "SM SOUTHMALL - BEBANG ENTERPRISE INC."
+    ],
+    "missing_any_acct": [
+      "BEBANG FRANCHISE CORP.",
+      "LEGACY77 FOOD CORP."
+    ],
+    "missing_bki_supplier_acct": [
+      "ARANETA GATEWAY - TUNGSTEN CAPITAL HOLDINGS OPC",
+      "AYALA EVO CITY - BEBANG MEGA INC.",
+      "AYALA FAIRVIEW TERRACES - BEBANG FT INC.",
+      "AYALA MARKET MARKET - BEBANG MARKET MARKET INC.",
+      "AYALA SOLENAD - HFFM SOLENAD FOOD SERVICES INC.",
+      "AYALA UP TOWN CENTER - BEBANG UP TOWN CENTER INC.",
+      "AYALA VERMOSA - BEBANG MEGA INC.",
+      "BEBANG FRANCHISE CORP.",
+      "BF HOMES - BEBANG BF HOMES INC.",
+      "CTTM TOMAS MORATO - B CUBED VENTURES CORP.",
+      "D'VERDE CALAMBA - TAJ FOOD CORP.",
+      "EVER COMMONWEALTH - DLS DESSERT CRAFT INC.",
+      "FESTIVAL MALL ALABANG - BEBANG FESTIVAL INC.",
+      "LEGACY77 FOOD CORP.",
+      "LUCKY CHINATOWN - BEBANG LCT INC.",
+      "MEGAWIDE PITX - BEBANG PITX INC.",
+      "MEGAWORLD PASEO CENTER - BEBANG PASEO INC.",
+      "MEGAWORLD VENICE GRAND CANAL - BEBANG VENICE GRAND CANAL INC.",
+      "NAIA T3 - HALO-HALO TERMINAL FOOD CORP.",
+      "ORTIGAS ESTANCIA - BB ESTANCIA FOOD CORP.",
+      "ORTIGAS GREENHILLS - BEIFRANCHISE FOOD OPC",
+      "ROBINSONS ANTIPOLO - BEBANG ENTERPRISE INC.",
+      "ROBINSONS GALLERIA SOUTH - TUNGSTEN CAPITAL HOLDINGS OPC",
+      "ROBINSONS GENERAL TRIAS - BEBANG MEGA INC.",
+      "ROBINSONS IMUS - BEBANG MEGA INC.",
+      "ROBINSONS PLACE DASMARINAS - FREEZE DELIGHT INC.",
+      "SM BICUTAN - BEBANG SM BICUTAN INC.",
+      "SM CALOOCAN - TAJ FOOD CORP.",
+      "SM CLARK - RED TALDAWA FOODS OPC",
+      "SM EAST ORTIGAS - BEBANG SMEO INC.",
+      "SM GRAND CENTRAL - BEBANG GRAND CENTRAL INC.",
+      "SM MALL OF ASIA - BEBANG SMOA INC.",
+      "SM MANILA - BEBANG ENTERPRISE INC.",
+      "SM MARIKINA - BEBANG SM MARIKINA INC.",
+      "SM MARILAO - BEBANG MARILAO INC.",
+      "SM MEGAMALL - BEBANG ENTERPRISE INC.",
+      "SM NORTH EDSA - BEBANG NORTH EDSA INC.",
+      "SM PULILAN - BEBANG SMM INC.",
+      "SM SAN JOSE DEL MONTE - JL TRADE OPC",
+      "SM SANGANDAAN - TUNGSTEN CAPITAL HOLDINGS OPC",
+      "SM SOUTHMALL - BEBANG ENTERPRISE INC.",
+      "SM STA. ROSA - SWEET HARMONY FOOD CORP.",
+      "SM TANZA - BEBANG MEGA INC.",
+      "SM TAYTAY - DAY ONES FOOD AND DRINK ESTABLISHMENTS CORP.",
+      "SM VALENZUELA - BEBANG SMV INC.",
+      "STA. LUCIA EAST GRAND MALL - BEBANG SM MARIKINA INC.",
+      "THE GRID ROCKWELL - TASTECARTEL CORP.",
+      "THE TERMINAL - BEBANG STARMALL ALABANG INC.",
+      "UP TOWN MALL BGC - DMD HOLDINGS INC.",
+      "VISTA MALL TAGUIG - TRICERN FOOD CORP.",
+      "XENTROMALL MONTALBAN - PERPETUAL FOOD CORP."
+    ]
+  },
+  "status": "OK"
+}
