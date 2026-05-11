@@ -1,0 +1,397 @@
+{
+  "timestamp_utc": "2026-05-11T05:36:32.033581Z",
+  "company_stock_fields": [
+    {
+      "fieldname": "stock_tab",
+      "fieldtype": "Tab Break",
+      "label": "Stock and Manufacturing"
+    },
+    {
+      "fieldname": "auto_accounting_for_stock_settings",
+      "fieldtype": "Section Break",
+      "label": "Stock Settings"
+    },
+    {
+      "fieldname": "enable_perpetual_inventory",
+      "fieldtype": "Check",
+      "label": "Enable Perpetual Inventory"
+    },
+    {
+      "fieldname": "enable_provisional_accounting_for_non_stock_items",
+      "fieldtype": "Check",
+      "label": "Enable Provisional Accounting For Non Stock Items"
+    },
+    {
+      "fieldname": "default_inventory_account",
+      "fieldtype": "Link",
+      "label": "Default Inventory Account"
+    },
+    {
+      "fieldname": "stock_adjustment_account",
+      "fieldtype": "Link",
+      "label": "Stock Adjustment Account"
+    },
+    {
+      "fieldname": "stock_received_but_not_billed",
+      "fieldtype": "Link",
+      "label": "Stock Received But Not Billed"
+    }
+  ],
+  "company_columns": [
+    "enable_perpetual_inventory",
+    "enable_provisional_accounting_for_non_stock_items",
+    "stock_adjustment_account",
+    "stock_received_but_not_billed"
+  ],
+  "per_company": [
+    {
+      "name": "ARANETA GATEWAY - TUNGSTEN CAPITAL HOLDINGS OPC",
+      "enable_perpetual_inventory": 0,
+      "enable_provisional_accounting_for_non_stock_items": 0,
+      "stock_adjustment_account": null,
+      "stock_received_but_not_billed": null
+    },
+    {
+      "name": "AYALA EVO CITY - BEBANG MEGA INC.",
+      "enable_perpetual_inventory": 0,
+      "enable_provisional_accounting_for_non_stock_items": 0,
+      "stock_adjustment_account": null,
+      "stock_received_but_not_billed": null
+    },
+    {
+      "name": "AYALA FAIRVIEW TERRACES - BEBANG FT INC.",
+      "enable_perpetual_inventory": 1,
+      "enable_provisional_accounting_for_non_stock_items": 0,
+      "stock_adjustment_account": null,
+      "stock_received_but_not_billed": null
+    },
+    {
+      "name": "AYALA MARKET MARKET - BEBANG MARKET MARKET INC.",
+      "enable_perpetual_inventory": 1,
+      "enable_provisional_accounting_for_non_stock_items": 0,
+      "stock_adjustment_account": null,
+      "stock_received_but_not_billed": null
+    },
+    {
+      "name": "AYALA SOLENAD - HFFM SOLENAD FOOD SERVICES INC.",
+      "enable_perpetual_inventory": 1,
+      "enable_provisional_accounting_for_non_stock_items": 0,
+      "stock_adjustment_account": null,
+      "stock_received_but_not_billed": null
+    },
+    {
+      "name": "AYALA UP TOWN CENTER - BEBANG UP TOWN CENTER INC.",
+      "enable_perpetual_inventory": 1,
+      "enable_provisional_accounting_for_non_stock_items": 0,
+      "stock_adjustment_account": null,
+      "stock_received_but_not_billed": null
+    },
+    {
+      "name": "AYALA VERMOSA - BEBANG MEGA INC.",
+      "enable_perpetual_inventory": 0,
+      "enable_provisional_accounting_for_non_stock_items": 0,
+      "stock_adjustment_account": null,
+      "stock_received_but_not_billed": null
+    },
+    {
+      "name": "BF HOMES - BEBANG BF HOMES INC.",
+      "enable_perpetual_inventory": 1,
+      "enable_provisional_accounting_for_non_stock_items": 0,
+      "stock_adjustment_account": null,
+      "stock_received_but_not_billed": null
+    },
+    {
+      "name": "CTTM TOMAS MORATO - B CUBED VENTURES CORP.",
+      "enable_perpetual_inventory": 1,
+      "enable_provisional_accounting_for_non_stock_items": 0,
+      "stock_adjustment_account": null,
+      "stock_received_but_not_billed": null
+    },
+    {
+      "name": "D'VERDE CALAMBA - TAJ FOOD CORP.",
+      "enable_perpetual_inventory": 0,
+      "enable_provisional_accounting_for_non_stock_items": 0,
+      "stock_adjustment_account": null,
+      "stock_received_but_not_billed": null
+    },
+    {
+      "name": "EVER COMMONWEALTH - DLS DESSERT CRAFT INC.",
+      "enable_perpetual_inventory": 1,
+      "enable_provisional_accounting_for_non_stock_items": 0,
+      "stock_adjustment_account": null,
+      "stock_received_but_not_billed": null
+    },
+    {
+      "name": "FESTIVAL MALL ALABANG - BEBANG FESTIVAL INC.",
+      "enable_perpetual_inventory": 1,
+      "enable_provisional_accounting_for_non_stock_items": 0,
+      "stock_adjustment_account": null,
+      "stock_received_but_not_billed": null
+    },
+    {
+      "name": "LUCKY CHINATOWN - BEBANG LCT INC.",
+      "enable_perpetual_inventory": 1,
+      "enable_provisional_accounting_for_non_stock_items": 0,
+      "stock_adjustment_account": null,
+      "stock_received_but_not_billed": null
+    },
+    {
+      "name": "MEGAWIDE PITX - BEBANG PITX INC.",
+      "enable_perpetual_inventory": 1,
+      "enable_provisional_accounting_for_non_stock_items": 0,
+      "stock_adjustment_account": null,
+      "stock_received_but_not_billed": null
+    },
+    {
+      "name": "MEGAWORLD PASEO CENTER - BEBANG PASEO INC.",
+      "enable_perpetual_inventory": 1,
+      "enable_provisional_accounting_for_non_stock_items": 0,
+      "stock_adjustment_account": null,
+      "stock_received_but_not_billed": null
+    },
+    {
+      "name": "MEGAWORLD VENICE GRAND CANAL - BEBANG VENICE GRAND CANAL INC.",
+      "enable_perpetual_inventory": 1,
+      "enable_provisional_accounting_for_non_stock_items": 0,
+      "stock_adjustment_account": null,
+      "stock_received_but_not_billed": null
+    },
+    {
+      "name": "NAIA T3 - HALO-HALO TERMINAL FOOD CORP.",
+      "enable_perpetual_inventory": 0,
+      "enable_provisional_accounting_for_non_stock_items": 0,
+      "stock_adjustment_account": null,
+      "stock_received_but_not_billed": null
+    },
+    {
+      "name": "ORTIGAS ESTANCIA - BB ESTANCIA FOOD CORP.",
+      "enable_perpetual_inventory": 0,
+      "enable_provisional_accounting_for_non_stock_items": 0,
+      "stock_adjustment_account": null,
+      "stock_received_but_not_billed": null
+    },
+    {
+      "name": "ORTIGAS GREENHILLS - BEIFRANCHISE FOOD OPC",
+      "enable_perpetual_inventory": 1,
+      "enable_provisional_accounting_for_non_stock_items": 0,
+      "stock_adjustment_account": "Stock Adjustment - GHO",
+      "stock_received_but_not_billed": "Stock Received But Not Billed - GHO"
+    },
+    {
+      "name": "ROBINSONS ANTIPOLO - BEBANG ENTERPRISE INC.",
+      "enable_perpetual_inventory": 0,
+      "enable_provisional_accounting_for_non_stock_items": 0,
+      "stock_adjustment_account": null,
+      "stock_received_but_not_billed": null
+    },
+    {
+      "name": "ROBINSONS GALLERIA SOUTH - TUNGSTEN CAPITAL HOLDINGS OPC",
+      "enable_perpetual_inventory": 1,
+      "enable_provisional_accounting_for_non_stock_items": 0,
+      "stock_adjustment_account": null,
+      "stock_received_but_not_billed": null
+    },
+    {
+      "name": "ROBINSONS GENERAL TRIAS - BEBANG MEGA INC.",
+      "enable_perpetual_inventory": 0,
+      "enable_provisional_accounting_for_non_stock_items": 0,
+      "stock_adjustment_account": null,
+      "stock_received_but_not_billed": null
+    },
+    {
+      "name": "ROBINSONS IMUS - BEBANG MEGA INC.",
+      "enable_perpetual_inventory": 0,
+      "enable_provisional_accounting_for_non_stock_items": 0,
+      "stock_adjustment_account": null,
+      "stock_received_but_not_billed": null
+    },
+    {
+      "name": "ROBINSONS PLACE DASMARINAS - FREEZE DELIGHT INC.",
+      "enable_perpetual_inventory": 0,
+      "enable_provisional_accounting_for_non_stock_items": 0,
+      "stock_adjustment_account": null,
+      "stock_received_but_not_billed": null
+    },
+    {
+      "name": "SM BICUTAN - BEBANG SM BICUTAN INC.",
+      "enable_perpetual_inventory": 1,
+      "enable_provisional_accounting_for_non_stock_items": 0,
+      "stock_adjustment_account": null,
+      "stock_received_but_not_billed": null
+    },
+    {
+      "name": "SM CALOOCAN - TAJ FOOD CORP.",
+      "enable_perpetual_inventory": 1,
+      "enable_provisional_accounting_for_non_stock_items": 0,
+      "stock_adjustment_account": null,
+      "stock_received_but_not_billed": null
+    },
+    {
+      "name": "SM CLARK - RED TALDAWA FOODS OPC",
+      "enable_perpetual_inventory": 1,
+      "enable_provisional_accounting_for_non_stock_items": 0,
+      "stock_adjustment_account": null,
+      "stock_received_but_not_billed": null
+    },
+    {
+      "name": "SM EAST ORTIGAS - BEBANG SMEO INC.",
+      "enable_perpetual_inventory": 1,
+      "enable_provisional_accounting_for_non_stock_items": 0,
+      "stock_adjustment_account": null,
+      "stock_received_but_not_billed": null
+    },
+    {
+      "name": "SM GRAND CENTRAL - BEBANG GRAND CENTRAL INC.",
+      "enable_perpetual_inventory": 1,
+      "enable_provisional_accounting_for_non_stock_items": 0,
+      "stock_adjustment_account": null,
+      "stock_received_but_not_billed": null
+    },
+    {
+      "name": "SM MALL OF ASIA - BEBANG SMOA INC.",
+      "enable_perpetual_inventory": 1,
+      "enable_provisional_accounting_for_non_stock_items": 0,
+      "stock_adjustment_account": null,
+      "stock_received_but_not_billed": null
+    },
+    {
+      "name": "SM MANILA - BEBANG ENTERPRISE INC.",
+      "enable_perpetual_inventory": 0,
+      "enable_provisional_accounting_for_non_stock_items": 0,
+      "stock_adjustment_account": null,
+      "stock_received_but_not_billed": null
+    },
+    {
+      "name": "SM MARIKINA - BEBANG SM MARIKINA INC.",
+      "enable_perpetual_inventory": 1,
+      "enable_provisional_accounting_for_non_stock_items": 0,
+      "stock_adjustment_account": "Stock Adjustment - SMK",
+      "stock_received_but_not_billed": "Stock Received But Not Billed - BEI"
+    },
+    {
+      "name": "SM MARILAO - BEBANG MARILAO INC.",
+      "enable_perpetual_inventory": 1,
+      "enable_provisional_accounting_for_non_stock_items": 0,
+      "stock_adjustment_account": null,
+      "stock_received_but_not_billed": null
+    },
+    {
+      "name": "SM MEGAMALL - BEBANG ENTERPRISE INC.",
+      "enable_perpetual_inventory": 0,
+      "enable_provisional_accounting_for_non_stock_items": 0,
+      "stock_adjustment_account": null,
+      "stock_received_but_not_billed": null
+    },
+    {
+      "name": "SM NORTH EDSA - BEBANG NORTH EDSA INC.",
+      "enable_perpetual_inventory": 1,
+      "enable_provisional_accounting_for_non_stock_items": 0,
+      "stock_adjustment_account": null,
+      "stock_received_but_not_billed": null
+    },
+    {
+      "name": "SM PULILAN - BEBANG SMM INC.",
+      "enable_perpetual_inventory": 1,
+      "enable_provisional_accounting_for_non_stock_items": 0,
+      "stock_adjustment_account": null,
+      "stock_received_but_not_billed": null
+    },
+    {
+      "name": "SM SAN JOSE DEL MONTE - JL TRADE OPC",
+      "enable_perpetual_inventory": 1,
+      "enable_provisional_accounting_for_non_stock_items": 0,
+      "stock_adjustment_account": null,
+      "stock_received_but_not_billed": null
+    },
+    {
+      "name": "SM SANGANDAAN - TUNGSTEN CAPITAL HOLDINGS OPC",
+      "enable_perpetual_inventory": 1,
+      "enable_provisional_accounting_for_non_stock_items": 0,
+      "stock_adjustment_account": null,
+      "stock_received_but_not_billed": null
+    },
+    {
+      "name": "SM SOUTHMALL - BEBANG ENTERPRISE INC.",
+      "enable_perpetual_inventory": 0,
+      "enable_provisional_accounting_for_non_stock_items": 0,
+      "stock_adjustment_account": null,
+      "stock_received_but_not_billed": null
+    },
+    {
+      "name": "SM STA. ROSA - SWEET HARMONY FOOD CORP.",
+      "enable_perpetual_inventory": 0,
+      "enable_provisional_accounting_for_non_stock_items": 0,
+      "stock_adjustment_account": null,
+      "stock_received_but_not_billed": null
+    },
+    {
+      "name": "SM TANZA - BEBANG MEGA INC.",
+      "enable_perpetual_inventory": 0,
+      "enable_provisional_accounting_for_non_stock_items": 0,
+      "stock_adjustment_account": null,
+      "stock_received_but_not_billed": null
+    },
+    {
+      "name": "SM TAYTAY - DAY ONES FOOD AND DRINK ESTABLISHMENTS CORP.",
+      "enable_perpetual_inventory": 1,
+      "enable_provisional_accounting_for_non_stock_items": 0,
+      "stock_adjustment_account": null,
+      "stock_received_but_not_billed": null
+    },
+    {
+      "name": "SM VALENZUELA - BEBANG SMV INC.",
+      "enable_perpetual_inventory": 1,
+      "enable_provisional_accounting_for_non_stock_items": 0,
+      "stock_adjustment_account": null,
+      "stock_received_but_not_billed": null
+    },
+    {
+      "name": "STA. LUCIA EAST GRAND MALL - BEBANG SM MARIKINA INC.",
+      "enable_perpetual_inventory": 0,
+      "enable_provisional_accounting_for_non_stock_items": 0,
+      "stock_adjustment_account": null,
+      "stock_received_but_not_billed": null
+    },
+    {
+      "name": "THE GRID ROCKWELL - TASTECARTEL CORP.",
+      "enable_perpetual_inventory": 1,
+      "enable_provisional_accounting_for_non_stock_items": 0,
+      "stock_adjustment_account": null,
+      "stock_received_but_not_billed": null
+    },
+    {
+      "name": "THE TERMINAL - BEBANG STARMALL ALABANG INC.",
+      "enable_perpetual_inventory": 1,
+      "enable_provisional_accounting_for_non_stock_items": 0,
+      "stock_adjustment_account": null,
+      "stock_received_but_not_billed": null
+    },
+    {
+      "name": "UP TOWN MALL BGC - DMD HOLDINGS INC.",
+      "enable_perpetual_inventory": 1,
+      "enable_provisional_accounting_for_non_stock_items": 0,
+      "stock_adjustment_account": null,
+      "stock_received_but_not_billed": null
+    },
+    {
+      "name": "VISTA MALL TAGUIG - TRICERN FOOD CORP.",
+      "enable_perpetual_inventory": 1,
+      "enable_provisional_accounting_for_non_stock_items": 0,
+      "stock_adjustment_account": null,
+      "stock_received_but_not_billed": null
+    },
+    {
+      "name": "XENTROMALL MONTALBAN - PERPETUAL FOOD CORP.",
+      "enable_perpetual_inventory": 0,
+      "enable_provisional_accounting_for_non_stock_items": 0,
+      "stock_adjustment_account": null,
+      "stock_received_but_not_billed": null
+    }
+  ],
+  "erpnext_perpetual_helper": {
+    "ARANETA_PASS": false,
+    "AFT_FAIL": true,
+    "GHO_FAIL": true
+  },
+  "status": "OK"
+}

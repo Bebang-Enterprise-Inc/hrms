@@ -1,0 +1,58 @@
+{
+  "timestamp_utc": "2026-05-11T05:33:45.754850Z",
+  "si_inserted": "BKI-SI-2026-00983-2",
+  "build_phase": {
+    "started_at": "2026-05-11T05:33:47.178456Z",
+    "build_ok": true,
+    "pi_dict": {
+      "company": "AYALA FAIRVIEW TERRACES - BEBANG FT INC.",
+      "supplier": "BEBANG KITCHEN INC. - Trade",
+      "currency": "PHP",
+      "conversion_rate": 1.0,
+      "set_warehouse": "AYALA FAIRVIEW TERRACES - BEBANG FT INC.",
+      "credit_to": "2103210 - 2103210 - AP-Trade-BKI - AFT",
+      "update_stock": 1,
+      "items_count": 1,
+      "taxes_count": 1,
+      "first_item_expense": "1104210 - 1104210 - Inventory-from-Commissary - AFT",
+      "first_item_warehouse": "AYALA FAIRVIEW TERRACES - BEBANG FT INC.",
+      "first_item_cost_center": "Main - AFT"
+    }
+  },
+  "insert_phase": {
+    "insert_ok": false,
+    "error": "Please set default Stock Received But Not Billed in Company AYALA FAIRVIEW TERRACES - BEBANG FT INC.",
+    "full_traceback": "Traceback (most recent call last):\n  File \"/tmp/s244_one.py\", line 96, in main\n    pi.insert(ignore_permissions=True)\n  File \"/home/frappe/frappe-bench/apps/frappe/frappe/model/document.py\", line 309, in insert\n    self.run_before_save_methods()\n  File \"/home/frappe/frappe-bench/apps/frappe/frappe/model/document.py\", line 1140, in run_before_save_methods\n    self.run_method(\"validate\")\n  File \"/home/frappe/frappe-bench/apps/frappe/frappe/model/document.py\", line 1011, in run_method\n    out = Document.hook(fn)(self, *args, **kwargs)\n          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/frappe/frappe-bench/apps/frappe/frappe/model/document.py\", line 1371, in composer\n    return composed(self, method, *args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/frappe/frappe-bench/apps/frappe/frappe/model/document.py\", line 1353, in runner\n    add_to_return_value(self, fn(self, *args, **kwargs))\n                              ^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/frappe/frappe-bench/apps/frappe/frappe/model/document.py\", line 1008, in fn\n    return method_object(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/frappe/frappe-bench/apps/erpnext/erpnext/accounts/doctype/purchase_invoice/purchase_invoice.py\", line 264, in validate\n    super().validate()\n  File \"/home/frappe/frappe-bench/apps/erpnext/erpnext/controllers/buying_controller.py\", line 34, in validate\n    super().validate()\n  File \"/home/frappe/frappe-bench/apps/erpnext/erpnext/controllers/subcontracting_controller.py\", line 60, in validate\n    super().validate()\n  File \"/home/frappe/frappe-bench/apps/erpnext/erpnext/controllers/stock_controller.py\", line 52, in validate\n    super().validate()\n  File \"/home/frappe/frappe-bench/apps/erpnext/erpnext/controllers/accounts_controller.py\", line 226, in validate\n    self.set_missing_values(for_validate=True)\n  File \"/home/frappe/frappe-bench/apps/erpnext/erpnext/accounts/doctype/purchase_invoice/purchase_invoice.py\", line 357, in set_missing_values\n    super().set_missing_values(for_validate)\n  File \"/home/frappe/frappe-bench/apps/erpnext/erpnext/controllers/buying_controller.py\", line 182, in set_missing_values\n    self.set_missing_item_details(for_validate)\n  File \"/home/frappe/frappe-bench/apps/erpnext/erpnext/controllers/accounts_controller.py\", line 1119, in set_missing_item_details\n    self.set_expense_account(for_validate)\n  File \"/home/frappe/frappe-bench/apps/erpnext/erpnext/accounts/doctype/purchase_invoice/purchase_invoice.py\", line 455, in set_expense_account\n    stock_not_billed_account = self.get_company_default(\"stock_received_but_not_billed\")\n                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/frappe/frappe-bench/apps/erpnext/erpnext/controllers/accounts_controller.py\", line 2288, in get_company_default\n    return get_company_default(self.company, fieldname, ignore_validation=ignore_validation)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/frappe/frappe-bench/apps/frappe/frappe/utils/typing_validations.py\", line 32, in wrapper\n    return func(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/frappe/frappe-bench/apps/erpnext/erpnext/accounts/utils.py\", line 1103, in get_company_default\n    throw(\n  File \"/home/frappe/frappe-bench/apps/frappe/frappe/__init__.py\", line 619, in throw\n    msgprint(\n  File \"/home/frappe/frappe-bench/apps/frappe/frappe/__init__.py\", line 584, in msgprint\n    _raise_exception()\n  File \"/home/frappe/frappe-bench/apps/frappe/frappe/__init__.py\", line 535, in _raise_exception\n    raise exc\nfrappe.exceptions.ValidationError: Please set default Stock Received But Not Billed in Company AYALA FAIRVIEW TERRACES - BEBANG FT INC.\n"
+  },
+  "warehouse_default_account": null,
+  "s238_accounts": [
+    {
+      "name": "1104210 - 1104210 - Inventory-from-Commissary - AFT",
+      "account_number": "1104210",
+      "account_type": "Stock",
+      "root_type": "Asset",
+      "is_group": 0,
+      "disabled": 0
+    },
+    {
+      "name": "1106210 - 1106210 - Input VAT - BKI Inter-Co - AFT",
+      "account_number": "1106210",
+      "account_type": "Tax",
+      "root_type": "Asset",
+      "is_group": 0,
+      "disabled": 0
+    },
+    {
+      "name": "2103210 - 2103210 - AP-Trade-BKI - AFT",
+      "account_number": "2103210",
+      "account_type": "Payable",
+      "root_type": "Liability",
+      "is_group": 0,
+      "disabled": 0
+    }
+  ],
+  "status": "OK",
+  "cleanup_log": [
+    "Deleted SI BKI-SI-2026-00983-2"
+  ]
+}
