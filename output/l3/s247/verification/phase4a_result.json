@@ -1,0 +1,80 @@
+{
+  "sprint": "S247",
+  "phase": "4a",
+  "purpose": "set Company.cost_center on 4 BEI-Enterprise stores",
+  "timestamp_utc": "2026-05-11T15:50:04.237596Z",
+  "results": [
+    {
+      "company": "ROBINSONS ANTIPOLO - BEBANG ENTERPRISE INC.",
+      "abbr": "ROA",
+      "old_cost_center": null,
+      "target_cost_center_name": "Bebang Enterprise Inc. - Robinsons Antipolo - ROA",
+      "target_cost_center_pre_exists": true,
+      "new_cost_center": "Bebang Enterprise Inc. - Robinsons Antipolo - ROA",
+      "status": "SET"
+    },
+    {
+      "company": "SM MANILA - BEBANG ENTERPRISE INC.",
+      "abbr": "SMM",
+      "old_cost_center": null,
+      "target_cost_center_name": "Bebang Enterprise Inc. - SM Manila - SMM",
+      "target_cost_center_pre_exists": true,
+      "new_cost_center": "Bebang Enterprise Inc. - SM Manila - SMM",
+      "status": "SET"
+    },
+    {
+      "company": "SM MEGAMALL - BEBANG ENTERPRISE INC.",
+      "abbr": "SMMM",
+      "old_cost_center": null,
+      "target_cost_center_name": "Bebang Enterprise Inc. - SM Megamall - SMMM",
+      "target_cost_center_pre_exists": true,
+      "new_cost_center": "Bebang Enterprise Inc. - SM Megamall - SMMM",
+      "status": "SET"
+    },
+    {
+      "company": "SM SOUTHMALL - BEBANG ENTERPRISE INC.",
+      "abbr": "SMS",
+      "old_cost_center": null,
+      "target_cost_center_name": "Bebang Enterprise Inc. - SM Southmall - SMS",
+      "target_cost_center_pre_exists": true,
+      "new_cost_center": "Bebang Enterprise Inc. - SM Southmall - SMS",
+      "status": "SET"
+    }
+  ],
+  "teardown_ledger": [
+    {
+      "doctype": "Company",
+      "name": "ROBINSONS ANTIPOLO - BEBANG ENTERPRISE INC.",
+      "field": "cost_center",
+      "old_value": null,
+      "new_value": "Bebang Enterprise Inc. - Robinsons Antipolo - ROA",
+      "action": "REVERT_FIELDS"
+    },
+    {
+      "doctype": "Company",
+      "name": "SM MANILA - BEBANG ENTERPRISE INC.",
+      "field": "cost_center",
+      "old_value": null,
+      "new_value": "Bebang Enterprise Inc. - SM Manila - SMM",
+      "action": "REVERT_FIELDS"
+    },
+    {
+      "doctype": "Company",
+      "name": "SM MEGAMALL - BEBANG ENTERPRISE INC.",
+      "field": "cost_center",
+      "old_value": null,
+      "new_value": "Bebang Enterprise Inc. - SM Megamall - SMMM",
+      "action": "REVERT_FIELDS"
+    },
+    {
+      "doctype": "Company",
+      "name": "SM SOUTHMALL - BEBANG ENTERPRISE INC.",
+      "field": "cost_center",
+      "old_value": null,
+      "new_value": "Bebang Enterprise Inc. - SM Southmall - SMS",
+      "action": "REVERT_FIELDS"
+    }
+  ],
+  "all_4_stores_have_cost_center": true,
+  "status": "OK"
+}
