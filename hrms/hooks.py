@@ -222,17 +222,32 @@ doc_events = {
 		# embedding the originating BEI Store Order # for traceability.
 		# No-op for non-BKI SIs (Frappe falls back to naming_series).
 		"autoname": "hrms.api.bki_si_naming.set_bki_si_name",
-		# S238 — generate paired Draft PI on per-store Co's books when BKI SI submits.
-		# Implements ICT-003 paired-document model.
-		"on_submit": "hrms.api.bki_store_pi_generator.maybe_generate_store_pi",
-		# S238 v2-B3 — cascade to paired PI when BKI SI cancelled.
-		# Draft PI -> delete; Submitted PI -> Comment alert (manual review).
-		"on_cancel": "hrms.api.bki_store_pi_generator.cascade_cancel_store_pi",
+		# S238/S247 — paired-doc generators on SI submit. ORDER: PI first, SE second.
+		# Each generator runs independently with its own savepoint isolation; one
+		# failure doesn't block the other. Daily reconciliation cron (S248) sweeps
+		# half-paired SIs. v3 (S247): converted from STRING to LIST per audit Blocker 1.
+		"on_submit": [
+			"hrms.api.bki_store_pi_generator.maybe_generate_store_pi",
+			"hrms.api.bki_store_stock_entry_generator.maybe_generate_store_stock_entry",
+		],
+		# S238/S247 — cascade-cancel paired docs on SI cancel. ORDER: SE FIRST, PI SECOND
+		# (reverse-creation, textbook cancellation pattern). Cancelling SE first keeps
+		# SRBNB net at zero throughout the cancellation window. v3 (S247): converted
+		# from STRING to LIST per audit Blocker 1 + cascade order per Blocker 10.
+		"on_cancel": [
+			"hrms.api.bki_store_stock_entry_generator.cascade_cancel_store_stock_entry",
+			"hrms.api.bki_store_pi_generator.cascade_cancel_store_pi",
+		],
 	},
 	"Purchase Invoice": {
 		# S238 v2-B8 — lock posting_date on auto-generated paired PIs
 		# (must match BKI SI's posting_date per ICT-007 + PFRS 15).
 		"validate": "hrms.api.bki_store_pi_generator.lock_posting_date_on_bki_paired_pi",
+	},
+	"Stock Entry": {
+		# S247 — lock posting_date on auto-generated paired SEs
+		# (must match BKI SI's posting_date per ICT-007 + PFRS 15).
+		"validate": "hrms.api.bki_store_stock_entry_generator.lock_posting_date_on_bki_paired_se",
 	},
 	"Branch": {
 		# S201 — invalidate branch->Company resolver cache when Branch docs change

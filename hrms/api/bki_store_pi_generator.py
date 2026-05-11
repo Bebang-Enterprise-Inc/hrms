@@ -1,8 +1,27 @@
-"""S238 — Generate store-side Draft Purchase Invoice when a BKI Sales Invoice submits.
+"""S238/S247 — Generate store-side Draft Purchase Invoice when a BKI Sales Invoice submits.
 
 Implements ICT-003: each BKI->store SI must have a paired PI on the receiving
-store's books for BIR per-entity bookkeeping. NOT an atomic auto-mirror — the
-PI is a SEPARATE document on a SEPARATE Company, awaiting Denise's team review.
+store's books for BIR per-entity bookkeeping.
+
+# Option 3-corrected (S247, CEO-chosen 2026-05-11)
+# billing-only PI + GR/IR via SRBNB clearing account
+# Paired with Stock Entry generator (bki_store_stock_entry_generator.py).
+#
+# v3 GL chain per BKI->Store shipment:
+#   SE (Material Receipt, update_stock=1):
+#     Dr  1104210 Inventory-from-Commissary  (via Warehouse.account)
+#     Cr  SRBNB                                (via SE item.expense_account = srbnb_account)
+#   PI (this generator, update_stock=0):
+#     Dr  SRBNB                                (via PI item.expense_account = srbnb_account, CLEARS SE Cr)
+#     Dr  1106210 Input VAT BKI Inter-Co      (via tax row)
+#     Cr  2103210 AP-Trade-BKI                 (via pi.credit_to)
+#   Net per shipment:
+#     Dr  1104210 Inventory + Dr 1106210 Input VAT
+#     Cr  2103210 AP-Trade-BKI
+#     SRBNB clearing nets to zero.
+#
+# This is the canonical Goods-Receipt / Invoice-Received pattern used by
+# SAP, Oracle, NetSuite, and standard ERPNext flows.
 
 v2: audit fixes B1 (savepoint API), B2 (set_warehouse), B3 (on_cancel),
 B4 (account_number resolution), B7 (naming series guard), B8 (posting_time/lock),
@@ -13,6 +32,10 @@ v2.1: CRIT-1 (bei_legal_entity = buyer_company, NOT seller's),
 CRIT-2 (per-store cost_center via Warehouse.custom_cost_center, NOT mirror SI's),
 W2 (try/except on cascade), W3 (Sentry breadcrumb on silent skip),
 W7 (has_field guards on S192/S203 fields), W9 (drift-detection entry point).
+
+v3 (S247): Option 3-corrected refactor — set update_stock=0, remove set_warehouse,
+change expense_account from 1104210 to SRBNB. Paired with new SE generator that
+posts the inventory. Cancel cascade order: SE first then PI (reverse-creation).
 """
 from __future__ import annotations
 
@@ -123,13 +146,24 @@ def maybe_generate_store_pi(doc, method=None):
 
 
 def build_store_pi(si, buyer_company):
-	"""Construct the Draft PI mirroring the SI's items + taxes."""
+	"""Construct the Draft PI (BILLING-ONLY, update_stock=0) per Option 3-corrected.
+
+	v3 (S247): expense_account is SRBNB (clearing account that the paired SE Cr posts to),
+	NOT 1104210 directly. SE posts the inventory Dr; this PI clears the SRBNB credit and
+	posts the AP liability.
+	"""
 	# v2-B4: exact-match by account_number (deterministic)
+	# v3 (S247): inv_account still resolved but NO LONGER used on this PI's items —
+	# kept for backwards-compat with any imports. Can be removed in a follow-up.
 	inv_account = resolve_account_by_number(buyer_company, ACCT_INVENTORY_FROM_COMMISSARY)
 	vat_account = resolve_account_by_number(buyer_company, ACCT_INPUT_VAT_BKI_INTERCO)
 	ap_account = resolve_account_by_number(buyer_company, ACCT_AP_TRADE_BKI)
+	# v3 (S247): resolve the GR/IR clearing account. Set on every store's Company by
+	# S247 Phase 4b via Company.stock_received_but_not_billed.
+	srbnb_account = _resolve_srbnb_account(buyer_company)
 
 	# v2-B2: per-store warehouse — canonical: Warehouse.docname == Company.name
+	# v3 (S247): kept for cost_center resolution; PI no longer sets pi.set_warehouse
 	buyer_warehouse = buyer_company
 
 	# v2.1-CRIT-2: resolve per-store cost_center BEFORE building items.
@@ -172,8 +206,12 @@ def build_store_pi(si, buyer_company):
 	# as the authoritative cross-doc link instead. G-046 dashboard updates to
 	# query `bki_si_reference` instead of `inter_company_invoice_reference` are
 	# a separate follow-up sprint candidate.
-	pi.update_stock = 1
-	pi.set_warehouse = buyer_warehouse                    # v2-B2
+	# v3 (S247) Option 3-corrected — billing-only PI:
+	# - update_stock=0 (Stock Entry generator handles inventory landing)
+	# - no set_warehouse (PI doesn't post stock; warehouse is on SE side)
+	# - expense_account on each item line = SRBNB (clears the SE credit posting)
+	pi.update_stock = 0
+	# pi.set_warehouse intentionally NOT set (was buyer_warehouse before S247 v3)
 	pi.credit_to = ap_account
 
 	# v2.1-CRIT-1: bei_legal_entity is the BUYER's, NOT the seller's.
@@ -184,10 +222,46 @@ def build_store_pi(si, buyer_company):
 	if pi_meta.has_field("bei_store_label") and getattr(si, "bei_store_label", None):
 		pi.bei_store_label = si.bei_store_label
 
-	# v2-B9: explicit item + tax mirroring
-	_mirror_items(pi, si, inv_account, buyer_warehouse, buyer_cost_center)
+	# v2-B9 + v3 (S247): mirror items with SRBNB as expense_account (GR/IR clearing).
+	# The paired SE generator credits SRBNB; this PI debits SRBNB. Net = zero balance.
+	# Item warehouse is intentionally NOT set on PI (update_stock=0 means no SLE).
+	_mirror_items(pi, si, srbnb_account, buyer_cost_center)
 	_mirror_taxes(pi, si, vat_account, buyer_cost_center)
 	return pi
+
+
+def _resolve_srbnb_account(buyer_company):
+	"""v3 (S247): resolve the buyer Company's Stock Received But Not Billed account.
+
+	GR/IR clearing account. Set on every store's Company.stock_received_but_not_billed
+	by S247 Phase 4b via /frappe-bulk-edits. The SE generator posts Cr to this account;
+	this PI posts Dr to clear it. Net per shipment = zero balance on SRBNB.
+
+	Resolution order:
+	  1. Company.stock_received_but_not_billed (canonical, set by Phase 4b)
+	  2. Account on this Company with account_type='Stock Received But Not Billed' (fallback)
+	  3. Throw — fail loud, not silent. SI submit will see this via savepoint rollback.
+	"""
+	srbnb = frappe.db.get_value("Company", buyer_company, "stock_received_but_not_billed")
+	if srbnb:
+		return srbnb
+	srbnb = frappe.db.get_value(
+		"Account",
+		{
+			"company": buyer_company,
+			"account_type": "Stock Received But Not Billed",
+			"is_group": 0,
+			"disabled": 0,
+		},
+		"name",
+	)
+	if srbnb:
+		return srbnb
+	frappe.throw(_(
+		f"S247: SRBNB account not found for {buyer_company}. Set "
+		f"Company({buyer_company}).stock_received_but_not_billed via /frappe-bulk-edits "
+		f"(S247 Phase 4b)."
+	))
 
 
 def _resolve_per_store_cost_center(buyer_company, buyer_warehouse):
@@ -225,8 +299,12 @@ def _resolve_per_store_cost_center(buyer_company, buyer_warehouse):
 	return cc
 
 
-def _mirror_items(pi, si, inv_account, warehouse, cost_center):
-	"""v2-B9 + B10 + v2.1-CRIT-2: mirror SI line items with per-store inventory + per-store CC."""
+def _mirror_items(pi, si, expense_account, cost_center):
+	"""v2-B9 + B10 + v2.1-CRIT-2 + v3 (S247): mirror SI line items with per-store CC.
+
+	v3 (S247): signature changed — removed `warehouse` arg (PI no longer posts stock).
+	`expense_account` is now SRBNB (GR/IR clearing) per Option 3-corrected, not 1104210.
+	"""
 	for si_item in si.items:
 		pi.append("items", {
 			"item_code":   si_item.item_code,
@@ -236,8 +314,8 @@ def _mirror_items(pi, si, inv_account, warehouse, cost_center):
 			"uom":         si_item.uom,
 			"rate":        flt(si_item.rate),
 			"amount":      flt(si_item.amount),
-			"warehouse":   warehouse,                      # v2-B2
-			"expense_account": inv_account,
+			# v3 (S247): no "warehouse" key — PI is billing-only (update_stock=0)
+			"expense_account": expense_account,            # SRBNB clearing per Option 3-corrected
 			"cost_center": cost_center,                    # v2.1-CRIT-2 (NOT si_item.cost_center)
 		})
 
