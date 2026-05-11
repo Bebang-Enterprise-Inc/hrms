@@ -1,0 +1,20 @@
+{
+  "sprint": "S246",
+  "started_at_utc": "2026-05-11T14:00:00Z",
+  "phase": 0,
+  "status": "in_progress",
+  "worktree_path": "F:/Dropbox/Projects/BEI-ERP-s246-bki-store-billing-redesign",
+  "branch": "s246-bki-store-billing-redesign",
+  "plan_path": "docs/plans/2026-05-11-sprint-246-bki-store-billing-redesign.md",
+  "plan_version": "v1.1",
+  "owns_files": [
+    "hrms/api/bki_store_pi_generator.py",
+    "hrms/api/bki_store_stock_entry_generator.py",
+    "hrms/hooks.py",
+    "hrms/hr/doctype/bei_settings/bei_settings.json",
+    "scripts/verify_canonical_structure.py",
+    "scripts/billing_sweep/multi_store_smoke.py",
+    "scripts/s246/**",
+    "output/l3/s246/**"
+  ]
+}

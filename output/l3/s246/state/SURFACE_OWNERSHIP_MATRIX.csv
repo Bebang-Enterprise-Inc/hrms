@@ -1,0 +1,10 @@
+file_glob,owner_sprint,owner_phase,reason
+hrms/api/bki_store_pi_generator.py,S246,P3A,refactor to update_stock=0 + SRBNB routing
+hrms/api/bki_store_stock_entry_generator.py,S246,P3B,NEW file (Stock Entry generator)
+hrms/hooks.py,S246,P3B.6,STRING->LIST conversion of Sales Invoice on_submit/on_cancel + Stock Entry validate hook
+hrms/hr/doctype/bei_settings/bei_settings.json,S246,P3C.1,add enable_bki_store_pi_generator + enable_bki_store_stock_entry_generator toggles
+scripts/verify_canonical_structure.py,S246,P1A.4,extend to v2 mode asserting full canonical store spec
+scripts/billing_sweep/multi_store_smoke.py,S246,P3B.8,add Stock Entry assertions + GR/IR SRBNB JE chain verification
+scripts/s246/install_se_custom_field.py,S246,P3C.4,NEW idempotent installer for bki_si_reference on Stock Entry
+scripts/s246/cleanup_historical_test_bki_si.py,S246,P6,NEW cleanup script for historical test BKI SIs
+output/l3/s246/**,S246,all_phases,all evidence + state + ledgers

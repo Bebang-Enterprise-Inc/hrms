@@ -1,0 +1,422 @@
+{
+  "sprint": "S246",
+  "phase": "1B",
+  "purpose": "7-item audit + 30-day Error Log sweep",
+  "timestamp_utc": "2026-05-11T14:01:06.029852Z",
+  "audits": {
+    "p1b_1_bki_si_gl": {
+      "audit": "P1B.1 \u2014 BKI SI GL Posting",
+      "sample_count": 5,
+      "samples": [
+        {
+          "si_name": "ACC-SINV-2026-00023",
+          "customer": "Bebang Enterprise Inc.",
+          "order": "BEI-ORD-2026-00304",
+          "grand_total": 215465.14,
+          "posting_date": "2026-04-18",
+          "gl_lines": [
+            {
+              "account": "Debtors - BKI",
+              "debit": 215465.0,
+              "credit": 0.0
+            },
+            {
+              "account": "OUTPUT VAT PAYABLE - BKI",
+              "debit": 0.0,
+              "credit": 23085.55
+            },
+            {
+              "account": "4000210 - DELIVERIES - BKI",
+              "debit": 0.0,
+              "credit": 192379.59
+            },
+            {
+              "account": "4000908 - SALES DISCOUNTS - EMPLOYEE DISC - BKI",
+              "debit": 0.14,
+              "credit": 0.0
+            }
+          ],
+          "gl_balanced": true
+        },
+        {
+          "si_name": "ACC-SINV-2026-00013",
+          "customer": "Bebang Enterprise Inc.",
+          "order": "BEI-ORD-2026-00292",
+          "grand_total": 215465.14,
+          "posting_date": "2026-04-18",
+          "gl_lines": [
+            {
+              "account": "Debtors - BKI",
+              "debit": 215465.0,
+              "credit": 0.0
+            },
+            {
+              "account": "OUTPUT VAT PAYABLE - BKI",
+              "debit": 0.0,
+              "credit": 23085.55
+            },
+            {
+              "account": "4000210 - DELIVERIES - BKI",
+              "debit": 0.0,
+              "credit": 192379.59
+            },
+            {
+              "account": "4000908 - SALES DISCOUNTS - EMPLOYEE DISC - BKI",
+              "debit": 0.14,
+              "credit": 0.0
+            }
+          ],
+          "gl_balanced": true
+        },
+        {
+          "si_name": "ACC-SINV-2026-00484",
+          "customer": "FESTIVAL MALL ALABANG - BEBANG FESTIVAL INC.",
+          "order": "BEI-ORD-2026-00582",
+          "grand_total": 1715.0,
+          "posting_date": "2026-04-30",
+          "gl_lines": [
+            {
+              "account": "Debtors - BKI",
+              "debit": 1715.0,
+              "credit": 0.0
+            },
+            {
+              "account": "OUTPUT VAT PAYABLE - BKI",
+              "debit": 0.0,
+              "credit": 183.75
+            },
+            {
+              "account": "4000210 - DELIVERIES - BKI",
+              "debit": 0.0,
+              "credit": 1531.25
+            }
+          ],
+          "gl_balanced": true
+        },
+        {
+          "si_name": "ACC-SINV-2026-00770",
+          "customer": "BF HOMES - BEBANG BF HOMES INC.",
+          "order": "BEI-ORD-2026-00871",
+          "grand_total": 1416.3,
+          "posting_date": "2026-05-03",
+          "gl_lines": [
+            {
+              "account": "Debtors - BKI",
+              "debit": 1416.0,
+              "credit": 0.0
+            },
+            {
+              "account": "OUTPUT VAT PAYABLE - BKI",
+              "debit": 0.0,
+              "credit": 151.75
+            },
+            {
+              "account": "4000210 - DELIVERIES - BKI",
+              "debit": 0.0,
+              "credit": 1264.55
+            },
+            {
+              "account": "4000908 - SALES DISCOUNTS - EMPLOYEE DISC - BKI",
+              "debit": 0.3,
+              "credit": 0.0
+            }
+          ],
+          "gl_balanced": true
+        },
+        {
+          "si_name": "ACC-SINV-2026-00730",
+          "customer": "NAIA T3 - HALO-HALO TERMINAL FOOD CORP.",
+          "order": "BEI-ORD-2026-00831",
+          "grand_total": 1219.23,
+          "posting_date": "2026-05-01",
+          "gl_lines": [
+            {
+              "account": "Debtors - BKI",
+              "debit": 1219.0,
+              "credit": 0.0
+            },
+            {
+              "account": "OUTPUT VAT PAYABLE - BKI",
+              "debit": 0.0,
+              "credit": 130.63
+            },
+            {
+              "account": "4000210 - DELIVERIES - BKI",
+              "debit": 0.0,
+              "credit": 1088.6
+            },
+            {
+              "account": "4000908 - SALES DISCOUNTS - EMPLOYEE DISC - BKI",
+              "debit": 0.23,
+              "credit": 0.0
+            }
+          ],
+          "gl_balanced": true
+        }
+      ],
+      "all_balanced": true
+    },
+    "p1b_2_tax_flow": {
+      "audit": "P1B.2 \u2014 Output VAT \u2192 Input VAT Flow",
+      "pair_count": 0,
+      "pairs": []
+    },
+    "p1b_3_cancel_cascade": {
+      "audit": "P1B.3 \u2014 Cancel Cascade",
+      "cancelled_si_count": 10,
+      "cases": [
+        {
+          "si_name": "ACC-SINV-2026-00308",
+          "si_cancelled_at": "2026-04-27 17:40:24.174892",
+          "paired_pi_remaining": [],
+          "cascade_clean": true
+        },
+        {
+          "si_name": "ACC-SINV-2026-00309",
+          "si_cancelled_at": "2026-04-27 17:40:24.060318",
+          "paired_pi_remaining": [],
+          "cascade_clean": true
+        },
+        {
+          "si_name": "ACC-SINV-2026-00310",
+          "si_cancelled_at": "2026-04-27 17:40:23.951295",
+          "paired_pi_remaining": [],
+          "cascade_clean": true
+        }
+      ]
+    },
+    "p1b_4_pass_stores_inventory": {
+      "audit": "P1B.4 \u2014 13 PASS Stores Inventory Reality",
+      "stores": [
+        {
+          "company": "ARANETA GATEWAY - TUNGSTEN CAPITAL HOLDINGS OPC",
+          "stock_gl_entry_count": 0,
+          "stock_gl_total_dr": 0.0,
+          "stock_gl_total_cr": 0.0,
+          "current_bin_inventory_value": 75583.2840490326,
+          "bin_count_with_stock": 79
+        },
+        {
+          "company": "AYALA EVO CITY - BEBANG MEGA INC.",
+          "stock_gl_entry_count": 0,
+          "stock_gl_total_dr": 0.0,
+          "stock_gl_total_cr": 0.0,
+          "current_bin_inventory_value": 0.0,
+          "bin_count_with_stock": 0
+        },
+        {
+          "company": "AYALA VERMOSA - BEBANG MEGA INC.",
+          "stock_gl_entry_count": 0,
+          "stock_gl_total_dr": 0.0,
+          "stock_gl_total_cr": 0.0,
+          "current_bin_inventory_value": 205070.89938993767,
+          "bin_count_with_stock": 71
+        },
+        {
+          "company": "D'VERDE CALAMBA - TAJ FOOD CORP.",
+          "stock_gl_entry_count": 0,
+          "stock_gl_total_dr": 0.0,
+          "stock_gl_total_cr": 0.0,
+          "current_bin_inventory_value": 103389.59349031166,
+          "bin_count_with_stock": 75
+        },
+        {
+          "company": "NAIA T3 - HALO-HALO TERMINAL FOOD CORP.",
+          "stock_gl_entry_count": 0,
+          "stock_gl_total_dr": 0.0,
+          "stock_gl_total_cr": 0.0,
+          "current_bin_inventory_value": 123906.29231000377,
+          "bin_count_with_stock": 78
+        },
+        {
+          "company": "ORTIGAS ESTANCIA - BB ESTANCIA FOOD CORP.",
+          "stock_gl_entry_count": 0,
+          "stock_gl_total_dr": 0.0,
+          "stock_gl_total_cr": 0.0,
+          "current_bin_inventory_value": 0.0,
+          "bin_count_with_stock": 0
+        },
+        {
+          "company": "ROBINSONS GENERAL TRIAS - BEBANG MEGA INC.",
+          "stock_gl_entry_count": 0,
+          "stock_gl_total_dr": 0.0,
+          "stock_gl_total_cr": 0.0,
+          "current_bin_inventory_value": 0.0,
+          "bin_count_with_stock": 0
+        },
+        {
+          "company": "ROBINSONS IMUS - BEBANG MEGA INC.",
+          "stock_gl_entry_count": 0,
+          "stock_gl_total_dr": 0.0,
+          "stock_gl_total_cr": 0.0,
+          "current_bin_inventory_value": 0.0,
+          "bin_count_with_stock": 0
+        },
+        {
+          "company": "ROBINSONS PLACE DASMARINAS - FREEZE DELIGHT INC.",
+          "stock_gl_entry_count": 0,
+          "stock_gl_total_dr": 0.0,
+          "stock_gl_total_cr": 0.0,
+          "current_bin_inventory_value": 0.0,
+          "bin_count_with_stock": 0
+        },
+        {
+          "company": "SM STA. ROSA - SWEET HARMONY FOOD CORP.",
+          "stock_gl_entry_count": 0,
+          "stock_gl_total_dr": 0.0,
+          "stock_gl_total_cr": 0.0,
+          "current_bin_inventory_value": 137767.8704386809,
+          "bin_count_with_stock": 72
+        },
+        {
+          "company": "SM TANZA - BEBANG MEGA INC.",
+          "stock_gl_entry_count": 0,
+          "stock_gl_total_dr": 0.0,
+          "stock_gl_total_cr": 0.0,
+          "current_bin_inventory_value": 197910.05987957056,
+          "bin_count_with_stock": 70
+        },
+        {
+          "company": "STA. LUCIA EAST GRAND MALL - BEBANG SM MARIKINA INC.",
+          "stock_gl_entry_count": 0,
+          "stock_gl_total_dr": 0.0,
+          "stock_gl_total_cr": 0.0,
+          "current_bin_inventory_value": 72430.82296077596,
+          "bin_count_with_stock": 79
+        },
+        {
+          "company": "XENTROMALL MONTALBAN - PERPETUAL FOOD CORP.",
+          "stock_gl_entry_count": 0,
+          "stock_gl_total_dr": 0.0,
+          "stock_gl_total_cr": 0.0,
+          "current_bin_inventory_value": 0.0,
+          "bin_count_with_stock": 0
+        }
+      ],
+      "zero_stock_gl_count": 13,
+      "nonzero_inventory_count": 7
+    },
+    "p1b_5_historical_si_gl": {
+      "audit": "P1B.5 \u2014 839 Historical Test BKI SI GL Audit",
+      "si_breakdown": [
+        {
+          "docstatus": 0,
+          "count": 49,
+          "total_pesos": 93426.96
+        },
+        {
+          "docstatus": 1,
+          "count": 560,
+          "total_pesos": 10480472.08
+        },
+        {
+          "docstatus": 2,
+          "count": 230,
+          "total_pesos": 4151421.87
+        }
+      ],
+      "si_total_count": 839,
+      "paired_pi_breakdown": [],
+      "bki_si_active_gl_entries": 2215,
+      "bki_si_total_dr": 10480551.25,
+      "bki_si_total_cr": 10480551.25,
+      "paired_pi_active_gl_entries": 0,
+      "paired_pi_total_dr": 0.0,
+      "paired_pi_total_cr": 0.0,
+      "orphan_pi_count": 0
+    },
+    "p1b_6_error_log_sweep": {
+      "audit": "P1B.6 \u2014 30-Day Error Log Sweep",
+      "total_s238_errors_30d": 40,
+      "by_method": [
+        {
+          "method": "S238 Store PI Generator Error",
+          "count": 37
+        },
+        {
+          "method": "S238 install bki_si_reference field failed",
+          "count": 1
+        },
+        {
+          "method": "S238 drift: 141 BKI SIs without paired PI in last 7d. Sample: [{'name': 'ACC-SINV-2026-00767', 'customer': 'AYALA SOLENAD - HFFM SOL...",
+          "count": 1
+        },
+        {
+          "method": "S238 Supplier seed failed",
+          "count": 1
+        }
+      ],
+      "by_day": [
+        {
+          "day": "2026-05-11",
+          "count": 34
+        },
+        {
+          "day": "2026-05-10",
+          "count": 4
+        },
+        {
+          "day": "2026-05-09",
+          "count": 2
+        }
+      ],
+      "longest_errors": [
+        {
+          "name": "vh9efl47bh",
+          "method": "S238 Supplier seed failed",
+          "creation": "2026-05-09 17:35:12.933412",
+          "err_len": 1500,
+          "preview": "Traceback (most recent call last):\n  File \"/home/frappe/frappe-bench/apps/frappe/frappe/model/base_document.py\", line 576, in db_insert\n    frappe.db.sql(\n  File \"/home/frappe/frappe-bench/apps/frappe/frappe/database/database.py\", line 230, in sql\n    self._cursor.execute(query, values)\n  File \"/home/frappe/frappe-bench/env/lib/python3.11/site-packages/pymysql/cursors.py\", line 153, in execute\n    result = self._query(query)\n             ^^^^^^^^^^^^^^^^^^\n  File \"/home/frappe/frappe-bench/env/lib/python3.11/site-packages/pymysql/cursors.py\", line 322, in _query\n    conn.query(q)\n  File \"/home/frappe/frappe-bench/env/lib/python3.11/site-packages/pymysql/connections.py\", line 563, in query\n    self._affected_rows = self._read_query_result(unbuffered=unbuffered)\n                          ^^^"
+        },
+        {
+          "name": "vjfhauvirq",
+          "method": "S238 install bki_si_reference field failed",
+          "creation": "2026-05-09 17:35:19.932925",
+          "err_len": 1500,
+          "preview": "Traceback (most recent call last):\n  File \"/tmp/install_bki_si_reference_field.py\", line 62, in execute\n    frappe.db.release_savepoint(SAVEPOINT)\n  File \"/home/frappe/frappe-bench/apps/frappe/frappe/database/database.py\", line 1211, in release_savepoint\n    self.sql(f\"release savepoint {save_point}\")\n  File \"/home/frappe/frappe-bench/apps/frappe/frappe/database/database.py\", line 230, in sql\n    self._cursor.execute(query, values)\n  File \"/home/frappe/frappe-bench/env/lib/python3.11/site-packages/pymysql/cursors.py\", line 153, in execute\n    result = self._query(query)\n             ^^^^^^^^^^^^^^^^^^\n  File \"/home/frappe/frappe-bench/env/lib/python3.11/site-packages/pymysql/cursors.py\", line 322, in _query\n    conn.query(q)\n  File \"/home/frappe/frappe-bench/env/lib/python3.11/site-package"
+        },
+        {
+          "name": "du9et17j5t",
+          "method": "S238 Store PI Generator Error",
+          "creation": "2026-05-10 07:39:00.154390",
+          "err_len": 135,
+          "preview": "S238: PI generation failed for SI BKI-SI-2026-00981-2: Traceback (most recent call last):\n  File \"apps/hrms/hrms/api/bki_store_pi_ge..."
+        }
+      ]
+    },
+    "p1b_7_cross_store": {
+      "audit": "P1B.7 \u2014 Cross-Store Transfer Model",
+      "recent_material_transfer_count": 20,
+      "cross_company_transfer_count": 0,
+      "sample": [
+        {
+          "name": "MAT-STE-2026-01038",
+          "source": "3MD LOGISTICS \u2013 CAMANGYANAN - BKI",
+          "target": "3MD LOGISTICS - CAMANGYANAN - BKI"
+        },
+        {
+          "name": "MAT-STE-2026-01038",
+          "source": "3MD LOGISTICS \u2013 CAMANGYANAN - BKI",
+          "target": "3MD LOGISTICS - CAMANGYANAN - BKI"
+        },
+        {
+          "name": "MAT-STE-2026-01038",
+          "source": "3MD LOGISTICS \u2013 CAMANGYANAN - BKI",
+          "target": "3MD LOGISTICS - CAMANGYANAN - BKI"
+        },
+        {
+          "name": "MAT-STE-2026-01038",
+          "source": "3MD LOGISTICS \u2013 CAMANGYANAN - BKI",
+          "target": "3MD LOGISTICS - CAMANGYANAN - BKI"
+        },
+        {
+          "name": "MAT-STE-2026-01038",
+          "source": "3MD LOGISTICS \u2013 CAMANGYANAN - BKI",
+          "target": "3MD LOGISTICS - CAMANGYANAN - BKI"
+        }
+      ],
+      "resolve_store_buyer_entity_referenced": true
+    }
+  },
+  "status": "OK"
+}
