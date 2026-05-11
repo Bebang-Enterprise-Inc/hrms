@@ -1,0 +1,19 @@
+{
+  "sprint": "S246",
+  "title": "BKI->Store Billing Redesign — Audit + Decision + Option 3-corrected (GR/IR via SRBNB)",
+  "spawned_at_utc": "2026-05-11T14:00:00Z",
+  "repo": "Bebang-Enterprise-Inc/hrms",
+  "release_branch": "production",
+  "release_head_sha": "40f22c07c1cdd8fe6f2842da1419294ac3324612",
+  "release_head_subject": "Merge pull request #746 from Bebang-Enterprise-Inc/s245-closeout",
+  "live_evidence_basis": "output/l3/billing-sweep-2026-05-11/evidence/sweep_result.json (49/49 buyer Companies tested; 13 PASS + 32 FAIL + 4 DEFECT_CONFIRMED)",
+  "dependencies_met": {
+    "pr_745_merged": true,
+    "pr_745_merge_commit": "d813d2ef881934f72fe78609c4026584270c7180",
+    "pr_745_merged_at_utc": "2026-05-11T13:23:02Z",
+    "worktree_spawned": "F:/Dropbox/Projects/BEI-ERP-s246-bki-store-billing-redesign",
+    "concurrent_sprint_collision": "none — no other ACTIVE_RUN.json found"
+  },
+  "branch": "s246-bki-store-billing-redesign",
+  "plan_version": "v1.1"
+}
