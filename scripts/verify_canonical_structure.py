@@ -3,8 +3,16 @@
 Read-only. Reports violations. Exit code 0 = all stores canonical, 1 = at least one violation.
 
 Usage:
-    python scripts/verify_canonical_structure.py                # all stores
-    python scripts/verify_canonical_structure.py --store "SM TANZA - BEBANG MEGA INC."
+    python scripts/verify_canonical_structure.py                  # all stores (v1 mode)
+    python scripts/verify_canonical_structure.py --store "..."    # one store (v1 mode)
+    python scripts/verify_canonical_structure.py --mode v2        # full canonical store spec (S246-v2)
+
+S246-v2 (2026-05-11): added --mode v2 flag that delegates to scripts/s246/run_v2_verifier.py
+which asserts the FULL canonical store master-data spec defined in
+output/l3/s246/audit/CANONICAL_STORE_SPEC.md (every REQUIRED field on Company / Warehouse
+/ Customer / Internal Customer / Account / BKI Trade Supplier accounts[] / BEI Settings
+/ Custom Fields). v1 mode (default) preserves the original CANONICAL_OK / VIOLATION check
+on WH+Customer+Internal-Customer existence + uniqueness + linkage.
 """
 from __future__ import annotations
 import argparse
@@ -173,7 +181,19 @@ frappe.destroy()
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--store", help="Check only this per-store Company name")
+    ap.add_argument("--mode", choices=["v1", "v2"], default="v1",
+                    help="v1 (default) = original WH+Customer canonical check. "
+                         "v2 = S246 full master-data spec assertion (delegates to scripts/s246/run_v2_verifier.py)")
     args = ap.parse_args()
+
+    # S246-v2: delegate to the extended verifier
+    if args.mode == "v2":
+        import subprocess
+        import os
+        v2_runner = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                 "s246", "run_v2_verifier.py")
+        print(f"S246-v2 mode: delegating to {v2_runner}")
+        return subprocess.call([sys.executable, v2_runner])
 
     script = _build_script(args.store)
     enc = base64.b64encode(script.encode()).decode()
