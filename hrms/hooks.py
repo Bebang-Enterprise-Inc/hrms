@@ -244,11 +244,6 @@ doc_events = {
 		# (must match BKI SI's posting_date per ICT-007 + PFRS 15).
 		"validate": "hrms.api.bki_store_pi_generator.lock_posting_date_on_bki_paired_pi",
 	},
-	"Stock Entry": {
-		# S247 — lock posting_date on auto-generated paired SEs
-		# (must match BKI SI's posting_date per ICT-007 + PFRS 15).
-		"validate": "hrms.api.bki_store_stock_entry_generator.lock_posting_date_on_bki_paired_se",
-	},
 	"Branch": {
 		# S201 — invalidate branch->Company resolver cache when Branch docs change
 		"on_update": "hrms.utils.company_lookup.clear_cache",
@@ -342,6 +337,11 @@ doc_events = {
 			"hrms.api.commissary_planning.on_stock_entry_cancel",
 			"hrms.api.commissary._delete_orphan_draft_si_on_se_cancel",
 		],
+		# S247 hotfix — lock posting_date on auto-generated paired SEs (BKI->Store flow).
+		# v3 of S247 originally added a SECOND "Stock Entry": {} dict key after the
+		# Purchase Invoice block; Python last-key-wins silently dropped this handler.
+		# Merged into the existing Stock Entry block here. Must coexist with S136 on_submit.
+		"validate": "hrms.api.bki_store_stock_entry_generator.lock_posting_date_on_bki_paired_se",
 	},
 	# S189: Auto-sync BOM recipe changes to Supabase product_bom table
 	"BOM": {

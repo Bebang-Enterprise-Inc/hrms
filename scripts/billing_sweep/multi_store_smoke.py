@@ -89,15 +89,16 @@ STORES_READY = [
     "UP TOWN MALL BGC - DMD HOLDINGS INC.",
     "VISTA MALL TAGUIG - TRICERN FOOD CORP.",
     "XENTROMALL MONTALBAN - PERPETUAL FOOD CORP.",
-]
-
-# 4 stores expected to FAIL PI generation (missing Company.cost_center)
-STORES_BROKEN = [
+    # S247 P4a (2026-05-12): added the 4 BEI-Enterprise stores post cost_center fix.
     "ROBINSONS ANTIPOLO - BEBANG ENTERPRISE INC.",
     "SM MANILA - BEBANG ENTERPRISE INC.",
     "SM MEGAMALL - BEBANG ENTERPRISE INC.",
     "SM SOUTHMALL - BEBANG ENTERPRISE INC.",
 ]
+
+# S247: STORES_BROKEN emptied — P4a fixed the cost_center on the 4 BEI-Enterprise stores;
+# they're now in STORES_READY above. Kept as empty list to preserve verdict-loop structure.
+STORES_BROKEN = []
 
 # Real BEI Store Order # per store (queried via probe_order_per_store.py 2026-05-11)
 STORE_ORDER_MAP = {

@@ -1,0 +1,2162 @@
+{
+  "sprint": "S247",
+  "phase": "4b",
+  "purpose": "post-deploy master-data UPDATEs for Option 3-corrected",
+  "timestamp_utc": "2026-05-12T01:30:42.719841Z",
+  "results": [
+    {
+      "company": "ARANETA GATEWAY - TUNGSTEN CAPITAL HOLDINGS OPC",
+      "abbr": "ARGW",
+      "srbnb_account": "Stock Received But Not Billed - ARGW",
+      "srbnb_account_created": false,
+      "old_company_srbnb": null,
+      "company_srbnb_set": true,
+      "wh_inventory_account": "1104210 - 1104210 - Inventory-from-Commissary - ARGW",
+      "old_warehouse_account": null,
+      "warehouse_account_set": true,
+      "ap_account": "2103210 - 2103210 - AP-Trade-BKI - ARGW",
+      "supplier_account_added": true,
+      "old_perpetual_inventory": 0,
+      "perpetual_inventory_set": true,
+      "status": "OK"
+    },
+    {
+      "company": "AYALA EVO CITY - BEBANG MEGA INC.",
+      "abbr": "AYEVO",
+      "srbnb_account": "Stock Received But Not Billed - AYEVO",
+      "srbnb_account_created": false,
+      "old_company_srbnb": null,
+      "company_srbnb_set": true,
+      "wh_inventory_account": "1104210 - 1104210 - Inventory-from-Commissary - AYEVO",
+      "old_warehouse_account": null,
+      "warehouse_account_set": true,
+      "ap_account": "2103210 - 2103210 - AP-Trade-BKI - AYEVO",
+      "supplier_account_added": true,
+      "old_perpetual_inventory": 0,
+      "perpetual_inventory_set": true,
+      "status": "OK"
+    },
+    {
+      "company": "AYALA FAIRVIEW TERRACES - BEBANG FT INC.",
+      "abbr": "AFT",
+      "srbnb_account": "Stock Received But Not Billed - AFT",
+      "srbnb_account_created": false,
+      "old_company_srbnb": null,
+      "company_srbnb_set": true,
+      "wh_inventory_account": "1104210 - 1104210 - Inventory-from-Commissary - AFT",
+      "old_warehouse_account": null,
+      "warehouse_account_set": true,
+      "ap_account": "2103210 - 2103210 - AP-Trade-BKI - AFT",
+      "supplier_account_added": true,
+      "old_perpetual_inventory": 1,
+      "perpetual_inventory_set": false,
+      "perpetual_inventory_status": "ALREADY_SET",
+      "status": "OK"
+    },
+    {
+      "company": "AYALA MARKET MARKET - BEBANG MARKET MARKET INC.",
+      "abbr": "AMM",
+      "srbnb_account": "Stock Received But Not Billed - AMM",
+      "srbnb_account_created": false,
+      "old_company_srbnb": null,
+      "company_srbnb_set": true,
+      "wh_inventory_account": "1104210 - 1104210 - Inventory-from-Commissary - AMM",
+      "old_warehouse_account": null,
+      "warehouse_account_set": true,
+      "ap_account": "2103210 - 2103210 - AP-Trade-BKI - AMM",
+      "supplier_account_added": true,
+      "old_perpetual_inventory": 1,
+      "perpetual_inventory_set": false,
+      "perpetual_inventory_status": "ALREADY_SET",
+      "status": "OK"
+    },
+    {
+      "company": "AYALA SOLENAD - HFFM SOLENAD FOOD SERVICES INC.",
+      "abbr": "AYSOL",
+      "srbnb_account": "Stock Received But Not Billed - AYSOL",
+      "srbnb_account_created": false,
+      "old_company_srbnb": null,
+      "company_srbnb_set": true,
+      "wh_inventory_account": "1104210 - 1104210 - Inventory-from-Commissary - AYSOL",
+      "old_warehouse_account": null,
+      "warehouse_account_set": true,
+      "ap_account": "2103210 - 2103210 - AP-Trade-BKI - AYSOL",
+      "supplier_account_added": true,
+      "old_perpetual_inventory": 1,
+      "perpetual_inventory_set": false,
+      "perpetual_inventory_status": "ALREADY_SET",
+      "status": "OK"
+    },
+    {
+      "company": "AYALA UP TOWN CENTER - BEBANG UP TOWN CENTER INC.",
+      "abbr": "UPTC",
+      "srbnb_account": "Stock Received But Not Billed - UPTC",
+      "srbnb_account_created": false,
+      "old_company_srbnb": null,
+      "company_srbnb_set": true,
+      "wh_inventory_account": "1104210 - 1104210 - Inventory-from-Commissary - UPTC",
+      "old_warehouse_account": null,
+      "warehouse_account_set": true,
+      "ap_account": "2103210 - 2103210 - AP-Trade-BKI - UPTC",
+      "supplier_account_added": true,
+      "old_perpetual_inventory": 1,
+      "perpetual_inventory_set": false,
+      "perpetual_inventory_status": "ALREADY_SET",
+      "status": "OK"
+    },
+    {
+      "company": "AYALA VERMOSA - BEBANG MEGA INC.",
+      "abbr": "AYVER",
+      "srbnb_account": "Stock Received But Not Billed - AYVER",
+      "srbnb_account_created": false,
+      "old_company_srbnb": null,
+      "company_srbnb_set": true,
+      "wh_inventory_account": "1104210 - 1104210 - Inventory-from-Commissary - AYVER",
+      "old_warehouse_account": null,
+      "warehouse_account_set": true,
+      "ap_account": "2103210 - 2103210 - AP-Trade-BKI - AYVER",
+      "supplier_account_added": true,
+      "old_perpetual_inventory": 0,
+      "perpetual_inventory_set": true,
+      "status": "OK"
+    },
+    {
+      "company": "BF HOMES - BEBANG BF HOMES INC.",
+      "abbr": "BFH",
+      "srbnb_account": "Stock Received But Not Billed - BFH",
+      "srbnb_account_created": false,
+      "old_company_srbnb": null,
+      "company_srbnb_set": true,
+      "wh_inventory_account": "1104210 - 1104210 - Inventory-from-Commissary - BFH",
+      "old_warehouse_account": null,
+      "warehouse_account_set": true,
+      "ap_account": "2103210 - 2103210 - AP-Trade-BKI - BFH",
+      "supplier_account_added": true,
+      "old_perpetual_inventory": 1,
+      "perpetual_inventory_set": false,
+      "perpetual_inventory_status": "ALREADY_SET",
+      "status": "OK"
+    },
+    {
+      "company": "CTTM TOMAS MORATO - B CUBED VENTURES CORP.",
+      "abbr": "CTTM",
+      "srbnb_account": "Stock Received But Not Billed - CTTM",
+      "srbnb_account_created": false,
+      "old_company_srbnb": null,
+      "company_srbnb_set": true,
+      "wh_inventory_account": "1104210 - 1104210 - Inventory-from-Commissary - CTTM",
+      "old_warehouse_account": null,
+      "warehouse_account_set": true,
+      "ap_account": "2103210 - 2103210 - AP-Trade-BKI - CTTM",
+      "supplier_account_added": true,
+      "old_perpetual_inventory": 1,
+      "perpetual_inventory_set": false,
+      "perpetual_inventory_status": "ALREADY_SET",
+      "status": "OK"
+    },
+    {
+      "company": "D'VERDE CALAMBA - TAJ FOOD CORP.",
+      "abbr": "DVCAL",
+      "srbnb_account": "Stock Received But Not Billed - DVCAL",
+      "srbnb_account_created": false,
+      "old_company_srbnb": null,
+      "company_srbnb_set": true,
+      "wh_inventory_account": "1104210 - 1104210 - Inventory-from-Commissary - DVCAL",
+      "old_warehouse_account": null,
+      "warehouse_account_set": true,
+      "ap_account": "2103210 - 2103210 - AP-Trade-BKI - DVCAL",
+      "supplier_account_added": true,
+      "old_perpetual_inventory": 0,
+      "perpetual_inventory_set": true,
+      "status": "OK"
+    },
+    {
+      "company": "EVER COMMONWEALTH - DLS DESSERT CRAFT INC.",
+      "abbr": "EGC",
+      "srbnb_account": "Stock Received But Not Billed - EGC",
+      "srbnb_account_created": false,
+      "old_company_srbnb": null,
+      "company_srbnb_set": true,
+      "wh_inventory_account": "1104210 - 1104210 - Inventory-from-Commissary - EGC",
+      "old_warehouse_account": null,
+      "warehouse_account_set": true,
+      "ap_account": "2103210 - 2103210 - AP-Trade-BKI - EGC",
+      "supplier_account_added": true,
+      "old_perpetual_inventory": 1,
+      "perpetual_inventory_set": false,
+      "perpetual_inventory_status": "ALREADY_SET",
+      "status": "OK"
+    },
+    {
+      "company": "FESTIVAL MALL ALABANG - BEBANG FESTIVAL INC.",
+      "abbr": "FMA",
+      "srbnb_account": "Stock Received But Not Billed - FMA",
+      "srbnb_account_created": false,
+      "old_company_srbnb": null,
+      "company_srbnb_set": true,
+      "wh_inventory_account": "1104210 - 1104210 - Inventory-from-Commissary - FMA",
+      "old_warehouse_account": null,
+      "warehouse_account_set": true,
+      "ap_account": "2103210 - 2103210 - AP-Trade-BKI - FMA",
+      "supplier_account_added": true,
+      "old_perpetual_inventory": 1,
+      "perpetual_inventory_set": false,
+      "perpetual_inventory_status": "ALREADY_SET",
+      "status": "OK"
+    },
+    {
+      "company": "LUCKY CHINATOWN - BEBANG LCT INC.",
+      "abbr": "LCT",
+      "srbnb_account": "Stock Received But Not Billed - LCT",
+      "srbnb_account_created": false,
+      "old_company_srbnb": null,
+      "company_srbnb_set": true,
+      "wh_inventory_account": "1104210 - 1104210 - Inventory-from-Commissary - LCT",
+      "old_warehouse_account": null,
+      "warehouse_account_set": true,
+      "ap_account": "2103210 - 2103210 - AP-Trade-BKI - LCT",
+      "supplier_account_added": true,
+      "old_perpetual_inventory": 1,
+      "perpetual_inventory_set": false,
+      "perpetual_inventory_status": "ALREADY_SET",
+      "status": "OK"
+    },
+    {
+      "company": "MEGAWIDE PITX - BEBANG PITX INC.",
+      "abbr": "PTX",
+      "srbnb_account": "Stock Received But Not Billed - PTX",
+      "srbnb_account_created": false,
+      "old_company_srbnb": null,
+      "company_srbnb_set": true,
+      "wh_inventory_account": "1104210 - 1104210 - Inventory-from-Commissary - PTX",
+      "old_warehouse_account": null,
+      "warehouse_account_set": true,
+      "ap_account": "2103210 - 2103210 - AP-Trade-BKI - PTX",
+      "supplier_account_added": true,
+      "old_perpetual_inventory": 1,
+      "perpetual_inventory_set": false,
+      "perpetual_inventory_status": "ALREADY_SET",
+      "status": "OK"
+    },
+    {
+      "company": "MEGAWORLD PASEO CENTER - BEBANG PASEO INC.",
+      "abbr": "MPD",
+      "srbnb_account": "Stock Received But Not Billed - MPD",
+      "srbnb_account_created": false,
+      "old_company_srbnb": null,
+      "company_srbnb_set": true,
+      "wh_inventory_account": "1104210 - 1104210 - Inventory-from-Commissary - MPD",
+      "old_warehouse_account": null,
+      "warehouse_account_set": true,
+      "ap_account": "2103210 - 2103210 - AP-Trade-BKI - MPD",
+      "supplier_account_added": true,
+      "old_perpetual_inventory": 1,
+      "perpetual_inventory_set": false,
+      "perpetual_inventory_status": "ALREADY_SET",
+      "status": "OK"
+    },
+    {
+      "company": "MEGAWORLD VENICE GRAND CANAL - BEBANG VENICE GRAND CANAL INC.",
+      "abbr": "VGC",
+      "srbnb_account": "Stock Received But Not Billed - VGC",
+      "srbnb_account_created": false,
+      "old_company_srbnb": null,
+      "company_srbnb_set": true,
+      "wh_inventory_account": "1104210 - 1104210 - Inventory-from-Commissary - VGC",
+      "old_warehouse_account": null,
+      "warehouse_account_set": true,
+      "ap_account": "2103210 - 2103210 - AP-Trade-BKI - VGC",
+      "supplier_account_added": true,
+      "old_perpetual_inventory": 1,
+      "perpetual_inventory_set": false,
+      "perpetual_inventory_status": "ALREADY_SET",
+      "status": "OK"
+    },
+    {
+      "company": "NAIA T3 - HALO-HALO TERMINAL FOOD CORP.",
+      "abbr": "NAIA",
+      "srbnb_account": "Stock Received But Not Billed - NAIA",
+      "srbnb_account_created": false,
+      "old_company_srbnb": null,
+      "company_srbnb_set": true,
+      "wh_inventory_account": "1104210 - 1104210 - Inventory-from-Commissary - NAIA",
+      "old_warehouse_account": null,
+      "warehouse_account_set": true,
+      "ap_account": "2103210 - 2103210 - AP-Trade-BKI - NAIA",
+      "supplier_account_added": true,
+      "old_perpetual_inventory": 0,
+      "perpetual_inventory_set": true,
+      "status": "OK"
+    },
+    {
+      "company": "ORTIGAS ESTANCIA - BB ESTANCIA FOOD CORP.",
+      "abbr": "ESM",
+      "srbnb_account": "Stock Received But Not Billed - ESM",
+      "srbnb_account_created": false,
+      "old_company_srbnb": null,
+      "company_srbnb_set": true,
+      "wh_inventory_account": "1104210 - 1104210 - Inventory-from-Commissary - ESM",
+      "old_warehouse_account": null,
+      "warehouse_account_set": true,
+      "ap_account": "2103210 - 2103210 - AP-Trade-BKI - ESM",
+      "supplier_account_added": true,
+      "old_perpetual_inventory": 0,
+      "perpetual_inventory_set": true,
+      "status": "OK"
+    },
+    {
+      "company": "ORTIGAS GREENHILLS - BEIFRANCHISE FOOD OPC",
+      "abbr": "GHO",
+      "srbnb_account": "Stock Received But Not Billed - GHO",
+      "srbnb_account_created": false,
+      "old_company_srbnb": "Stock Received But Not Billed - GHO",
+      "company_srbnb_set": false,
+      "company_srbnb_status": "ALREADY_SET",
+      "wh_inventory_account": "1104210 - 1104210 - Inventory-from-Commissary - GHO",
+      "old_warehouse_account": null,
+      "warehouse_account_set": true,
+      "ap_account": "2103210 - 2103210 - AP-Trade-BKI - GHO",
+      "supplier_account_added": true,
+      "old_perpetual_inventory": 1,
+      "perpetual_inventory_set": false,
+      "perpetual_inventory_status": "ALREADY_SET",
+      "status": "OK"
+    },
+    {
+      "company": "ROBINSONS ANTIPOLO - BEBANG ENTERPRISE INC.",
+      "abbr": "ROA",
+      "srbnb_account": "Stock Received But Not Billed - ROA",
+      "srbnb_account_created": true,
+      "old_company_srbnb": null,
+      "company_srbnb_set": true,
+      "wh_inventory_account": "1104210 - 1104210 - Inventory-from-Commissary - ROA",
+      "old_warehouse_account": null,
+      "warehouse_account_set": true,
+      "ap_account": "2103210 - 2103210 - AP-Trade-BKI - ROA",
+      "supplier_account_added": true,
+      "old_perpetual_inventory": 0,
+      "perpetual_inventory_set": true,
+      "status": "OK"
+    },
+    {
+      "company": "ROBINSONS GALLERIA SOUTH - TUNGSTEN CAPITAL HOLDINGS OPC",
+      "abbr": "ROBGS",
+      "srbnb_account": "Stock Received But Not Billed - ROBGS",
+      "srbnb_account_created": false,
+      "old_company_srbnb": null,
+      "company_srbnb_set": true,
+      "wh_inventory_account": "1104210 - 1104210 - Inventory-from-Commissary - ROBGS",
+      "old_warehouse_account": null,
+      "warehouse_account_set": true,
+      "ap_account": "2103210 - 2103210 - AP-Trade-BKI - ROBGS",
+      "supplier_account_added": true,
+      "old_perpetual_inventory": 1,
+      "perpetual_inventory_set": false,
+      "perpetual_inventory_status": "ALREADY_SET",
+      "status": "OK"
+    },
+    {
+      "company": "ROBINSONS GENERAL TRIAS - BEBANG MEGA INC.",
+      "abbr": "ROBGT",
+      "srbnb_account": "Stock Received But Not Billed - ROBGT",
+      "srbnb_account_created": false,
+      "old_company_srbnb": null,
+      "company_srbnb_set": true,
+      "wh_inventory_account": "1104210 - 1104210 - Inventory-from-Commissary - ROBGT",
+      "old_warehouse_account": null,
+      "warehouse_account_set": true,
+      "ap_account": "2103210 - 2103210 - AP-Trade-BKI - ROBGT",
+      "supplier_account_added": true,
+      "old_perpetual_inventory": 0,
+      "perpetual_inventory_set": true,
+      "status": "OK"
+    },
+    {
+      "company": "ROBINSONS IMUS - BEBANG MEGA INC.",
+      "abbr": "ROBIM",
+      "srbnb_account": "Stock Received But Not Billed - ROBIM",
+      "srbnb_account_created": false,
+      "old_company_srbnb": null,
+      "company_srbnb_set": true,
+      "wh_inventory_account": "1104210 - 1104210 - Inventory-from-Commissary - ROBIM",
+      "old_warehouse_account": null,
+      "warehouse_account_set": true,
+      "ap_account": "2103210 - 2103210 - AP-Trade-BKI - ROBIM",
+      "supplier_account_added": true,
+      "old_perpetual_inventory": 0,
+      "perpetual_inventory_set": true,
+      "status": "OK"
+    },
+    {
+      "company": "ROBINSONS PLACE DASMARINAS - FREEZE DELIGHT INC.",
+      "abbr": "ROBDA",
+      "srbnb_account": "Stock Received But Not Billed - ROBDA",
+      "srbnb_account_created": false,
+      "old_company_srbnb": null,
+      "company_srbnb_set": true,
+      "wh_inventory_account": "1104210 - 1104210 - Inventory-from-Commissary - ROBDA",
+      "old_warehouse_account": null,
+      "warehouse_account_set": true,
+      "ap_account": "2103210 - 2103210 - AP-Trade-BKI - ROBDA",
+      "supplier_account_added": true,
+      "old_perpetual_inventory": 0,
+      "perpetual_inventory_set": true,
+      "status": "OK"
+    },
+    {
+      "company": "SM BICUTAN - BEBANG SM BICUTAN INC.",
+      "abbr": "SMBIC",
+      "srbnb_account": "Stock Received But Not Billed - SMBIC",
+      "srbnb_account_created": false,
+      "old_company_srbnb": null,
+      "company_srbnb_set": true,
+      "wh_inventory_account": "1104210 - 1104210 - Inventory-from-Commissary - SMBIC",
+      "old_warehouse_account": null,
+      "warehouse_account_set": true,
+      "ap_account": "2103210 - 2103210 - AP-Trade-BKI - SMBIC",
+      "supplier_account_added": true,
+      "old_perpetual_inventory": 1,
+      "perpetual_inventory_set": false,
+      "perpetual_inventory_status": "ALREADY_SET",
+      "status": "OK"
+    },
+    {
+      "company": "SM CALOOCAN - TAJ FOOD CORP.",
+      "abbr": "SMCAL",
+      "srbnb_account": "Stock Received But Not Billed - SMCAL",
+      "srbnb_account_created": false,
+      "old_company_srbnb": null,
+      "company_srbnb_set": true,
+      "wh_inventory_account": "1104210 - 1104210 - Inventory-from-Commissary - SMCAL",
+      "old_warehouse_account": null,
+      "warehouse_account_set": true,
+      "ap_account": "2103210 - 2103210 - AP-Trade-BKI - SMCAL",
+      "supplier_account_added": true,
+      "old_perpetual_inventory": 1,
+      "perpetual_inventory_set": false,
+      "perpetual_inventory_status": "ALREADY_SET",
+      "status": "OK"
+    },
+    {
+      "company": "SM CLARK - RED TALDAWA FOODS OPC",
+      "abbr": "SMCLK",
+      "srbnb_account": "Stock Received But Not Billed - SMCLK",
+      "srbnb_account_created": false,
+      "old_company_srbnb": null,
+      "company_srbnb_set": true,
+      "wh_inventory_account": "1104210 - 1104210 - Inventory-from-Commissary - SMCLK",
+      "old_warehouse_account": null,
+      "warehouse_account_set": true,
+      "ap_account": "2103210 - 2103210 - AP-Trade-BKI - SMCLK",
+      "supplier_account_added": true,
+      "old_perpetual_inventory": 1,
+      "perpetual_inventory_set": false,
+      "perpetual_inventory_status": "ALREADY_SET",
+      "status": "OK"
+    },
+    {
+      "company": "SM EAST ORTIGAS - BEBANG SMEO INC.",
+      "abbr": "SMEO",
+      "srbnb_account": "Stock Received But Not Billed - SMEO",
+      "srbnb_account_created": false,
+      "old_company_srbnb": null,
+      "company_srbnb_set": true,
+      "wh_inventory_account": "1104210 - 1104210 - Inventory-from-Commissary - SMEO",
+      "old_warehouse_account": null,
+      "warehouse_account_set": true,
+      "ap_account": "2103210 - 2103210 - AP-Trade-BKI - SMEO",
+      "supplier_account_added": true,
+      "old_perpetual_inventory": 1,
+      "perpetual_inventory_set": false,
+      "perpetual_inventory_status": "ALREADY_SET",
+      "status": "OK"
+    },
+    {
+      "company": "SM GRAND CENTRAL - BEBANG GRAND CENTRAL INC.",
+      "abbr": "SMGC",
+      "srbnb_account": "Stock Received But Not Billed - SMGC",
+      "srbnb_account_created": false,
+      "old_company_srbnb": null,
+      "company_srbnb_set": true,
+      "wh_inventory_account": "1104210 - 1104210 - Inventory-from-Commissary - SMGC",
+      "old_warehouse_account": null,
+      "warehouse_account_set": true,
+      "ap_account": "2103210 - 2103210 - AP-Trade-BKI - SMGC",
+      "supplier_account_added": true,
+      "old_perpetual_inventory": 1,
+      "perpetual_inventory_set": false,
+      "perpetual_inventory_status": "ALREADY_SET",
+      "status": "OK"
+    },
+    {
+      "company": "SM MALL OF ASIA - BEBANG SMOA INC.",
+      "abbr": "SMMOA",
+      "srbnb_account": "Stock Received But Not Billed - SMMOA",
+      "srbnb_account_created": false,
+      "old_company_srbnb": null,
+      "company_srbnb_set": true,
+      "wh_inventory_account": "1104210 - 1104210 - Inventory-from-Commissary - SMMOA",
+      "old_warehouse_account": null,
+      "warehouse_account_set": true,
+      "ap_account": "2103210 - 2103210 - AP-Trade-BKI - SMMOA",
+      "supplier_account_added": true,
+      "old_perpetual_inventory": 1,
+      "perpetual_inventory_set": false,
+      "perpetual_inventory_status": "ALREADY_SET",
+      "status": "OK"
+    },
+    {
+      "company": "SM MANILA - BEBANG ENTERPRISE INC.",
+      "abbr": "SMM",
+      "srbnb_account": "Stock Received But Not Billed - SMM",
+      "srbnb_account_created": true,
+      "old_company_srbnb": null,
+      "company_srbnb_set": true,
+      "wh_inventory_account": "1104210 - 1104210 - Inventory-from-Commissary - SMM",
+      "old_warehouse_account": null,
+      "warehouse_account_set": true,
+      "ap_account": "2103210 - 2103210 - AP-Trade-BKI - SMM",
+      "supplier_account_added": true,
+      "old_perpetual_inventory": 0,
+      "perpetual_inventory_set": true,
+      "status": "OK"
+    },
+    {
+      "company": "SM MARIKINA - BEBANG SM MARIKINA INC.",
+      "abbr": "SMK",
+      "srbnb_account": "Stock Received But Not Billed - SMK",
+      "srbnb_account_created": false,
+      "old_company_srbnb": "Stock Received But Not Billed - BEI",
+      "company_srbnb_set": true,
+      "wh_inventory_account": "1104210 - 1104210 - Inventory-from-Commissary - SMK",
+      "old_warehouse_account": null,
+      "warehouse_account_set": true,
+      "ap_account": "2103210 - 2103210 - AP-Trade-BKI - SMK",
+      "supplier_account_added": true,
+      "old_perpetual_inventory": 1,
+      "perpetual_inventory_set": false,
+      "perpetual_inventory_status": "ALREADY_SET",
+      "status": "OK"
+    },
+    {
+      "company": "SM MARILAO - BEBANG MARILAO INC.",
+      "abbr": "SMMAR",
+      "srbnb_account": "Stock Received But Not Billed - SMMAR",
+      "srbnb_account_created": false,
+      "old_company_srbnb": null,
+      "company_srbnb_set": true,
+      "wh_inventory_account": "1104210 - 1104210 - Inventory-from-Commissary - SMMAR",
+      "old_warehouse_account": null,
+      "warehouse_account_set": true,
+      "ap_account": "2103210 - 2103210 - AP-Trade-BKI - SMMAR",
+      "supplier_account_added": true,
+      "old_perpetual_inventory": 1,
+      "perpetual_inventory_set": false,
+      "perpetual_inventory_status": "ALREADY_SET",
+      "status": "OK"
+    },
+    {
+      "company": "SM MEGAMALL - BEBANG ENTERPRISE INC.",
+      "abbr": "SMMM",
+      "srbnb_account": "Stock Received But Not Billed - SMMM",
+      "srbnb_account_created": true,
+      "old_company_srbnb": null,
+      "company_srbnb_set": true,
+      "wh_inventory_account": "1104210 - 1104210 - Inventory-from-Commissary - SMMM",
+      "old_warehouse_account": null,
+      "warehouse_account_set": true,
+      "ap_account": "2103210 - 2103210 - AP-Trade-BKI - SMMM",
+      "supplier_account_added": true,
+      "old_perpetual_inventory": 0,
+      "perpetual_inventory_set": true,
+      "status": "OK"
+    },
+    {
+      "company": "SM NORTH EDSA - BEBANG NORTH EDSA INC.",
+      "abbr": "SMNE",
+      "srbnb_account": "Stock Received But Not Billed - SMNE",
+      "srbnb_account_created": false,
+      "old_company_srbnb": null,
+      "company_srbnb_set": true,
+      "wh_inventory_account": "1104210 - 1104210 - Inventory-from-Commissary - SMNE",
+      "old_warehouse_account": null,
+      "warehouse_account_set": true,
+      "ap_account": "2103210 - 2103210 - AP-Trade-BKI - SMNE",
+      "supplier_account_added": true,
+      "old_perpetual_inventory": 1,
+      "perpetual_inventory_set": false,
+      "perpetual_inventory_status": "ALREADY_SET",
+      "status": "OK"
+    },
+    {
+      "company": "SM PULILAN - BEBANG SMM INC.",
+      "abbr": "SMPUL",
+      "srbnb_account": "Stock Received But Not Billed - SMPUL",
+      "srbnb_account_created": false,
+      "old_company_srbnb": null,
+      "company_srbnb_set": true,
+      "wh_inventory_account": "1104210 - 1104210 - Inventory-from-Commissary - SMPUL",
+      "old_warehouse_account": null,
+      "warehouse_account_set": true,
+      "ap_account": "2103210 - 2103210 - AP-Trade-BKI - SMPUL",
+      "supplier_account_added": true,
+      "old_perpetual_inventory": 1,
+      "perpetual_inventory_set": false,
+      "perpetual_inventory_status": "ALREADY_SET",
+      "status": "OK"
+    },
+    {
+      "company": "SM SAN JOSE DEL MONTE - JL TRADE OPC",
+      "abbr": "SJDM",
+      "srbnb_account": "Stock Received But Not Billed - SJDM",
+      "srbnb_account_created": false,
+      "old_company_srbnb": null,
+      "company_srbnb_set": true,
+      "wh_inventory_account": "1104210 - 1104210 - Inventory-from-Commissary - SJDM",
+      "old_warehouse_account": null,
+      "warehouse_account_set": true,
+      "ap_account": "2103210 - 2103210 - AP-Trade-BKI - SJDM",
+      "supplier_account_added": true,
+      "old_perpetual_inventory": 1,
+      "perpetual_inventory_set": false,
+      "perpetual_inventory_status": "ALREADY_SET",
+      "status": "OK"
+    },
+    {
+      "company": "SM SANGANDAAN - TUNGSTEN CAPITAL HOLDINGS OPC",
+      "abbr": "SMSDN",
+      "srbnb_account": "Stock Received But Not Billed - SMSDN",
+      "srbnb_account_created": false,
+      "old_company_srbnb": null,
+      "company_srbnb_set": true,
+      "wh_inventory_account": "1104210 - 1104210 - Inventory-from-Commissary - SMSDN",
+      "old_warehouse_account": null,
+      "warehouse_account_set": true,
+      "ap_account": "2103210 - 2103210 - AP-Trade-BKI - SMSDN",
+      "supplier_account_added": true,
+      "old_perpetual_inventory": 1,
+      "perpetual_inventory_set": false,
+      "perpetual_inventory_status": "ALREADY_SET",
+      "status": "OK"
+    },
+    {
+      "company": "SM SOUTHMALL - BEBANG ENTERPRISE INC.",
+      "abbr": "SMS",
+      "srbnb_account": "Stock Received But Not Billed - SMS",
+      "srbnb_account_created": true,
+      "old_company_srbnb": null,
+      "company_srbnb_set": true,
+      "wh_inventory_account": "1104210 - 1104210 - Inventory-from-Commissary - SMS",
+      "old_warehouse_account": null,
+      "warehouse_account_set": true,
+      "ap_account": "2103210 - 2103210 - AP-Trade-BKI - SMS",
+      "supplier_account_added": true,
+      "old_perpetual_inventory": 0,
+      "perpetual_inventory_set": true,
+      "status": "OK"
+    },
+    {
+      "company": "SM STA. ROSA - SWEET HARMONY FOOD CORP.",
+      "abbr": "SMSTR",
+      "srbnb_account": "Stock Received But Not Billed - SMSTR",
+      "srbnb_account_created": false,
+      "old_company_srbnb": null,
+      "company_srbnb_set": true,
+      "wh_inventory_account": "1104210 - 1104210 - Inventory-from-Commissary - SMSTR",
+      "old_warehouse_account": null,
+      "warehouse_account_set": true,
+      "ap_account": "2103210 - 2103210 - AP-Trade-BKI - SMSTR",
+      "supplier_account_added": true,
+      "old_perpetual_inventory": 0,
+      "perpetual_inventory_set": true,
+      "status": "OK"
+    },
+    {
+      "company": "SM TANZA - BEBANG MEGA INC.",
+      "abbr": "SMTZ",
+      "srbnb_account": "Stock Received But Not Billed - SMTZ",
+      "srbnb_account_created": false,
+      "old_company_srbnb": null,
+      "company_srbnb_set": true,
+      "wh_inventory_account": "1104210 - 1104210 - Inventory-from-Commissary - SMTZ",
+      "old_warehouse_account": null,
+      "warehouse_account_set": true,
+      "ap_account": "2103210 - 2103210 - AP-Trade-BKI - SMTZ",
+      "supplier_account_added": true,
+      "old_perpetual_inventory": 0,
+      "perpetual_inventory_set": true,
+      "status": "OK"
+    },
+    {
+      "company": "SM TAYTAY - DAY ONES FOOD AND DRINK ESTABLISHMENTS CORP.",
+      "abbr": "SMTAY",
+      "srbnb_account": "Stock Received But Not Billed - SMTAY",
+      "srbnb_account_created": false,
+      "old_company_srbnb": null,
+      "company_srbnb_set": true,
+      "wh_inventory_account": "1104210 - 1104210 - Inventory-from-Commissary - SMTAY",
+      "old_warehouse_account": null,
+      "warehouse_account_set": true,
+      "ap_account": "2103210 - 2103210 - AP-Trade-BKI - SMTAY",
+      "supplier_account_added": true,
+      "old_perpetual_inventory": 1,
+      "perpetual_inventory_set": false,
+      "perpetual_inventory_status": "ALREADY_SET",
+      "status": "OK"
+    },
+    {
+      "company": "SM VALENZUELA - BEBANG SMV INC.",
+      "abbr": "SMV",
+      "srbnb_account": "Stock Received But Not Billed - SMV",
+      "srbnb_account_created": false,
+      "old_company_srbnb": null,
+      "company_srbnb_set": true,
+      "wh_inventory_account": "1104210 - 1104210 - Inventory-from-Commissary - SMV",
+      "old_warehouse_account": null,
+      "warehouse_account_set": true,
+      "ap_account": "2103210 - 2103210 - AP-Trade-BKI - SMV",
+      "supplier_account_added": true,
+      "old_perpetual_inventory": 1,
+      "perpetual_inventory_set": false,
+      "perpetual_inventory_status": "ALREADY_SET",
+      "status": "OK"
+    },
+    {
+      "company": "STA. LUCIA EAST GRAND MALL - BEBANG SM MARIKINA INC.",
+      "abbr": "SLGM",
+      "srbnb_account": "Stock Received But Not Billed - SLGM",
+      "srbnb_account_created": false,
+      "old_company_srbnb": null,
+      "company_srbnb_set": true,
+      "wh_inventory_account": "1104210 - 1104210 - Inventory-from-Commissary - SLGM",
+      "old_warehouse_account": null,
+      "warehouse_account_set": true,
+      "ap_account": "2103210 - 2103210 - AP-Trade-BKI - SLGM",
+      "supplier_account_added": true,
+      "old_perpetual_inventory": 0,
+      "perpetual_inventory_set": true,
+      "status": "OK"
+    },
+    {
+      "company": "THE GRID ROCKWELL - TASTECARTEL CORP.",
+      "abbr": "TGR",
+      "srbnb_account": "Stock Received But Not Billed - TGR",
+      "srbnb_account_created": false,
+      "old_company_srbnb": null,
+      "company_srbnb_set": true,
+      "wh_inventory_account": "1104210 - 1104210 - Inventory-from-Commissary - TGR",
+      "old_warehouse_account": null,
+      "warehouse_account_set": true,
+      "ap_account": "2103210 - 2103210 - AP-Trade-BKI - TGR",
+      "supplier_account_added": true,
+      "old_perpetual_inventory": 1,
+      "perpetual_inventory_set": false,
+      "perpetual_inventory_status": "ALREADY_SET",
+      "status": "OK"
+    },
+    {
+      "company": "THE TERMINAL - BEBANG STARMALL ALABANG INC.",
+      "abbr": "TTA",
+      "srbnb_account": "Stock Received But Not Billed - TTA",
+      "srbnb_account_created": false,
+      "old_company_srbnb": null,
+      "company_srbnb_set": true,
+      "wh_inventory_account": "1104210 - 1104210 - Inventory-from-Commissary - TTA",
+      "old_warehouse_account": null,
+      "warehouse_account_set": true,
+      "ap_account": "2103210 - 2103210 - AP-Trade-BKI - TTA",
+      "supplier_account_added": true,
+      "old_perpetual_inventory": 1,
+      "perpetual_inventory_set": false,
+      "perpetual_inventory_status": "ALREADY_SET",
+      "status": "OK"
+    },
+    {
+      "company": "UP TOWN MALL BGC - DMD HOLDINGS INC.",
+      "abbr": "UMBGC",
+      "srbnb_account": "Stock Received But Not Billed - UMBGC",
+      "srbnb_account_created": false,
+      "old_company_srbnb": null,
+      "company_srbnb_set": true,
+      "wh_inventory_account": "1104210 - 1104210 - Inventory-from-Commissary - UMBGC",
+      "old_warehouse_account": null,
+      "warehouse_account_set": true,
+      "ap_account": "2103210 - 2103210 - AP-Trade-BKI - UMBGC",
+      "supplier_account_added": true,
+      "old_perpetual_inventory": 1,
+      "perpetual_inventory_set": false,
+      "perpetual_inventory_status": "ALREADY_SET",
+      "status": "OK"
+    },
+    {
+      "company": "VISTA MALL TAGUIG - TRICERN FOOD CORP.",
+      "abbr": "VMTAG",
+      "srbnb_account": "Stock Received But Not Billed - VMTAG",
+      "srbnb_account_created": false,
+      "old_company_srbnb": null,
+      "company_srbnb_set": true,
+      "wh_inventory_account": "1104210 - 1104210 - Inventory-from-Commissary - VMTAG",
+      "old_warehouse_account": null,
+      "warehouse_account_set": true,
+      "ap_account": "2103210 - 2103210 - AP-Trade-BKI - VMTAG",
+      "supplier_account_added": true,
+      "old_perpetual_inventory": 1,
+      "perpetual_inventory_set": false,
+      "perpetual_inventory_status": "ALREADY_SET",
+      "status": "OK"
+    },
+    {
+      "company": "XENTROMALL MONTALBAN - PERPETUAL FOOD CORP.",
+      "abbr": "XMM",
+      "srbnb_account": "Stock Received But Not Billed - XMM",
+      "srbnb_account_created": false,
+      "old_company_srbnb": null,
+      "company_srbnb_set": true,
+      "wh_inventory_account": "1104210 - 1104210 - Inventory-from-Commissary - XMM",
+      "old_warehouse_account": null,
+      "warehouse_account_set": true,
+      "ap_account": "2103210 - 2103210 - AP-Trade-BKI - XMM",
+      "supplier_account_added": true,
+      "old_perpetual_inventory": 0,
+      "perpetual_inventory_set": true,
+      "status": "OK"
+    }
+  ],
+  "teardown_ledger": [
+    {
+      "doctype": "Company",
+      "name": "ARANETA GATEWAY - TUNGSTEN CAPITAL HOLDINGS OPC",
+      "field": "stock_received_but_not_billed",
+      "old_value": null,
+      "new_value": "Stock Received But Not Billed - ARGW",
+      "action": "REVERT_FIELDS"
+    },
+    {
+      "doctype": "Warehouse",
+      "name": "ARANETA GATEWAY - TUNGSTEN CAPITAL HOLDINGS OPC",
+      "field": "account",
+      "old_value": null,
+      "new_value": "1104210 - 1104210 - Inventory-from-Commissary - ARGW",
+      "action": "REVERT_FIELDS"
+    },
+    {
+      "doctype": "Party Account",
+      "parent": "BEBANG KITCHEN INC. - Trade",
+      "company": "ARANETA GATEWAY - TUNGSTEN CAPITAL HOLDINGS OPC",
+      "account": "2103210 - 2103210 - AP-Trade-BKI - ARGW",
+      "action": "DELETE",
+      "context": "P4b BKI Trade per-Co AP entry"
+    },
+    {
+      "doctype": "Company",
+      "name": "ARANETA GATEWAY - TUNGSTEN CAPITAL HOLDINGS OPC",
+      "field": "enable_perpetual_inventory",
+      "old_value": 0,
+      "new_value": 1,
+      "action": "REVERT_FIELDS"
+    },
+    {
+      "doctype": "Company",
+      "name": "AYALA EVO CITY - BEBANG MEGA INC.",
+      "field": "stock_received_but_not_billed",
+      "old_value": null,
+      "new_value": "Stock Received But Not Billed - AYEVO",
+      "action": "REVERT_FIELDS"
+    },
+    {
+      "doctype": "Warehouse",
+      "name": "AYALA EVO CITY - BEBANG MEGA INC.",
+      "field": "account",
+      "old_value": null,
+      "new_value": "1104210 - 1104210 - Inventory-from-Commissary - AYEVO",
+      "action": "REVERT_FIELDS"
+    },
+    {
+      "doctype": "Party Account",
+      "parent": "BEBANG KITCHEN INC. - Trade",
+      "company": "AYALA EVO CITY - BEBANG MEGA INC.",
+      "account": "2103210 - 2103210 - AP-Trade-BKI - AYEVO",
+      "action": "DELETE",
+      "context": "P4b BKI Trade per-Co AP entry"
+    },
+    {
+      "doctype": "Company",
+      "name": "AYALA EVO CITY - BEBANG MEGA INC.",
+      "field": "enable_perpetual_inventory",
+      "old_value": 0,
+      "new_value": 1,
+      "action": "REVERT_FIELDS"
+    },
+    {
+      "doctype": "Company",
+      "name": "AYALA FAIRVIEW TERRACES - BEBANG FT INC.",
+      "field": "stock_received_but_not_billed",
+      "old_value": null,
+      "new_value": "Stock Received But Not Billed - AFT",
+      "action": "REVERT_FIELDS"
+    },
+    {
+      "doctype": "Warehouse",
+      "name": "AYALA FAIRVIEW TERRACES - BEBANG FT INC.",
+      "field": "account",
+      "old_value": null,
+      "new_value": "1104210 - 1104210 - Inventory-from-Commissary - AFT",
+      "action": "REVERT_FIELDS"
+    },
+    {
+      "doctype": "Party Account",
+      "parent": "BEBANG KITCHEN INC. - Trade",
+      "company": "AYALA FAIRVIEW TERRACES - BEBANG FT INC.",
+      "account": "2103210 - 2103210 - AP-Trade-BKI - AFT",
+      "action": "DELETE",
+      "context": "P4b BKI Trade per-Co AP entry"
+    },
+    {
+      "doctype": "Company",
+      "name": "AYALA MARKET MARKET - BEBANG MARKET MARKET INC.",
+      "field": "stock_received_but_not_billed",
+      "old_value": null,
+      "new_value": "Stock Received But Not Billed - AMM",
+      "action": "REVERT_FIELDS"
+    },
+    {
+      "doctype": "Warehouse",
+      "name": "AYALA MARKET MARKET - BEBANG MARKET MARKET INC.",
+      "field": "account",
+      "old_value": null,
+      "new_value": "1104210 - 1104210 - Inventory-from-Commissary - AMM",
+      "action": "REVERT_FIELDS"
+    },
+    {
+      "doctype": "Party Account",
+      "parent": "BEBANG KITCHEN INC. - Trade",
+      "company": "AYALA MARKET MARKET - BEBANG MARKET MARKET INC.",
+      "account": "2103210 - 2103210 - AP-Trade-BKI - AMM",
+      "action": "DELETE",
+      "context": "P4b BKI Trade per-Co AP entry"
+    },
+    {
+      "doctype": "Company",
+      "name": "AYALA SOLENAD - HFFM SOLENAD FOOD SERVICES INC.",
+      "field": "stock_received_but_not_billed",
+      "old_value": null,
+      "new_value": "Stock Received But Not Billed - AYSOL",
+      "action": "REVERT_FIELDS"
+    },
+    {
+      "doctype": "Warehouse",
+      "name": "AYALA SOLENAD - HFFM SOLENAD FOOD SERVICES INC.",
+      "field": "account",
+      "old_value": null,
+      "new_value": "1104210 - 1104210 - Inventory-from-Commissary - AYSOL",
+      "action": "REVERT_FIELDS"
+    },
+    {
+      "doctype": "Party Account",
+      "parent": "BEBANG KITCHEN INC. - Trade",
+      "company": "AYALA SOLENAD - HFFM SOLENAD FOOD SERVICES INC.",
+      "account": "2103210 - 2103210 - AP-Trade-BKI - AYSOL",
+      "action": "DELETE",
+      "context": "P4b BKI Trade per-Co AP entry"
+    },
+    {
+      "doctype": "Company",
+      "name": "AYALA UP TOWN CENTER - BEBANG UP TOWN CENTER INC.",
+      "field": "stock_received_but_not_billed",
+      "old_value": null,
+      "new_value": "Stock Received But Not Billed - UPTC",
+      "action": "REVERT_FIELDS"
+    },
+    {
+      "doctype": "Warehouse",
+      "name": "AYALA UP TOWN CENTER - BEBANG UP TOWN CENTER INC.",
+      "field": "account",
+      "old_value": null,
+      "new_value": "1104210 - 1104210 - Inventory-from-Commissary - UPTC",
+      "action": "REVERT_FIELDS"
+    },
+    {
+      "doctype": "Party Account",
+      "parent": "BEBANG KITCHEN INC. - Trade",
+      "company": "AYALA UP TOWN CENTER - BEBANG UP TOWN CENTER INC.",
+      "account": "2103210 - 2103210 - AP-Trade-BKI - UPTC",
+      "action": "DELETE",
+      "context": "P4b BKI Trade per-Co AP entry"
+    },
+    {
+      "doctype": "Company",
+      "name": "AYALA VERMOSA - BEBANG MEGA INC.",
+      "field": "stock_received_but_not_billed",
+      "old_value": null,
+      "new_value": "Stock Received But Not Billed - AYVER",
+      "action": "REVERT_FIELDS"
+    },
+    {
+      "doctype": "Warehouse",
+      "name": "AYALA VERMOSA - BEBANG MEGA INC.",
+      "field": "account",
+      "old_value": null,
+      "new_value": "1104210 - 1104210 - Inventory-from-Commissary - AYVER",
+      "action": "REVERT_FIELDS"
+    },
+    {
+      "doctype": "Party Account",
+      "parent": "BEBANG KITCHEN INC. - Trade",
+      "company": "AYALA VERMOSA - BEBANG MEGA INC.",
+      "account": "2103210 - 2103210 - AP-Trade-BKI - AYVER",
+      "action": "DELETE",
+      "context": "P4b BKI Trade per-Co AP entry"
+    },
+    {
+      "doctype": "Company",
+      "name": "AYALA VERMOSA - BEBANG MEGA INC.",
+      "field": "enable_perpetual_inventory",
+      "old_value": 0,
+      "new_value": 1,
+      "action": "REVERT_FIELDS"
+    },
+    {
+      "doctype": "Company",
+      "name": "BF HOMES - BEBANG BF HOMES INC.",
+      "field": "stock_received_but_not_billed",
+      "old_value": null,
+      "new_value": "Stock Received But Not Billed - BFH",
+      "action": "REVERT_FIELDS"
+    },
+    {
+      "doctype": "Warehouse",
+      "name": "BF HOMES - BEBANG BF HOMES INC.",
+      "field": "account",
+      "old_value": null,
+      "new_value": "1104210 - 1104210 - Inventory-from-Commissary - BFH",
+      "action": "REVERT_FIELDS"
+    },
+    {
+      "doctype": "Party Account",
+      "parent": "BEBANG KITCHEN INC. - Trade",
+      "company": "BF HOMES - BEBANG BF HOMES INC.",
+      "account": "2103210 - 2103210 - AP-Trade-BKI - BFH",
+      "action": "DELETE",
+      "context": "P4b BKI Trade per-Co AP entry"
+    },
+    {
+      "doctype": "Company",
+      "name": "CTTM TOMAS MORATO - B CUBED VENTURES CORP.",
+      "field": "stock_received_but_not_billed",
+      "old_value": null,
+      "new_value": "Stock Received But Not Billed - CTTM",
+      "action": "REVERT_FIELDS"
+    },
+    {
+      "doctype": "Warehouse",
+      "name": "CTTM TOMAS MORATO - B CUBED VENTURES CORP.",
+      "field": "account",
+      "old_value": null,
+      "new_value": "1104210 - 1104210 - Inventory-from-Commissary - CTTM",
+      "action": "REVERT_FIELDS"
+    },
+    {
+      "doctype": "Party Account",
+      "parent": "BEBANG KITCHEN INC. - Trade",
+      "company": "CTTM TOMAS MORATO - B CUBED VENTURES CORP.",
+      "account": "2103210 - 2103210 - AP-Trade-BKI - CTTM",
+      "action": "DELETE",
+      "context": "P4b BKI Trade per-Co AP entry"
+    },
+    {
+      "doctype": "Company",
+      "name": "D'VERDE CALAMBA - TAJ FOOD CORP.",
+      "field": "stock_received_but_not_billed",
+      "old_value": null,
+      "new_value": "Stock Received But Not Billed - DVCAL",
+      "action": "REVERT_FIELDS"
+    },
+    {
+      "doctype": "Warehouse",
+      "name": "D'VERDE CALAMBA - TAJ FOOD CORP.",
+      "field": "account",
+      "old_value": null,
+      "new_value": "1104210 - 1104210 - Inventory-from-Commissary - DVCAL",
+      "action": "REVERT_FIELDS"
+    },
+    {
+      "doctype": "Party Account",
+      "parent": "BEBANG KITCHEN INC. - Trade",
+      "company": "D'VERDE CALAMBA - TAJ FOOD CORP.",
+      "account": "2103210 - 2103210 - AP-Trade-BKI - DVCAL",
+      "action": "DELETE",
+      "context": "P4b BKI Trade per-Co AP entry"
+    },
+    {
+      "doctype": "Company",
+      "name": "D'VERDE CALAMBA - TAJ FOOD CORP.",
+      "field": "enable_perpetual_inventory",
+      "old_value": 0,
+      "new_value": 1,
+      "action": "REVERT_FIELDS"
+    },
+    {
+      "doctype": "Company",
+      "name": "EVER COMMONWEALTH - DLS DESSERT CRAFT INC.",
+      "field": "stock_received_but_not_billed",
+      "old_value": null,
+      "new_value": "Stock Received But Not Billed - EGC",
+      "action": "REVERT_FIELDS"
+    },
+    {
+      "doctype": "Warehouse",
+      "name": "EVER COMMONWEALTH - DLS DESSERT CRAFT INC.",
+      "field": "account",
+      "old_value": null,
+      "new_value": "1104210 - 1104210 - Inventory-from-Commissary - EGC",
+      "action": "REVERT_FIELDS"
+    },
+    {
+      "doctype": "Party Account",
+      "parent": "BEBANG KITCHEN INC. - Trade",
+      "company": "EVER COMMONWEALTH - DLS DESSERT CRAFT INC.",
+      "account": "2103210 - 2103210 - AP-Trade-BKI - EGC",
+      "action": "DELETE",
+      "context": "P4b BKI Trade per-Co AP entry"
+    },
+    {
+      "doctype": "Company",
+      "name": "FESTIVAL MALL ALABANG - BEBANG FESTIVAL INC.",
+      "field": "stock_received_but_not_billed",
+      "old_value": null,
+      "new_value": "Stock Received But Not Billed - FMA",
+      "action": "REVERT_FIELDS"
+    },
+    {
+      "doctype": "Warehouse",
+      "name": "FESTIVAL MALL ALABANG - BEBANG FESTIVAL INC.",
+      "field": "account",
+      "old_value": null,
+      "new_value": "1104210 - 1104210 - Inventory-from-Commissary - FMA",
+      "action": "REVERT_FIELDS"
+    },
+    {
+      "doctype": "Party Account",
+      "parent": "BEBANG KITCHEN INC. - Trade",
+      "company": "FESTIVAL MALL ALABANG - BEBANG FESTIVAL INC.",
+      "account": "2103210 - 2103210 - AP-Trade-BKI - FMA",
+      "action": "DELETE",
+      "context": "P4b BKI Trade per-Co AP entry"
+    },
+    {
+      "doctype": "Company",
+      "name": "LUCKY CHINATOWN - BEBANG LCT INC.",
+      "field": "stock_received_but_not_billed",
+      "old_value": null,
+      "new_value": "Stock Received But Not Billed - LCT",
+      "action": "REVERT_FIELDS"
+    },
+    {
+      "doctype": "Warehouse",
+      "name": "LUCKY CHINATOWN - BEBANG LCT INC.",
+      "field": "account",
+      "old_value": null,
+      "new_value": "1104210 - 1104210 - Inventory-from-Commissary - LCT",
+      "action": "REVERT_FIELDS"
+    },
+    {
+      "doctype": "Party Account",
+      "parent": "BEBANG KITCHEN INC. - Trade",
+      "company": "LUCKY CHINATOWN - BEBANG LCT INC.",
+      "account": "2103210 - 2103210 - AP-Trade-BKI - LCT",
+      "action": "DELETE",
+      "context": "P4b BKI Trade per-Co AP entry"
+    },
+    {
+      "doctype": "Company",
+      "name": "MEGAWIDE PITX - BEBANG PITX INC.",
+      "field": "stock_received_but_not_billed",
+      "old_value": null,
+      "new_value": "Stock Received But Not Billed - PTX",
+      "action": "REVERT_FIELDS"
+    },
+    {
+      "doctype": "Warehouse",
+      "name": "MEGAWIDE PITX - BEBANG PITX INC.",
+      "field": "account",
+      "old_value": null,
+      "new_value": "1104210 - 1104210 - Inventory-from-Commissary - PTX",
+      "action": "REVERT_FIELDS"
+    },
+    {
+      "doctype": "Party Account",
+      "parent": "BEBANG KITCHEN INC. - Trade",
+      "company": "MEGAWIDE PITX - BEBANG PITX INC.",
+      "account": "2103210 - 2103210 - AP-Trade-BKI - PTX",
+      "action": "DELETE",
+      "context": "P4b BKI Trade per-Co AP entry"
+    },
+    {
+      "doctype": "Company",
+      "name": "MEGAWORLD PASEO CENTER - BEBANG PASEO INC.",
+      "field": "stock_received_but_not_billed",
+      "old_value": null,
+      "new_value": "Stock Received But Not Billed - MPD",
+      "action": "REVERT_FIELDS"
+    },
+    {
+      "doctype": "Warehouse",
+      "name": "MEGAWORLD PASEO CENTER - BEBANG PASEO INC.",
+      "field": "account",
+      "old_value": null,
+      "new_value": "1104210 - 1104210 - Inventory-from-Commissary - MPD",
+      "action": "REVERT_FIELDS"
+    },
+    {
+      "doctype": "Party Account",
+      "parent": "BEBANG KITCHEN INC. - Trade",
+      "company": "MEGAWORLD PASEO CENTER - BEBANG PASEO INC.",
+      "account": "2103210 - 2103210 - AP-Trade-BKI - MPD",
+      "action": "DELETE",
+      "context": "P4b BKI Trade per-Co AP entry"
+    },
+    {
+      "doctype": "Company",
+      "name": "MEGAWORLD VENICE GRAND CANAL - BEBANG VENICE GRAND CANAL INC.",
+      "field": "stock_received_but_not_billed",
+      "old_value": null,
+      "new_value": "Stock Received But Not Billed - VGC",
+      "action": "REVERT_FIELDS"
+    },
+    {
+      "doctype": "Warehouse",
+      "name": "MEGAWORLD VENICE GRAND CANAL - BEBANG VENICE GRAND CANAL INC.",
+      "field": "account",
+      "old_value": null,
+      "new_value": "1104210 - 1104210 - Inventory-from-Commissary - VGC",
+      "action": "REVERT_FIELDS"
+    },
+    {
+      "doctype": "Party Account",
+      "parent": "BEBANG KITCHEN INC. - Trade",
+      "company": "MEGAWORLD VENICE GRAND CANAL - BEBANG VENICE GRAND CANAL INC.",
+      "account": "2103210 - 2103210 - AP-Trade-BKI - VGC",
+      "action": "DELETE",
+      "context": "P4b BKI Trade per-Co AP entry"
+    },
+    {
+      "doctype": "Company",
+      "name": "NAIA T3 - HALO-HALO TERMINAL FOOD CORP.",
+      "field": "stock_received_but_not_billed",
+      "old_value": null,
+      "new_value": "Stock Received But Not Billed - NAIA",
+      "action": "REVERT_FIELDS"
+    },
+    {
+      "doctype": "Warehouse",
+      "name": "NAIA T3 - HALO-HALO TERMINAL FOOD CORP.",
+      "field": "account",
+      "old_value": null,
+      "new_value": "1104210 - 1104210 - Inventory-from-Commissary - NAIA",
+      "action": "REVERT_FIELDS"
+    },
+    {
+      "doctype": "Party Account",
+      "parent": "BEBANG KITCHEN INC. - Trade",
+      "company": "NAIA T3 - HALO-HALO TERMINAL FOOD CORP.",
+      "account": "2103210 - 2103210 - AP-Trade-BKI - NAIA",
+      "action": "DELETE",
+      "context": "P4b BKI Trade per-Co AP entry"
+    },
+    {
+      "doctype": "Company",
+      "name": "NAIA T3 - HALO-HALO TERMINAL FOOD CORP.",
+      "field": "enable_perpetual_inventory",
+      "old_value": 0,
+      "new_value": 1,
+      "action": "REVERT_FIELDS"
+    },
+    {
+      "doctype": "Company",
+      "name": "ORTIGAS ESTANCIA - BB ESTANCIA FOOD CORP.",
+      "field": "stock_received_but_not_billed",
+      "old_value": null,
+      "new_value": "Stock Received But Not Billed - ESM",
+      "action": "REVERT_FIELDS"
+    },
+    {
+      "doctype": "Warehouse",
+      "name": "ORTIGAS ESTANCIA - BB ESTANCIA FOOD CORP.",
+      "field": "account",
+      "old_value": null,
+      "new_value": "1104210 - 1104210 - Inventory-from-Commissary - ESM",
+      "action": "REVERT_FIELDS"
+    },
+    {
+      "doctype": "Party Account",
+      "parent": "BEBANG KITCHEN INC. - Trade",
+      "company": "ORTIGAS ESTANCIA - BB ESTANCIA FOOD CORP.",
+      "account": "2103210 - 2103210 - AP-Trade-BKI - ESM",
+      "action": "DELETE",
+      "context": "P4b BKI Trade per-Co AP entry"
+    },
+    {
+      "doctype": "Company",
+      "name": "ORTIGAS ESTANCIA - BB ESTANCIA FOOD CORP.",
+      "field": "enable_perpetual_inventory",
+      "old_value": 0,
+      "new_value": 1,
+      "action": "REVERT_FIELDS"
+    },
+    {
+      "doctype": "Warehouse",
+      "name": "ORTIGAS GREENHILLS - BEIFRANCHISE FOOD OPC",
+      "field": "account",
+      "old_value": null,
+      "new_value": "1104210 - 1104210 - Inventory-from-Commissary - GHO",
+      "action": "REVERT_FIELDS"
+    },
+    {
+      "doctype": "Party Account",
+      "parent": "BEBANG KITCHEN INC. - Trade",
+      "company": "ORTIGAS GREENHILLS - BEIFRANCHISE FOOD OPC",
+      "account": "2103210 - 2103210 - AP-Trade-BKI - GHO",
+      "action": "DELETE",
+      "context": "P4b BKI Trade per-Co AP entry"
+    },
+    {
+      "doctype": "Account",
+      "name": "Stock Received But Not Billed - ROA",
+      "action": "DELETE",
+      "context": "P4b created SRBNB acct"
+    },
+    {
+      "doctype": "Company",
+      "name": "ROBINSONS ANTIPOLO - BEBANG ENTERPRISE INC.",
+      "field": "stock_received_but_not_billed",
+      "old_value": null,
+      "new_value": "Stock Received But Not Billed - ROA",
+      "action": "REVERT_FIELDS"
+    },
+    {
+      "doctype": "Warehouse",
+      "name": "ROBINSONS ANTIPOLO - BEBANG ENTERPRISE INC.",
+      "field": "account",
+      "old_value": null,
+      "new_value": "1104210 - 1104210 - Inventory-from-Commissary - ROA",
+      "action": "REVERT_FIELDS"
+    },
+    {
+      "doctype": "Party Account",
+      "parent": "BEBANG KITCHEN INC. - Trade",
+      "company": "ROBINSONS ANTIPOLO - BEBANG ENTERPRISE INC.",
+      "account": "2103210 - 2103210 - AP-Trade-BKI - ROA",
+      "action": "DELETE",
+      "context": "P4b BKI Trade per-Co AP entry"
+    },
+    {
+      "doctype": "Company",
+      "name": "ROBINSONS ANTIPOLO - BEBANG ENTERPRISE INC.",
+      "field": "enable_perpetual_inventory",
+      "old_value": 0,
+      "new_value": 1,
+      "action": "REVERT_FIELDS"
+    },
+    {
+      "doctype": "Company",
+      "name": "ROBINSONS GALLERIA SOUTH - TUNGSTEN CAPITAL HOLDINGS OPC",
+      "field": "stock_received_but_not_billed",
+      "old_value": null,
+      "new_value": "Stock Received But Not Billed - ROBGS",
+      "action": "REVERT_FIELDS"
+    },
+    {
+      "doctype": "Warehouse",
+      "name": "ROBINSONS GALLERIA SOUTH - TUNGSTEN CAPITAL HOLDINGS OPC",
+      "field": "account",
+      "old_value": null,
+      "new_value": "1104210 - 1104210 - Inventory-from-Commissary - ROBGS",
+      "action": "REVERT_FIELDS"
+    },
+    {
+      "doctype": "Party Account",
+      "parent": "BEBANG KITCHEN INC. - Trade",
+      "company": "ROBINSONS GALLERIA SOUTH - TUNGSTEN CAPITAL HOLDINGS OPC",
+      "account": "2103210 - 2103210 - AP-Trade-BKI - ROBGS",
+      "action": "DELETE",
+      "context": "P4b BKI Trade per-Co AP entry"
+    },
+    {
+      "doctype": "Company",
+      "name": "ROBINSONS GENERAL TRIAS - BEBANG MEGA INC.",
+      "field": "stock_received_but_not_billed",
+      "old_value": null,
+      "new_value": "Stock Received But Not Billed - ROBGT",
+      "action": "REVERT_FIELDS"
+    },
+    {
+      "doctype": "Warehouse",
+      "name": "ROBINSONS GENERAL TRIAS - BEBANG MEGA INC.",
+      "field": "account",
+      "old_value": null,
+      "new_value": "1104210 - 1104210 - Inventory-from-Commissary - ROBGT",
+      "action": "REVERT_FIELDS"
+    },
+    {
+      "doctype": "Party Account",
+      "parent": "BEBANG KITCHEN INC. - Trade",
+      "company": "ROBINSONS GENERAL TRIAS - BEBANG MEGA INC.",
+      "account": "2103210 - 2103210 - AP-Trade-BKI - ROBGT",
+      "action": "DELETE",
+      "context": "P4b BKI Trade per-Co AP entry"
+    },
+    {
+      "doctype": "Company",
+      "name": "ROBINSONS GENERAL TRIAS - BEBANG MEGA INC.",
+      "field": "enable_perpetual_inventory",
+      "old_value": 0,
+      "new_value": 1,
+      "action": "REVERT_FIELDS"
+    },
+    {
+      "doctype": "Company",
+      "name": "ROBINSONS IMUS - BEBANG MEGA INC.",
+      "field": "stock_received_but_not_billed",
+      "old_value": null,
+      "new_value": "Stock Received But Not Billed - ROBIM",
+      "action": "REVERT_FIELDS"
+    },
+    {
+      "doctype": "Warehouse",
+      "name": "ROBINSONS IMUS - BEBANG MEGA INC.",
+      "field": "account",
+      "old_value": null,
+      "new_value": "1104210 - 1104210 - Inventory-from-Commissary - ROBIM",
+      "action": "REVERT_FIELDS"
+    },
+    {
+      "doctype": "Party Account",
+      "parent": "BEBANG KITCHEN INC. - Trade",
+      "company": "ROBINSONS IMUS - BEBANG MEGA INC.",
+      "account": "2103210 - 2103210 - AP-Trade-BKI - ROBIM",
+      "action": "DELETE",
+      "context": "P4b BKI Trade per-Co AP entry"
+    },
+    {
+      "doctype": "Company",
+      "name": "ROBINSONS IMUS - BEBANG MEGA INC.",
+      "field": "enable_perpetual_inventory",
+      "old_value": 0,
+      "new_value": 1,
+      "action": "REVERT_FIELDS"
+    },
+    {
+      "doctype": "Company",
+      "name": "ROBINSONS PLACE DASMARINAS - FREEZE DELIGHT INC.",
+      "field": "stock_received_but_not_billed",
+      "old_value": null,
+      "new_value": "Stock Received But Not Billed - ROBDA",
+      "action": "REVERT_FIELDS"
+    },
+    {
+      "doctype": "Warehouse",
+      "name": "ROBINSONS PLACE DASMARINAS - FREEZE DELIGHT INC.",
+      "field": "account",
+      "old_value": null,
+      "new_value": "1104210 - 1104210 - Inventory-from-Commissary - ROBDA",
+      "action": "REVERT_FIELDS"
+    },
+    {
+      "doctype": "Party Account",
+      "parent": "BEBANG KITCHEN INC. - Trade",
+      "company": "ROBINSONS PLACE DASMARINAS - FREEZE DELIGHT INC.",
+      "account": "2103210 - 2103210 - AP-Trade-BKI - ROBDA",
+      "action": "DELETE",
+      "context": "P4b BKI Trade per-Co AP entry"
+    },
+    {
+      "doctype": "Company",
+      "name": "ROBINSONS PLACE DASMARINAS - FREEZE DELIGHT INC.",
+      "field": "enable_perpetual_inventory",
+      "old_value": 0,
+      "new_value": 1,
+      "action": "REVERT_FIELDS"
+    },
+    {
+      "doctype": "Company",
+      "name": "SM BICUTAN - BEBANG SM BICUTAN INC.",
+      "field": "stock_received_but_not_billed",
+      "old_value": null,
+      "new_value": "Stock Received But Not Billed - SMBIC",
+      "action": "REVERT_FIELDS"
+    },
+    {
+      "doctype": "Warehouse",
+      "name": "SM BICUTAN - BEBANG SM BICUTAN INC.",
+      "field": "account",
+      "old_value": null,
+      "new_value": "1104210 - 1104210 - Inventory-from-Commissary - SMBIC",
+      "action": "REVERT_FIELDS"
+    },
+    {
+      "doctype": "Party Account",
+      "parent": "BEBANG KITCHEN INC. - Trade",
+      "company": "SM BICUTAN - BEBANG SM BICUTAN INC.",
+      "account": "2103210 - 2103210 - AP-Trade-BKI - SMBIC",
+      "action": "DELETE",
+      "context": "P4b BKI Trade per-Co AP entry"
+    },
+    {
+      "doctype": "Company",
+      "name": "SM CALOOCAN - TAJ FOOD CORP.",
+      "field": "stock_received_but_not_billed",
+      "old_value": null,
+      "new_value": "Stock Received But Not Billed - SMCAL",
+      "action": "REVERT_FIELDS"
+    },
+    {
+      "doctype": "Warehouse",
+      "name": "SM CALOOCAN - TAJ FOOD CORP.",
+      "field": "account",
+      "old_value": null,
+      "new_value": "1104210 - 1104210 - Inventory-from-Commissary - SMCAL",
+      "action": "REVERT_FIELDS"
+    },
+    {
+      "doctype": "Party Account",
+      "parent": "BEBANG KITCHEN INC. - Trade",
+      "company": "SM CALOOCAN - TAJ FOOD CORP.",
+      "account": "2103210 - 2103210 - AP-Trade-BKI - SMCAL",
+      "action": "DELETE",
+      "context": "P4b BKI Trade per-Co AP entry"
+    },
+    {
+      "doctype": "Company",
+      "name": "SM CLARK - RED TALDAWA FOODS OPC",
+      "field": "stock_received_but_not_billed",
+      "old_value": null,
+      "new_value": "Stock Received But Not Billed - SMCLK",
+      "action": "REVERT_FIELDS"
+    },
+    {
+      "doctype": "Warehouse",
+      "name": "SM CLARK - RED TALDAWA FOODS OPC",
+      "field": "account",
+      "old_value": null,
+      "new_value": "1104210 - 1104210 - Inventory-from-Commissary - SMCLK",
+      "action": "REVERT_FIELDS"
+    },
+    {
+      "doctype": "Party Account",
+      "parent": "BEBANG KITCHEN INC. - Trade",
+      "company": "SM CLARK - RED TALDAWA FOODS OPC",
+      "account": "2103210 - 2103210 - AP-Trade-BKI - SMCLK",
+      "action": "DELETE",
+      "context": "P4b BKI Trade per-Co AP entry"
+    },
+    {
+      "doctype": "Company",
+      "name": "SM EAST ORTIGAS - BEBANG SMEO INC.",
+      "field": "stock_received_but_not_billed",
+      "old_value": null,
+      "new_value": "Stock Received But Not Billed - SMEO",
+      "action": "REVERT_FIELDS"
+    },
+    {
+      "doctype": "Warehouse",
+      "name": "SM EAST ORTIGAS - BEBANG SMEO INC.",
+      "field": "account",
+      "old_value": null,
+      "new_value": "1104210 - 1104210 - Inventory-from-Commissary - SMEO",
+      "action": "REVERT_FIELDS"
+    },
+    {
+      "doctype": "Party Account",
+      "parent": "BEBANG KITCHEN INC. - Trade",
+      "company": "SM EAST ORTIGAS - BEBANG SMEO INC.",
+      "account": "2103210 - 2103210 - AP-Trade-BKI - SMEO",
+      "action": "DELETE",
+      "context": "P4b BKI Trade per-Co AP entry"
+    },
+    {
+      "doctype": "Company",
+      "name": "SM GRAND CENTRAL - BEBANG GRAND CENTRAL INC.",
+      "field": "stock_received_but_not_billed",
+      "old_value": null,
+      "new_value": "Stock Received But Not Billed - SMGC",
+      "action": "REVERT_FIELDS"
+    },
+    {
+      "doctype": "Warehouse",
+      "name": "SM GRAND CENTRAL - BEBANG GRAND CENTRAL INC.",
+      "field": "account",
+      "old_value": null,
+      "new_value": "1104210 - 1104210 - Inventory-from-Commissary - SMGC",
+      "action": "REVERT_FIELDS"
+    },
+    {
+      "doctype": "Party Account",
+      "parent": "BEBANG KITCHEN INC. - Trade",
+      "company": "SM GRAND CENTRAL - BEBANG GRAND CENTRAL INC.",
+      "account": "2103210 - 2103210 - AP-Trade-BKI - SMGC",
+      "action": "DELETE",
+      "context": "P4b BKI Trade per-Co AP entry"
+    },
+    {
+      "doctype": "Company",
+      "name": "SM MALL OF ASIA - BEBANG SMOA INC.",
+      "field": "stock_received_but_not_billed",
+      "old_value": null,
+      "new_value": "Stock Received But Not Billed - SMMOA",
+      "action": "REVERT_FIELDS"
+    },
+    {
+      "doctype": "Warehouse",
+      "name": "SM MALL OF ASIA - BEBANG SMOA INC.",
+      "field": "account",
+      "old_value": null,
+      "new_value": "1104210 - 1104210 - Inventory-from-Commissary - SMMOA",
+      "action": "REVERT_FIELDS"
+    },
+    {
+      "doctype": "Party Account",
+      "parent": "BEBANG KITCHEN INC. - Trade",
+      "company": "SM MALL OF ASIA - BEBANG SMOA INC.",
+      "account": "2103210 - 2103210 - AP-Trade-BKI - SMMOA",
+      "action": "DELETE",
+      "context": "P4b BKI Trade per-Co AP entry"
+    },
+    {
+      "doctype": "Account",
+      "name": "Stock Received But Not Billed - SMM",
+      "action": "DELETE",
+      "context": "P4b created SRBNB acct"
+    },
+    {
+      "doctype": "Company",
+      "name": "SM MANILA - BEBANG ENTERPRISE INC.",
+      "field": "stock_received_but_not_billed",
+      "old_value": null,
+      "new_value": "Stock Received But Not Billed - SMM",
+      "action": "REVERT_FIELDS"
+    },
+    {
+      "doctype": "Warehouse",
+      "name": "SM MANILA - BEBANG ENTERPRISE INC.",
+      "field": "account",
+      "old_value": null,
+      "new_value": "1104210 - 1104210 - Inventory-from-Commissary - SMM",
+      "action": "REVERT_FIELDS"
+    },
+    {
+      "doctype": "Party Account",
+      "parent": "BEBANG KITCHEN INC. - Trade",
+      "company": "SM MANILA - BEBANG ENTERPRISE INC.",
+      "account": "2103210 - 2103210 - AP-Trade-BKI - SMM",
+      "action": "DELETE",
+      "context": "P4b BKI Trade per-Co AP entry"
+    },
+    {
+      "doctype": "Company",
+      "name": "SM MANILA - BEBANG ENTERPRISE INC.",
+      "field": "enable_perpetual_inventory",
+      "old_value": 0,
+      "new_value": 1,
+      "action": "REVERT_FIELDS"
+    },
+    {
+      "doctype": "Company",
+      "name": "SM MARIKINA - BEBANG SM MARIKINA INC.",
+      "field": "stock_received_but_not_billed",
+      "old_value": "Stock Received But Not Billed - BEI",
+      "new_value": "Stock Received But Not Billed - SMK",
+      "action": "REVERT_FIELDS"
+    },
+    {
+      "doctype": "Warehouse",
+      "name": "SM MARIKINA - BEBANG SM MARIKINA INC.",
+      "field": "account",
+      "old_value": null,
+      "new_value": "1104210 - 1104210 - Inventory-from-Commissary - SMK",
+      "action": "REVERT_FIELDS"
+    },
+    {
+      "doctype": "Party Account",
+      "parent": "BEBANG KITCHEN INC. - Trade",
+      "company": "SM MARIKINA - BEBANG SM MARIKINA INC.",
+      "account": "2103210 - 2103210 - AP-Trade-BKI - SMK",
+      "action": "DELETE",
+      "context": "P4b BKI Trade per-Co AP entry"
+    },
+    {
+      "doctype": "Company",
+      "name": "SM MARILAO - BEBANG MARILAO INC.",
+      "field": "stock_received_but_not_billed",
+      "old_value": null,
+      "new_value": "Stock Received But Not Billed - SMMAR",
+      "action": "REVERT_FIELDS"
+    },
+    {
+      "doctype": "Warehouse",
+      "name": "SM MARILAO - BEBANG MARILAO INC.",
+      "field": "account",
+      "old_value": null,
+      "new_value": "1104210 - 1104210 - Inventory-from-Commissary - SMMAR",
+      "action": "REVERT_FIELDS"
+    },
+    {
+      "doctype": "Party Account",
+      "parent": "BEBANG KITCHEN INC. - Trade",
+      "company": "SM MARILAO - BEBANG MARILAO INC.",
+      "account": "2103210 - 2103210 - AP-Trade-BKI - SMMAR",
+      "action": "DELETE",
+      "context": "P4b BKI Trade per-Co AP entry"
+    },
+    {
+      "doctype": "Account",
+      "name": "Stock Received But Not Billed - SMMM",
+      "action": "DELETE",
+      "context": "P4b created SRBNB acct"
+    },
+    {
+      "doctype": "Company",
+      "name": "SM MEGAMALL - BEBANG ENTERPRISE INC.",
+      "field": "stock_received_but_not_billed",
+      "old_value": null,
+      "new_value": "Stock Received But Not Billed - SMMM",
+      "action": "REVERT_FIELDS"
+    },
+    {
+      "doctype": "Warehouse",
+      "name": "SM MEGAMALL - BEBANG ENTERPRISE INC.",
+      "field": "account",
+      "old_value": null,
+      "new_value": "1104210 - 1104210 - Inventory-from-Commissary - SMMM",
+      "action": "REVERT_FIELDS"
+    },
+    {
+      "doctype": "Party Account",
+      "parent": "BEBANG KITCHEN INC. - Trade",
+      "company": "SM MEGAMALL - BEBANG ENTERPRISE INC.",
+      "account": "2103210 - 2103210 - AP-Trade-BKI - SMMM",
+      "action": "DELETE",
+      "context": "P4b BKI Trade per-Co AP entry"
+    },
+    {
+      "doctype": "Company",
+      "name": "SM MEGAMALL - BEBANG ENTERPRISE INC.",
+      "field": "enable_perpetual_inventory",
+      "old_value": 0,
+      "new_value": 1,
+      "action": "REVERT_FIELDS"
+    },
+    {
+      "doctype": "Company",
+      "name": "SM NORTH EDSA - BEBANG NORTH EDSA INC.",
+      "field": "stock_received_but_not_billed",
+      "old_value": null,
+      "new_value": "Stock Received But Not Billed - SMNE",
+      "action": "REVERT_FIELDS"
+    },
+    {
+      "doctype": "Warehouse",
+      "name": "SM NORTH EDSA - BEBANG NORTH EDSA INC.",
+      "field": "account",
+      "old_value": null,
+      "new_value": "1104210 - 1104210 - Inventory-from-Commissary - SMNE",
+      "action": "REVERT_FIELDS"
+    },
+    {
+      "doctype": "Party Account",
+      "parent": "BEBANG KITCHEN INC. - Trade",
+      "company": "SM NORTH EDSA - BEBANG NORTH EDSA INC.",
+      "account": "2103210 - 2103210 - AP-Trade-BKI - SMNE",
+      "action": "DELETE",
+      "context": "P4b BKI Trade per-Co AP entry"
+    },
+    {
+      "doctype": "Company",
+      "name": "SM PULILAN - BEBANG SMM INC.",
+      "field": "stock_received_but_not_billed",
+      "old_value": null,
+      "new_value": "Stock Received But Not Billed - SMPUL",
+      "action": "REVERT_FIELDS"
+    },
+    {
+      "doctype": "Warehouse",
+      "name": "SM PULILAN - BEBANG SMM INC.",
+      "field": "account",
+      "old_value": null,
+      "new_value": "1104210 - 1104210 - Inventory-from-Commissary - SMPUL",
+      "action": "REVERT_FIELDS"
+    },
+    {
+      "doctype": "Party Account",
+      "parent": "BEBANG KITCHEN INC. - Trade",
+      "company": "SM PULILAN - BEBANG SMM INC.",
+      "account": "2103210 - 2103210 - AP-Trade-BKI - SMPUL",
+      "action": "DELETE",
+      "context": "P4b BKI Trade per-Co AP entry"
+    },
+    {
+      "doctype": "Company",
+      "name": "SM SAN JOSE DEL MONTE - JL TRADE OPC",
+      "field": "stock_received_but_not_billed",
+      "old_value": null,
+      "new_value": "Stock Received But Not Billed - SJDM",
+      "action": "REVERT_FIELDS"
+    },
+    {
+      "doctype": "Warehouse",
+      "name": "SM SAN JOSE DEL MONTE - JL TRADE OPC",
+      "field": "account",
+      "old_value": null,
+      "new_value": "1104210 - 1104210 - Inventory-from-Commissary - SJDM",
+      "action": "REVERT_FIELDS"
+    },
+    {
+      "doctype": "Party Account",
+      "parent": "BEBANG KITCHEN INC. - Trade",
+      "company": "SM SAN JOSE DEL MONTE - JL TRADE OPC",
+      "account": "2103210 - 2103210 - AP-Trade-BKI - SJDM",
+      "action": "DELETE",
+      "context": "P4b BKI Trade per-Co AP entry"
+    },
+    {
+      "doctype": "Company",
+      "name": "SM SANGANDAAN - TUNGSTEN CAPITAL HOLDINGS OPC",
+      "field": "stock_received_but_not_billed",
+      "old_value": null,
+      "new_value": "Stock Received But Not Billed - SMSDN",
+      "action": "REVERT_FIELDS"
+    },
+    {
+      "doctype": "Warehouse",
+      "name": "SM SANGANDAAN - TUNGSTEN CAPITAL HOLDINGS OPC",
+      "field": "account",
+      "old_value": null,
+      "new_value": "1104210 - 1104210 - Inventory-from-Commissary - SMSDN",
+      "action": "REVERT_FIELDS"
+    },
+    {
+      "doctype": "Party Account",
+      "parent": "BEBANG KITCHEN INC. - Trade",
+      "company": "SM SANGANDAAN - TUNGSTEN CAPITAL HOLDINGS OPC",
+      "account": "2103210 - 2103210 - AP-Trade-BKI - SMSDN",
+      "action": "DELETE",
+      "context": "P4b BKI Trade per-Co AP entry"
+    },
+    {
+      "doctype": "Account",
+      "name": "Stock Received But Not Billed - SMS",
+      "action": "DELETE",
+      "context": "P4b created SRBNB acct"
+    },
+    {
+      "doctype": "Company",
+      "name": "SM SOUTHMALL - BEBANG ENTERPRISE INC.",
+      "field": "stock_received_but_not_billed",
+      "old_value": null,
+      "new_value": "Stock Received But Not Billed - SMS",
+      "action": "REVERT_FIELDS"
+    },
+    {
+      "doctype": "Warehouse",
+      "name": "SM SOUTHMALL - BEBANG ENTERPRISE INC.",
+      "field": "account",
+      "old_value": null,
+      "new_value": "1104210 - 1104210 - Inventory-from-Commissary - SMS",
+      "action": "REVERT_FIELDS"
+    },
+    {
+      "doctype": "Party Account",
+      "parent": "BEBANG KITCHEN INC. - Trade",
+      "company": "SM SOUTHMALL - BEBANG ENTERPRISE INC.",
+      "account": "2103210 - 2103210 - AP-Trade-BKI - SMS",
+      "action": "DELETE",
+      "context": "P4b BKI Trade per-Co AP entry"
+    },
+    {
+      "doctype": "Company",
+      "name": "SM SOUTHMALL - BEBANG ENTERPRISE INC.",
+      "field": "enable_perpetual_inventory",
+      "old_value": 0,
+      "new_value": 1,
+      "action": "REVERT_FIELDS"
+    },
+    {
+      "doctype": "Company",
+      "name": "SM STA. ROSA - SWEET HARMONY FOOD CORP.",
+      "field": "stock_received_but_not_billed",
+      "old_value": null,
+      "new_value": "Stock Received But Not Billed - SMSTR",
+      "action": "REVERT_FIELDS"
+    },
+    {
+      "doctype": "Warehouse",
+      "name": "SM STA. ROSA - SWEET HARMONY FOOD CORP.",
+      "field": "account",
+      "old_value": null,
+      "new_value": "1104210 - 1104210 - Inventory-from-Commissary - SMSTR",
+      "action": "REVERT_FIELDS"
+    },
+    {
+      "doctype": "Party Account",
+      "parent": "BEBANG KITCHEN INC. - Trade",
+      "company": "SM STA. ROSA - SWEET HARMONY FOOD CORP.",
+      "account": "2103210 - 2103210 - AP-Trade-BKI - SMSTR",
+      "action": "DELETE",
+      "context": "P4b BKI Trade per-Co AP entry"
+    },
+    {
+      "doctype": "Company",
+      "name": "SM STA. ROSA - SWEET HARMONY FOOD CORP.",
+      "field": "enable_perpetual_inventory",
+      "old_value": 0,
+      "new_value": 1,
+      "action": "REVERT_FIELDS"
+    },
+    {
+      "doctype": "Company",
+      "name": "SM TANZA - BEBANG MEGA INC.",
+      "field": "stock_received_but_not_billed",
+      "old_value": null,
+      "new_value": "Stock Received But Not Billed - SMTZ",
+      "action": "REVERT_FIELDS"
+    },
+    {
+      "doctype": "Warehouse",
+      "name": "SM TANZA - BEBANG MEGA INC.",
+      "field": "account",
+      "old_value": null,
+      "new_value": "1104210 - 1104210 - Inventory-from-Commissary - SMTZ",
+      "action": "REVERT_FIELDS"
+    },
+    {
+      "doctype": "Party Account",
+      "parent": "BEBANG KITCHEN INC. - Trade",
+      "company": "SM TANZA - BEBANG MEGA INC.",
+      "account": "2103210 - 2103210 - AP-Trade-BKI - SMTZ",
+      "action": "DELETE",
+      "context": "P4b BKI Trade per-Co AP entry"
+    },
+    {
+      "doctype": "Company",
+      "name": "SM TANZA - BEBANG MEGA INC.",
+      "field": "enable_perpetual_inventory",
+      "old_value": 0,
+      "new_value": 1,
+      "action": "REVERT_FIELDS"
+    },
+    {
+      "doctype": "Company",
+      "name": "SM TAYTAY - DAY ONES FOOD AND DRINK ESTABLISHMENTS CORP.",
+      "field": "stock_received_but_not_billed",
+      "old_value": null,
+      "new_value": "Stock Received But Not Billed - SMTAY",
+      "action": "REVERT_FIELDS"
+    },
+    {
+      "doctype": "Warehouse",
+      "name": "SM TAYTAY - DAY ONES FOOD AND DRINK ESTABLISHMENTS CORP.",
+      "field": "account",
+      "old_value": null,
+      "new_value": "1104210 - 1104210 - Inventory-from-Commissary - SMTAY",
+      "action": "REVERT_FIELDS"
+    },
+    {
+      "doctype": "Party Account",
+      "parent": "BEBANG KITCHEN INC. - Trade",
+      "company": "SM TAYTAY - DAY ONES FOOD AND DRINK ESTABLISHMENTS CORP.",
+      "account": "2103210 - 2103210 - AP-Trade-BKI - SMTAY",
+      "action": "DELETE",
+      "context": "P4b BKI Trade per-Co AP entry"
+    },
+    {
+      "doctype": "Company",
+      "name": "SM VALENZUELA - BEBANG SMV INC.",
+      "field": "stock_received_but_not_billed",
+      "old_value": null,
+      "new_value": "Stock Received But Not Billed - SMV",
+      "action": "REVERT_FIELDS"
+    },
+    {
+      "doctype": "Warehouse",
+      "name": "SM VALENZUELA - BEBANG SMV INC.",
+      "field": "account",
+      "old_value": null,
+      "new_value": "1104210 - 1104210 - Inventory-from-Commissary - SMV",
+      "action": "REVERT_FIELDS"
+    },
+    {
+      "doctype": "Party Account",
+      "parent": "BEBANG KITCHEN INC. - Trade",
+      "company": "SM VALENZUELA - BEBANG SMV INC.",
+      "account": "2103210 - 2103210 - AP-Trade-BKI - SMV",
+      "action": "DELETE",
+      "context": "P4b BKI Trade per-Co AP entry"
+    },
+    {
+      "doctype": "Company",
+      "name": "STA. LUCIA EAST GRAND MALL - BEBANG SM MARIKINA INC.",
+      "field": "stock_received_but_not_billed",
+      "old_value": null,
+      "new_value": "Stock Received But Not Billed - SLGM",
+      "action": "REVERT_FIELDS"
+    },
+    {
+      "doctype": "Warehouse",
+      "name": "STA. LUCIA EAST GRAND MALL - BEBANG SM MARIKINA INC.",
+      "field": "account",
+      "old_value": null,
+      "new_value": "1104210 - 1104210 - Inventory-from-Commissary - SLGM",
+      "action": "REVERT_FIELDS"
+    },
+    {
+      "doctype": "Party Account",
+      "parent": "BEBANG KITCHEN INC. - Trade",
+      "company": "STA. LUCIA EAST GRAND MALL - BEBANG SM MARIKINA INC.",
+      "account": "2103210 - 2103210 - AP-Trade-BKI - SLGM",
+      "action": "DELETE",
+      "context": "P4b BKI Trade per-Co AP entry"
+    },
+    {
+      "doctype": "Company",
+      "name": "STA. LUCIA EAST GRAND MALL - BEBANG SM MARIKINA INC.",
+      "field": "enable_perpetual_inventory",
+      "old_value": 0,
+      "new_value": 1,
+      "action": "REVERT_FIELDS"
+    },
+    {
+      "doctype": "Company",
+      "name": "THE GRID ROCKWELL - TASTECARTEL CORP.",
+      "field": "stock_received_but_not_billed",
+      "old_value": null,
+      "new_value": "Stock Received But Not Billed - TGR",
+      "action": "REVERT_FIELDS"
+    },
+    {
+      "doctype": "Warehouse",
+      "name": "THE GRID ROCKWELL - TASTECARTEL CORP.",
+      "field": "account",
+      "old_value": null,
+      "new_value": "1104210 - 1104210 - Inventory-from-Commissary - TGR",
+      "action": "REVERT_FIELDS"
+    },
+    {
+      "doctype": "Party Account",
+      "parent": "BEBANG KITCHEN INC. - Trade",
+      "company": "THE GRID ROCKWELL - TASTECARTEL CORP.",
+      "account": "2103210 - 2103210 - AP-Trade-BKI - TGR",
+      "action": "DELETE",
+      "context": "P4b BKI Trade per-Co AP entry"
+    },
+    {
+      "doctype": "Company",
+      "name": "THE TERMINAL - BEBANG STARMALL ALABANG INC.",
+      "field": "stock_received_but_not_billed",
+      "old_value": null,
+      "new_value": "Stock Received But Not Billed - TTA",
+      "action": "REVERT_FIELDS"
+    },
+    {
+      "doctype": "Warehouse",
+      "name": "THE TERMINAL - BEBANG STARMALL ALABANG INC.",
+      "field": "account",
+      "old_value": null,
+      "new_value": "1104210 - 1104210 - Inventory-from-Commissary - TTA",
+      "action": "REVERT_FIELDS"
+    },
+    {
+      "doctype": "Party Account",
+      "parent": "BEBANG KITCHEN INC. - Trade",
+      "company": "THE TERMINAL - BEBANG STARMALL ALABANG INC.",
+      "account": "2103210 - 2103210 - AP-Trade-BKI - TTA",
+      "action": "DELETE",
+      "context": "P4b BKI Trade per-Co AP entry"
+    },
+    {
+      "doctype": "Company",
+      "name": "UP TOWN MALL BGC - DMD HOLDINGS INC.",
+      "field": "stock_received_but_not_billed",
+      "old_value": null,
+      "new_value": "Stock Received But Not Billed - UMBGC",
+      "action": "REVERT_FIELDS"
+    },
+    {
+      "doctype": "Warehouse",
+      "name": "UP TOWN MALL BGC - DMD HOLDINGS INC.",
+      "field": "account",
+      "old_value": null,
+      "new_value": "1104210 - 1104210 - Inventory-from-Commissary - UMBGC",
+      "action": "REVERT_FIELDS"
+    },
+    {
+      "doctype": "Party Account",
+      "parent": "BEBANG KITCHEN INC. - Trade",
+      "company": "UP TOWN MALL BGC - DMD HOLDINGS INC.",
+      "account": "2103210 - 2103210 - AP-Trade-BKI - UMBGC",
+      "action": "DELETE",
+      "context": "P4b BKI Trade per-Co AP entry"
+    },
+    {
+      "doctype": "Company",
+      "name": "VISTA MALL TAGUIG - TRICERN FOOD CORP.",
+      "field": "stock_received_but_not_billed",
+      "old_value": null,
+      "new_value": "Stock Received But Not Billed - VMTAG",
+      "action": "REVERT_FIELDS"
+    },
+    {
+      "doctype": "Warehouse",
+      "name": "VISTA MALL TAGUIG - TRICERN FOOD CORP.",
+      "field": "account",
+      "old_value": null,
+      "new_value": "1104210 - 1104210 - Inventory-from-Commissary - VMTAG",
+      "action": "REVERT_FIELDS"
+    },
+    {
+      "doctype": "Party Account",
+      "parent": "BEBANG KITCHEN INC. - Trade",
+      "company": "VISTA MALL TAGUIG - TRICERN FOOD CORP.",
+      "account": "2103210 - 2103210 - AP-Trade-BKI - VMTAG",
+      "action": "DELETE",
+      "context": "P4b BKI Trade per-Co AP entry"
+    },
+    {
+      "doctype": "Company",
+      "name": "XENTROMALL MONTALBAN - PERPETUAL FOOD CORP.",
+      "field": "stock_received_but_not_billed",
+      "old_value": null,
+      "new_value": "Stock Received But Not Billed - XMM",
+      "action": "REVERT_FIELDS"
+    },
+    {
+      "doctype": "Warehouse",
+      "name": "XENTROMALL MONTALBAN - PERPETUAL FOOD CORP.",
+      "field": "account",
+      "old_value": null,
+      "new_value": "1104210 - 1104210 - Inventory-from-Commissary - XMM",
+      "action": "REVERT_FIELDS"
+    },
+    {
+      "doctype": "Party Account",
+      "parent": "BEBANG KITCHEN INC. - Trade",
+      "company": "XENTROMALL MONTALBAN - PERPETUAL FOOD CORP.",
+      "account": "2103210 - 2103210 - AP-Trade-BKI - XMM",
+      "action": "DELETE",
+      "context": "P4b BKI Trade per-Co AP entry"
+    },
+    {
+      "doctype": "Company",
+      "name": "XENTROMALL MONTALBAN - PERPETUAL FOOD CORP.",
+      "field": "enable_perpetual_inventory",
+      "old_value": 0,
+      "new_value": 1,
+      "action": "REVERT_FIELDS"
+    }
+  ],
+  "summary": {
+    "total_stores": 49,
+    "ok_count": 49,
+    "total_changes_in_ledger": 167,
+    "fully_configured_post_p4b": 49
+  },
+  "status": "OK"
+}
