@@ -289,8 +289,9 @@ def _smoke_one_store(idx: int, company: str, phase: str) -> dict:
                 "pi_bki_si_reference_matches": pi.bki_si_reference == si_name_post,
                 "pi_inter_company_invoice_reference": pi.inter_company_invoice_reference,
                 "pi_update_stock": pi.update_stock,
+                "pi_update_stock_is_0": pi.update_stock == 0,                # S247 v3: billing-only
                 "pi_set_warehouse": pi.set_warehouse,
-                "pi_set_warehouse_matches_buyer": pi.set_warehouse == company,
+                "pi_set_warehouse_is_empty": not bool(pi.set_warehouse),     # S247 v3
                 "pi_credit_to": pi.credit_to,
                 "pi_credit_to_is_2103210": "2103210" in (pi.credit_to or ""),
                 "pi_bei_legal_entity": getattr(pi, "bei_legal_entity", None),
@@ -302,14 +303,20 @@ def _smoke_one_store(idx: int, company: str, phase: str) -> dict:
             })
             if pi.items:
                 first = pi.items[0]
+                # S247 v3: PI item expense_account is now SRBNB (GR/IR clearing), NOT 1104210.
+                # Check by account_type via DB lookup.
+                expense_acct_type = frappe.db.get_value(
+                    "Account", first.expense_account or "", "account_type"
+                ) if first.expense_account else None
                 result["stages"]["assert_pi"].update({
                     "pi_item0_code": first.item_code,
                     "pi_item0_qty": float(first.qty or 0),
                     "pi_item0_rate": float(first.rate or 0),
                     "pi_item0_expense_account": first.expense_account,
-                    "pi_item0_expense_is_1104210": "1104210" in (first.expense_account or ""),
+                    "pi_item0_expense_account_type": expense_acct_type,
+                    "pi_item0_expense_is_srbnb": expense_acct_type == "Stock Received But Not Billed",
                     "pi_item0_warehouse": first.warehouse,
-                    "pi_item0_warehouse_matches_buyer": first.warehouse == company,
+                    "pi_item0_warehouse_is_empty": not bool(first.warehouse),   # S247 v3
                     "pi_item0_cost_center": first.cost_center,
                 })
             if pi.taxes:
@@ -343,6 +350,46 @@ def _smoke_one_store(idx: int, company: str, phase: str) -> dict:
             "error": str(e)[:500],
         }
 
+    # --- stage assert_se (S247 v3: paired Stock Entry from new generator) ---
+    se_name = None
+    try:
+        if frappe.get_meta("Stock Entry").has_field("bki_si_reference"):
+            se_name = frappe.db.get_value(
+                "Stock Entry", {"bki_si_reference": si_name_post}, "name"
+            )
+        result["stages"]["assert_se"] = {"se_name": se_name, "se_exists": bool(se_name)}
+        if se_name:
+            CREATED.append({"doctype": "Stock Entry", "name": se_name, "stage": "draft"})
+            se = frappe.get_doc("Stock Entry", se_name)
+            result["stages"]["assert_se"].update({
+                "se_company": se.company,
+                "se_company_matches_buyer": se.company == company,
+                "se_stock_entry_type": se.stock_entry_type,
+                "se_is_material_receipt": se.stock_entry_type == "Material Receipt",
+                "se_docstatus": se.docstatus,
+                "se_is_draft": se.docstatus == 0,
+                "se_bki_si_reference": se.bki_si_reference,
+                "se_bki_si_reference_matches": se.bki_si_reference == si_name_post,
+                "se_items_count": len(se.items),
+            })
+            if se.items:
+                first_se = se.items[0]
+                se_exp_acct_type = frappe.db.get_value(
+                    "Account", first_se.expense_account or "", "account_type"
+                ) if first_se.expense_account else None
+                result["stages"]["assert_se"].update({
+                    "se_item0_code": first_se.item_code,
+                    "se_item0_t_warehouse": first_se.t_warehouse,
+                    "se_item0_t_warehouse_matches_buyer": first_se.t_warehouse == company,
+                    "se_item0_basic_rate": float(first_se.basic_rate or 0),
+                    "se_item0_expense_account": first_se.expense_account,
+                    "se_item0_expense_account_type": se_exp_acct_type,
+                    # S247 v3: SE.item expense_account is SRBNB (GR/IR clearing — clears PI Dr)
+                    "se_item0_expense_is_srbnb": se_exp_acct_type == "Stock Received But Not Billed",
+                })
+    except Exception as e:
+        result["stages"]["assert_se"] = {"ok": False, "error": str(e)[:500]}
+
     # --- stage cancel ---
     try:
         si = frappe.get_doc("Sales Invoice", si_name_post)
@@ -352,8 +399,19 @@ def _smoke_one_store(idx: int, company: str, phase: str) -> dict:
         pi_still_exists = bool(
             frappe.db.exists("Purchase Invoice", {"bki_si_reference": si_name_post})
         )
+        se_still_exists = False
+        if frappe.get_meta("Stock Entry").has_field("bki_si_reference"):
+            se_still_exists = bool(
+                frappe.db.exists("Stock Entry", {"bki_si_reference": si_name_post})
+            )
         result["stages"]["cancel"]["pi_still_exists_after_cancel"] = pi_still_exists
-        result["stages"]["cancel"]["cascade_worked"] = (not pi_still_exists) if pi_name else True
+        result["stages"]["cancel"]["se_still_exists_after_cancel"] = se_still_exists
+        # S247 v3: both must be gone for cascade_worked
+        cascade_pi_ok = (not pi_still_exists) if pi_name else True
+        cascade_se_ok = (not se_still_exists) if se_name else True
+        result["stages"]["cancel"]["cascade_pi_worked"] = cascade_pi_ok
+        result["stages"]["cancel"]["cascade_se_worked"] = cascade_se_ok
+        result["stages"]["cancel"]["cascade_worked"] = cascade_pi_ok and cascade_se_ok
     except Exception as e:
         result["stages"]["cancel"] = {"ok": False, "error": str(e)[:500]}
 
@@ -369,29 +427,46 @@ def _smoke_one_store(idx: int, company: str, phase: str) -> dict:
         # Drop PI tracker if cascade already deleted it
         if pi_name and not frappe.db.exists("Purchase Invoice", pi_name):
             CREATED[:] = [c for c in CREATED if not (c["doctype"] == "Purchase Invoice" and c["name"] == pi_name)]
+        # S247 v3: drop SE tracker if cascade already deleted it
+        if se_name and not frappe.db.exists("Stock Entry", se_name):
+            CREATED[:] = [c for c in CREATED if not (c["doctype"] == "Stock Entry" and c["name"] == se_name)]
     except Exception as e:
         result["stages"]["delete"] = {"ok": False, "error": str(e)[:500]}
 
-    # --- per-store verdict ---
+    # --- per-store verdict (S247 v3: requires BOTH PI and SE dual-doc pass) ---
     if phase == "READY":
-        # PI must have been created with all key fields correct
         ap = result["stages"].get("assert_pi", {})
+        ase = result["stages"].get("assert_se", {})
         delete_ok = result["stages"].get("delete", {}).get("ok", False)
         cancel_ok = result["stages"].get("cancel", {}).get("ok", False)
-        cascade_ok = result["stages"].get("cancel", {}).get("cascade_worked", False)
+        cascade_pi_ok = result["stages"].get("cancel", {}).get("cascade_pi_worked", False)
+        cascade_se_ok = result["stages"].get("cancel", {}).get("cascade_se_worked", False)
         all_good = (
             result["stages"].get("create_submit", {}).get("ok", False)
+            # PI assertions (S247 v3: billing-only, SRBNB expense, NO warehouse)
             and ap.get("pi_exists", False)
             and ap.get("pi_company_matches_buyer", False)
             and ap.get("pi_supplier_is_bki_trade", False)
             and ap.get("pi_currency_is_php", False)
-            and ap.get("pi_set_warehouse_matches_buyer", False)
+            and ap.get("pi_update_stock_is_0", False)
+            and ap.get("pi_set_warehouse_is_empty", False)
             and ap.get("pi_credit_to_is_2103210", False)
-            and ap.get("pi_item0_expense_is_1104210", False)
+            and ap.get("pi_item0_expense_is_srbnb", False)
+            and ap.get("pi_item0_warehouse_is_empty", False)
             and ap.get("pi_tax0_account_is_1106210", False)
             and ap.get("pi_bki_si_reference_matches", False)
+            # SE assertions (S247 v3: Material Receipt, SRBNB expense, t_warehouse=buyer)
+            and ase.get("se_exists", False)
+            and ase.get("se_company_matches_buyer", False)
+            and ase.get("se_is_material_receipt", False)
+            and ase.get("se_is_draft", False)
+            and ase.get("se_bki_si_reference_matches", False)
+            and ase.get("se_item0_t_warehouse_matches_buyer", False)
+            and ase.get("se_item0_expense_is_srbnb", False)
+            # Cancel cascade (SE first per hooks.py order, then PI)
             and cancel_ok
-            and cascade_ok
+            and cascade_pi_ok
+            and cascade_se_ok
             and delete_ok
         )
         result["verdict"] = "PASS" if all_good else "FAIL"

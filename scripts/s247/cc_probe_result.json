@@ -1,0 +1,82 @@
+{
+  "stores": [
+    {
+      "company": "ROBINSONS ANTIPOLO - BEBANG ENTERPRISE INC.",
+      "abbr": "ROA",
+      "cost_center_count": 1,
+      "cost_centers": [
+        {
+          "name": "Bebang Enterprise Inc. - Robinsons Antipolo - ROA",
+          "cost_center_name": "Bebang Enterprise Inc. - Robinsons Antipolo",
+          "is_group": 0,
+          "parent_cost_center": null,
+          "lft": 343,
+          "rgt": 344
+        }
+      ]
+    },
+    {
+      "company": "SM MANILA - BEBANG ENTERPRISE INC.",
+      "abbr": "SMM",
+      "cost_center_count": 1,
+      "cost_centers": [
+        {
+          "name": "Bebang Enterprise Inc. - SM Manila - SMM",
+          "cost_center_name": "Bebang Enterprise Inc. - SM Manila",
+          "is_group": 0,
+          "parent_cost_center": null,
+          "lft": 339,
+          "rgt": 340
+        }
+      ]
+    },
+    {
+      "company": "SM MEGAMALL - BEBANG ENTERPRISE INC.",
+      "abbr": "SMMM",
+      "cost_center_count": 1,
+      "cost_centers": [
+        {
+          "name": "Bebang Enterprise Inc. - SM Megamall - SMMM",
+          "cost_center_name": "Bebang Enterprise Inc. - SM Megamall",
+          "is_group": 0,
+          "parent_cost_center": null,
+          "lft": 337,
+          "rgt": 338
+        }
+      ]
+    },
+    {
+      "company": "SM SOUTHMALL - BEBANG ENTERPRISE INC.",
+      "abbr": "SMS",
+      "cost_center_count": 1,
+      "cost_centers": [
+        {
+          "name": "Bebang Enterprise Inc. - SM Southmall - SMS",
+          "cost_center_name": "Bebang Enterprise Inc. - SM Southmall",
+          "is_group": 0,
+          "parent_cost_center": null,
+          "lft": 341,
+          "rgt": 342
+        }
+      ]
+    }
+  ],
+  "reference_aranetac_cc_tree": [
+    {
+      "name": "Tungsten Capital - Gateway Mall - ARGW",
+      "cost_center_name": "Tungsten Capital - Gateway Mall",
+      "is_group": 1,
+      "parent_cost_center": null,
+      "lft": 333,
+      "rgt": 336
+    },
+    {
+      "name": "Main - ARGW",
+      "cost_center_name": "Main",
+      "is_group": 0,
+      "parent_cost_center": "Tungsten Capital - Gateway Mall - ARGW",
+      "lft": 334,
+      "rgt": 335
+    }
+  ]
+}

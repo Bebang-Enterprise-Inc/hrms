@@ -66,6 +66,8 @@
   "bki_sales_debit_to_account",
   "bki_sales_naming_series",
   "bki_ewt_on_store_sales_enabled",
+  "enable_bki_store_pi_generator",
+  "enable_bki_store_stock_entry_generator",
   "section_break_bfc_jv_billing",
   "bfc_revenue_company",
   "bfc_sales_vat_template",
@@ -459,6 +461,20 @@
    "label": "Enable EWT on BKI\u2192Store Sales",
    "default": "0",
    "description": "Phase 13 / ICT-004: When checked, BKI\u2192store Sales Invoices include an EWT line using BEI Settings.default_ewt_rate and ewt_payable_account. Default OFF (BEI is not Top 20,000 taxpayer)."
+  },
+  {
+   "fieldname": "enable_bki_store_pi_generator",
+   "fieldtype": "Check",
+   "label": "Enable BKI\u2192Store PI Generator",
+   "default": "1",
+   "description": "S238/S247: kill switch for the store-side Purchase Invoice auto-generator that fires on BKI SI submit. Set to 0 to temporarily disable (used by S247 Phase 6 cleanup to prevent cascade-recursion during historical SI delete sweep)."
+  },
+  {
+   "fieldname": "enable_bki_store_stock_entry_generator",
+   "fieldtype": "Check",
+   "label": "Enable BKI\u2192Store Stock Entry Generator",
+   "default": "1",
+   "description": "S247: kill switch for the store-side Stock Entry (Material Receipt) auto-generator that fires on BKI SI submit. Posts inventory landing on the store's books with SRBNB as GR/IR clearing account. Set to 0 to temporarily disable (used by S247 Phase 6 cleanup)."
   },
   {
    "fieldname": "section_break_bfc_jv_billing",
