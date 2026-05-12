@@ -1,0 +1,13 @@
+{
+  "sprint": "S247",
+  "phase": "3C.4",
+  "purpose": "install bki_si_reference Custom Field on Stock Entry",
+  "timestamp_utc": "2026-05-12T01:29:43.673141Z",
+  "status": "INSTALLED",
+  "installed_field": "Stock Entry.bki_si_reference",
+  "post_install_has_field": true,
+  "post_install_settings_toggles": {
+    "enable_bki_store_pi_generator_field_exists": true,
+    "enable_bki_store_stock_entry_generator_field_exists": true
+  }
+}
