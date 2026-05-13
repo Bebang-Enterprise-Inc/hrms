@@ -1,0 +1,77 @@
+{
+  "captured_at": "2026-05-13 PHT — post-S252 writes",
+  "ssm_command_ids": [
+    "f6af5d68-e3f6-420b-a6f3-334924d8b470 (audit incl 3 ATC + JIMENEZ + CLOSA punch history)",
+    "446f6538-181b-4c95-8ab2-34872a84d6ba (JIMENEZ + NAÑOS regex probe)",
+    "24a3c4f2-1175-4691-b260-a2f3ea3f8dad (NAÑOS broad probe — S244 commands confirmed)",
+    "97c8a741-7fa7-4579-bdcd-d496e81ef392 (25 USERINFO execution + ACK verification)"
+  ],
+  "master_csv_updates": {
+    "rows_updated": 3,
+    "backup_at": "tmp/s245_atc_additional/EMPLOYEE_MASTER_pre_s249_backup.csv",
+    "details": {
+      "9000273_CLOSA": {
+        "store_location": {"from": "BF HOMES", "to": "ALABANG TOWN CENTER"},
+        "designation": {"from": "AREA SUPERVISOR", "to": "STORE OIC"},
+        "bio_device_name": {"from": "BF HOMES", "to": "ALABANG TOWN CENTER"},
+        "notes_appended": "S252 (2026-05-13): Opening Team — promoted from Area Supervisor at BF HOMES to STORE OIC at ALABANG TOWN CENTER effective 2026-05-16 per Ron Andrew Santos chat 2026-05-13"
+      },
+      "9000280_MANGUERA": {
+        "store_location": {"from": "ROBINSONS GALLERIA SOUTH", "to": "ALABANG TOWN CENTER"},
+        "bio_device_name": {"from": "ROBINSON GALLERIA S", "to": "ALABANG TOWN CENTER"},
+        "designation_unchanged": "STORE CREW (Ron self-corrected earlier Production entry)"
+      },
+      "9001860_BALADJAY": {
+        "bio_device_name": {"from": "(blank)", "to": "ALABANG TOWN CENTER"}
+      }
+    }
+  },
+  "adms_device_cmd_inserts": {
+    "total_userinfo": 25,
+    "id_range_observed": "12219-12243 (25 contiguous)",
+    "tab_byte_validation": "min=2, max=2 across all 25",
+    "utf8_validation": "SQL written with explicit UTF-8 encoding; passed psql execution without rollback",
+    "by_group": {
+      "atc_c6_cluster_3_employees": {
+        "employees": ["CLOSA 9000273","MANGUERA 9000280","BALADJAY 9001860"],
+        "devices": ["UDP3251600317","UDP3251600215","CNYG242061718","UDP3251200195","CNYG242061620","UDP3254701583"],
+        "commands": 18
+      },
+      "jimenez_c9_home_cluster": {
+        "employee": "JIMENEZ 9001912",
+        "devices": ["CNYG242061011","UDP3235201051","UDP3252100358","UDP3252100422","UDP3252300354","UDP3252100496"],
+        "commands": 6,
+        "note": "First-ever ADMS enrollment for JIMENEZ — S228 Master-only since 2026-04-28, zero punches anywhere prior"
+      },
+      "jimenez_dverde_reliever": {
+        "employee": "JIMENEZ 9001912",
+        "device": "UDP3252900188",
+        "commands": 1,
+        "note": "Single-device push per clusters.md:217 cross-cluster reliever rule"
+      }
+    },
+    "ack_status_at_+45s": {
+      "ACKED": 25,
+      "PENDING": 0,
+      "ack_rate_percent": 100.0
+    },
+    "per_device_ack": "All 13 unique devices ACKED 100% (CNYG242061011:1/1, CNYG242061620:3/3, CNYG242061718:3/3, UDP3235201051:1/1, UDP3251200195:3/3, UDP3251600215:3/3, UDP3251600317:3/3, UDP3252100358:1/1, UDP3252100422:1/1, UDP3252100496:1/1, UDP3252300354:1/1, UDP3252900188:1/1, UDP3254701583:3/3)"
+  },
+  "naños_reliever_audit_only": {
+    "bio_id": "9001861",
+    "reliever_assignment": "ATC -> BF Homes",
+    "userinfo_required": false,
+    "reason": "Already enrolled at all C6 devices including UDP3251600215 BF Homes via S244 ID 12184 ACKED 2026-05-10 23:17:45.14847",
+    "audit_log_only": true
+  },
+  "change_log_appends": {
+    "delta": 9,
+    "breakdown": {
+      "EMPLOYEE_MASTER UPDATE": 3,
+      "ADMS ENROLL (full cluster)": 4,
+      "ADMS RELIEVER_ENROLL (cross-cluster single-device)": 1,
+      "ADMS RELIEVER_ASSIGN (NO_OP audit-only)": 1
+    }
+  },
+  "sprint_id_note": "Originally branched as s248-atc... renamed to s249, then to s252 because the registry reserves S248-S251 for S247 follow-up sprints (reconciliation cron, G-046 dashboard, CC tree, legacy SE harmonization)."
+}
