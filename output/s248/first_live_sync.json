@@ -1,0 +1,98 @@
+{
+  "live_run_note": "HTTP client disconnected mid-execution but the Apps Script completed the bulk-append. Synthesized from dry-run prediction + actual sheet delta verification.",
+  "dry_run_predicted_appended": 278,
+  "actual_sheet_delta": {
+    "Suppliers SOA": 278,
+    "Head Office": 0,
+    "CAPEX": 0
+  },
+  "denise_seed": {
+    "appended": 278,
+    "matches_dry_run": true,
+    "by_tab_predicted": {
+      "Suppliers w/o FD & Middleby": 262,
+      "Middleby": 7,
+      "Forward Dynamics": 0,
+      "Masterlist": 9
+    },
+    "sample_appended": [
+      {
+        "tab": "Suppliers w/o FD & Middleby",
+        "source_tag": "Denise PP",
+        "payee": "1 to 1 Marketing",
+        "invoice": "1772835",
+        "amount": 74260.81,
+        "outstanding": 74260.81,
+        "status": "Schedule for Online Payment",
+        "ap_status": "FOR ONLINE PAYMENT"
+      },
+      {
+        "tab": "Suppliers w/o FD & Middleby",
+        "source_tag": "Denise PP",
+        "payee": "1 to 1 Marketing",
+        "invoice": "1761250",
+        "amount": 311142.59,
+        "outstanding": 311142.59,
+        "status": "Not yet forwarded to Acctg/Fin",
+        "ap_status": "NO RFP YET"
+      },
+      {
+        "tab": "Suppliers w/o FD & Middleby",
+        "source_tag": "Denise PP",
+        "payee": "1 to 1 Marketing",
+        "invoice": "1772832",
+        "amount": 74260.87,
+        "outstanding": 74260.87,
+        "status": "Not yet forwarded to Acctg/Fin",
+        "ap_status": "NO RFP YET"
+      },
+      {
+        "tab": "Suppliers w/o FD & Middleby",
+        "source_tag": "Denise PP",
+        "payee": "1 to 1 Marketing",
+        "invoice": "1786640",
+        "amount": 213172.06,
+        "outstanding": 213172.06,
+        "status": "Schedule for Online Payment",
+        "ap_status": "FOR ONLINE PAYMENT"
+      },
+      {
+        "tab": "Suppliers w/o FD & Middleby",
+        "source_tag": "Denise PP",
+        "payee": "1 to 1 Marketing",
+        "invoice": "1787968",
+        "amount": 238542.2,
+        "outstanding": 238542.2,
+        "status": "Schedule for Online Payment",
+        "ap_status": "FOR ONLINE PAYMENT"
+      }
+    ]
+  },
+  "fpm_seed_continuing": {
+    "scanned": 2585,
+    "appended": 0,
+    "skipped_paid_old": 1,
+    "skipped_empty": 64,
+    "skipped_existing": 2520,
+    "capex_count": 0,
+    "ho_count": 0,
+    "soa_count": 0,
+    "sample_appended": []
+  },
+  "status_sync_continuing": {
+    "updates": 0,
+    "conflicts": 0,
+    "nochange": 2334,
+    "tabs_seen": {
+      "Suppliers SOA": 973,
+      "Head Office": 4476,
+      "CAPEX": 154
+    },
+    "sample_changes": []
+  },
+  "deployment_version": 14,
+  "first_log_event_timestamp": "2026-05-14 10:01:??",
+  "last_log_event_timestamp": "2026-05-14 10:03:04 PHT",
+  "log_events_captured": 109,
+  "note_on_log_count": "Logging happens one row-event at a time AFTER the bulk-append. The Apps Script timeout terminated logging after 109/278 events, but all 278 rows are in the sheet."
+}

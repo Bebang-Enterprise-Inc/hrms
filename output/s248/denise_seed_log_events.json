@@ -1,0 +1,547 @@
+[
+  [
+    "2026-05-14 10:00:47 PHT",
+    "invoice_seeded_from_denise_pp",
+    "{\"tab\":\"Suppliers SOA\",\"ap_master_row_idx\":991,\"source_sheet\":\"Denise PP\",\"source_denise_tab\":\"Suppliers w/o FD & Middleby\",\"source_row_id\":4,\"source_tag\":\"Denise PP\",\"payee\":\"1 to 1 Marketing\",\"invoice\":\"1772835\",\"amount\":74260.81}"
+  ],
+  [
+    "2026-05-14 10:00:50 PHT",
+    "invoice_seeded_from_denise_pp",
+    "{\"tab\":\"Suppliers SOA\",\"ap_master_row_idx\":992,\"source_sheet\":\"Denise PP\",\"source_denise_tab\":\"Suppliers w/o FD & Middleby\",\"source_row_id\":9,\"source_tag\":\"Denise PP\",\"payee\":\"1 to 1 Marketing\",\"invoice\":\"1761250\",\"amount\":311142.59}"
+  ],
+  [
+    "2026-05-14 10:00:51 PHT",
+    "invoice_seeded_from_denise_pp",
+    "{\"tab\":\"Suppliers SOA\",\"ap_master_row_idx\":993,\"source_sheet\":\"Denise PP\",\"source_denise_tab\":\"Suppliers w/o FD & Middleby\",\"source_row_id\":13,\"source_tag\":\"Denise PP\",\"payee\":\"1 to 1 Marketing\",\"invoice\":\"1772832\",\"amount\":74260.87}"
+  ],
+  [
+    "2026-05-14 10:00:53 PHT",
+    "invoice_seeded_from_denise_pp",
+    "{\"tab\":\"Suppliers SOA\",\"ap_master_row_idx\":994,\"source_sheet\":\"Denise PP\",\"source_denise_tab\":\"Suppliers w/o FD & Middleby\",\"source_row_id\":14,\"source_tag\":\"Denise PP\",\"payee\":\"1 to 1 Marketing\",\"invoice\":\"1786640\",\"amount\":213172.06}"
+  ],
+  [
+    "2026-05-14 10:00:54 PHT",
+    "invoice_seeded_from_denise_pp",
+    "{\"tab\":\"Suppliers SOA\",\"ap_master_row_idx\":995,\"source_sheet\":\"Denise PP\",\"source_denise_tab\":\"Suppliers w/o FD & Middleby\",\"source_row_id\":15,\"source_tag\":\"Denise PP\",\"payee\":\"1 to 1 Marketing\",\"invoice\":\"1787968\",\"amount\":238542.2}"
+  ],
+  [
+    "2026-05-14 10:00:56 PHT",
+    "invoice_seeded_from_denise_pp",
+    "{\"tab\":\"Suppliers SOA\",\"ap_master_row_idx\":996,\"source_sheet\":\"Denise PP\",\"source_denise_tab\":\"Suppliers w/o FD & Middleby\",\"source_row_id\":16,\"source_tag\":\"Denise PP\",\"payee\":\"1 to 1 Marketing\",\"invoice\":\"1781920\",\"amount\":311142.59}"
+  ],
+  [
+    "2026-05-14 10:00:57 PHT",
+    "invoice_seeded_from_denise_pp",
+    "{\"tab\":\"Suppliers SOA\",\"ap_master_row_idx\":997,\"source_sheet\":\"Denise PP\",\"source_denise_tab\":\"Suppliers w/o FD & Middleby\",\"source_row_id\":17,\"source_tag\":\"Denise PP\",\"payee\":\"1 to 1 Marketing\",\"invoice\":\"1781919\",\"amount\":311142.59}"
+  ],
+  [
+    "2026-05-14 10:00:58 PHT",
+    "invoice_seeded_from_denise_pp",
+    "{\"tab\":\"Suppliers SOA\",\"ap_master_row_idx\":998,\"source_sheet\":\"Denise PP\",\"source_denise_tab\":\"Suppliers w/o FD & Middleby\",\"source_row_id\":18,\"source_tag\":\"Denise PP\",\"payee\":\"1 to 1 Marketing\",\"invoice\":\"1781918\",\"amount\":311142.59}"
+  ],
+  [
+    "2026-05-14 10:00:59 PHT",
+    "invoice_seeded_from_denise_pp",
+    "{\"tab\":\"Suppliers SOA\",\"ap_master_row_idx\":999,\"source_sheet\":\"Denise PP\",\"source_denise_tab\":\"Suppliers w/o FD & Middleby\",\"source_row_id\":19,\"source_tag\":\"Denise PP\",\"payee\":\"1 to 1 Marketing\",\"invoice\":\"1781917\",\"amount\":311142.59}"
+  ],
+  [
+    "2026-05-14 10:01:00 PHT",
+    "invoice_seeded_from_denise_pp",
+    "{\"tab\":\"Suppliers SOA\",\"ap_master_row_idx\":1000,\"source_sheet\":\"Denise PP\",\"source_denise_tab\":\"Suppliers w/o FD & Middleby\",\"source_row_id\":20,\"source_tag\":\"Denise PP\",\"payee\":\"1 to 1 Marketing\",\"invoice\":\"1781916\",\"amount\":414856.78}"
+  ],
+  [
+    "2026-05-14 10:01:01 PHT",
+    "invoice_seeded_from_denise_pp",
+    "{\"tab\":\"Suppliers SOA\",\"ap_master_row_idx\":1001,\"source_sheet\":\"Denise PP\",\"source_denise_tab\":\"Suppliers w/o FD & Middleby\",\"source_row_id\":21,\"source_tag\":\"Denise PP\",\"payee\":\"1 to 1 Marketing\",\"invoice\":\"1785415\",\"amount\":102978.51}"
+  ],
+  [
+    "2026-05-14 10:01:02 PHT",
+    "invoice_seeded_from_denise_pp",
+    "{\"tab\":\"Suppliers SOA\",\"ap_master_row_idx\":1002,\"source_sheet\":\"Denise PP\",\"source_denise_tab\":\"Suppliers w/o FD & Middleby\",\"source_row_id\":92,\"source_tag\":\"Denise PP\",\"payee\":\"Cle Ace Corporation\",\"invoice\":\"182676\",\"amount\":285084}"
+  ],
+  [
+    "2026-05-14 10:01:04 PHT",
+    "invoice_seeded_from_denise_pp",
+    "{\"tab\":\"Suppliers SOA\",\"ap_master_row_idx\":1003,\"source_sheet\":\"Denise PP\",\"source_denise_tab\":\"Suppliers w/o FD & Middleby\",\"source_row_id\":93,\"source_tag\":\"Denise PP\",\"payee\":\"Cle Ace Corporation\",\"invoice\":\"182906\",\"amount\":285084}"
+  ],
+  [
+    "2026-05-14 10:01:06 PHT",
+    "invoice_seeded_from_denise_pp",
+    "{\"tab\":\"Suppliers SOA\",\"ap_master_row_idx\":1004,\"source_sheet\":\"Denise PP\",\"source_denise_tab\":\"Suppliers w/o FD & Middleby\",\"source_row_id\":94,\"source_tag\":\"Denise PP\",\"payee\":\"Cle Ace Corporation\",\"invoice\":\"182907\",\"amount\":363240}"
+  ],
+  [
+    "2026-05-14 10:01:07 PHT",
+    "invoice_seeded_from_denise_pp",
+    "{\"tab\":\"Suppliers SOA\",\"ap_master_row_idx\":1005,\"source_sheet\":\"Denise PP\",\"source_denise_tab\":\"Suppliers w/o FD & Middleby\",\"source_row_id\":95,\"source_tag\":\"Denise PP\",\"payee\":\"Cle Ace Corporation\",\"invoice\":\"183247\",\"amount\":285084}"
+  ],
+  [
+    "2026-05-14 10:01:08 PHT",
+    "invoice_seeded_from_denise_pp",
+    "{\"tab\":\"Suppliers SOA\",\"ap_master_row_idx\":1006,\"source_sheet\":\"Denise PP\",\"source_denise_tab\":\"Suppliers w/o FD & Middleby\",\"source_row_id\":96,\"source_tag\":\"Denise PP\",\"payee\":\"Cle Ace Corporation\",\"invoice\":\"183536A\",\"amount\":285084}"
+  ],
+  [
+    "2026-05-14 10:01:09 PHT",
+    "invoice_seeded_from_denise_pp",
+    "{\"tab\":\"Suppliers SOA\",\"ap_master_row_idx\":1007,\"source_sheet\":\"Denise PP\",\"source_denise_tab\":\"Suppliers w/o FD & Middleby\",\"source_row_id\":97,\"source_tag\":\"Denise PP\",\"payee\":\"Cle Ace Corporation\",\"invoice\":\"182720\",\"amount\":179999}"
+  ],
+  [
+    "2026-05-14 10:01:11 PHT",
+    "invoice_seeded_from_denise_pp",
+    "{\"tab\":\"Suppliers SOA\",\"ap_master_row_idx\":1008,\"source_sheet\":\"Denise PP\",\"source_denise_tab\":\"Suppliers w/o FD & Middleby\",\"source_row_id\":98,\"source_tag\":\"Denise PP\",\"payee\":\"Cle Ace Corporation\",\"invoice\":\"182721\",\"amount\":89999.5}"
+  ],
+  [
+    "2026-05-14 10:01:13 PHT",
+    "invoice_seeded_from_denise_pp",
+    "{\"tab\":\"Suppliers SOA\",\"ap_master_row_idx\":1009,\"source_sheet\":\"Denise PP\",\"source_denise_tab\":\"Suppliers w/o FD & Middleby\",\"source_row_id\":99,\"source_tag\":\"Denise PP\",\"payee\":\"Cle Ace Corporation\",\"invoice\":\"182719\",\"amount\":89999.5}"
+  ],
+  [
+    "2026-05-14 10:01:14 PHT",
+    "invoice_seeded_from_denise_pp",
+    "{\"tab\":\"Suppliers SOA\",\"ap_master_row_idx\":1010,\"source_sheet\":\"Denise PP\",\"source_denise_tab\":\"Suppliers w/o FD & Middleby\",\"source_row_id\":100,\"source_tag\":\"Denise PP\",\"payee\":\"Cle Ace Corporation\",\"invoice\":\"183537\",\"amount\":1187850}"
+  ],
+  [
+    "2026-05-14 10:01:16 PHT",
+    "invoice_seeded_from_denise_pp",
+    "{\"tab\":\"Suppliers SOA\",\"ap_master_row_idx\":1011,\"source_sheet\":\"Denise PP\",\"source_denise_tab\":\"Suppliers w/o FD & Middleby\",\"source_row_id\":101,\"source_tag\":\"Denise PP\",\"payee\":\"Cle Ace Corporation\",\"invoice\":\"183248\",\"amount\":179999}"
+  ],
+  [
+    "2026-05-14 10:01:18 PHT",
+    "invoice_seeded_from_denise_pp",
+    "{\"tab\":\"Suppliers SOA\",\"ap_master_row_idx\":1012,\"source_sheet\":\"Denise PP\",\"source_denise_tab\":\"Suppliers w/o FD & Middleby\",\"source_row_id\":102,\"source_tag\":\"Denise PP\",\"payee\":\"Cle Ace Corporation\",\"invoice\":\"183946\",\"amount\":285084}"
+  ],
+  [
+    "2026-05-14 10:01:21 PHT",
+    "invoice_seeded_from_denise_pp",
+    "{\"tab\":\"Suppliers SOA\",\"ap_master_row_idx\":1013,\"source_sheet\":\"Denise PP\",\"source_denise_tab\":\"Suppliers w/o FD & Middleby\",\"source_row_id\":103,\"source_tag\":\"Denise PP\",\"payee\":\"Cle Ace Corporation\",\"invoice\":\"184164\",\"amount\":285082.5}"
+  ],
+  [
+    "2026-05-14 10:01:23 PHT",
+    "invoice_seeded_from_denise_pp",
+    "{\"tab\":\"Suppliers SOA\",\"ap_master_row_idx\":1014,\"source_sheet\":\"Denise PP\",\"source_denise_tab\":\"Suppliers w/o FD & Middleby\",\"source_row_id\":104,\"source_tag\":\"Denise PP\",\"payee\":\"Cle Ace Corporation\",\"invoice\":\"184412\",\"amount\":47514}"
+  ],
+  [
+    "2026-05-14 10:01:25 PHT",
+    "invoice_seeded_from_denise_pp",
+    "{\"tab\":\"Suppliers SOA\",\"ap_master_row_idx\":1015,\"source_sheet\":\"Denise PP\",\"source_denise_tab\":\"Suppliers w/o FD & Middleby\",\"source_row_id\":105,\"source_tag\":\"Denise PP\",\"payee\":\"Cle Ace Corporation\",\"invoice\":\"185205\",\"amount\":88800}"
+  ],
+  [
+    "2026-05-14 10:01:27 PHT",
+    "invoice_seeded_from_denise_pp",
+    "{\"tab\":\"Suppliers SOA\",\"ap_master_row_idx\":1016,\"source_sheet\":\"Denise PP\",\"source_denise_tab\":\"Suppliers w/o FD & Middleby\",\"source_row_id\":106,\"source_tag\":\"Denise PP\",\"payee\":\"Cle Ace Corporation\",\"invoice\":\"185203\",\"amount\":88800}"
+  ],
+  [
+    "2026-05-14 10:01:29 PHT",
+    "invoice_seeded_from_denise_pp",
+    "{\"tab\":\"Suppliers SOA\",\"ap_master_row_idx\":1017,\"source_sheet\":\"Denise PP\",\"source_denise_tab\":\"Suppliers w/o FD & Middleby\",\"source_row_id\":109,\"source_tag\":\"Denise PP\",\"payee\":\"Dane International Commodities Inc.\",\"invoice\":\"176606\",\"amount\":34000}"
+  ],
+  [
+    "2026-05-14 10:01:30 PHT",
+    "invoice_seeded_from_denise_pp",
+    "{\"tab\":\"Suppliers SOA\",\"ap_master_row_idx\":1018,\"source_sheet\":\"Denise PP\",\"source_denise_tab\":\"Suppliers w/o FD & Middleby\",\"source_row_id\":110,\"source_tag\":\"Denise PP\",\"payee\":\"Dimax Food Wholesailing\",\"invoice\":\"0137\",\"amount\":317354.4}"
+  ],
+  [
+    "2026-05-14 10:01:32 PHT",
+    "invoice_seeded_from_denise_pp",
+    "{\"tab\":\"Suppliers SOA\",\"ap_master_row_idx\":1019,\"source_sheet\":\"Denise PP\",\"source_denise_tab\":\"Suppliers w/o FD & Middleby\",\"source_row_id\":111,\"source_tag\":\"Denise PP\",\"payee\":\"DKSH Philippines\",\"invoice\":\"4300074855\",\"amount\":19750}"
+  ],
+  [
+    "2026-05-14 10:01:33 PHT",
+    "invoice_seeded_from_denise_pp",
+    "{\"tab\":\"Suppliers SOA\",\"ap_master_row_idx\":1020,\"source_sheet\":\"Denise PP\",\"source_denise_tab\":\"Suppliers w/o FD & Middleby\",\"source_row_id\":113,\"source_tag\":\"Denise PP\",\"payee\":\"ESV International Corp\",\"invoice\":\"762971\",\"amount\":306000}"
+  ],
+  [
+    "2026-05-14 10:01:35 PHT",
+    "invoice_seeded_from_denise_pp",
+    "{\"tab\":\"Suppliers SOA\",\"ap_master_row_idx\":1021,\"source_sheet\":\"Denise PP\",\"source_denise_tab\":\"Suppliers w/o FD & Middleby\",\"source_row_id\":114,\"source_tag\":\"Denise PP\",\"payee\":\"ESV International Corp\",\"invoice\":\"\",\"amount\":571526.82}"
+  ],
+  [
+    "2026-05-14 10:01:36 PHT",
+    "invoice_seeded_from_denise_pp",
+    "{\"tab\":\"Suppliers SOA\",\"ap_master_row_idx\":1022,\"source_sheet\":\"Denise PP\",\"source_denise_tab\":\"Suppliers w/o FD & Middleby\",\"source_row_id\":115,\"source_tag\":\"Denise PP\",\"payee\":\"ESV International Corp\",\"invoice\":\"762972\",\"amount\":306000}"
+  ],
+  [
+    "2026-05-14 10:01:38 PHT",
+    "invoice_seeded_from_denise_pp",
+    "{\"tab\":\"Suppliers SOA\",\"ap_master_row_idx\":1023,\"source_sheet\":\"Denise PP\",\"source_denise_tab\":\"Suppliers w/o FD & Middleby\",\"source_row_id\":116,\"source_tag\":\"Denise PP\",\"payee\":\"ESV International Corp\",\"invoice\":\"765424\",\"amount\":306000}"
+  ],
+  [
+    "2026-05-14 10:01:40 PHT",
+    "invoice_seeded_from_denise_pp",
+    "{\"tab\":\"Suppliers SOA\",\"ap_master_row_idx\":1024,\"source_sheet\":\"Denise PP\",\"source_denise_tab\":\"Suppliers w/o FD & Middleby\",\"source_row_id\":117,\"source_tag\":\"Denise PP\",\"payee\":\"ESV International Corp\",\"invoice\":\"765482\",\"amount\":79200}"
+  ],
+  [
+    "2026-05-14 10:01:42 PHT",
+    "invoice_seeded_from_denise_pp",
+    "{\"tab\":\"Suppliers SOA\",\"ap_master_row_idx\":1025,\"source_sheet\":\"Denise PP\",\"source_denise_tab\":\"Suppliers w/o FD & Middleby\",\"source_row_id\":120,\"source_tag\":\"Denise PP\",\"payee\":\"Fast Trax Corporation\",\"invoice\":\"195767\",\"amount\":142500}"
+  ],
+  [
+    "2026-05-14 10:01:43 PHT",
+    "invoice_seeded_from_denise_pp",
+    "{\"tab\":\"Suppliers SOA\",\"ap_master_row_idx\":1026,\"source_sheet\":\"Denise PP\",\"source_denise_tab\":\"Suppliers w/o FD & Middleby\",\"source_row_id\":121,\"source_tag\":\"Denise PP\",\"payee\":\"Fast Trax Corporation\",\"invoice\":\"195798\",\"amount\":427500}"
+  ],
+  [
+    "2026-05-14 10:01:44 PHT",
+    "invoice_seeded_from_denise_pp",
+    "{\"tab\":\"Suppliers SOA\",\"ap_master_row_idx\":1027,\"source_sheet\":\"Denise PP\",\"source_denise_tab\":\"Suppliers w/o FD & Middleby\",\"source_row_id\":129,\"source_tag\":\"Denise PP\",\"payee\":\"Four Coolitz Enterprises Corporation\",\"invoice\":\"1592\",\"amount\":506387.84}"
+  ],
+  [
+    "2026-05-14 10:01:45 PHT",
+    "invoice_seeded_from_denise_pp",
+    "{\"tab\":\"Suppliers SOA\",\"ap_master_row_idx\":1028,\"source_sheet\":\"Denise PP\",\"source_denise_tab\":\"Suppliers w/o FD & Middleby\",\"source_row_id\":130,\"source_tag\":\"Denise PP\",\"payee\":\"Four Coolitz Enterprises Corporation\",\"invoice\":\"1590\",\"amount\":298588.64}"
+  ],
+  [
+    "2026-05-14 10:01:46 PHT",
+    "invoice_seeded_from_denise_pp",
+    "{\"tab\":\"Suppliers SOA\",\"ap_master_row_idx\":1029,\"source_sheet\":\"Denise PP\",\"source_denise_tab\":\"Suppliers w/o FD & Middleby\",\"source_row_id\":131,\"source_tag\":\"Denise PP\",\"payee\":\"Four Coolitz Enterprises Corporation\",\"invoice\":\"1593\",\"amount\":421350.72}"
+  ],
+  [
+    "2026-05-14 10:01:47 PHT",
+    "invoice_seeded_from_denise_pp",
+    "{\"tab\":\"Suppliers SOA\",\"ap_master_row_idx\":1030,\"source_sheet\":\"Denise PP\",\"source_denise_tab\":\"Suppliers w/o FD & Middleby\",\"source_row_id\":132,\"source_tag\":\"Denise PP\",\"payee\":\"Four Coolitz Enterprises Corporation\",\"invoice\":\"1591\",\"amount\":385792.96}"
+  ],
+  [
+    "2026-05-14 10:01:49 PHT",
+    "invoice_seeded_from_denise_pp",
+    "{\"tab\":\"Suppliers SOA\",\"ap_master_row_idx\":1031,\"source_sheet\":\"Denise PP\",\"source_denise_tab\":\"Suppliers w/o FD & Middleby\",\"source_row_id\":133,\"source_tag\":\"Denise PP\",\"payee\":\"GALVATRON CORPORATION\",\"invoice\":\"24570\",\"amount\":10500}"
+  ],
+  [
+    "2026-05-14 10:01:50 PHT",
+    "invoice_seeded_from_denise_pp",
+    "{\"tab\":\"Suppliers SOA\",\"ap_master_row_idx\":1032,\"source_sheet\":\"Denise PP\",\"source_denise_tab\":\"Suppliers w/o FD & Middleby\",\"source_row_id\":134,\"source_tag\":\"Denise PP\",\"payee\":\"GALVATRON CORPORATION\",\"invoice\":\"24571\",\"amount\":4350}"
+  ],
+  [
+    "2026-05-14 10:01:51 PHT",
+    "invoice_seeded_from_denise_pp",
+    "{\"tab\":\"Suppliers SOA\",\"ap_master_row_idx\":1033,\"source_sheet\":\"Denise PP\",\"source_denise_tab\":\"Suppliers w/o FD & Middleby\",\"source_row_id\":137,\"source_tag\":\"Denise PP\",\"payee\":\"Global Pacific Distribution Network\",\"invoice\":\"621484\",\"amount\":571526.82}"
+  ],
+  [
+    "2026-05-14 10:01:52 PHT",
+    "invoice_seeded_from_denise_pp",
+    "{\"tab\":\"Suppliers SOA\",\"ap_master_row_idx\":1034,\"source_sheet\":\"Denise PP\",\"source_denise_tab\":\"Suppliers w/o FD & Middleby\",\"source_row_id\":139,\"source_tag\":\"Denise PP\",\"payee\":\"Green District Fruits and Vegetables\",\"invoice\":\"35567\",\"amount\":25200}"
+  ],
+  [
+    "2026-05-14 10:01:53 PHT",
+    "invoice_seeded_from_denise_pp",
+    "{\"tab\":\"Suppliers SOA\",\"ap_master_row_idx\":1035,\"source_sheet\":\"Denise PP\",\"source_denise_tab\":\"Suppliers w/o FD & Middleby\",\"source_row_id\":140,\"source_tag\":\"Denise PP\",\"payee\":\"Green District Fruits and Vegetables\",\"invoice\":\"35566\",\"amount\":82800}"
+  ],
+  [
+    "2026-05-14 10:01:54 PHT",
+    "invoice_seeded_from_denise_pp",
+    "{\"tab\":\"Suppliers SOA\",\"ap_master_row_idx\":1036,\"source_sheet\":\"Denise PP\",\"source_denise_tab\":\"Suppliers w/o FD & Middleby\",\"source_row_id\":141,\"source_tag\":\"Denise PP\",\"payee\":\"Green District Fruits and Vegetables\",\"invoice\":\"35565\",\"amount\":36000}"
+  ],
+  [
+    "2026-05-14 10:01:56 PHT",
+    "invoice_seeded_from_denise_pp",
+    "{\"tab\":\"Suppliers SOA\",\"ap_master_row_idx\":1037,\"source_sheet\":\"Denise PP\",\"source_denise_tab\":\"Suppliers w/o FD & Middleby\",\"source_row_id\":147,\"source_tag\":\"Denise PP\",\"payee\":\"Green District Fruits and Vegetables\",\"invoice\":\"0035568\",\"amount\":111000}"
+  ],
+  [
+    "2026-05-14 10:01:57 PHT",
+    "invoice_seeded_from_denise_pp",
+    "{\"tab\":\"Suppliers SOA\",\"ap_master_row_idx\":1038,\"source_sheet\":\"Denise PP\",\"source_denise_tab\":\"Suppliers w/o FD & Middleby\",\"source_row_id\":148,\"source_tag\":\"Denise PP\",\"payee\":\"Griffift Foods Philippines Inc.\",\"invoice\":\"961\",\"amount\":53760}"
+  ],
+  [
+    "2026-05-14 10:01:59 PHT",
+    "invoice_seeded_from_denise_pp",
+    "{\"tab\":\"Suppliers SOA\",\"ap_master_row_idx\":1039,\"source_sheet\":\"Denise PP\",\"source_denise_tab\":\"Suppliers w/o FD & Middleby\",\"source_row_id\":150,\"source_tag\":\"Denise PP\",\"payee\":\"Handyware Philippines incorporated\",\"invoice\":\"39408\",\"amount\":21500}"
+  ],
+  [
+    "2026-05-14 10:02:00 PHT",
+    "invoice_seeded_from_denise_pp",
+    "{\"tab\":\"Suppliers SOA\",\"ap_master_row_idx\":1040,\"source_sheet\":\"Denise PP\",\"source_denise_tab\":\"Suppliers w/o FD & Middleby\",\"source_row_id\":152,\"source_tag\":\"Denise PP\",\"payee\":\"Happybee Packaging Inc\",\"invoice\":\"46839\",\"amount\":62500}"
+  ],
+  [
+    "2026-05-14 10:02:01 PHT",
+    "invoice_seeded_from_denise_pp",
+    "{\"tab\":\"Suppliers SOA\",\"ap_master_row_idx\":1041,\"source_sheet\":\"Denise PP\",\"source_denise_tab\":\"Suppliers w/o FD & Middleby\",\"source_row_id\":154,\"source_tag\":\"Denise PP\",\"payee\":\"Happybee Packaging Inc\",\"invoice\":\"46838\",\"amount\":96000}"
+  ],
+  [
+    "2026-05-14 10:02:02 PHT",
+    "invoice_seeded_from_denise_pp",
+    "{\"tab\":\"Suppliers SOA\",\"ap_master_row_idx\":1042,\"source_sheet\":\"Denise PP\",\"source_denise_tab\":\"Suppliers w/o FD & Middleby\",\"source_row_id\":157,\"source_tag\":\"Denise PP\",\"payee\":\"Happybee Packaging Inc\",\"invoice\":\"47331\",\"amount\":47868.732}"
+  ],
+  [
+    "2026-05-14 10:02:03 PHT",
+    "invoice_seeded_from_denise_pp",
+    "{\"tab\":\"Suppliers SOA\",\"ap_master_row_idx\":1043,\"source_sheet\":\"Denise PP\",\"source_denise_tab\":\"Suppliers w/o FD & Middleby\",\"source_row_id\":158,\"source_tag\":\"Denise PP\",\"payee\":\"Happybee Packaging Inc\",\"invoice\":\"47330\",\"amount\":47868.75}"
+  ],
+  [
+    "2026-05-14 10:02:04 PHT",
+    "invoice_seeded_from_denise_pp",
+    "{\"tab\":\"Suppliers SOA\",\"ap_master_row_idx\":1044,\"source_sheet\":\"Denise PP\",\"source_denise_tab\":\"Suppliers w/o FD & Middleby\",\"source_row_id\":180,\"source_tag\":\"Denise PP\",\"payee\":\"Icon Printing Solutions Inc\",\"invoice\":\"00171\",\"amount\":132308.04}"
+  ],
+  [
+    "2026-05-14 10:02:05 PHT",
+    "invoice_seeded_from_denise_pp",
+    "{\"tab\":\"Suppliers SOA\",\"ap_master_row_idx\":1045,\"source_sheet\":\"Denise PP\",\"source_denise_tab\":\"Suppliers w/o FD & Middleby\",\"source_row_id\":181,\"source_tag\":\"Denise PP\",\"payee\":\"Icon Printing Solutions Inc\",\"invoice\":\"00137\",\"amount\":127848.21}"
+  ],
+  [
+    "2026-05-14 10:02:06 PHT",
+    "invoice_seeded_from_denise_pp",
+    "{\"tab\":\"Suppliers SOA\",\"ap_master_row_idx\":1046,\"source_sheet\":\"Denise PP\",\"source_denise_tab\":\"Suppliers w/o FD & Middleby\",\"source_row_id\":182,\"source_tag\":\"Denise PP\",\"payee\":\"Icon Printing Solutions Inc\",\"invoice\":\"00169\",\"amount\":110256.7}"
+  ],
+  [
+    "2026-05-14 10:02:07 PHT",
+    "invoice_seeded_from_denise_pp",
+    "{\"tab\":\"Suppliers SOA\",\"ap_master_row_idx\":1047,\"source_sheet\":\"Denise PP\",\"source_denise_tab\":\"Suppliers w/o FD & Middleby\",\"source_row_id\":183,\"source_tag\":\"Denise PP\",\"payee\":\"Icon Printing Solutions Inc\",\"invoice\":\"00160\",\"amount\":110256.7}"
+  ],
+  [
+    "2026-05-14 10:02:10 PHT",
+    "invoice_seeded_from_denise_pp",
+    "{\"tab\":\"Suppliers SOA\",\"ap_master_row_idx\":1048,\"source_sheet\":\"Denise PP\",\"source_denise_tab\":\"Suppliers w/o FD & Middleby\",\"source_row_id\":184,\"source_tag\":\"Denise PP\",\"payee\":\"Icon Printing Solutions Inc\",\"invoice\":\"00172\",\"amount\":132308.04}"
+  ],
+  [
+    "2026-05-14 10:02:11 PHT",
+    "invoice_seeded_from_denise_pp",
+    "{\"tab\":\"Suppliers SOA\",\"ap_master_row_idx\":1049,\"source_sheet\":\"Denise PP\",\"source_denise_tab\":\"Suppliers w/o FD & Middleby\",\"source_row_id\":185,\"source_tag\":\"Denise PP\",\"payee\":\"Icon Printing Solutions Inc\",\"invoice\":\"00175\",\"amount\":104062.5}"
+  ],
+  [
+    "2026-05-14 10:02:12 PHT",
+    "invoice_seeded_from_denise_pp",
+    "{\"tab\":\"Suppliers SOA\",\"ap_master_row_idx\":1050,\"source_sheet\":\"Denise PP\",\"source_denise_tab\":\"Suppliers w/o FD & Middleby\",\"source_row_id\":186,\"source_tag\":\"Denise PP\",\"payee\":\"Icon Printing Solutions Inc\",\"invoice\":\"00182\",\"amount\":121906.25}"
+  ],
+  [
+    "2026-05-14 10:02:13 PHT",
+    "invoice_seeded_from_denise_pp",
+    "{\"tab\":\"Suppliers SOA\",\"ap_master_row_idx\":1051,\"source_sheet\":\"Denise PP\",\"source_denise_tab\":\"Suppliers w/o FD & Middleby\",\"source_row_id\":187,\"source_tag\":\"Denise PP\",\"payee\":\"Icon Printing Solutions Inc\",\"invoice\":\"00170\",\"amount\":132308.04}"
+  ],
+  [
+    "2026-05-14 10:02:14 PHT",
+    "invoice_seeded_from_denise_pp",
+    "{\"tab\":\"Suppliers SOA\",\"ap_master_row_idx\":1052,\"source_sheet\":\"Denise PP\",\"source_denise_tab\":\"Suppliers w/o FD & Middleby\",\"source_row_id\":188,\"source_tag\":\"Denise PP\",\"payee\":\"Icon Printing Solutions Inc\",\"invoice\":\"00168\",\"amount\":132308.04}"
+  ],
+  [
+    "2026-05-14 10:02:15 PHT",
+    "invoice_seeded_from_denise_pp",
+    "{\"tab\":\"Suppliers SOA\",\"ap_master_row_idx\":1053,\"source_sheet\":\"Denise PP\",\"source_denise_tab\":\"Suppliers w/o FD & Middleby\",\"source_row_id\":189,\"source_tag\":\"Denise PP\",\"payee\":\"Icon Printing Solutions Inc\",\"invoice\":\"00138\",\"amount\":170464.79}"
+  ],
+  [
+    "2026-05-14 10:02:16 PHT",
+    "invoice_seeded_from_denise_pp",
+    "{\"tab\":\"Suppliers SOA\",\"ap_master_row_idx\":1054,\"source_sheet\":\"Denise PP\",\"source_denise_tab\":\"Suppliers w/o FD & Middleby\",\"source_row_id\":190,\"source_tag\":\"Denise PP\",\"payee\":\"Icon Printing Solutions Inc\",\"invoice\":\"00166\",\"amount\":220513.39}"
+  ],
+  [
+    "2026-05-14 10:02:17 PHT",
+    "invoice_seeded_from_denise_pp",
+    "{\"tab\":\"Suppliers SOA\",\"ap_master_row_idx\":1055,\"source_sheet\":\"Denise PP\",\"source_denise_tab\":\"Suppliers w/o FD & Middleby\",\"source_row_id\":191,\"source_tag\":\"Denise PP\",\"payee\":\"Icon Printing Solutions Inc\",\"invoice\":\"00187\",\"amount\":96381.7}"
+  ],
+  [
+    "2026-05-14 10:02:19 PHT",
+    "invoice_seeded_from_denise_pp",
+    "{\"tab\":\"Suppliers SOA\",\"ap_master_row_idx\":1056,\"source_sheet\":\"Denise PP\",\"source_denise_tab\":\"Suppliers w/o FD & Middleby\",\"source_row_id\":192,\"source_tag\":\"Denise PP\",\"payee\":\"Icon Printing Solutions Inc\",\"invoice\":\"00185\",\"amount\":104062.5}"
+  ],
+  [
+    "2026-05-14 10:02:20 PHT",
+    "invoice_seeded_from_denise_pp",
+    "{\"tab\":\"Suppliers SOA\",\"ap_master_row_idx\":1057,\"source_sheet\":\"Denise PP\",\"source_denise_tab\":\"Suppliers w/o FD & Middleby\",\"source_row_id\":193,\"source_tag\":\"Denise PP\",\"payee\":\"Icon Printing Solutions Inc\",\"invoice\":\"00183\",\"amount\":121456.25}"
+  ],
+  [
+    "2026-05-14 10:02:21 PHT",
+    "invoice_seeded_from_denise_pp",
+    "{\"tab\":\"Suppliers SOA\",\"ap_master_row_idx\":1058,\"source_sheet\":\"Denise PP\",\"source_denise_tab\":\"Suppliers w/o FD & Middleby\",\"source_row_id\":194,\"source_tag\":\"Denise PP\",\"payee\":\"Icon Printing Solutions Inc\",\"invoice\":\"00165\",\"amount\":191772.32}"
+  ],
+  [
+    "2026-05-14 10:02:22 PHT",
+    "invoice_seeded_from_denise_pp",
+    "{\"tab\":\"Suppliers SOA\",\"ap_master_row_idx\":1059,\"source_sheet\":\"Denise PP\",\"source_denise_tab\":\"Suppliers w/o FD & Middleby\",\"source_row_id\":206,\"source_tag\":\"Denise PP\",\"payee\":\"Jovilyn and Violeta Ube House\",\"invoice\":\"0504\",\"amount\":29532}"
+  ],
+  [
+    "2026-05-14 10:02:23 PHT",
+    "invoice_seeded_from_denise_pp",
+    "{\"tab\":\"Suppliers SOA\",\"ap_master_row_idx\":1060,\"source_sheet\":\"Denise PP\",\"source_denise_tab\":\"Suppliers w/o FD & Middleby\",\"source_row_id\":207,\"source_tag\":\"Denise PP\",\"payee\":\"Jovilyn and Violeta Ube House\",\"invoice\":\"0499\",\"amount\":27324}"
+  ],
+  [
+    "2026-05-14 10:02:24 PHT",
+    "invoice_seeded_from_denise_pp",
+    "{\"tab\":\"Suppliers SOA\",\"ap_master_row_idx\":1061,\"source_sheet\":\"Denise PP\",\"source_denise_tab\":\"Suppliers w/o FD & Middleby\",\"source_row_id\":208,\"source_tag\":\"Denise PP\",\"payee\":\"Jovilyn and Violeta Ube House\",\"invoice\":\"0498\",\"amount\":68500}"
+  ],
+  [
+    "2026-05-14 10:02:24 PHT",
+    "invoice_seeded_from_denise_pp",
+    "{\"tab\":\"Suppliers SOA\",\"ap_master_row_idx\":1062,\"source_sheet\":\"Denise PP\",\"source_denise_tab\":\"Suppliers w/o FD & Middleby\",\"source_row_id\":209,\"source_tag\":\"Denise PP\",\"payee\":\"Jovilyn and Violeta Ube House\",\"invoice\":\"0509\",\"amount\":29394}"
+  ],
+  [
+    "2026-05-14 10:02:25 PHT",
+    "invoice_seeded_from_denise_pp",
+    "{\"tab\":\"Suppliers SOA\",\"ap_master_row_idx\":1063,\"source_sheet\":\"Denise PP\",\"source_denise_tab\":\"Suppliers w/o FD & Middleby\",\"source_row_id\":210,\"source_tag\":\"Denise PP\",\"payee\":\"Jovilyn and Violeta Ube House\",\"invoice\":\"0506\",\"amount\":68500}"
+  ],
+  [
+    "2026-05-14 10:02:26 PHT",
+    "invoice_seeded_from_denise_pp",
+    "{\"tab\":\"Suppliers SOA\",\"ap_master_row_idx\":1064,\"source_sheet\":\"Denise PP\",\"source_denise_tab\":\"Suppliers w/o FD & Middleby\",\"source_row_id\":211,\"source_tag\":\"Denise PP\",\"payee\":\"Jovilyn and Violeta Ube House\",\"invoice\":\"0508\",\"amount\":68500}"
+  ],
+  [
+    "2026-05-14 10:02:27 PHT",
+    "invoice_seeded_from_denise_pp",
+    "{\"tab\":\"Suppliers SOA\",\"ap_master_row_idx\":1065,\"source_sheet\":\"Denise PP\",\"source_denise_tab\":\"Suppliers w/o FD & Middleby\",\"source_row_id\":212,\"source_tag\":\"Denise PP\",\"payee\":\"Jovilyn and Violeta Ube House\",\"invoice\":\"0513\",\"amount\":68500}"
+  ],
+  [
+    "2026-05-14 10:02:28 PHT",
+    "invoice_seeded_from_denise_pp",
+    "{\"tab\":\"Suppliers SOA\",\"ap_master_row_idx\":1066,\"source_sheet\":\"Denise PP\",\"source_denise_tab\":\"Suppliers w/o FD & Middleby\",\"source_row_id\":213,\"source_tag\":\"Denise PP\",\"payee\":\"Jovilyn and Violeta Ube House\",\"invoice\":\"0507\",\"amount\":29118}"
+  ],
+  [
+    "2026-05-14 10:02:29 PHT",
+    "invoice_seeded_from_denise_pp",
+    "{\"tab\":\"Suppliers SOA\",\"ap_master_row_idx\":1067,\"source_sheet\":\"Denise PP\",\"source_denise_tab\":\"Suppliers w/o FD & Middleby\",\"source_row_id\":214,\"source_tag\":\"Denise PP\",\"payee\":\"Jovilyn and Violeta Ube House\",\"invoice\":\"0503\",\"amount\":44988}"
+  ],
+  [
+    "2026-05-14 10:02:30 PHT",
+    "invoice_seeded_from_denise_pp",
+    "{\"tab\":\"Suppliers SOA\",\"ap_master_row_idx\":1068,\"source_sheet\":\"Denise PP\",\"source_denise_tab\":\"Suppliers w/o FD & Middleby\",\"source_row_id\":215,\"source_tag\":\"Denise PP\",\"payee\":\"Jovilyn and Violeta Ube House\",\"invoice\":\"0502\",\"amount\":68500}"
+  ],
+  [
+    "2026-05-14 10:02:31 PHT",
+    "invoice_seeded_from_denise_pp",
+    "{\"tab\":\"Suppliers SOA\",\"ap_master_row_idx\":1069,\"source_sheet\":\"Denise PP\",\"source_denise_tab\":\"Suppliers w/o FD & Middleby\",\"source_row_id\":216,\"source_tag\":\"Denise PP\",\"payee\":\"Jovilyn and Violeta Ube House\",\"invoice\":\"0525\",\"amount\":68500}"
+  ],
+  [
+    "2026-05-14 10:02:33 PHT",
+    "invoice_seeded_from_denise_pp",
+    "{\"tab\":\"Suppliers SOA\",\"ap_master_row_idx\":1070,\"source_sheet\":\"Denise PP\",\"source_denise_tab\":\"Suppliers w/o FD & Middleby\",\"source_row_id\":217,\"source_tag\":\"Denise PP\",\"payee\":\"Jovilyn and Violeta Ube House\",\"invoice\":\"0524\",\"amount\":28704}"
+  ],
+  [
+    "2026-05-14 10:02:34 PHT",
+    "invoice_seeded_from_denise_pp",
+    "{\"tab\":\"Suppliers SOA\",\"ap_master_row_idx\":1071,\"source_sheet\":\"Denise PP\",\"source_denise_tab\":\"Suppliers w/o FD & Middleby\",\"source_row_id\":218,\"source_tag\":\"Denise PP\",\"payee\":\"Jovilyn and Violeta Ube House\",\"invoice\":\"0489\",\"amount\":68500}"
+  ],
+  [
+    "2026-05-14 10:02:35 PHT",
+    "invoice_seeded_from_denise_pp",
+    "{\"tab\":\"Suppliers SOA\",\"ap_master_row_idx\":1072,\"source_sheet\":\"Denise PP\",\"source_denise_tab\":\"Suppliers w/o FD & Middleby\",\"source_row_id\":219,\"source_tag\":\"Denise PP\",\"payee\":\"Jovilyn and Violeta Ube House\",\"invoice\":\"0488\",\"amount\":34250}"
+  ],
+  [
+    "2026-05-14 10:02:36 PHT",
+    "invoice_seeded_from_denise_pp",
+    "{\"tab\":\"Suppliers SOA\",\"ap_master_row_idx\":1073,\"source_sheet\":\"Denise PP\",\"source_denise_tab\":\"Suppliers w/o FD & Middleby\",\"source_row_id\":220,\"source_tag\":\"Denise PP\",\"payee\":\"Jovilyn and Violeta Ube House\",\"invoice\":\"0490\",\"amount\":30360}"
+  ],
+  [
+    "2026-05-14 10:02:37 PHT",
+    "invoice_seeded_from_denise_pp",
+    "{\"tab\":\"Suppliers SOA\",\"ap_master_row_idx\":1074,\"source_sheet\":\"Denise PP\",\"source_denise_tab\":\"Suppliers w/o FD & Middleby\",\"source_row_id\":221,\"source_tag\":\"Denise PP\",\"payee\":\"Jovilyn and Violeta Ube House\",\"invoice\":\"0491\",\"amount\":68500}"
+  ],
+  [
+    "2026-05-14 10:02:38 PHT",
+    "invoice_seeded_from_denise_pp",
+    "{\"tab\":\"Suppliers SOA\",\"ap_master_row_idx\":1075,\"source_sheet\":\"Denise PP\",\"source_denise_tab\":\"Suppliers w/o FD & Middleby\",\"source_row_id\":222,\"source_tag\":\"Denise PP\",\"payee\":\"Jovilyn and Violeta Ube House\",\"invoice\":\"0493\",\"amount\":29946}"
+  ],
+  [
+    "2026-05-14 10:02:39 PHT",
+    "invoice_seeded_from_denise_pp",
+    "{\"tab\":\"Suppliers SOA\",\"ap_master_row_idx\":1076,\"source_sheet\":\"Denise PP\",\"source_denise_tab\":\"Suppliers w/o FD & Middleby\",\"source_row_id\":223,\"source_tag\":\"Denise PP\",\"payee\":\"Jovilyn and Violeta Ube House\",\"invoice\":\"0492\",\"amount\":68500}"
+  ],
+  [
+    "2026-05-14 10:02:40 PHT",
+    "invoice_seeded_from_denise_pp",
+    "{\"tab\":\"Suppliers SOA\",\"ap_master_row_idx\":1077,\"source_sheet\":\"Denise PP\",\"source_denise_tab\":\"Suppliers w/o FD & Middleby\",\"source_row_id\":224,\"source_tag\":\"Denise PP\",\"payee\":\"Jovilyn and Violeta Ube House\",\"invoice\":\"0494\",\"amount\":68500}"
+  ],
+  [
+    "2026-05-14 10:02:40 PHT",
+    "invoice_seeded_from_denise_pp",
+    "{\"tab\":\"Suppliers SOA\",\"ap_master_row_idx\":1078,\"source_sheet\":\"Denise PP\",\"source_denise_tab\":\"Suppliers w/o FD & Middleby\",\"source_row_id\":225,\"source_tag\":\"Denise PP\",\"payee\":\"Jovilyn and Violeta Ube House\",\"invoice\":\"0495\",\"amount\":29394}"
+  ],
+  [
+    "2026-05-14 10:02:41 PHT",
+    "invoice_seeded_from_denise_pp",
+    "{\"tab\":\"Suppliers SOA\",\"ap_master_row_idx\":1079,\"source_sheet\":\"Denise PP\",\"source_denise_tab\":\"Suppliers w/o FD & Middleby\",\"source_row_id\":226,\"source_tag\":\"Denise PP\",\"payee\":\"Jovilyn and Violeta Ube House\",\"invoice\":\"0496\",\"amount\":68500}"
+  ],
+  [
+    "2026-05-14 10:02:43 PHT",
+    "invoice_seeded_from_denise_pp",
+    "{\"tab\":\"Suppliers SOA\",\"ap_master_row_idx\":1080,\"source_sheet\":\"Denise PP\",\"source_denise_tab\":\"Suppliers w/o FD & Middleby\",\"source_row_id\":227,\"source_tag\":\"Denise PP\",\"payee\":\"Jovilyn and Violeta Ube House\",\"invoice\":\"0484\",\"amount\":28290}"
+  ],
+  [
+    "2026-05-14 10:02:44 PHT",
+    "invoice_seeded_from_denise_pp",
+    "{\"tab\":\"Suppliers SOA\",\"ap_master_row_idx\":1081,\"source_sheet\":\"Denise PP\",\"source_denise_tab\":\"Suppliers w/o FD & Middleby\",\"source_row_id\":228,\"source_tag\":\"Denise PP\",\"payee\":\"Jovilyn and Violeta Ube House\",\"invoice\":\"0485A\",\"amount\":28980}"
+  ],
+  [
+    "2026-05-14 10:02:45 PHT",
+    "invoice_seeded_from_denise_pp",
+    "{\"tab\":\"Suppliers SOA\",\"ap_master_row_idx\":1082,\"source_sheet\":\"Denise PP\",\"source_denise_tab\":\"Suppliers w/o FD & Middleby\",\"source_row_id\":229,\"source_tag\":\"Denise PP\",\"payee\":\"Jovilyn and Violeta Ube House\",\"invoice\":\"372\",\"amount\":17689.6}"
+  ],
+  [
+    "2026-05-14 10:02:46 PHT",
+    "invoice_seeded_from_denise_pp",
+    "{\"tab\":\"Suppliers SOA\",\"ap_master_row_idx\":1083,\"source_sheet\":\"Denise PP\",\"source_denise_tab\":\"Suppliers w/o FD & Middleby\",\"source_row_id\":232,\"source_tag\":\"Denise PP\",\"payee\":\"Jovilyn and Violeta Ube House\",\"invoice\":\"405\",\"amount\":20662.5}"
+  ],
+  [
+    "2026-05-14 10:02:47 PHT",
+    "invoice_seeded_from_denise_pp",
+    "{\"tab\":\"Suppliers SOA\",\"ap_master_row_idx\":1084,\"source_sheet\":\"Denise PP\",\"source_denise_tab\":\"Suppliers w/o FD & Middleby\",\"source_row_id\":233,\"source_tag\":\"Denise PP\",\"payee\":\"Jovilyn and Violeta Ube House\",\"invoice\":\"404\",\"amount\":20662.5}"
+  ],
+  [
+    "2026-05-14 10:02:48 PHT",
+    "invoice_seeded_from_denise_pp",
+    "{\"tab\":\"Suppliers SOA\",\"ap_master_row_idx\":1085,\"source_sheet\":\"Denise PP\",\"source_denise_tab\":\"Suppliers w/o FD & Middleby\",\"source_row_id\":239,\"source_tag\":\"Denise PP\",\"payee\":\"Jovilyn and Violeta Ube House\",\"invoice\":\"371\",\"amount\":20662.5}"
+  ],
+  [
+    "2026-05-14 10:02:49 PHT",
+    "invoice_seeded_from_denise_pp",
+    "{\"tab\":\"Suppliers SOA\",\"ap_master_row_idx\":1086,\"source_sheet\":\"Denise PP\",\"source_denise_tab\":\"Suppliers w/o FD & Middleby\",\"source_row_id\":246,\"source_tag\":\"Denise PP\",\"payee\":\"Jovilyn and Violeta Ube House\",\"invoice\":\"365\",\"amount\":13775}"
+  ],
+  [
+    "2026-05-14 10:02:50 PHT",
+    "invoice_seeded_from_denise_pp",
+    "{\"tab\":\"Suppliers SOA\",\"ap_master_row_idx\":1087,\"source_sheet\":\"Denise PP\",\"source_denise_tab\":\"Suppliers w/o FD & Middleby\",\"source_row_id\":247,\"source_tag\":\"Denise PP\",\"payee\":\"Jovilyn and Violeta Ube House\",\"invoice\":\"330\",\"amount\":28331}"
+  ],
+  [
+    "2026-05-14 10:02:51 PHT",
+    "invoice_seeded_from_denise_pp",
+    "{\"tab\":\"Suppliers SOA\",\"ap_master_row_idx\":1088,\"source_sheet\":\"Denise PP\",\"source_denise_tab\":\"Suppliers w/o FD & Middleby\",\"source_row_id\":248,\"source_tag\":\"Denise PP\",\"payee\":\"Jovilyn and Violeta Ube House\",\"invoice\":\"329\",\"amount\":29436.6}"
+  ],
+  [
+    "2026-05-14 10:02:52 PHT",
+    "invoice_seeded_from_denise_pp",
+    "{\"tab\":\"Suppliers SOA\",\"ap_master_row_idx\":1089,\"source_sheet\":\"Denise PP\",\"source_denise_tab\":\"Suppliers w/o FD & Middleby\",\"source_row_id\":249,\"source_tag\":\"Denise PP\",\"payee\":\"Jovilyn and Violeta Ube House\",\"invoice\":\"343\",\"amount\":13775}"
+  ],
+  [
+    "2026-05-14 10:02:53 PHT",
+    "invoice_seeded_from_denise_pp",
+    "{\"tab\":\"Suppliers SOA\",\"ap_master_row_idx\":1090,\"source_sheet\":\"Denise PP\",\"source_denise_tab\":\"Suppliers w/o FD & Middleby\",\"source_row_id\":250,\"source_tag\":\"Denise PP\",\"payee\":\"Jovilyn and Violeta Ube House\",\"invoice\":\"344\",\"amount\":26534.4}"
+  ],
+  [
+    "2026-05-14 10:02:54 PHT",
+    "invoice_seeded_from_denise_pp",
+    "{\"tab\":\"Suppliers SOA\",\"ap_master_row_idx\":1091,\"source_sheet\":\"Denise PP\",\"source_denise_tab\":\"Suppliers w/o FD & Middleby\",\"source_row_id\":251,\"source_tag\":\"Denise PP\",\"payee\":\"Jovilyn and Violeta Ube House\",\"invoice\":\"360\",\"amount\":13775}"
+  ],
+  [
+    "2026-05-14 10:02:56 PHT",
+    "invoice_seeded_from_denise_pp",
+    "{\"tab\":\"Suppliers SOA\",\"ap_master_row_idx\":1092,\"source_sheet\":\"Denise PP\",\"source_denise_tab\":\"Suppliers w/o FD & Middleby\",\"source_row_id\":253,\"source_tag\":\"Denise PP\",\"payee\":\"Jovilyn and Violeta Ube House\",\"invoice\":\"0483\",\"amount\":29394}"
+  ],
+  [
+    "2026-05-14 10:02:57 PHT",
+    "invoice_seeded_from_denise_pp",
+    "{\"tab\":\"Suppliers SOA\",\"ap_master_row_idx\":1093,\"source_sheet\":\"Denise PP\",\"source_denise_tab\":\"Suppliers w/o FD & Middleby\",\"source_row_id\":257,\"source_tag\":\"Denise PP\",\"payee\":\"Jovilyn and Violeta Ube House\",\"invoice\":\"0470\",\"amount\":34250}"
+  ],
+  [
+    "2026-05-14 10:02:58 PHT",
+    "invoice_seeded_from_denise_pp",
+    "{\"tab\":\"Suppliers SOA\",\"ap_master_row_idx\":1094,\"source_sheet\":\"Denise PP\",\"source_denise_tab\":\"Suppliers w/o FD & Middleby\",\"source_row_id\":258,\"source_tag\":\"Denise PP\",\"payee\":\"Jovilyn and Violeta Ube House\",\"invoice\":\"0471\",\"amount\":30404}"
+  ],
+  [
+    "2026-05-14 10:02:59 PHT",
+    "invoice_seeded_from_denise_pp",
+    "{\"tab\":\"Suppliers SOA\",\"ap_master_row_idx\":1095,\"source_sheet\":\"Denise PP\",\"source_denise_tab\":\"Suppliers w/o FD & Middleby\",\"source_row_id\":259,\"source_tag\":\"Denise PP\",\"payee\":\"Jovilyn and Violeta Ube House\",\"invoice\":\"0473\",\"amount\":20550}"
+  ],
+  [
+    "2026-05-14 10:03:01 PHT",
+    "invoice_seeded_from_denise_pp",
+    "{\"tab\":\"Suppliers SOA\",\"ap_master_row_idx\":1096,\"source_sheet\":\"Denise PP\",\"source_denise_tab\":\"Suppliers w/o FD & Middleby\",\"source_row_id\":260,\"source_tag\":\"Denise PP\",\"payee\":\"Jovilyn and Violeta Ube House\",\"invoice\":\"0474\",\"amount\":34250}"
+  ],
+  [
+    "2026-05-14 10:03:02 PHT",
+    "invoice_seeded_from_denise_pp",
+    "{\"tab\":\"Suppliers SOA\",\"ap_master_row_idx\":1097,\"source_sheet\":\"Denise PP\",\"source_denise_tab\":\"Suppliers w/o FD & Middleby\",\"source_row_id\":261,\"source_tag\":\"Denise PP\",\"payee\":\"Jovilyn and Violeta Ube House\",\"invoice\":\"0475\",\"amount\":20700}"
+  ],
+  [
+    "2026-05-14 10:03:03 PHT",
+    "invoice_seeded_from_denise_pp",
+    "{\"tab\":\"Suppliers SOA\",\"ap_master_row_idx\":1098,\"source_sheet\":\"Denise PP\",\"source_denise_tab\":\"Suppliers w/o FD & Middleby\",\"source_row_id\":262,\"source_tag\":\"Denise PP\",\"payee\":\"Jovilyn and Violeta Ube House\",\"invoice\":\"\",\"amount\":20700}"
+  ],
+  [
+    "2026-05-14 10:03:04 PHT",
+    "invoice_seeded_from_denise_pp",
+    "{\"tab\":\"Suppliers SOA\",\"ap_master_row_idx\":1099,\"source_sheet\":\"Denise PP\",\"source_denise_tab\":\"Suppliers w/o FD & Middleby\",\"source_row_id\":263,\"source_tag\":\"Denise PP\",\"payee\":\"Jovilyn and Violeta Ube House\",\"invoice\":\"0476\",\"amount\":28566}"
+  ]
+]

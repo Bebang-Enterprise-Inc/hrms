@@ -1,0 +1,13 @@
+surface,owner_sprint,protected,verification_method
+script-project-1pE8wt_z8NA9q__PNbUilJ72UE0_EI3DmurJekkw6mbgtHr8hosnKsNRF,S248,yes,script.projects.getContent length compare vs tmp/s248/script_source_backup_v36.gs
+ap-master-suppliers-soa-tab,S248-append-only,yes,row count delta = appended count from first_live_sync.json
+ap-master-head-office-tab,no-S248-writes-phase1,yes,row count unchanged after Phase 3
+ap-master-capex-tab,no-S248-writes-phase1,yes,row count unchanged after Phase 3
+ap-master-payment-plan-tab-NEW,S248-phase6,yes,tab does not exist before Phase 6; >=600 rows after Phase 6
+denise-pp-sheet-tab-Suppliers-w-o-FD-Middleby,S248-READ-ONLY,yes,no service-account writes (urgent AP source)
+denise-pp-sheet-tab-Middleby,S248-READ-ONLY,yes,no service-account writes (disputed AP source)
+denise-pp-sheet-tab-Forward-Dynamics,S248-READ-ONLY,yes,no service-account writes (disputed AP source)
+denise-pp-sheet-tab-Masterlist,S248-READ-ONLY,yes,no service-account writes (safety net source)
+ap-master-banner-row-4,no-S248-writes,yes,RF-7 stale-banner known issue; NOT in S248 scope
+fpm-rfp-summary-sheet,no-S248-writes,yes,FPM seed continues unchanged
+compliance-appsheet,no-S248-writes,yes,VAT/EWT sync unchanged
