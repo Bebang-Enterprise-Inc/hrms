@@ -1,0 +1,34 @@
+{
+  "rows_migrated": 419,
+  "final_row_count": 422,
+  "by_tab": {
+    "Suppliers w/o FD & Middleby": {
+      "scanned": 566,
+      "migrated": 342,
+      "skipped_paid": 216,
+      "skipped_dupe": 8,
+      "skipped_blank": 0
+    },
+    "Middleby": {
+      "scanned": 7,
+      "migrated": 7,
+      "skipped_paid": 0,
+      "skipped_dupe": 0,
+      "skipped_blank": 0
+    },
+    "Forward Dynamics": {
+      "scanned": 61,
+      "migrated": 61,
+      "skipped_paid": 0,
+      "skipped_dupe": 0,
+      "skipped_blank": 0
+    },
+    "Masterlist": {
+      "scanned": 637,
+      "migrated": 9,
+      "skipped_paid": 210,
+      "skipped_dupe": 418,
+      "skipped_blank": 0
+    }
+  }
+}

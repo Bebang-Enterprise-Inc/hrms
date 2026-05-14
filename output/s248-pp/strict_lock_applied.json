@@ -1,0 +1,31 @@
+{
+  "sheet_id": 2073065932,
+  "tab_name": "Payment Plan",
+  "editors": [
+    "sam@bebang.ph"
+  ],
+  "warning_only": false,
+  "rationale": "Auto-mirrored hourly from Denise PP. Strict-lock prevents accidental edits while in mirror mode. Will be relaxed to add denise@bebang.ph when she officially switches.",
+  "result": {
+    "spreadsheetId": "1bQ6mO1FXD4VYcLt8m-yklkV7pyYhSWqU7b8K0bVgG7c",
+    "replies": [
+      {
+        "addProtectedRange": {
+          "protectedRange": {
+            "protectedRangeId": 1538574387,
+            "range": {
+              "sheetId": 2073065932
+            },
+            "description": "S248 Payment Plan \u2014 auto-mirrored from Denise PP. Read-only to all team. Sam owns until Denise switches.",
+            "requestingUserCanEdit": true,
+            "editors": {
+              "users": [
+                "sam@bebang.ph"
+              ]
+            }
+          }
+        }
+      }
+    ]
+  }
+}

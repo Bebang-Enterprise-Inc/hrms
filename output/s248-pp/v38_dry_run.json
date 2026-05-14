@@ -1,0 +1,77 @@
+{
+  "dry_run": true,
+  "status_sync": {
+    "updates": 0,
+    "conflicts": 0,
+    "nochange": 2330,
+    "tabs_seen": {
+      "Suppliers SOA": 1251,
+      "Head Office": 4476,
+      "CAPEX": 154
+    },
+    "sample_changes": []
+  },
+  "tax_sync": {
+    "updates": 0,
+    "conflicts": 0,
+    "nochange": 907
+  },
+  "seed": {
+    "scanned": 3154,
+    "appended": 1,
+    "duplicate_conflicts": 0,
+    "skipped_paid": 381,
+    "skipped_existing": 6138,
+    "fpm_seed": {
+      "scanned": 2585,
+      "appended": 0,
+      "skipped_paid_old": 1,
+      "skipped_empty": 64,
+      "skipped_existing": 2520,
+      "capex_count": 0,
+      "ho_count": 0,
+      "soa_count": 0,
+      "sample_appended": []
+    },
+    "denise_seed": {
+      "scanned": 1330,
+      "appended": 1,
+      "skipped_paid": 442,
+      "skipped_blank": 42,
+      "skipped_existing": 845,
+      "deduped_intra_denise": 0,
+      "by_tab": {
+        "Suppliers w/o FD & Middleby": 0,
+        "Middleby": 0,
+        "Forward Dynamics": 0,
+        "Masterlist": 1
+      },
+      "sample_appended": [
+        {
+          "tab": "Masterlist",
+          "source_tag": "Denise PP - Masterlist",
+          "payee": "Cle Ace Corporation",
+          "invoice": "182079",
+          "amount": 74099.97,
+          "outstanding": 74099.97,
+          "status": "",
+          "ap_status": "WITH FINANCE"
+        }
+      ]
+    },
+    "payment_plan_mirror": {
+      "scanned": 1330,
+      "mirrored": 420,
+      "skipped_paid": 442,
+      "skipped_blank": 42,
+      "deduped_intra_denise": 426,
+      "by_tab": {
+        "Suppliers w/o FD & Middleby": 342,
+        "Middleby": 7,
+        "Forward Dynamics": 61,
+        "Masterlist": 10
+      }
+    }
+  },
+  "duration_ms": 51359
+}
