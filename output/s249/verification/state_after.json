@@ -1,0 +1,49 @@
+{
+  "captured_at": "2026-05-14 PHT — post-S249 writes",
+  "ssm_command_ids": [
+    "39f935d3-58ed-45eb-ba1e-2b43f81bf78f (audit probe)",
+    "312187ca-994d-4c7a-8ffb-28d2aa1623ae (LIWANAG insert + ACK verify)"
+  ],
+  "master_csv_updates": {
+    "rows_updated": 1,
+    "backup_at": "tmp/s249_atc_capitalhouse/EMPLOYEE_MASTER_pre_s249_backup.csv",
+    "details": {
+      "9000407_LIWANAG": {
+        "store_location": {"from": "SHAW COMMISSARY (latent drift)", "to": "3MD COMMISSARY"},
+        "bio_device_name": {"from": "BRITANY OFFICE (typo + latent)", "to": "3MD COMMISSARY"},
+        "designation_unchanged": "QA SPECIALIST"
+      }
+    }
+  },
+  "adms_device_cmd_insert": {
+    "id": 12244,
+    "sn": "UDP3254800655",
+    "pin": "9000407",
+    "name": "LIWANAG, JENNALYN .",
+    "status": "ACKED",
+    "sent_at": "2026-05-14 07:05:12.196 UTC",
+    "acked_at": "2026-05-14 07:05:12.587 UTC",
+    "ack_latency_ms": 391,
+    "tab_byte_count": 2
+  },
+  "noop_audit_logs": {
+    "9001969_MATA_capital_house": {
+      "reason": "Already enrolled at all 3 head office devices via S241 IDs 12120-12122 ACKED 2026-05-08 10:15",
+      "action": "NO_OP audit log"
+    },
+    "9001861_NANOS_festival_reliever": {
+      "reason": "Already enrolled at UDP3251200195 Festival Mall via S244 ID 12200 ACKED 2026-05-10 23:17:49",
+      "action": "NO_OP audit log"
+    }
+  },
+  "change_log_appends": {
+    "delta": 4,
+    "breakdown": {
+      "EMPLOYEE_MASTER UPDATE": 1,
+      "ADMS ENROLL (LIWANAG)": 1,
+      "ADMS ENROLL_VERIFY NO_OP (MATA)": 1,
+      "ADMS RELIEVER_ASSIGN NO_OP (NAÑOS)": 1
+    }
+  },
+  "workflow_gap_flagged": "LIWANAG was on the 2026-03-04 mass roving enrollment (47 devices) but new devices added later (UDP3254800655 S239, UDP3254701583 S244) didn't auto-extend roving employees. Worth a separate sprint for automated 'enroll all roving employees on new device when added'."
+}
