@@ -1,0 +1,12 @@
+{
+  "versionNumber": 14,
+  "description": "WebApp v3.7 (S248) \u2014 Denise PP seed: pull from 4 tabs (Suppliers w/o FD & Middleby, Middleby, Forward Dynamics, Masterlist) into AP Master Suppliers SOA",
+  "deployment_id": "AKfycbw-AuqJq6OyMV6DGarGWEruDoez04OETlWFQoeppNjvzoeSOJOomPOZNsVPE9iuV6ZC_Q",
+  "deploymentConfig": {
+    "scriptId": "1pE8wt_z8NA9q__PNbUilJ72UE0_EI3DmurJekkw6mbgtHr8hosnKsNRF",
+    "versionNumber": 14,
+    "manifestFileName": "appsscript",
+    "description": "WebApp v3.7 (S248) \u2014 Denise PP seed: pull from 4 tabs (Suppliers w/o FD & Middleby, Middleby, Forward Dynamics, Masterlist) into AP Master Suppliers SOA"
+  },
+  "created_at_pht_iso": "2026-05-14T09:58:26.216912"
+}

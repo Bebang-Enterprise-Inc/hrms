@@ -1,0 +1,66 @@
+{
+  "total_seeded": 278,
+  "source_distribution": {
+    "Denise PP": 262,
+    "Denise PP - Disputed (Middleby)": 7,
+    "Denise PP - Masterlist": 9
+  },
+  "category_distribution": {
+    "Supplier Payments": 271,
+    "Disputed - Eventually Payable": 7
+  },
+  "status_distribution": {
+    "FOR ONLINE PAYMENT": 123,
+    "NO RFP YET": 39,
+    "CHECK RELEASED": 4,
+    "CHECK READY": 85,
+    "WITH FINANCE": 25,
+    "PAID": 2
+  },
+  "aging_bucket_distribution": {
+    "0-30 days": 80,
+    "Not Yet Due": 127,
+    "61-90 days": 9,
+    "31-60 days": 25,
+    "Over 120 days": 20,
+    "91-120 days": 17
+  },
+  "sample_rows": [
+    {
+      "source": "Denise PP",
+      "payee": "1 to 1 Marketing",
+      "invoice": 1772835,
+      "amount": 74260.81,
+      "outstanding": 74260.81,
+      "aging": 12,
+      "aging_bucket": "0-30 days",
+      "status": "FOR ONLINE PAYMENT",
+      "category": "Supplier Payments",
+      "classification": "Suppliers w/o FD & Middleby"
+    },
+    {
+      "source": "Denise PP - Disputed (Middleby)",
+      "payee": "MIDDLEBY PHILIPPINES CORPORATION",
+      "invoice": 560016,
+      "amount": 842506.56,
+      "outstanding": 842506.56,
+      "aging": 199,
+      "aging_bucket": "Over 120 days",
+      "status": "NO RFP YET",
+      "category": "Disputed - Eventually Payable",
+      "classification": "Middleby"
+    },
+    {
+      "source": "Denise PP - Masterlist",
+      "payee": "3M Dragon Logistics Corporation",
+      "invoice": 5676,
+      "amount": 166320,
+      "outstanding": 166320,
+      "aging": -28,
+      "aging_bucket": "Not Yet Due",
+      "status": "NO RFP YET",
+      "category": "Supplier Payments",
+      "classification": "Masterlist"
+    }
+  ]
+}
