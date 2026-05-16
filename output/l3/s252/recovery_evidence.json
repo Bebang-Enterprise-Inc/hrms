@@ -1,0 +1,183 @@
+{
+  "runs": [
+    {
+      "store": "ARANETA GATEWAY - TUNGSTEN CAPITAL HOLDINGS OPC",
+      "si_name": "BKI-SI-2026-01041-1",
+      "pi_name": "ACC-PINV-2026-00703",
+      "se_name": "MAT-STE-2026-03033",
+      "si": {
+        "docstatus": 1,
+        "company": "BEBANG KITCHEN INC.",
+        "customer": "ARANETA GATEWAY - TUNGSTEN CAPITAL HOLDINGS OPC",
+        "grand_total": 1554.39,
+        "posting_date": "2026-05-16"
+      },
+      "pi": {
+        "docstatus": 0,
+        "company": "ARANETA GATEWAY - TUNGSTEN CAPITAL HOLDINGS OPC",
+        "supplier": "BEBANG KITCHEN INC. - Trade",
+        "update_stock": 0,
+        "credit_to": "2103210 - 2103210 - AP-Trade-BKI - ARGW",
+        "bki_si_reference": "BKI-SI-2026-01041-1"
+      },
+      "pi_item0": {
+        "expense_account": "Stock Received But Not Billed - ARGW",
+        "warehouse": null,
+        "qty": 5.0,
+        "rate": 109.73
+      },
+      "se": {
+        "docstatus": 0,
+        "company": "ARANETA GATEWAY - TUNGSTEN CAPITAL HOLDINGS OPC",
+        "stock_entry_type": "Material Receipt",
+        "bki_si_reference": "BKI-SI-2026-01041-1"
+      },
+      "se_item0": {
+        "expense_account": "Stock Received But Not Billed - ARGW",
+        "t_warehouse": "ARANETA GATEWAY - TUNGSTEN CAPITAL HOLDINGS OPC",
+        "qty": 5.0,
+        "basic_rate": 109.73
+      },
+      "gr_ir_pi_se_same_srbnb": true,
+      "srbnb_account_type": "Stock Received But Not Billed",
+      "srbnb_account_type_correct": true
+    },
+    {
+      "store": "NAIA T3 - HALO-HALO TERMINAL FOOD CORP.",
+      "si_name": "BKI-SI-2026-01042-1",
+      "pi_name": "ACC-PINV-2026-00704",
+      "se_name": "MAT-STE-2026-03036",
+      "si": {
+        "docstatus": 1,
+        "company": "BEBANG KITCHEN INC.",
+        "customer": "NAIA T3 - HALO-HALO TERMINAL FOOD CORP.",
+        "grand_total": 1219.23,
+        "posting_date": "2026-05-16"
+      },
+      "pi": {
+        "docstatus": 0,
+        "company": "NAIA T3 - HALO-HALO TERMINAL FOOD CORP.",
+        "supplier": "BEBANG KITCHEN INC. - Trade",
+        "update_stock": 0,
+        "credit_to": "2103210 - 2103210 - AP-Trade-BKI - NAIA",
+        "bki_si_reference": "BKI-SI-2026-01042-1"
+      },
+      "pi_item0": {
+        "expense_account": "Stock Received But Not Billed - NAIA",
+        "warehouse": null,
+        "qty": 5.0,
+        "rate": 107.99
+      },
+      "se": {
+        "docstatus": 0,
+        "company": "NAIA T3 - HALO-HALO TERMINAL FOOD CORP.",
+        "stock_entry_type": "Material Receipt",
+        "bki_si_reference": "BKI-SI-2026-01042-1"
+      },
+      "se_item0": {
+        "expense_account": "Stock Received But Not Billed - NAIA",
+        "t_warehouse": "NAIA T3 - HALO-HALO TERMINAL FOOD CORP.",
+        "qty": 5.0,
+        "basic_rate": 107.99
+      },
+      "gr_ir_pi_se_same_srbnb": true,
+      "srbnb_account_type": "Stock Received But Not Billed",
+      "srbnb_account_type_correct": true
+    },
+    {
+      "store": "SM TANZA - BEBANG MEGA INC.",
+      "si_name": "BKI-SI-2026-01046-1",
+      "pi_name": "ACC-PINV-2026-00705",
+      "se_name": "MAT-STE-2026-03040",
+      "si": {
+        "docstatus": 1,
+        "company": "BEBANG KITCHEN INC.",
+        "customer": "SM TANZA - BEBANG MEGA INC.",
+        "grand_total": 1802.58,
+        "posting_date": "2026-05-16"
+      },
+      "pi": {
+        "docstatus": 0,
+        "company": "SM TANZA - BEBANG MEGA INC.",
+        "supplier": "BEBANG KITCHEN INC. - Trade",
+        "update_stock": 0,
+        "credit_to": "2103210 - 2103210 - AP-Trade-BKI - SMTZ",
+        "bki_si_reference": "BKI-SI-2026-01046-1"
+      },
+      "pi_item0": {
+        "expense_account": "Stock Received But Not Billed - SMTZ",
+        "warehouse": null,
+        "qty": 5.0,
+        "rate": 102.81
+      },
+      "se": {
+        "docstatus": 0,
+        "company": "SM TANZA - BEBANG MEGA INC.",
+        "stock_entry_type": "Material Receipt",
+        "bki_si_reference": "BKI-SI-2026-01046-1"
+      },
+      "se_item0": {
+        "expense_account": "Stock Received But Not Billed - SMTZ",
+        "t_warehouse": "SM TANZA - BEBANG MEGA INC.",
+        "qty": 5.0,
+        "basic_rate": 102.81
+      },
+      "gr_ir_pi_se_same_srbnb": true,
+      "srbnb_account_type": "Stock Received But Not Billed",
+      "srbnb_account_type_correct": true
+    },
+    {
+      "store": "XENTROMALL MONTALBAN - PERPETUAL FOOD CORP.",
+      "si_name": "BKI-SI-2026-01047-1",
+      "pi_name": "ACC-PINV-2026-00706",
+      "se_name": "MAT-STE-2026-03043",
+      "si": {
+        "docstatus": 1,
+        "company": "BEBANG KITCHEN INC.",
+        "customer": "XENTROMALL MONTALBAN - PERPETUAL FOOD CORP.",
+        "grand_total": 1732.47,
+        "posting_date": "2026-05-16"
+      },
+      "pi": {
+        "docstatus": 0,
+        "company": "XENTROMALL MONTALBAN - PERPETUAL FOOD CORP.",
+        "supplier": "BEBANG KITCHEN INC. - Trade",
+        "update_stock": 0,
+        "credit_to": "2103210 - 2103210 - AP-Trade-BKI - XMM",
+        "bki_si_reference": "BKI-SI-2026-01047-1"
+      },
+      "pi_item0": {
+        "expense_account": "Stock Received But Not Billed - XMM",
+        "warehouse": null,
+        "qty": 5.0,
+        "rate": 107.99
+      },
+      "se": {
+        "docstatus": 0,
+        "company": "XENTROMALL MONTALBAN - PERPETUAL FOOD CORP.",
+        "stock_entry_type": "Material Receipt",
+        "bki_si_reference": "BKI-SI-2026-01047-1"
+      },
+      "se_item0": {
+        "expense_account": "Stock Received But Not Billed - XMM",
+        "t_warehouse": "XENTROMALL MONTALBAN - PERPETUAL FOOD CORP.",
+        "qty": 5.0,
+        "basic_rate": 107.99
+      },
+      "gr_ir_pi_se_same_srbnb": true,
+      "srbnb_account_type": "Stock Received But Not Billed",
+      "srbnb_account_type_correct": true
+    }
+  ],
+  "sm_megamall_failure": {
+    "store": "SM MEGAMALL - BEBANG ENTERPRISE INC.",
+    "pass": false,
+    "failed_at": "dispatch_ui",
+    "error": "DispatchPage: dispatch did not register for MAT-MR-2026-01142 within 30s (status=Ordered, per_transferred=undefined)",
+    "diagnosis": "Pre-existing dispatch UI issue specific to SM MEGAMALL; BKI SI never created, so S247 generators never had chance to fire. Not a S247 regression \u2014 same store passed the S247 P5 backend smoke (49/49 PASS)."
+  },
+  "status": "OK",
+  "all_pi_update_stock_is_0": true,
+  "all_gr_ir_clean": true,
+  "all_srbnb_acct_type": true
+}

@@ -1,0 +1,36 @@
+[
+  {
+    "store": "SM TANZA - BEBANG MEGA INC.",
+    "pass": true,
+    "si_name": "BKI-SI-2026-01046-1",
+    "pi_name": "ACC-PINV-2026-00705",
+    "pi_update_stock": 0,
+    "pi_credit_to": "2103210 - 2103210 - AP-Trade-BKI - SMTZ",
+    "pi_expense_account": "Stock Received But Not Billed - SMTZ",
+    "pi_docstatus": 0,
+    "pi_expense_acct_type": "Stock Received But Not Billed",
+    "se_name": "MAT-STE-2026-03040",
+    "se_stock_entry_type": "Material Receipt",
+    "se_t_warehouse": "SM TANZA - BEBANG MEGA INC.",
+    "se_expense_account": "Stock Received But Not Billed - SMTZ",
+    "se_docstatus": 0,
+    "se_expense_acct_type": "Stock Received But Not Billed"
+  },
+  {
+    "store": "XENTROMALL MONTALBAN - PERPETUAL FOOD CORP.",
+    "pass": true,
+    "si_name": "BKI-SI-2026-01047-1",
+    "pi_name": "ACC-PINV-2026-00706",
+    "pi_update_stock": 0,
+    "pi_credit_to": "2103210 - 2103210 - AP-Trade-BKI - XMM",
+    "pi_expense_account": "Stock Received But Not Billed - XMM",
+    "pi_docstatus": 0,
+    "pi_expense_acct_type": "Stock Received But Not Billed",
+    "se_name": "MAT-STE-2026-03043",
+    "se_stock_entry_type": "Material Receipt",
+    "se_t_warehouse": "XENTROMALL MONTALBAN - PERPETUAL FOOD CORP.",
+    "se_expense_account": "Stock Received But Not Billed - XMM",
+    "se_docstatus": 0,
+    "se_expense_acct_type": "Stock Received But Not Billed"
+  }
+]
