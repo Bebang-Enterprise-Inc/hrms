@@ -1,0 +1,118 @@
+{
+  "captured_at": "2026-05-20T07:20:36.335389+08:00",
+  "captured_by_agent": "claude-opus-4-7",
+  "phase": "0.6",
+  "spreadsheet_id": "1bQ6mO1FXD4VYcLt8m-yklkV7pyYhSWqU7b8K0bVgG7c",
+  "title": "AP Suppliers - Payment Status (Auto-View)",
+  "tab_count": 18,
+  "tabs": [
+    {
+      "tab_id": 671440595,
+      "name": "All Liabilities",
+      "row_count": 5000,
+      "column_count": 19
+    },
+    {
+      "tab_id": 370662125,
+      "name": "_sync_log_v3",
+      "row_count": 2001,
+      "column_count": 26
+    },
+    {
+      "tab_id": 1187737374,
+      "name": "_dry_run_preview",
+      "row_count": 1000,
+      "column_count": 26
+    },
+    {
+      "tab_id": 1920805313,
+      "name": "_sync_log",
+      "row_count": 1000,
+      "column_count": 26
+    },
+    {
+      "tab_id": 1358403305,
+      "name": "Summary",
+      "row_count": 999,
+      "column_count": 26
+    },
+    {
+      "tab_id": 6754847,
+      "name": "Commissary",
+      "row_count": 1000,
+      "column_count": 26
+    },
+    {
+      "tab_id": 529289522,
+      "name": "Head Office (BEI)",
+      "row_count": 1000,
+      "column_count": 26
+    },
+    {
+      "tab_id": 1848455987,
+      "name": "Needs Attention",
+      "row_count": 1000,
+      "column_count": 26
+    },
+    {
+      "tab_id": 1718749586,
+      "name": "Suppliers SOA",
+      "row_count": 2186,
+      "column_count": 22
+    },
+    {
+      "tab_id": 605225080,
+      "name": "Head Office",
+      "row_count": 4764,
+      "column_count": 22
+    },
+    {
+      "tab_id": 651888969,
+      "name": "CAPEX",
+      "row_count": 173,
+      "column_count": 22
+    },
+    {
+      "tab_id": 215633588,
+      "name": "Needs RFP",
+      "row_count": 5000,
+      "column_count": 19
+    },
+    {
+      "tab_id": 1551550954,
+      "name": "With Finance (No RFP)",
+      "row_count": 5000,
+      "column_count": 19
+    },
+    {
+      "tab_id": 1829747224,
+      "name": "Check Released",
+      "row_count": 5000,
+      "column_count": 19
+    },
+    {
+      "tab_id": 1572425235,
+      "name": "In Pipeline",
+      "row_count": 5000,
+      "column_count": 19
+    },
+    {
+      "tab_id": 2092108297,
+      "name": "VAT Gaps",
+      "row_count": 5000,
+      "column_count": 19
+    },
+    {
+      "tab_id": 1507838471,
+      "name": "PAID",
+      "row_count": 5000,
+      "column_count": 19
+    },
+    {
+      "tab_id": 2073065932,
+      "name": "Payment Plan",
+      "row_count": 1500,
+      "column_count": 30
+    }
+  ]
+}
