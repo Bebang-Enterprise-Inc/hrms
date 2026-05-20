@@ -1,0 +1,101 @@
+{
+  "captured_at": "2026-05-20T08:59:27.678108+08:00",
+  "expected_pairs": 96,
+  "actual_pairs": 96,
+  "tabs_locked_ok": 16,
+  "tabs_total": 16,
+  "writers": [
+    "angelamel@bebang.ph",
+    "je-ann@bebang.ph",
+    "bethina@bebang.ph",
+    "izza@bebang.ph",
+    "avislyndelle@bebang.ph",
+    "denise@bebang.ph"
+  ],
+  "tabs": [
+    "All Liabilities",
+    "Summary",
+    "Commissary",
+    "Head Office (BEI)",
+    "Needs Attention",
+    "Needs RFP",
+    "With Finance (No RFP)",
+    "Check Released",
+    "In Pipeline",
+    "VAT Gaps",
+    "PAID",
+    "_sync_log",
+    "_sync_log_v3",
+    "_dry_run_preview",
+    "Payment Plan",
+    "Intercompany"
+  ],
+  "missing_lock": [],
+  "warning_only": [],
+  "details": {
+    "All Liabilities": {
+      "status": "LOCKED",
+      "protections": 1
+    },
+    "Summary": {
+      "status": "LOCKED",
+      "protections": 1
+    },
+    "Commissary": {
+      "status": "LOCKED",
+      "protections": 1
+    },
+    "Head Office (BEI)": {
+      "status": "LOCKED",
+      "protections": 1
+    },
+    "Needs Attention": {
+      "status": "LOCKED",
+      "protections": 1
+    },
+    "Needs RFP": {
+      "status": "LOCKED",
+      "protections": 1
+    },
+    "With Finance (No RFP)": {
+      "status": "LOCKED",
+      "protections": 1
+    },
+    "Check Released": {
+      "status": "LOCKED",
+      "protections": 1
+    },
+    "In Pipeline": {
+      "status": "LOCKED",
+      "protections": 1
+    },
+    "VAT Gaps": {
+      "status": "LOCKED",
+      "protections": 1
+    },
+    "PAID": {
+      "status": "LOCKED",
+      "protections": 1
+    },
+    "_sync_log": {
+      "status": "LOCKED",
+      "protections": 1
+    },
+    "_sync_log_v3": {
+      "status": "LOCKED",
+      "protections": 1
+    },
+    "_dry_run_preview": {
+      "status": "LOCKED",
+      "protections": 1
+    },
+    "Payment Plan": {
+      "status": "LOCKED",
+      "protections": 1
+    },
+    "Intercompany": {
+      "status": "LOCKED",
+      "protections": 1
+    }
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "phase": "0.5",
+  "action": "pause",
+  "paused_at": "2026-05-20T07:18:00+08:00",
+  "paused_by": "agent (claude-opus-4-7) executing S255",
+  "job_name": "ap-auto-view-hourly-refresh",
+  "project": "quiet-walker-475722-s2",
+  "location": "asia-southeast1",
+  "original_state": "ENABLED",
+  "original_schedule": "0 * * * *",
+  "current_state": "ENABLED",
+  "paused": true,
+  "reason": "Blocker 6 mitigation \u00e2\u20ac\u201d prevent hourly cycle from racing destructive Phase 1/2/4 operations",
+  "resume_phase": "9b.5",
+  "note": "Plan handoff mentioned xx:12 PHT but actual cron is xx:00. Job confirmed via gcloud describe.",
+  "resumed_at": "2026-05-20T09:06:30.390974+08:00",
+  "resumed": true
+}

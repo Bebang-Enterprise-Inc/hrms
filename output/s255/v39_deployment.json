@@ -1,0 +1,35 @@
+{
+  "deploymentId": "AKfycbw-AuqJq6OyMV6DGarGWEruDoez04OETlWFQoeppNjvzoeSOJOomPOZNsVPE9iuV6ZC_Q",
+  "versionNumber": 16,
+  "promoted_at": "2026-05-20T09:03:13.050386+08:00",
+  "promote_response": {
+    "deploymentId": "AKfycbw-AuqJq6OyMV6DGarGWEruDoez04OETlWFQoeppNjvzoeSOJOomPOZNsVPE9iuV6ZC_Q",
+    "deploymentConfig": {
+      "scriptId": "1pE8wt_z8NA9q__PNbUilJ72UE0_EI3DmurJekkw6mbgtHr8hosnKsNRF",
+      "versionNumber": 16,
+      "manifestFileName": "appsscript",
+      "description": "S255 v3.9 \u2014 Intercompany + recomputeBanners_ + Denise PP - Manual + mirror gate"
+    },
+    "updateTime": "2026-05-20T01:04:30.861Z",
+    "entryPoints": [
+      {
+        "entryPointType": "WEB_APP",
+        "webApp": {
+          "url": "https://script.google.com/macros/s/AKfycbw-AuqJq6OyMV6DGarGWEruDoez04OETlWFQoeppNjvzoeSOJOomPOZNsVPE9iuV6ZC_Q/exec",
+          "entryPointConfig": {
+            "access": "ANYONE_ANONYMOUS",
+            "executeAs": "USER_DEPLOYING"
+          }
+        }
+      },
+      {
+        "entryPointType": "EXECUTION_API",
+        "executionApi": {
+          "entryPointConfig": {
+            "access": "MYSELF"
+          }
+        }
+      }
+    ]
+  }
+}

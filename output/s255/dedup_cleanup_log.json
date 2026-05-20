@@ -1,0 +1,186 @@
+{
+  "phase": "4",
+  "started_at": "2026-05-20T08:44:07.731672+08:00",
+  "normalization_fn": "invNoVariants_",
+  "tasks": {},
+  "tabs": {
+    "Suppliers SOA": {
+      "header_row": 17,
+      "dupes_found": 26,
+      "rows_deleted": 19,
+      "sample_deleted": [
+        {
+          "key_payee": "ALYANA CHUA",
+          "key_variant": "PO#1175",
+          "amount": 5500.0,
+          "keep": {
+            "sheet_row": 75,
+            "source": "Suppliers SOA",
+            "inv_no": "PO#1175"
+          },
+          "delete_candidate": {
+            "sheet_row": 79,
+            "source": "Suppliers SOA",
+            "inv_no": "PO#1175"
+          },
+          "deleted": false
+        },
+        {
+          "key_payee": "CLE ACE CORPORATION",
+          "key_variant": "182907",
+          "amount": 363240.0,
+          "keep": {
+            "sheet_row": 139,
+            "source": "FPM-SOA",
+            "inv_no": "182907"
+          },
+          "delete_candidate": {
+            "sheet_row": 151,
+            "source": "Denise PP",
+            "inv_no": "182907"
+          },
+          "deleted": true
+        },
+        {
+          "key_payee": "GLOBAL PACIFIC DISTRIBUTION NETWORK CORP.",
+          "key_variant": "621484",
+          "amount": 571526.82,
+          "keep": {
+            "sheet_row": 304,
+            "source": "FPM-SOA",
+            "inv_no": "621484"
+          },
+          "delete_candidate": {
+            "sheet_row": 300,
+            "source": "Denise PP",
+            "inv_no": "621484"
+          },
+          "deleted": true
+        },
+        {
+          "key_payee": "GREEN DISTRICT FRUITS AND VEGETABLES TRADING",
+          "key_variant": "35566",
+          "amount": 82800.0,
+          "keep": {
+            "sheet_row": 322,
+            "source": "FPM-SOA",
+            "inv_no": "35566"
+          },
+          "delete_candidate": {
+            "sheet_row": 315,
+            "source": "Denise PP",
+            "inv_no": "35566"
+          },
+          "deleted": true
+        },
+        {
+          "key_payee": "GREEN DISTRICT FRUITS AND VEGETABLES TRADING",
+          "key_variant": "35565",
+          "amount": 36000.0,
+          "keep": {
+            "sheet_row": 323,
+            "source": "FPM-SOA",
+            "inv_no": "35565"
+          },
+          "delete_candidate": {
+            "sheet_row": 316,
+            "source": "Denise PP",
+            "inv_no": "35565"
+          },
+          "deleted": true
+        },
+        {
+          "key_payee": "GREEN DISTRICT FRUITS AND VEGETABLES TRADING",
+          "key_variant": "1578",
+          "amount": 70000.0,
+          "keep": {
+            "sheet_row": 324,
+            "source": "FPM",
+            "inv_no": "1578"
+          },
+          "delete_candidate": {
+            "sheet_row": 321,
+            "source": "FPM-SOA",
+            "inv_no": "1578"
+          },
+          "deleted": false
+        },
+        {
+          "key_payee": "M TEALICIOUS MILKTEA SUPPLIES",
+          "key_variant": "NO INV NUMBER",
+          "amount": 254520.0,
+          "keep": {
+            "sheet_row": 613,
+            "source": "Procurement App",
+            "inv_no": "no inv number"
+          },
+          "delete_candidate": {
+            "sheet_row": 614,
+            "source": "Procurement App",
+            "inv_no": "no inv number"
+          },
+          "deleted": false
+        },
+        {
+          "key_payee": "MAC SIGNS",
+          "key_variant": "617",
+          "amount": 165000.0,
+          "keep": {
+            "sheet_row": 615,
+            "source": "Suppliers SOA",
+            "inv_no": "617"
+          },
+          "delete_candidate": {
+            "sheet_row": 617,
+            "source": "Suppliers SOA",
+            "inv_no": "617"
+          },
+          "deleted": false
+        },
+        {
+          "key_payee": "MAC SIGNS",
+          "key_variant": "617",
+          "amount": 97500.0,
+          "keep": {
+            "sheet_row": 616,
+            "source": "Suppliers SOA",
+            "inv_no": "617"
+          },
+          "delete_candidate": {
+            "sheet_row": 618,
+            "source": "Suppliers SOA",
+            "inv_no": "617"
+          },
+          "deleted": false
+        },
+        {
+          "key_payee": "MAX'S BAKESHOP INC.",
+          "key_variant": "100000215872",
+          "amount": 681600.0,
+          "keep": {
+            "sheet_row": 714,
+            "source": "FPM-SOA",
+            "inv_no": "100000215872"
+          },
+          "delete_candidate": {
+            "sheet_row": 676,
+            "source": "Denise PP",
+            "inv_no": "100000215872"
+          },
+          "deleted": true
+        }
+      ],
+      "dupes_after": 7,
+      "rows_still_to_delete": 0
+    },
+    "Payment Plan": {
+      "header_row": 3,
+      "dupes_found": 0,
+      "rows_deleted": 0,
+      "sample_deleted": [],
+      "dupes_after": 0,
+      "rows_still_to_delete": 0
+    }
+  },
+  "finished_at": "2026-05-20T08:44:12.850262+08:00"
+}

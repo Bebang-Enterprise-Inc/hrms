@@ -1,0 +1,201 @@
+{
+  "captured_at": "2026-05-20T07:20:36.335389+08:00",
+  "captured_by_agent": "claude-opus-4-7",
+  "phase": "0.7",
+  "bridge_user_present": true,
+  "bridge_emails_on_acl": [
+    "anna.r@bridge-ph.com",
+    "flor.a@bridge-ph.com",
+    "bea.p@bridge-ph.com"
+  ],
+  "plan_v1_0_expected_bridge_email": "accountant.outsource@bridge-ph.com",
+  "drift_note": "Plan said specific email; live ACL has 3 different bridge-ph.com writers. Sam's Bridge engagement intent (DOMAIN-level Bridge access) still satisfied.",
+  "acl_entry_count": 18,
+  "acl": [
+    {
+      "id": "13395941331925390489",
+      "email": "hangouts-chat-1fecc11e36bf8ba6@bebang.ph",
+      "name": "Google Chat Room",
+      "role": "commenter",
+      "type": "group"
+    },
+    {
+      "id": "08422216691074473979",
+      "email": "drew@bebang.ph",
+      "name": "Andrew Rodel S. Manansala",
+      "role": "writer",
+      "type": "user"
+    },
+    {
+      "id": "14690981443994776200",
+      "email": "anna.r@bridge-ph.com",
+      "name": "Anna Ramos",
+      "role": "writer",
+      "type": "user"
+    },
+    {
+      "id": "17125055641836194202",
+      "email": "roberose@bebang.ph",
+      "name": "Roberose Pulido",
+      "role": "writer",
+      "type": "user"
+    },
+    {
+      "id": "16256088154718545982",
+      "email": "liezel@bebang.ph",
+      "name": "Liezel Acero",
+      "role": "writer",
+      "type": "user"
+    },
+    {
+      "id": "13980329071027296780",
+      "email": "julius@bebang.ph",
+      "name": "Julius Jose Tin-ga",
+      "role": "reader",
+      "type": "user"
+    },
+    {
+      "id": "05827791042567278754",
+      "email": "denise@bebang.ph",
+      "name": "Denise Marielle Almario",
+      "role": "owner",
+      "type": "user"
+    },
+    {
+      "id": "00713263602246846024",
+      "email": "flor.a@bridge-ph.com",
+      "name": "flor.a",
+      "role": "writer",
+      "type": "user"
+    },
+    {
+      "id": "13010303919258447834",
+      "email": "bea.p@bridge-ph.com",
+      "name": "Bea Pads",
+      "role": "writer",
+      "type": "user"
+    },
+    {
+      "id": "05580636043772330295",
+      "email": "james.tamaca@bebang.ph",
+      "name": "James Tamaca",
+      "role": "writer",
+      "type": "user"
+    },
+    {
+      "id": "04371438667110274646",
+      "email": "bea.garcia.intern@bebang.ph",
+      "name": "Bea Garcia",
+      "role": "writer",
+      "type": "user"
+    },
+    {
+      "id": "03914398859093596333",
+      "email": "angelamel@bebang.ph",
+      "name": "Angelamel Letada",
+      "role": "writer",
+      "type": "user"
+    },
+    {
+      "id": "07461978701785164178",
+      "email": "joevic@bebang.ph",
+      "name": "Joevic Almajar",
+      "role": "writer",
+      "type": "user"
+    },
+    {
+      "id": "00857547740542170013",
+      "email": "sam@bebang.ph",
+      "name": "Sam Karazi",
+      "role": "commenter",
+      "type": "user"
+    },
+    {
+      "id": "01347525327458404728",
+      "email": "maika@bebang.ph",
+      "name": "Maika Jean Talisayon",
+      "role": "writer",
+      "type": "user"
+    },
+    {
+      "id": "11944437737360678110",
+      "email": "luwi@bebang.ph",
+      "name": "Luwi Azusano",
+      "role": "commenter",
+      "type": "user"
+    },
+    {
+      "id": "13737906402791021839",
+      "email": "marco@bebang.ph",
+      "name": "Marco Limosnero",
+      "role": "writer",
+      "type": "user"
+    },
+    {
+      "id": "08497434891557003480",
+      "email": "je-ann@bebang.ph",
+      "name": "Je-Ann Torato",
+      "role": "writer",
+      "type": "user"
+    }
+  ],
+  "spreadsheet_id": "13cyYaPLmjL0TPaeqyYd2esjJNYj-5qJCDS8OZLdhURU",
+  "title": "Project: 2- Week Payment Plan",
+  "tab_count": 9,
+  "tabs": [
+    {
+      "tab_id": 1091057673,
+      "name": "Suppliers w/o FD & Middleby",
+      "row_count": 1401,
+      "column_count": 35
+    },
+    {
+      "tab_id": 1925827743,
+      "name": "Middleby",
+      "row_count": 780,
+      "column_count": 35
+    },
+    {
+      "tab_id": 745275519,
+      "name": "Forward Dynamics",
+      "row_count": 799,
+      "column_count": 35
+    },
+    {
+      "tab_id": 0,
+      "name": "Masterlist",
+      "row_count": 1641,
+      "column_count": 35
+    },
+    {
+      "tab_id": 690117775,
+      "name": "Scheduled for Online Transfer - Due",
+      "row_count": 1000,
+      "column_count": 27
+    },
+    {
+      "tab_id": 1174807109,
+      "name": "Scheduled for Release Check - Due",
+      "row_count": 1000,
+      "column_count": 28
+    },
+    {
+      "tab_id": 1613363097,
+      "name": "Summary",
+      "row_count": 1001,
+      "column_count": 26
+    },
+    {
+      "tab_id": 1517447217,
+      "name": "Pivot Table 1",
+      "row_count": 1002,
+      "column_count": 26
+    },
+    {
+      "tab_id": 1467446913,
+      "name": "Copy of Pivot Table 1",
+      "row_count": 1023,
+      "column_count": 26
+    }
+  ]
+}

@@ -1,0 +1,249 @@
+{
+  "phase": "3",
+  "started_at": "2026-05-20T08:44:35.134303+08:00",
+  "tasks": {
+    "3.1+3.2": {
+      "status": "DONE",
+      "v39_has_recomputeBanners_": true,
+      "wired": true
+    },
+    "3.3_python_parallel_recompute": {
+      "updated": 5,
+      "tabs": {
+        "Suppliers SOA": {
+          "total_outstanding": 127352857.86,
+          "unique_payees": 68,
+          "items": 753,
+          "vatable": 89712231.63,
+          "vat": 4551011.68,
+          "ewt": 64501.78,
+          "vat_gaps": 251,
+          "aging": {
+            "0-30 days": 41480936.54,
+            "Not Yet Due": 19818853.85,
+            "61-90 days": 10489660.75,
+            "31-60 days": 14123416.84,
+            "Over 120 days": 21073940.38,
+            "91-120 days": 11482482.71
+          },
+          "status_bucket_totals": {
+            "NO RFP YET": {
+              "t": 49799236.94,
+              "c": 326
+            },
+            "WITH FINANCE": {
+              "t": 16585475.53,
+              "c": 110
+            },
+            "IN PIPELINE": {
+              "t": 4528738.46,
+              "c": 65
+            },
+            "CHECK READY": {
+              "t": 22332885.96,
+              "c": 112
+            },
+            "FOR ONLINE PAYMENT": {
+              "t": 5513136.44,
+              "c": 92
+            },
+            "CHECK RELEASED": {
+              "t": 10811423.1,
+              "c": 23
+            },
+            "PAID": {
+              "t": 11560201.49,
+              "c": 505
+            }
+          }
+        },
+        "Head Office": {
+          "total_outstanding": 128212959.04,
+          "unique_payees": 626,
+          "items": 2744,
+          "vatable": 28558775.23,
+          "vat": 1019031.19,
+          "ewt": 110336.78,
+          "vat_gaps": 368,
+          "aging": {
+            "Over 120 days": 900368.04,
+            "91-120 days": 2996235.86,
+            "61-90 days": 15524505.95,
+            "31-60 days": 21008973.86,
+            "0-30 days": 69686264.65,
+            "Not Yet Due": 18096610.69
+          },
+          "status_bucket_totals": {
+            "NO RFP YET": {
+              "t": 0.0,
+              "c": 0
+            },
+            "WITH FINANCE": {
+              "t": 24340742.08,
+              "c": 2021
+            },
+            "IN PIPELINE": {
+              "t": 17066249.64,
+              "c": 135
+            },
+            "CHECK READY": {
+              "t": 18498563.73,
+              "c": 167
+            },
+            "FOR ONLINE PAYMENT": {
+              "t": 27317013.07,
+              "c": 133
+            },
+            "CHECK RELEASED": {
+              "t": 16034004.01,
+              "c": 100
+            },
+            "PAID": {
+              "t": 22501534.3,
+              "c": 1634
+            }
+          }
+        },
+        "CAPEX": {
+          "total_outstanding": 8875720.28,
+          "unique_payees": 43,
+          "items": 82,
+          "vatable": 7809663.2,
+          "vat": 480942.9,
+          "ewt": 13757.14,
+          "vat_gaps": 15,
+          "aging": {
+            "Over 120 days": 3496.36,
+            "91-120 days": 5479.96,
+            "61-90 days": 529883.62,
+            "31-60 days": 4934670.63,
+            "0-30 days": 2299763.9,
+            "Not Yet Due": 1102425.81
+          },
+          "status_bucket_totals": {
+            "NO RFP YET": {
+              "t": 0.0,
+              "c": 0
+            },
+            "WITH FINANCE": {
+              "t": 8178634.57,
+              "c": 75
+            },
+            "IN PIPELINE": {
+              "t": 460681.81,
+              "c": 1
+            },
+            "CHECK READY": {
+              "t": 0.0,
+              "c": 0
+            },
+            "FOR ONLINE PAYMENT": {
+              "t": 0.0,
+              "c": 0
+            },
+            "CHECK RELEASED": {
+              "t": 0.0,
+              "c": 0
+            },
+            "PAID": {
+              "t": 236403.9,
+              "c": 78
+            }
+          }
+        },
+        "Payment Plan": {
+          "total_outstanding": 89319649.9,
+          "unique_payees": 45,
+          "items": 576,
+          "vatable": 78188972.61,
+          "vat": 7215115.65,
+          "ewt": 194702.85,
+          "vat_gaps": 81,
+          "aging": {
+            "0-30 days": 25202492.8,
+            "Not Yet Due": 47078386.27,
+            "61-90 days": 4942491.38,
+            "91-120 days": 2778606.41,
+            "31-60 days": 2580293.98,
+            "Over 120 days": 6737379.06
+          },
+          "status_bucket_totals": {
+            "NO RFP YET": {
+              "t": 35616342.29,
+              "c": 244
+            },
+            "WITH FINANCE": {
+              "t": 3264760.72,
+              "c": 22
+            },
+            "IN PIPELINE": {
+              "t": 0.0,
+              "c": 0
+            },
+            "CHECK READY": {
+              "t": 41213712.72,
+              "c": 174
+            },
+            "FOR ONLINE PAYMENT": {
+              "t": 8394877.17,
+              "c": 130
+            },
+            "CHECK RELEASED": {
+              "t": 645082.0,
+              "c": 4
+            },
+            "PAID": {
+              "t": 184875.0,
+              "c": 2
+            }
+          }
+        },
+        "Intercompany": {
+          "total_outstanding": 108638358.06,
+          "unique_payees": 5,
+          "items": 113,
+          "vatable": 497006.72,
+          "vat": 0.0,
+          "ewt": 0.0,
+          "vat_gaps": 112,
+          "aging": {
+            "61-90 days": 31919312.91,
+            "31-60 days": 4000000.0,
+            "0-30 days": 72719045.15
+          },
+          "status_bucket_totals": {
+            "NO RFP YET": {
+              "t": 0.0,
+              "c": 0
+            },
+            "WITH FINANCE": {
+              "t": 0.0,
+              "c": 0
+            },
+            "IN PIPELINE": {
+              "t": 26000000.0,
+              "c": 4
+            },
+            "CHECK READY": {
+              "t": 44219045.15,
+              "c": 63
+            },
+            "FOR ONLINE PAYMENT": {
+              "t": 6500000.0,
+              "c": 3
+            },
+            "CHECK RELEASED": {
+              "t": 31919312.91,
+              "c": 44
+            },
+            "PAID": {
+              "t": 0.0,
+              "c": 217
+            }
+          }
+        }
+      }
+    }
+  },
+  "finished_at": "2026-05-20T08:44:49.070428+08:00"
+}

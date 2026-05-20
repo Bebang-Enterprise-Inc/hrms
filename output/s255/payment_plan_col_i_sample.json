@@ -1,0 +1,18 @@
+{
+  "phase": "6.0",
+  "sampled_rows": 97,
+  "counts": {
+    "FOR ONLINE PAYMENT": 7,
+    "NO RFP YET": 16,
+    "CHECK READY": 69,
+    "CHECK RELEASED": 4,
+    "WITH FINANCE": 1
+  },
+  "ap_vocab_found": [
+    "WITH FINANCE",
+    "FOR ONLINE PAYMENT",
+    "CHECK READY",
+    "CHECK RELEASED",
+    "NO RFP YET"
+  ]
+}

@@ -1,0 +1,19 @@
+surface,owner,read_write,touched_by_s255_phase,protection,notes
+"AP Master Suppliers SOA (cols + rows)",6 writers + Sam,write,"1.1, 1.2, 1.3 (col delete + grid resize), 2.3 (row migrate), 4.2 (row dedup delete)",none on rows,Cloud Scheduler PAUSED at 0.5 → no race
+"AP Master Head Office (cols + rows)",6 writers + Sam,write,"1.4 (grid resize), 2.3 (row migrate)",none on rows,Cloud Scheduler PAUSED at 0.5
+"AP Master CAPEX (cols)",6 writers + Sam,write,"1.5 (grid resize), 1.6 (header rename)",none on rows,Cloud Scheduler PAUSED at 0.5
+"AP Master Payment Plan (cols + filter views)",sam@ only (strict-lock),write,"1.7 (col 15 header to BILLED ENTITY), 6.1+6.2 (filter views), 4.4 (dedup if any)",protectedRange strict-lock,Mirror restored by next hourly cycle after resume
+"AP Master Intercompany (NEW)",sam@ only (strict-lock),write,"2.1 (create), 2.3 (populate), 2.5 (existingIndex)",protectedRange strict-lock,Created in Phase 2.1
+"AP Master 14 strict-locked tabs (All Liabilities/Summary/etc.)",sam@ only (strict-lock),write,"no S255 changes to row data; banner row 4 recompute touches some",protectedRange strict-lock,recomputeBanners_ writes B/C/E row 4 only
+"Apps Script project 1pE8wt_z8NA9q__PNbUilJ72UE0_EI3DmurJekkw6mbgtHr8hosnKsNRF",Sam (owner),write,"1.6 (lines 70/506/668/1035), 2.2 (FPM seed), 2.5 (existingIndex), 3.1 (recomputeBanners_), 5.1 (Denise PP - Manual), 7.1-7.3 (mirror_disabled flag)",none,Backed up to output/s255/script_source_backup_v38.gs (87425 bytes)
+"Apps Script production deployment AKfycbw-Auq...",Sam (owner),write,"9b.1 (new dry-run deployment), 9b.4 (promote to v16)",none,Backup deployment v15 stays as rollback option
+"Cloud Scheduler ap-auto-view-hourly-refresh",Sam (project owner),pause/resume,"0.5 (pause), 9b.5 (resume)",none,Currently PAUSED as of 2026-05-20T07:18:00+08:00
+"Denise PP sheet rows + Denise's personal tabs (Suppliers w/o FD & Middleby, Middleby, Forward Dynamics, Masterlist, Scheduled for Online Transfer, Scheduled for Release Check, Summary, Pivots)",Denise (owner),READ-ONLY for S255,"none (DO NOT TOUCH)",Denise owns,Per Sam: ""no touch Denise personal data""
+"Denise PP sheet ACL",Denise (owner),write,"8.4 (per Sam approval only)",Drive ACL,18 entries today (was 17 in plan); Bridge engagement actor changed (accountant.outsource@ gone; anna.r@ + flor.a@ + bea.p@ writers now)
+"/finance-ap skill (3 mirrors: .claude/.agent/.agents/)",Sam,write,"5.3 (training amend), 8.5 (permissions amend), 9a.3 + 9a.4 (Bridge + DD section sync)",none,Verify Bridge section intact at Phase 0.9
+"docs/plans/2026-05-19-sprint-255-...md (this plan)",Sam,write,"9b.12 (status update)",none,YAML status will flip to COMPLETED at closeout
+"docs/plans/SPRINT_REGISTRY.md S255 row",Sam,write,"9b.13 (status update)",none,Already added v1.1 row in this commit
+"output/s255/* (committed evidence)",agent → committed,write,every phase writes here,none,Survives worktree closeout per v1.1 amendment
+"tmp/s255/* (transient)",agent,write,workflow scripts,none gitignored,Removed at worktree closeout
+"Cashflow Tracker CEO sheet (IMPORTRANGE from AP Master)",Sam,READ-ONLY for S255,none,external,If CLASSIFICATION rename breaks IMPORTRANGE reads it's display-name issue only — flagged for post-deploy verify
+"Bridge engagement (DD readiness)",Sam,READ-ONLY for S255,9a.1 (audit only) + 9a.2 (draft checklist),N/A,Verify ACL of 3 bridge-ph.com users — possibly outdated handoff

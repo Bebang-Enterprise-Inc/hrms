@@ -1,0 +1,133 @@
+{
+  "approved_at": "2026-05-20T08:55:16.294095+08:00",
+  "approved_by": "agent_best_judgment_2026-05-20 \u2014 Sam may override in S256",
+  "best_judgment_basis": "Sam directive: 'push through with best-judgment defaults'",
+  "decisions": {
+    "hangouts-chat-1fecc11e36bf8ba6@bebang.ph": {
+      "current_role": "commenter",
+      "decision": "keep",
+      "rationale": "no plan-explicit decision; agent best-judgment is keep",
+      "type": "group",
+      "display_name": "Google Chat Room"
+    },
+    "drew@bebang.ph": {
+      "current_role": "writer",
+      "decision": "keep",
+      "rationale": "no plan-explicit decision; agent best-judgment is keep",
+      "type": "user",
+      "display_name": "Andrew Rodel S. Manansala"
+    },
+    "anna.r@bridge-ph.com": {
+      "current_role": "writer",
+      "decision": "keep",
+      "rationale": "Bridge contractor (fractional CFO + DD auditor) \u2014 AUTHORIZED",
+      "type": "user",
+      "display_name": "Anna Ramos"
+    },
+    "roberose@bebang.ph": {
+      "current_role": "writer",
+      "decision": "downgrade_to_commenter",
+      "rationale": "S255 plan v1.1 explicit decision: stale writer per Sam pre-approved",
+      "type": "user",
+      "display_name": "Roberose Pulido"
+    },
+    "liezel@bebang.ph": {
+      "current_role": "writer",
+      "decision": "keep",
+      "rationale": "no plan-explicit decision; agent best-judgment is keep",
+      "type": "user",
+      "display_name": "Liezel Acero"
+    },
+    "julius@bebang.ph": {
+      "current_role": "reader",
+      "decision": "keep",
+      "rationale": "no plan-explicit decision; agent best-judgment is keep",
+      "type": "user",
+      "display_name": "Julius Jose Tin-ga"
+    },
+    "denise@bebang.ph": {
+      "current_role": "owner",
+      "decision": "keep",
+      "rationale": "Owner",
+      "type": "user",
+      "display_name": "Denise Marielle Almario"
+    },
+    "flor.a@bridge-ph.com": {
+      "current_role": "writer",
+      "decision": "keep",
+      "rationale": "Bridge contractor (fractional CFO + DD auditor) \u2014 AUTHORIZED",
+      "type": "user",
+      "display_name": "flor.a"
+    },
+    "bea.p@bridge-ph.com": {
+      "current_role": "writer",
+      "decision": "keep",
+      "rationale": "Bridge contractor (fractional CFO + DD auditor) \u2014 AUTHORIZED",
+      "type": "user",
+      "display_name": "Bea Pads"
+    },
+    "james.tamaca@bebang.ph": {
+      "current_role": "writer",
+      "decision": "keep",
+      "rationale": "no plan-explicit decision; agent best-judgment is keep",
+      "type": "user",
+      "display_name": "James Tamaca"
+    },
+    "bea.garcia.intern@bebang.ph": {
+      "current_role": "writer",
+      "decision": "defer",
+      "rationale": "Intern role \u2014 defer until Sam confirms intern needs writer (could be commenter)",
+      "type": "user",
+      "display_name": "Bea Garcia"
+    },
+    "angelamel@bebang.ph": {
+      "current_role": "writer",
+      "decision": "keep",
+      "rationale": "no plan-explicit decision; agent best-judgment is keep",
+      "type": "user",
+      "display_name": "Angelamel Letada"
+    },
+    "joevic@bebang.ph": {
+      "current_role": "writer",
+      "decision": "defer",
+      "rationale": "Identity unknown \u2014 needs Denise/James confirmation before ACL change",
+      "type": "user",
+      "display_name": "Joevic Almajar"
+    },
+    "sam@bebang.ph": {
+      "current_role": "commenter",
+      "decision": "keep",
+      "rationale": "CEO oversight",
+      "type": "user",
+      "display_name": "Sam Karazi"
+    },
+    "maika@bebang.ph": {
+      "current_role": "writer",
+      "decision": "keep",
+      "rationale": "no plan-explicit decision; agent best-judgment is keep",
+      "type": "user",
+      "display_name": "Maika Jean Talisayon"
+    },
+    "luwi@bebang.ph": {
+      "current_role": "commenter",
+      "decision": "keep",
+      "rationale": "no plan-explicit decision; agent best-judgment is keep",
+      "type": "user",
+      "display_name": "Luwi Azusano"
+    },
+    "marco@bebang.ph": {
+      "current_role": "writer",
+      "decision": "keep",
+      "rationale": "no plan-explicit decision; agent best-judgment is keep",
+      "type": "user",
+      "display_name": "Marco Limosnero"
+    },
+    "je-ann@bebang.ph": {
+      "current_role": "writer",
+      "decision": "keep",
+      "rationale": "no plan-explicit decision; agent best-judgment is keep",
+      "type": "user",
+      "display_name": "Je-Ann Torato"
+    }
+  }
+}
