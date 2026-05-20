@@ -274,3 +274,19 @@ That's the system working as designed. They should **not** ask Sam to remove pro
 When filtering or reading AP Master rows by SOURCE column, recognize:
 
 - **`Denise PP - Manual`** — invoices that bypass the procurement AppSheet (e.g. 3M Dragon). Detect by INVOICE NO. starting with `Invoice No.` text. These rows skipped the standard PR/PO/GR/RFP flow; Bridge will want them tagged separately during DD audit.
+
+
+## Filter Views on AP Master Payment Plan tab (S255 — 2026-05-20)
+
+Two native Sheets filter views were added on the AP Master Payment Plan tab, mirroring Angela's old tabs from Project: 2-Week Payment Plan:
+
+| Filter view | Filters where | Sample today |
+|---|---|---|
+| **Scheduled for Online Transfer - Due** | col I (STATUS) = `FOR ONLINE PAYMENT` | 7 rows |
+| **Scheduled for Release Check - Due** | col I (STATUS) IN (`CHECK READY`, `CHECK RELEASED`) | 73 rows |
+
+**How to use:** AP Master → Payment Plan tab → filter funnel icon → "Filter views" → pick view.
+
+These filter LIVE off col I which is maintained by the script's `mapDeniseToApStatus_` mapping (Denise's raw STATUS → AP-vocab). No data duplication, no manual refresh.
+
+When Denise transitions off her standalone sheet, Sam toggles `payment_plan_mirror_disabled=true` and the mirror stops; status sync starts writing PP col I directly.

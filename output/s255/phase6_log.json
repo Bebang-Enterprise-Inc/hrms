@@ -1,0 +1,32 @@
+{
+  "phase": "6",
+  "started_at": "2026-05-20T08:50:05.242243+08:00",
+  "tasks": {
+    "6.0": {
+      "status": "DONE",
+      "ap_vocab_found": [
+        "WITH FINANCE",
+        "FOR ONLINE PAYMENT",
+        "CHECK READY",
+        "CHECK RELEASED",
+        "NO RFP YET"
+      ],
+      "sample_size": 97
+    },
+    "6.2": {
+      "status": "CREATED",
+      "title": "Scheduled for Online Transfer - Due",
+      "filterViewId": 1449517352
+    },
+    "6.3": {
+      "status": "CREATED",
+      "title": "Scheduled for Release Check - Due",
+      "filterViewId": 1281333422
+    },
+    "6.4": {
+      "status": "DONE",
+      "path": "output/s255/angela_denise_chat_draft.md"
+    }
+  },
+  "finished_at": "2026-05-20T08:50:08.967031+08:00"
+}
