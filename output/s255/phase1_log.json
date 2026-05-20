@@ -1,0 +1,44 @@
+{
+  "phase": "1",
+  "started_at": "2026-05-20T08:27:12.514444+08:00",
+  "tasks": {
+    "1.6a": {
+      "status": "DONE",
+      "v39_size_bytes": 85734,
+      "v38_size_bytes": 85734,
+      "renames": 4,
+      "internal_classification_preserved": true,
+      "remaining_uppercase_CLASSIFICATION": 4
+    },
+    "1.1": {
+      "row_355_col_D_invoice_date_pre": 46010,
+      "row_355_col_T_remarks_pre": null,
+      "migrated": false,
+      "reason": "INVOICE DATE not blank (got 46010) OR Remarks empty/missing"
+    },
+    "1.8_pre": {
+      "suppliers_soa_row18_col15": "Suppliers w/o FD & Middleby",
+      "head_office_row18_col15": "HEAD OFFICE"
+    },
+    "batch_update_replies": 8,
+    "1.8_post": {
+      "grids": {
+        "Suppliers SOA": 19,
+        "Head Office": 19,
+        "CAPEX": 20,
+        "Payment Plan": 30
+      },
+      "headers": {
+        "Suppliers SOA": "GOODS/SERVICES",
+        "Head Office": "GOODS/SERVICES",
+        "CAPEX": "GOODS/SERVICES",
+        "Payment Plan": "BILLED ENTITY"
+      },
+      "suppliers_soa_row18_col15_post": "Suppliers w/o FD & Middleby",
+      "head_office_row18_col15_post": "HEAD OFFICE",
+      "data_preserved_soa": true,
+      "data_preserved_ho": true
+    }
+  },
+  "finished_at": "2026-05-20T08:27:22.418065+08:00"
+}
