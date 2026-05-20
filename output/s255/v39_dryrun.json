@@ -1,0 +1,154 @@
+{
+  "dry_run": true,
+  "status_sync": {
+    "updates": 0,
+    "conflicts": 0,
+    "nochange": 2395,
+    "tabs_seen": {
+      "Suppliers SOA": 1255,
+      "Head Office": 4227,
+      "CAPEX": 154,
+      "Intercompany": 331
+    },
+    "sample_changes": []
+  },
+  "tax_sync": {
+    "updates": 0,
+    "conflicts": 0,
+    "nochange": 882
+  },
+  "seed": {
+    "scanned": 3154,
+    "appended": 78,
+    "duplicate_conflicts": 0,
+    "skipped_paid": 381,
+    "skipped_existing": 6271,
+    "fpm_seed": {
+      "scanned": 2671,
+      "appended": 28,
+      "skipped_paid_old": 1,
+      "skipped_empty": 66,
+      "skipped_existing": 2576,
+      "capex_count": 0,
+      "ho_count": 0,
+      "soa_count": 28,
+      "sample_appended": [
+        {
+          "tab": "Suppliers SOA",
+          "payee": "Carandang Consumer Goods Trading",
+          "amount": 17325,
+          "status": "Paid/ Cleared",
+          "rfpNo": "0112"
+        },
+        {
+          "tab": "Suppliers SOA",
+          "payee": "Happybee Packaging Inc.",
+          "amount": 103750,
+          "status": "Paid/ Cleared",
+          "rfpNo": "0243"
+        },
+        {
+          "tab": "Suppliers SOA",
+          "payee": "Happybee Packaging Inc.",
+          "amount": 22500,
+          "status": "Paid/ Cleared",
+          "rfpNo": "0244"
+        },
+        {
+          "tab": "Suppliers SOA",
+          "payee": "Happybee Packaging Inc.",
+          "amount": 15600,
+          "status": "Paid/ Cleared",
+          "rfpNo": "0245"
+        },
+        {
+          "tab": "Suppliers SOA",
+          "payee": "1 to 1 Marketing, Inc.",
+          "amount": 311142,
+          "status": "Paid/ Cleared",
+          "rfpNo": "0442"
+        }
+      ]
+    },
+    "denise_seed": {
+      "scanned": 1640,
+      "appended": 18,
+      "skipped_paid": 612,
+      "skipped_blank": 42,
+      "skipped_existing": 954,
+      "deduped_intra_denise": 14,
+      "by_tab": {
+        "Suppliers w/o FD & Middleby": 17,
+        "Middleby": 0,
+        "Forward Dynamics": 0,
+        "Masterlist": 1
+      },
+      "sample_appended": [
+        {
+          "tab": "Suppliers w/o FD & Middleby",
+          "source_tag": "Denise PP",
+          "payee": "Global Pacific Distribution Network",
+          "invoice": "621484",
+          "amount": 571526.82,
+          "outstanding": 571526.82,
+          "status": "Schedule for Check Release",
+          "ap_status": "CHECK READY"
+        },
+        {
+          "tab": "Suppliers w/o FD & Middleby",
+          "source_tag": "Denise PP",
+          "payee": "Green District Fruits and Vegetables",
+          "invoice": "35566",
+          "amount": 82800,
+          "outstanding": 82800,
+          "status": "Schedule for Check Release",
+          "ap_status": "CHECK READY"
+        },
+        {
+          "tab": "Suppliers w/o FD & Middleby",
+          "source_tag": "Denise PP",
+          "payee": "Green District Fruits and Vegetables",
+          "invoice": "35565",
+          "amount": 36000,
+          "outstanding": 36000,
+          "status": "Schedule for Online Payment",
+          "ap_status": "FOR ONLINE PAYMENT"
+        },
+        {
+          "tab": "Suppliers w/o FD & Middleby",
+          "source_tag": "Denise PP",
+          "payee": "Green District Fruits and Vegetables",
+          "invoice": "35567",
+          "amount": 25200,
+          "outstanding": 25200,
+          "status": "Schedule for Online Payment",
+          "ap_status": "FOR ONLINE PAYMENT"
+        },
+        {
+          "tab": "Suppliers w/o FD & Middleby",
+          "source_tag": "Denise PP",
+          "payee": "Griffift Foods Philippines Inc.",
+          "invoice": "961",
+          "amount": 53760,
+          "outstanding": 53760,
+          "status": "Schedule for Online Payment",
+          "ap_status": "FOR ONLINE PAYMENT"
+        }
+      ]
+    },
+    "payment_plan_mirror": {
+      "scanned": 1640,
+      "mirrored": 576,
+      "skipped_paid": 612,
+      "skipped_blank": 42,
+      "deduped_intra_denise": 410,
+      "by_tab": {
+        "Suppliers w/o FD & Middleby": 348,
+        "Middleby": 72,
+        "Forward Dynamics": 135,
+        "Masterlist": 21
+      }
+    }
+  },
+  "duration_ms": 40674
+}

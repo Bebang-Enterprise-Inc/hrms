@@ -1,0 +1,66 @@
+{
+  "captured_at": "2026-05-20T09:07:30.034548+08:00",
+  "assertions": {
+    "A1_banner_totals": {
+      "pass": true,
+      "details": {
+        "Suppliers SOA": {
+          "banner_total": 141321102.1519999,
+          "data_sum": 141321102.152,
+          "delta": 1.1920928955078125e-07,
+          "pass": true
+        },
+        "Head Office": {
+          "banner_total": 128212959.03863543,
+          "data_sum": 128212959.0386354,
+          "delta": 2.9802322387695312e-08,
+          "pass": true
+        },
+        "CAPEX": {
+          "banner_total": 8875720.280000001,
+          "data_sum": 8875720.28,
+          "delta": 1.862645149230957e-09,
+          "pass": true
+        },
+        "Payment Plan": {
+          "banner_total": 89319649.902,
+          "data_sum": 89319649.902,
+          "delta": 0.0,
+          "pass": true
+        },
+        "Intercompany": {
+          "banner_total": 108638358.063,
+          "data_sum": 108638358.063,
+          "delta": 0.0,
+          "pass": true
+        }
+      },
+      "passed_count": 5
+    },
+    "A2_intercompany_stable": {
+      "pass": true,
+      "interco_routed_this_cycle": 0,
+      "note": "0 means existingIndex correctly skipped already-migrated Bebang rows"
+    },
+    "A3_pp_mirror_works": {
+      "pass": true,
+      "mirror_disabled": null,
+      "rows_mirrored": 576
+    },
+    "A4_status_sync_4_tabs": {
+      "pass": true,
+      "tabs_seen": {
+        "Suppliers SOA": 1255,
+        "Head Office": 4227,
+        "CAPEX": 154,
+        "Intercompany": 331
+      }
+    },
+    "A5_cycle_complete": {
+      "pass": true,
+      "duration_ms": 148071,
+      "rows_appended": 80
+    }
+  },
+  "all_assertions_passed": true
+}

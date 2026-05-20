@@ -1,0 +1,21 @@
+{
+  "all_assertions_passed": true,
+  "assertions": {
+    "dryrun_returned_stats": {
+      "pass": true,
+      "detail": "keys: ['dry_run', 'status_sync', 'tax_sync', 'seed', 'duration_ms']"
+    },
+    "dryRun_mode_was_set": {
+      "pass": true,
+      "detail": "dry_run flag: True"
+    },
+    "no_seed_errors": {
+      "pass": true,
+      "detail": "seed stats: ['scanned', 'appended', 'duplicate_conflicts', 'skipped_paid', 'skipped_existing', 'fpm_seed', 'denise_seed', 'payment_plan_mirror']"
+    },
+    "v39_logic_active": {
+      "pass": true,
+      "detail": "new v3.9 logic visible in output"
+    }
+  }
+}
