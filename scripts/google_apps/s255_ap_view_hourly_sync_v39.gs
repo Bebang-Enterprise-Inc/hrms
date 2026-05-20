@@ -1543,8 +1543,14 @@ function seedFromDenisePaymentPlan_(ss, fpmLookup, taxLookup, existingIndex, dry
       // Compute aging bucket
       var bucket = agingBucket(aging);
 
+      // v3.9 (S255 Phase 5): 3M Dragon manual-invoice detection — INVOICE NO starting with "INVOICE NO" prefix
+      // overrides cfg.sourceTag to 'Denise PP - Manual' so Sam can filter procurement-bypass entries
+      var sourceTag = cfg.sourceTag;
+      if (/^INVOICE\s*NO/i.test(invoiceNo)) {
+        sourceTag = 'Denise PP - Manual';
+      }
       var rowValues = [
-        cfg.sourceTag,                          // SOURCE
+        sourceTag,                              // SOURCE
         supplier,                               // PAYEE
         invoiceNo,                              // INVOICE NO.
         invDate || '',                          // INVOICE DATE

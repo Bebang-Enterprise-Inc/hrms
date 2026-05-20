@@ -267,3 +267,10 @@ That's the system working as designed. They should **not** ask Sam to remove pro
 ---
 
 **End of training. Bookmark this file:** `.claude/skills/finance-ap/references/team-training-2026-05-14.md` or ask Sam to share the rendered Google Doc version (forthcoming).
+
+
+## SOURCE class additions (S255 — 2026-05-20)
+
+When filtering or reading AP Master rows by SOURCE column, recognize:
+
+- **`Denise PP - Manual`** — invoices that bypass the procurement AppSheet (e.g. 3M Dragon). Detect by INVOICE NO. starting with `Invoice No.` text. These rows skipped the standard PR/PO/GR/RFP flow; Bridge will want them tagged separately during DD audit.
