@@ -190,6 +190,8 @@ function doRefreshAllTabs_v3_(dryRun) {
   const seedStats = seedNewInvoicesFromSources_(ss, fpmLookup, taxLookup, dryRun);
   stats.seed = seedStats;
 
+  // v3.9 (S255 Phase 3.2): refresh banners from current data before logging cycle complete
+  if (!dryRun) { stats.banners = recomputeBanners_(ss); }
   stats.duration_ms = Date.now() - t0;
   if (dryRun) {
     writeDryRunPreview_(ss, stats);
@@ -983,6 +985,112 @@ function agingBucket(d) {
 }
 
 // ───────────────────────────────────────────────────────────────────────────
+
+// ───────────────────────────────────────────────────────────────────────────
+// v3.9 (S255 Phase 3) — recomputeBanners_ — RF-7 fix
+// Recomputes banner rows from current tab data on every hourly cycle.
+// Replaces the stale legacy-only banner that buildGrid() wrote via mode=v2.
+// ───────────────────────────────────────────────────────────────────────────
+function recomputeBanners_(ss) {
+  var stats = { banners_updated: 0, tabs_processed: [], details: {} };
+  var TABS = ['Suppliers SOA', 'Head Office', 'CAPEX', 'Payment Plan', 'Intercompany'];
+
+  TABS.forEach(function(tabName) {
+    var sh = ss.getSheetByName(tabName);
+    if (!sh) return;
+    // Payment Plan has header at row 3; CAPEX at row 19; SOA/HO/Intercompany at row 17
+    var headerRow = (tabName === 'Payment Plan') ? 3 : (tabName === 'CAPEX' ? 19 : 17);
+    var dataStartRow = headerRow + 1;
+    var lastRow = sh.getLastRow();
+    if (lastRow < dataStartRow) {
+      stats.details[tabName] = { skipped: 'no data rows' };
+      return;
+    }
+    var ncols = sh.getLastColumn();
+    var hdr = sh.getRange(headerRow, 1, 1, ncols).getValues()[0];
+    var iOut = hdr.indexOf('OUTSTANDING');
+    var iPayee = hdr.indexOf('PAYEE');
+    var iStatus = hdr.indexOf('STATUS');
+    var iAgingBucket = hdr.indexOf('AGING BUCKET');
+    var iVatable = hdr.indexOf('VATABLE');
+    var iVat = hdr.indexOf('VAT');
+    var iEwt = hdr.indexOf('EWT');
+    var iAmount = hdr.indexOf('AMOUNT');
+    if (iOut < 0 || iPayee < 0) {
+      stats.details[tabName] = { skipped: 'missing OUTSTANDING or PAYEE column' };
+      return;
+    }
+    var data = sh.getRange(dataStartRow, 1, lastRow - dataStartRow + 1, ncols).getValues();
+
+    var total = 0, items = 0;
+    var payees = {}; var aging = {}; var vatable = 0, vat = 0, ewt = 0; var vatGaps = 0;
+    var bk = { 'NO RFP YET': {t:0,c:0}, 'WITH FINANCE': {t:0,c:0}, 'IN PIPELINE': {t:0,c:0},
+               'CHECK READY': {t:0,c:0}, 'FOR ONLINE PAYMENT': {t:0,c:0},
+               'CHECK RELEASED': {t:0,c:0}, 'PAID': {t:0,c:0} };
+
+    data.forEach(function(r) {
+      var out = toNum(r[iOut]);
+      var payee = String(r[iPayee] || '').trim();
+      var status = String(iStatus >= 0 ? r[iStatus] : '').trim().toUpperCase();
+      var bucket = String(iAgingBucket >= 0 ? r[iAgingBucket] : '').trim();
+
+      if (out > 0) {
+        total += out;
+        items++;
+        if (payee) payees[payee] = 1;
+        if (bucket) aging[bucket] = (aging[bucket] || 0) + out;
+        if (iVatable >= 0) vatable += toNum(r[iVatable]);
+        if (iVat >= 0) vat += toNum(r[iVat]);
+        if (iEwt >= 0) ewt += toNum(r[iEwt]);
+        if (iAmount >= 0 && toNum(r[iAmount]) > 50000 && toNum(r[iVat]) === 0) vatGaps++;
+      }
+      if (bk[status]) { bk[status].t += out; bk[status].c++; }
+    });
+
+    var uniquePayees = Object.keys(payees).length;
+    var pipelineT = bk['IN PIPELINE'].t + bk['CHECK READY'].t + bk['FOR ONLINE PAYMENT'].t;
+    var pipelineC = bk['IN PIPELINE'].c + bk['CHECK READY'].c + bk['FOR ONLINE PAYMENT'].c;
+
+    // Row 4: TOTAL OUTSTANDING — A4..E4
+    sh.getRange(4, 1, 1, 5).setValues([['TOTAL OUTSTANDING', total, uniquePayees + ' payees', '', items + ' items']]);
+
+    // Row 7 + 10 + 11 + 13 — only for entry-style tabs (Payment Plan has different banner)
+    if (tabName !== 'Payment Plan') {
+      sh.getRange(7, 1, 1, 15).setValues([[
+        'NO RFP YET', bk['NO RFP YET'].t, bk['NO RFP YET'].c + ' items',
+        'WITH FINANCE (no RFP)', bk['WITH FINANCE'].t, bk['WITH FINANCE'].c + ' items',
+        'IN PIPELINE', pipelineT, pipelineC + ' items',
+        'CHECK RELEASED', bk['CHECK RELEASED'].t, bk['CHECK RELEASED'].c + ' items',
+        'PAID', '', bk['PAID'].c + ' items',
+      ]]);
+      sh.getRange(10, 1, 1, 14).setValues([[
+        'Not Yet Due', aging['Not Yet Due']||0, '',
+        '0-30', aging['0-30 days']||0, '',
+        '31-60', aging['31-60 days']||0, '',
+        '61-90', aging['61-90 days']||0, '',
+        '91-120', aging['91-120 days']||0,
+      ]]);
+      sh.getRange(11, 1, 1, 2).setValues([['Over 120 days', aging['Over 120 days']||0]]);
+      sh.getRange(13, 1, 1, 11).setValues([[
+        'Vatable Sales', vatable, '',
+        'VAT (12%)', vat, '',
+        'EWT', ewt, '',
+        'VAT gaps (amt>50K, VAT=0)', vatGaps,
+      ]]);
+    }
+
+    stats.banners_updated++;
+    stats.tabs_processed.push(tabName);
+    stats.details[tabName] = {
+      total_outstanding: total,
+      unique_payees: uniquePayees,
+      items: items,
+      vatable: vatable, vat: vat, ewt: ewt, vat_gaps: vatGaps,
+    };
+  });
+  return stats;
+}
+
 // buildGrid + formatTab kept from v2 for the legacy wipe-rebuild path
 // ───────────────────────────────────────────────────────────────────────────
 function buildGrid(rows, label, ts, isCapex, isVatGaps) {
