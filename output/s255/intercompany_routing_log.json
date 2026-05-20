@@ -1,0 +1,69 @@
+{
+  "captured_at": "2026-05-20T08:33:19.973956+08:00",
+  "phase": "2.3",
+  "migrated_rows": 331,
+  "ambiguous_rows_count": 25,
+  "predicate": "PAYEE matches /^Bebang\\s+(Enterprise|Kitchen|Shaw)\\s+Inc\\.?/i AND CLASSIFICATION matches /(transfer (of )?fund|cash sweep|intercompany)/i AND NOT matches /HDMF|SSS|PHIC|PHILHEALTH|BIR|PAG-?IBIG|CONTRIBUTION|RENTAL|FINAL PAY/i",
+  "sample_migrated": [
+    {
+      "sheet_row": 2395,
+      "payee": "Bebang Enterprise Inc.",
+      "classification": "Cash Sweep 4th week of February",
+      "source": "FPM"
+    },
+    {
+      "sheet_row": 2396,
+      "payee": "Bebang Enterprise Inc.",
+      "classification": "Cash Sweep 4th week of February",
+      "source": "FPM"
+    },
+    {
+      "sheet_row": 2397,
+      "payee": "Bebang Enterprise Inc.",
+      "classification": "Cash Sweep 4th week of February",
+      "source": "FPM"
+    },
+    {
+      "sheet_row": 2398,
+      "payee": "Bebang Enterprise Inc.",
+      "classification": "Cash Sweep 4th week of February",
+      "source": "FPM"
+    },
+    {
+      "sheet_row": 2399,
+      "payee": "Bebang Enterprise Inc.",
+      "classification": "Cash Sweep 4th week of February",
+      "source": "FPM"
+    },
+    {
+      "sheet_row": 2400,
+      "payee": "Bebang Enterprise Inc.",
+      "classification": "Cash Sweep 4th week of February",
+      "source": "FPM"
+    },
+    {
+      "sheet_row": 2401,
+      "payee": "Bebang Enterprise Inc.",
+      "classification": "Cash Sweep 4th week of February",
+      "source": "FPM"
+    },
+    {
+      "sheet_row": 2402,
+      "payee": "Bebang Enterprise Inc.",
+      "classification": "Cash Sweep 4th week of February",
+      "source": "FPM"
+    },
+    {
+      "sheet_row": 2403,
+      "payee": "Bebang Enterprise Inc.",
+      "classification": "Cash Sweep 4th week of February",
+      "source": "FPM"
+    },
+    {
+      "sheet_row": 2404,
+      "payee": "Bebang Enterprise Inc.",
+      "classification": "Cash Sweep 4th week of February",
+      "source": "FPM"
+    }
+  ]
+}

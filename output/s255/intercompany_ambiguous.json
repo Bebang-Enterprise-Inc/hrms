@@ -1,0 +1,233 @@
+{
+  "captured_at": "2026-05-20T08:33:19.974956+08:00",
+  "phase": "2.3",
+  "ambiguous_count": 25,
+  "criteria": "PAYEE matches Bebang Enterprise/Kitchen/Shaw BUT CLASSIFICATION fails transfer-keyword OR contains govt-keyword. These rows STAY on HO.",
+  "rows": [
+    {
+      "sheet_row": 2331,
+      "payee": "Bebang Enterprise Inc.",
+      "classification": "HDMF Contribution for Sangandaan Aug to Jan 2026",
+      "source": "FPM",
+      "transfer_keyword_match": false,
+      "govt_keyword_match": true,
+      "reason": "matches PAYEE but contains govt keyword"
+    },
+    {
+      "sheet_row": 2332,
+      "payee": "Bebang Enterprise Inc.",
+      "classification": "HDMF Contribution for Rob Gal Nov to Jan 2026",
+      "source": "FPM",
+      "transfer_keyword_match": false,
+      "govt_keyword_match": true,
+      "reason": "matches PAYEE but contains govt keyword"
+    },
+    {
+      "sheet_row": 2333,
+      "payee": "Bebang Enterprise Inc.",
+      "classification": "HDMF Contribution for Gateway Nov to Jan 2026",
+      "source": "FPM",
+      "transfer_keyword_match": false,
+      "govt_keyword_match": true,
+      "reason": "matches PAYEE but contains govt keyword"
+    },
+    {
+      "sheet_row": 2335,
+      "payee": "Bebang Enterprise Inc.",
+      "classification": "SSS Contribution Nov to Jan 2026",
+      "source": "FPM",
+      "transfer_keyword_match": false,
+      "govt_keyword_match": true,
+      "reason": "matches PAYEE but contains govt keyword"
+    },
+    {
+      "sheet_row": 2336,
+      "payee": "Bebang Enterprise Inc.",
+      "classification": "SSS Contribution Nov to Jan 2026",
+      "source": "FPM",
+      "transfer_keyword_match": false,
+      "govt_keyword_match": true,
+      "reason": "matches PAYEE but contains govt keyword"
+    },
+    {
+      "sheet_row": 2337,
+      "payee": "Bebang Enterprise Inc.",
+      "classification": "SSS Contribution Nov to Jan 2026",
+      "source": "FPM",
+      "transfer_keyword_match": false,
+      "govt_keyword_match": true,
+      "reason": "matches PAYEE but contains govt keyword"
+    },
+    {
+      "sheet_row": 2338,
+      "payee": "Bebang Enterprise Inc.",
+      "classification": "SSS Contribution Nov to Jan 2026",
+      "source": "FPM",
+      "transfer_keyword_match": false,
+      "govt_keyword_match": true,
+      "reason": "matches PAYEE but contains govt keyword"
+    },
+    {
+      "sheet_row": 2339,
+      "payee": "Bebang Enterprise Inc.",
+      "classification": "SSS Contribution Nov to Jan 2026",
+      "source": "FPM",
+      "transfer_keyword_match": false,
+      "govt_keyword_match": true,
+      "reason": "matches PAYEE but contains govt keyword"
+    },
+    {
+      "sheet_row": 2340,
+      "payee": "Bebang Enterprise Inc.",
+      "classification": "SSS Contribution Nov to Jan 2026",
+      "source": "FPM",
+      "transfer_keyword_match": false,
+      "govt_keyword_match": true,
+      "reason": "matches PAYEE but contains govt keyword"
+    },
+    {
+      "sheet_row": 2355,
+      "payee": "Bebang Enterprise Inc.",
+      "classification": "SSS Contribution for Sangandaan Nov to Jan 2026",
+      "source": "FPM",
+      "transfer_keyword_match": false,
+      "govt_keyword_match": true,
+      "reason": "matches PAYEE but contains govt keyword"
+    },
+    {
+      "sheet_row": 2356,
+      "payee": "Bebang Enterprise Inc.",
+      "classification": "SSS Contribution for Rob Gal Nov to Jan 2026",
+      "source": "FPM",
+      "transfer_keyword_match": false,
+      "govt_keyword_match": true,
+      "reason": "matches PAYEE but contains govt keyword"
+    },
+    {
+      "sheet_row": 2357,
+      "payee": "Bebang Enterprise Inc.",
+      "classification": "SSS Contribution for Gateway Nov to Jan 2026",
+      "source": "FPM",
+      "transfer_keyword_match": false,
+      "govt_keyword_match": true,
+      "reason": "matches PAYEE but contains govt keyword"
+    },
+    {
+      "sheet_row": 2382,
+      "payee": "Bebang Enterprise Inc.",
+      "classification": "Transfer to BPI BEI to facilitate check clearing adjustment",
+      "source": "FPM",
+      "transfer_keyword_match": false,
+      "govt_keyword_match": false,
+      "reason": "matches PAYEE but no transfer keyword"
+    },
+    {
+      "sheet_row": 2574,
+      "payee": "Bebang Enterprise Inc.",
+      "classification": "Trasnfer of Fund from UB Snackhousr to BPi for preoccesing Iconic",
+      "source": "FPM",
+      "transfer_keyword_match": false,
+      "govt_keyword_match": false,
+      "reason": "matches PAYEE but no transfer keyword"
+    },
+    {
+      "sheet_row": 2783,
+      "payee": "Bebang Enterprise Inc.",
+      "classification": "SSS Contribution Dec 2025",
+      "source": "FPM",
+      "transfer_keyword_match": false,
+      "govt_keyword_match": true,
+      "reason": "matches PAYEE but contains govt keyword"
+    },
+    {
+      "sheet_row": 2799,
+      "payee": "Bebang Enterprise Inc.",
+      "classification": "SSS Contribution Jan 2026",
+      "source": "FPM",
+      "transfer_keyword_match": false,
+      "govt_keyword_match": true,
+      "reason": "matches PAYEE but contains govt keyword"
+    },
+    {
+      "sheet_row": 2800,
+      "payee": "Bebang Enterprise Inc.",
+      "classification": "SSS Contribution Dec to Jan 2026",
+      "source": "FPM",
+      "transfer_keyword_match": false,
+      "govt_keyword_match": true,
+      "reason": "matches PAYEE but contains govt keyword"
+    },
+    {
+      "sheet_row": 2925,
+      "payee": "Bebang Enterprise Inc.",
+      "classification": "Rental ftm of March 2026 - Soltea Commercial Corp",
+      "source": "FPM",
+      "transfer_keyword_match": false,
+      "govt_keyword_match": true,
+      "reason": "matches PAYEE but contains govt keyword"
+    },
+    {
+      "sheet_row": 2934,
+      "payee": "Bebang Enterprise Inc.",
+      "classification": "To Fund the AUB account for the PDC issued rental payment of Shaw ftm of April 2026",
+      "source": "FPM",
+      "transfer_keyword_match": false,
+      "govt_keyword_match": true,
+      "reason": "matches PAYEE but contains govt keyword"
+    },
+    {
+      "sheet_row": 3195,
+      "payee": "Bebang Enterprise Inc.",
+      "classification": "Ojt Allowance ftm of March 1-15, 2026 Cut Off",
+      "source": "FPM",
+      "transfer_keyword_match": false,
+      "govt_keyword_match": false,
+      "reason": "matches PAYEE but no transfer keyword"
+    },
+    {
+      "sheet_row": 3831,
+      "payee": "Bebang Enterprise Inc.",
+      "classification": "RFP 1801 Fund Transfer From UB - Snack House to BEI",
+      "source": "FPM",
+      "transfer_keyword_match": false,
+      "govt_keyword_match": false,
+      "reason": "matches PAYEE but no transfer keyword"
+    },
+    {
+      "sheet_row": 3929,
+      "payee": "Bebang Enterprise Inc",
+      "classification": "RFP 1910 To Fund AUB Account for the PCD Shaw Rental Monthly ftm of May 2026",
+      "source": "FPM",
+      "transfer_keyword_match": false,
+      "govt_keyword_match": true,
+      "reason": "matches PAYEE but contains govt keyword"
+    },
+    {
+      "sheet_row": 4314,
+      "payee": "Bebang Enterprise Inc",
+      "classification": "PHIC CONTRIBUTION(GRAND CENTRAL_FEB 2026)",
+      "source": "FPM",
+      "transfer_keyword_match": false,
+      "govt_keyword_match": true,
+      "reason": "matches PAYEE but contains govt keyword"
+    },
+    {
+      "sheet_row": 4315,
+      "payee": "Bebang Enterprise Inc",
+      "classification": "PHIC CONTRIBUTION(THE TERMINAL ALABANG _FEB 2026)",
+      "source": "FPM",
+      "transfer_keyword_match": false,
+      "govt_keyword_match": true,
+      "reason": "matches PAYEE but contains govt keyword"
+    },
+    {
+      "sheet_row": 4316,
+      "payee": "Bebang Enterprise Inc",
+      "classification": "PHILHEALTH CONTRIBUTIONS( LCT_FEB 2026)",
+      "source": "FPM",
+      "transfer_keyword_match": false,
+      "govt_keyword_match": true,
+      "reason": "matches PAYEE but contains govt keyword"
+    }
+  ]
+}

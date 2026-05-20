@@ -1,0 +1,30 @@
+{
+  "phase": "2",
+  "started_at": "2026-05-20T08:33:10.460324+08:00",
+  "tasks": {
+    "2.5a_v39_patches": {
+      "status": "DONE",
+      "v39_size_bytes": 86445,
+      "patches_applied": [
+        "line 290 status sync",
+        "line 428 existingIndex",
+        "line 1144 newRowsByTab",
+        "stats.intercompany_count init",
+        "FPM routing isIntercompany block + if-else extension"
+      ],
+      "intercompany_string_occurrences": 4
+    },
+    "2.1": {
+      "status": "CREATED",
+      "sheet_id": 1519913072
+    },
+    "2.3": {
+      "status": "DONE",
+      "migrated": 331,
+      "ambiguous": 25,
+      "log_path": "output/s255/intercompany_routing_log.json",
+      "ambiguous_path": "output/s255/intercompany_ambiguous.json"
+    }
+  },
+  "finished_at": "2026-05-20T08:33:19.975957+08:00"
+}

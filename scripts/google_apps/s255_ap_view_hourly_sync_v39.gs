@@ -287,7 +287,7 @@ function readEditTabRows_(ss, tabName) {
 // ───────────────────────────────────────────────────────────────────────────
 function syncStatusFieldsFromFPM_(ss, fpmLookup, dryRun) {
   const stats = { updates: 0, conflicts: 0, nochange: 0, tabs_seen: {}, sample_changes: [] };
-  ['Suppliers SOA', 'Head Office', 'CAPEX'].forEach(tabName => {
+  ['Suppliers SOA', 'Head Office', 'CAPEX', 'Intercompany'].forEach(tabName => {
     const t = readEditTabRows_(ss, tabName);
     if (!t.sheet) return;
     stats.tabs_seen[tabName] = t.rows.length;
@@ -425,7 +425,7 @@ function seedNewInvoicesFromSources_(ss, fpmLookup, taxLookup, dryRun) {
 
   // Index existing edit-tab rows by the same tolerant key set used in parity
   const existingIndex = {};
-  ['Suppliers SOA', 'Head Office', 'CAPEX'].forEach(tabName => {
+  ['Suppliers SOA', 'Head Office', 'CAPEX', 'Intercompany'].forEach(tabName => {
     const t = readEditTabRows_(ss, tabName);
     t.rows.forEach(row => {
       const payeeKey = (row.rec['PAYEE'] || '').toString().trim().toUpperCase();
@@ -1141,7 +1141,7 @@ function seedNewInvoicesFromFPM_(ss, fpmLookup, taxLookup, existingIndex, dryRun
                          'AIRCON','SIGNAGE','SIGN FABRICATION'];
 
   const ninetyDaysAgo = new Date(Date.now() - 90 * 24 * 3600 * 1000);
-  const newRowsByTab = { 'Suppliers SOA': [], 'Head Office': [], 'CAPEX': [] };
+  const newRowsByTab = { 'Suppliers SOA': [], 'Head Office': [], 'CAPEX': [], 'Intercompany': [] };
 
   for (var i = 1; i < fpmData.length; i++) {
     var r = fpmData[i];
@@ -1186,13 +1186,25 @@ function seedNewInvoicesFromFPM_(ss, fpmLookup, taxLookup, existingIndex, dryRun
     if (found) { stats.skipped_existing++; continue; }
 
     // Classify → which AP Master tab
+    // v3.9 (S255 Phase 2.2): Intercompany routing — Bebang entity payee + transfer keyword in CLASSIFICATION
+    // Tight predicate prevents misrouting govt-remittance rows (e.g. 'Bebang Enterprise Inc.' + 'SSS/HDMF/PHIC Contribution')
+    var isIntercompany = false;
+    if (/^Bebang\s+(Enterprise|Kitchen|Shaw)\s+Inc\.?/i.test(payee)
+        && /(transfer (of )?fund|cash sweep|intercompany)/i.test(particulars)
+        && !/HDMF|SSS|PHIC|PHILHEALTH|BIR|PAG-?IBIG|CONTRIBUTION|RENTAL|FINAL PAY/i.test(particulars)) {
+      isIntercompany = true;
+    }
+
     var targetTab = 'Head Office';
     var particularsUpper = particulars.toUpperCase();
     var isCapex = false;
     for (var ck = 0; ck < capexKeywords.length; ck++) {
       if (particularsUpper.indexOf(capexKeywords[ck]) >= 0) { isCapex = true; break; }
     }
-    if (isCapex) {
+    if (isIntercompany) {
+      targetTab = 'Intercompany';
+      stats.intercompany_count++;
+    } else if (isCapex) {
       targetTab = 'CAPEX';
       stats.capex_count++;
     } else if (supplierSet[payeeKey]) {
