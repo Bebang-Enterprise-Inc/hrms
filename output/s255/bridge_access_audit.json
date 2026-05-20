@@ -1,0 +1,114 @@
+{
+  "captured_at": "2026-05-20T08:59:25.628018+08:00",
+  "phase": "9a.1",
+  "sheets_audited": 8,
+  "sheets_with_bridge": 2,
+  "audit": {
+    "BEI AP Master": {
+      "sheet_id": "1bQ6mO1FXD4VYcLt8m-yklkV7pyYhSWqU7b8K0bVgG7c",
+      "owner_impersonate": "sam@bebang.ph",
+      "total_entries": 12,
+      "bridge_users_count": 0,
+      "bridge_users": [],
+      "bridge_present": false
+    },
+    "FPM": {
+      "sheet_id": "1t4wJLiAfIMJm6fe-x6h4eZn_S_Lx1AGN5ORd5Ywhcyw",
+      "owner_impersonate": "denise@bebang.ph",
+      "total_entries": 28,
+      "bridge_users_count": 5,
+      "bridge_users": [
+        {
+          "email": "anna.r@bridge-ph.com",
+          "role": "reader",
+          "name": "Anna Ramos"
+        },
+        {
+          "email": "kim.c@bridge-ph.com",
+          "role": "reader",
+          "name": "Kim Cruz"
+        },
+        {
+          "email": "flor.a@bridge-ph.com",
+          "role": "reader",
+          "name": "flor.a"
+        },
+        {
+          "email": "accountant.outsource@bridge-ph.com",
+          "role": "reader",
+          "name": "Bea Pads"
+        },
+        {
+          "email": "erica.d@bridge-ph.com",
+          "role": "reader",
+          "name": "erica.d"
+        }
+      ],
+      "bridge_present": true
+    },
+    "Compliance AppSheet": {
+      "sheet_id": "1QWdoZlT7XWLppfVKpJ2VRXhbMkYtE5TbUwg4lMbO03Q",
+      "owner_impersonate": "sam@bebang.ph",
+      "total_entries": 7,
+      "bridge_users_count": 0,
+      "bridge_users": [],
+      "bridge_present": false
+    },
+    "PCM": {
+      "sheet_id": "1_5BSZeNL9A_o5QO6WD4L42gGjYY6-yCDfgTp01y0fpo",
+      "owner_impersonate": "sam@bebang.ph",
+      "total_entries": 2,
+      "bridge_users_count": 0,
+      "bridge_users": [],
+      "bridge_present": false
+    },
+    "BGF": {
+      "sheet_id": "1dfIyAeGH_5ga_mjA1o-WWN9xM6VO3v7XKKoU1Jtq1eI",
+      "owner_impersonate": "sam@bebang.ph",
+      "total_entries": 22,
+      "bridge_users_count": 0,
+      "bridge_users": [],
+      "bridge_present": false
+    },
+    "Bank Balances LIVE": {
+      "sheet_id": "19kSR8HQdveZVleMZORGQetHXVCxaeDy6EMlKfe2G77w",
+      "owner_impersonate": "sam@bebang.ph",
+      "total_entries": 6,
+      "bridge_users_count": 0,
+      "bridge_users": [],
+      "bridge_present": false
+    },
+    "Cashflow Tracker - CEO": {
+      "sheet_id": "1W2GERTwbODqfbHM70XpJJEtFwL-jIPbb2zzwC0Rcfeg",
+      "owner_impersonate": "sam@bebang.ph",
+      "total_entries": 6,
+      "bridge_users_count": 0,
+      "bridge_users": [],
+      "bridge_present": false
+    },
+    "Project: 2-Week Payment Plan (Denise)": {
+      "sheet_id": "13cyYaPLmjL0TPaeqyYd2esjJNYj-5qJCDS8OZLdhURU",
+      "owner_impersonate": "denise@bebang.ph",
+      "total_entries": 18,
+      "bridge_users_count": 3,
+      "bridge_users": [
+        {
+          "email": "anna.r@bridge-ph.com",
+          "role": "writer",
+          "name": "Anna Ramos"
+        },
+        {
+          "email": "flor.a@bridge-ph.com",
+          "role": "writer",
+          "name": "flor.a"
+        },
+        {
+          "email": "bea.p@bridge-ph.com",
+          "role": "writer",
+          "name": "Bea Pads"
+        }
+      ],
+      "bridge_present": true
+    }
+  }
+}

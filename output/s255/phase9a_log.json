@@ -1,0 +1,31 @@
+{
+  "phase": "9a",
+  "started_at": "2026-05-20T08:59:13.501634+08:00",
+  "tasks": {
+    "9a.1": {
+      "status": "DONE",
+      "sheets_audited": 8,
+      "sheets_with_bridge": 2
+    },
+    "9a.2": {
+      "status": "DONE"
+    },
+    "9a.3+9a.4": {
+      "status": "DONE",
+      "mirrors_synced": 3,
+      "sha256_match": true,
+      "sha256_short": "fffa6b7594157118"
+    },
+    "9a.5": {
+      "status": "DONE",
+      "v39_size_bytes": 95031,
+      "in_range": true
+    },
+    "9a.6": {
+      "status": "DONE",
+      "pairs_locked": 96,
+      "pairs_expected": 96
+    }
+  },
+  "finished_at": "2026-05-20T08:59:27.679108+08:00"
+}

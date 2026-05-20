@@ -178,3 +178,30 @@ The 3 data-entry tabs on AP Master:
 - `references/history.md` — chronological narrative from 2026-04-14 (Sam asked Claude to find AP automation) through 2026-05-02 (BDO catchup reconciliation)
 - `references/source-files.md` — repo paths, doc IDs, Drive URLs, source-of-truth pointers
 - `references/team-guides.md` — the 7 training-guide DOCXs (Receiving + AP Master + CAPEX + PCM + Finance/Compliance)
+
+
+## DD Readiness (S255 — 2026-05-20)
+
+Bridge (`bridge-ph.com`) is BEI's fractional CFO + DD auditor (engaged ~2026-05-14). The 3 Bridge writers `anna.r@`, `flor.a@`, `bea.p@` are AUTHORIZED contractors on Denise PP. They may need expanded read access to other sheets during DD.
+
+### Bridge access matrix (live audit 2026-05-20)
+
+- **BEI AP Master**: no Bridge access
+- **FPM**: `anna.r@bridge-ph.com` (reader), `kim.c@bridge-ph.com` (reader), `flor.a@bridge-ph.com` (reader), `accountant.outsource@bridge-ph.com` (reader), `erica.d@bridge-ph.com` (reader)
+- **Compliance AppSheet**: no Bridge access
+- **PCM**: no Bridge access
+- **BGF**: no Bridge access
+- **Bank Balances LIVE**: no Bridge access
+- **Cashflow Tracker - CEO**: no Bridge access
+- **Project: 2-Week Payment Plan (Denise)**: `anna.r@bridge-ph.com` (writer), `flor.a@bridge-ph.com` (writer), `bea.p@bridge-ph.com` (writer)
+
+### DD package recommended exports
+
+When Bridge requests the AP audit package, prepare:
+1. AP outstanding by payee + aging (filter AP Master Suppliers SOA + HO + CAPEX + Intercompany on OUTSTANDING > 0)
+2. Payment plan (next 2 weeks) — AP Master Payment Plan tab native + filter view
+3. RFP processing pipeline — FPM RFP Summary tab
+4. Supplier compliance — Compliance AppSheet Suppliers tab
+5. Audit trail — `_sync_log_v3` tab on AP Master + git history of `scripts/google_apps/s248_ap_view_hourly_sync_v3*.gs`
+
+See `output/s255/dd_package_checklist.md` for full checklist.
