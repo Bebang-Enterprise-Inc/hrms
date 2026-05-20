@@ -53,6 +53,19 @@ const DRY_PREVIEW_TAB = '_dry_run_preview';
 const LOG_MAX_ROWS = 2000;
 const OWNED_TRIGGER_FN = 'refreshAllTabs';
 const ALERT_EMAIL = 'sam@bebang.ph';
+
+// ───────────────────────────────────────────────────────────────────────────
+// v3.9 (S255 Phase 7) — Payment Plan cutover gate
+// When false (default): mirrorDenisePaymentPlanTab_ runs hourly; syncStatusFieldsFromFPM_
+//   skips Payment Plan tab (mirror handles it).
+// When true: mirror stops; syncStatusFieldsFromFPM_ writes STATUS/RFP/METHOD/CHECK NO. into
+//   Payment Plan col I (STATUS) etc. This is the cutover path Denise will use when she's
+//   ready to make AP Master Payment Plan her primary tracker.
+//
+// To flip: edit this line, push v3.10, promote deployment. (Or use PropertiesService
+// later for toggle-without-redeploy — S256.)
+// ───────────────────────────────────────────────────────────────────────────
+const payment_plan_mirror_disabled = false;
 const ALERT_MIN_INTERVAL_HOURS = 6;
 const ALERT_PROP_KEY = 'last_alert_ts';
 const WEBAPP_TOKEN = 'bei-ap-sync-2026-04';
@@ -289,7 +302,10 @@ function readEditTabRows_(ss, tabName) {
 // ───────────────────────────────────────────────────────────────────────────
 function syncStatusFieldsFromFPM_(ss, fpmLookup, dryRun) {
   const stats = { updates: 0, conflicts: 0, nochange: 0, tabs_seen: {}, sample_changes: [] };
-  ['Suppliers SOA', 'Head Office', 'CAPEX', 'Intercompany'].forEach(tabName => {
+  (payment_plan_mirror_disabled
+    ? ['Suppliers SOA', 'Head Office', 'CAPEX', 'Intercompany', 'Payment Plan']
+    : ['Suppliers SOA', 'Head Office', 'CAPEX', 'Intercompany']
+  ).forEach(tabName => {
     const t = readEditTabRows_(ss, tabName);
     if (!t.sheet) return;
     stats.tabs_seen[tabName] = t.rows.length;
@@ -1651,6 +1667,10 @@ function mapDeniseToApStatus_(deniseStatus) {
 // ═══════════════════════════════════════════════════════════════════════════
 
 function mirrorDenisePaymentPlanTab_(ss, dryRun) {
+  // v3.9 (S255 Phase 7.2): early-exit when cutover flag is set; sync path takes over
+  if (payment_plan_mirror_disabled) {
+    return { mirror_disabled: true, by_tab: {} };
+  }
   const stats = {
     scanned: 0, mirrored: 0, skipped_paid: 0, skipped_blank: 0,
     deduped_intra_denise: 0, by_tab: {}
