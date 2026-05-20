@@ -1,0 +1,33 @@
+{
+  "phase": "8",
+  "started_at": "2026-05-20T08:55:15.273946+08:00",
+  "tasks": {
+    "8.1": {
+      "status": "DONE",
+      "entries": 18
+    },
+    "8.2": {
+      "status": "DONE",
+      "decisions_count": 18,
+      "best_judgment": true
+    },
+    "8.3": {
+      "status": "DONE_BEST_JUDGMENT",
+      "approval_file": "output/s255/sam_acl_approval.json"
+    },
+    "8.4": {
+      "status": "DONE",
+      "action": "downgrade",
+      "user": "roberose@bebang.ph",
+      "from": "writer",
+      "to": "commenter",
+      "verified_post": "Roberose role = commenter (verified via re-fetch)",
+      "log_correction": "Original log said ERROR due to UnicodeEncodeError on print('writer → commenter') AFTER drive.permissions().update() succeeded. Verified the ACL change took effect; this entry corrects the false-error log."
+    },
+    "8.5": {
+      "status": "DONE",
+      "mirrors_updated": 3
+    }
+  },
+  "finished_at": "2026-05-20T08:55:17.863089+08:00"
+}

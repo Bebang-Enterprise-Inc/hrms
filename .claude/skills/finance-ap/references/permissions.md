@@ -123,3 +123,31 @@ for sheet_id in SHEETS_TO_ADD:
 Every sheet has a revision history (File → Version history → See version history). The Apps Script entries appear as Sam at every full hour mark (xx:12 PHT). Human edits appear at irregular times with the actual editor's email.
 
 For per-cell audit logs, check the `_sync_log_v3` tab on AP Master.
+
+
+## S255 ACL change log (2026-05-20)
+
+### Denise PP sheet (`13cyYaPLmjL0TPaeqyYd2esjJNYj-5qJCDS8OZLdhURU`)
+
+**Executed:**
+- roberose@bebang.ph: writer → commenter (plan v1.1 explicit decision)
+
+**Deferred to S256 (pending Sam review):**
+- joevic@bebang.ph: identity verification needed (Denise/James to confirm)
+- bea.garcia.intern@bebang.ph: intern role — clarify writer vs commenter
+
+**Kept as writer (no change needed):**
+- denise@ (owner)
+- james.tamaca@ (new F&A manager, started ~2026-05-18)
+- angelamel@, je-ann@ (Finance team)
+- drew@, liezel@, maika@, marco@ (added by Sam/Denise since plan write 2026-05-19; presumed authorized)
+- 3× bridge-ph.com (anna.r@, flor.a@, bea.p@ — Bridge fractional CFO + DD auditors, AUTHORIZED)
+
+**ACL drift note:** `accountant.outsource@bridge-ph.com` (in plan v1.0) was REMOVED from the ACL between plan-write (2026-05-19) and execution (2026-05-20). Bridge engagement intent remains satisfied via the 3 different bridge-ph.com writers above.
+
+### Bridge access matrix (DD readiness — full audit in Phase 9a)
+
+| Sheet | Bridge user(s) | Role |
+|---|---|---|
+| Denise PP | anna.r@, flor.a@, bea.p@ | writer |
+| (others) | (audited in Phase 9a) | (TBD) |

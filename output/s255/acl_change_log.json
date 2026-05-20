@@ -1,0 +1,38 @@
+{
+  "phase": "8.4",
+  "executed_at": "2026-05-20T08:55:17.847091+08:00",
+  "changes": [
+    {
+      "user": "roberose@bebang.ph",
+      "action": "downgrade_to_commenter",
+      "from_role": "writer",
+      "to_role": "commenter",
+      "result": "DONE",
+      "verification": "Roberose role = commenter (verified via re-fetch after script ran). Original script log said SKIPPED due to UnicodeEncodeError on the success-print statement AFTER the API call succeeded; corrected here."
+    }
+  ],
+  "deferred": [
+    {
+      "user": "joevic@bebang.ph",
+      "reason": "Identity unknown"
+    },
+    {
+      "user": "bea.garcia.intern@bebang.ph",
+      "reason": "Intern role \u2014 verify writer vs commenter"
+    }
+  ],
+  "kept_as_writer": [
+    "drew@bebang.ph",
+    "anna.r@bridge-ph.com",
+    "liezel@bebang.ph",
+    "flor.a@bridge-ph.com",
+    "bea.p@bridge-ph.com",
+    "james.tamaca@bebang.ph",
+    "bea.garcia.intern@bebang.ph",
+    "angelamel@bebang.ph",
+    "joevic@bebang.ph",
+    "maika@bebang.ph",
+    "marco@bebang.ph",
+    "je-ann@bebang.ph"
+  ]
+}
