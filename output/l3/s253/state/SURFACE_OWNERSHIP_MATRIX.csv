@@ -1,0 +1,21 @@
+file_glob,owner_sprint,write_permission,protected_by,notes
+output/l3/s253/**,S253,WRITE,this sprint,All S253 evidence and state files
+scripts/s253/**,S253,WRITE,this sprint,Any helper scripts created during S253
+tests/e2e/specs/s253-bki-store-e2e-completion.spec.ts,S253,WRITE_NEW,this sprint,New spec; do not modify s252 spec
+tests/e2e/pages/SICancelPage.ts,S253,WRITE_NEW,this sprint,New Page Object
+tests/e2e/pages/FrappeDeskSubmitPage.ts,S253,WRITE_NEW,this sprint,New Page Object
+tests/e2e/assertions/glAssertions.ts,S253,WRITE_NEW,this sprint,New assertions module
+tests/e2e/fixtures/auth.ts,S253,EXTEND,bei-tasks core,Add loggedInDeskAdmin export; do not modify existing fixtures
+tests/e2e/pages/StoreOrderingPage.ts,S253,READ_ONLY,bei-tasks core (s224),Use existing submitOrderWithExplicitQty; do not modify
+tests/e2e/pages/DispatchPage.ts,S253,READ_ONLY,bei-tasks core (s209),Use existing dispatch({qtyOverrides}); do not modify
+tests/e2e/pages/OrderApprovalPage.ts,S253,READ_ONLY,bei-tasks core,Read-only
+tests/e2e/pages/WarehouseApprovalPage.ts,S253,READ_ONLY,bei-tasks core,Read-only
+tests/e2e/pages/ReceivingPage.ts,S253,EXTEND,bei-tasks core,Add rejectAll method; do not modify existing methods
+tests/e2e/specs/s252-bki-store-paired-doc-e2e.spec.ts,S253,READ_ONLY,S252 PR #466,Base spec — S253 spec extends behavior in NEW file
+tests/e2e/support/frappeReadback.ts,S253,READ_ONLY,bei-tasks core,Use readDoc/queryDocs/waitForDocStatus as-is
+hrms/api/bki_store_pi_generator.py,S253,READ_ONLY,S247 production,Phase 1 may need backend fix — CEO approval required
+hrms/api/bki_store_stock_entry_generator.py,S253,READ_ONLY,S247 production,Read-only unless Phase 1 backend fix needed
+hrms/api/warehouse.py,S253,READ_ONLY,production,Read-only unless Phase 1 SM MEGAMALL fix needed
+hrms/hooks.py,S253,READ_ONLY,S247 production,Hook chain is canonical — do not modify
+docs/plans/2026-05-16-sprint-253-bki-store-e2e-completion.md,S253,WRITE,this sprint,Status flips PLANNED -> EXECUTING -> COMPLETED
+docs/plans/SPRINT_REGISTRY.md,S253,EXTEND,this sprint,Update S253 row only

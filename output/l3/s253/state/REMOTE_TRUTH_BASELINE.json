@@ -1,0 +1,34 @@
+{
+  "sprint": "S253",
+  "captured_at": "2026-05-21T18:00:00+08:00",
+  "captured_by": "Claude Opus 4.7 (autonomous /execute-plan-bei-erp)",
+  "repos": {
+    "hrms": {
+      "repo": "Bebang-Enterprise-Inc/hrms",
+      "release_branch": "production",
+      "release_head_sha": "b7b92d4e46ef2378eb4d2882fbb076823c4e576f",
+      "s253_branch": "s253-bki-store-e2e-completion",
+      "s253_head_sha": "284599554cf0ef9d74b3595dc3fb98d15e6c5e5d",
+      "s253_plan_version": "v1.2"
+    },
+    "bei-tasks": {
+      "repo": "Bebang-Enterprise-Inc/BEI-Tasks",
+      "release_branch": "main",
+      "release_head_sha": "0c84e5d8b567d8a12e377e0a3d5768209dbe95f9",
+      "s253_branch": "s253-bki-store-e2e-completion",
+      "s253_head_sha": "0c84e5d8b567d8a12e377e0a3d5768209dbe95f9",
+      "note": "Branched from main; no S253 commits yet (Phase 2+ adds them)"
+    }
+  },
+  "live_evidence_basis": {
+    "s252_hrms_pr": "#755 merged 2026-05-16T05:47:16Z",
+    "s252_bei_tasks_pr": "#466 merged 2026-05-16T05:47:38Z",
+    "s247_hrms_pr": "#749 merged 2026-05-12T02:40:57Z"
+  },
+  "preflight_baseline": {
+    "canonical_structure": "ALL CANONICAL (49 stores, 0 violations)",
+    "custom_field_gate": "PASS (bki_si_reference on both PI and SE)",
+    "bki_source_warehouse": "3MD LOGISTICS - CAMANGYANAN - BKI (85 stocked bins)",
+    "bki_company_case": "BEBANG KITCHEN INC. (matches generator constant exactly)"
+  }
+}

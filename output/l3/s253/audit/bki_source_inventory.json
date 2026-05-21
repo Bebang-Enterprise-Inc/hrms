@@ -1,0 +1,24 @@
+{
+  "probe_date": "2026-05-21",
+  "probe_method": "Frappe REST API /api/method/frappe.client.get_list on Bin doctype filtered to BKI warehouses with actual_qty > 0",
+  "canonical_source_warehouse": "3MD LOGISTICS - CAMANGYANAN - BKI",
+  "rationale": "BKI has 6 warehouses on production. 3MD LOGISTICS - CAMANGYANAN has the most stocked bins (85), confirming it is the primary store-supply warehouse. COMMISSARY - BKI has 0 stocked bins (manufacturing only, not distribution).",
+  "all_bki_warehouses": [
+    {"name": "3MD LOGISTICS - CAMANGYANAN - BKI", "bins_stocked": 85, "role": "primary store supply"},
+    {"name": "PINNACLE COLD STORAGE SOLUTIONS - BKI", "bins_stocked": 70, "role": "cold chain supply"},
+    {"name": "SHAW BLVD - BKI", "bins_stocked": 16, "role": "Metro Manila supply"},
+    {"name": "COMMISSARY - BKI", "bins_stocked": 0, "role": "manufacturing source"},
+    {"name": "JENTEC STORAGE INC. - BKI", "bins_stocked": "TBD", "role": "TBD"},
+    {"name": "ROYAL COLD STORAGE - TAYTAY (RCS) - BKI", "bins_stocked": "TBD", "role": "TBD"}
+  ],
+  "inventory_items": [
+    {"item_code": "PM003", "item_name": "LONG SPOON GREEN W/ POUCH", "category_proxy": "DRY (Packaging Materials)", "actual_qty": 99030.0, "uom": "PIECE"},
+    {"item_code": "PM002", "item_name": "DOME LID 90MM", "category_proxy": "DRY (Packaging Materials)", "actual_qty": 87948.0, "uom": "PIECE"},
+    {"item_code": "PM007", "item_name": "PLASTIC 8x11 CALYPSO", "category_proxy": "DRY (Packaging Materials)", "actual_qty": 74336.0, "uom": "BUNDLE"},
+    {"item_code": "PM001", "item_name": "16OZ CUP WITH LOGO", "category_proxy": "DRY (Packaging Materials)", "actual_qty": 74110.0, "uom": "PIECE"},
+    {"item_code": "PM017", "item_name": "(query for full name in spec)", "category_proxy": "DRY (Packaging Materials)", "actual_qty": 777.0, "uom": "PIECE"}
+  ],
+  "verdict": "PASS",
+  "phase4_input_ready": true,
+  "notes": "Phase 4 multi-item scenario uses these 5 PM items. Phase 4.5 partial fulfillment uses PM001 (10 ordered, 7 dispatched). Phase 4.6 full rejection uses PM001 (5 ordered, all rejected). All quantities are reasonable (1-10 per item) given each store's daily ordering pattern."
+}
