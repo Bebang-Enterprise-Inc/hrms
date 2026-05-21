@@ -1,0 +1,15 @@
+{
+  "sprint": "S253",
+  "started_at": "2026-05-21T17:30:00+08:00",
+  "phase": 0,
+  "status": "in_progress",
+  "owner": "Claude Opus 4.7 (autonomous /execute-plan-bei-erp session)",
+  "worktrees": {
+    "hrms": "F:/Dropbox/Projects/BEI-ERP-s253-bki-store-e2e-completion",
+    "bei-tasks": "F:/Dropbox/Projects/bei-tasks-s253-bki-store-e2e-completion"
+  },
+  "session_handoff_planned": {
+    "reason": "Phase 5 is a 4-hour browser sweep — runs in fresh session per BEI L3 handoff rule",
+    "expected_handoff_phase": "End of Phase 4 (after infrastructure validated on 1 representative store)"
+  }
+}

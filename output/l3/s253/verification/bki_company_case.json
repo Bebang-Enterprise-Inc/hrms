@@ -1,0 +1,11 @@
+{
+  "probe_date": "2026-05-21",
+  "probe_method": "Frappe REST API /api/method/frappe.client.get_value on Company doctype with abbr=BKI filter",
+  "production_company_name": "BEBANG KITCHEN INC.",
+  "expected_company_name": "BEBANG KITCHEN INC.",
+  "generator_constant": "BEBANG KITCHEN INC.",
+  "case_matches": true,
+  "verdict": "PASS",
+  "evidence": {"name": "BEBANG KITCHEN INC.", "company_name": "BEBANG KITCHEN INC.", "abbr": "BKI"},
+  "notes": "Soft preflight per P0.13. The PI/SE generators use BKI_COMPANY = 'BEBANG KITCHEN INC.' constant; production Company record matches exact case. No drift risk."
+}

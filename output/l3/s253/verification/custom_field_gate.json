@@ -1,0 +1,12 @@
+{
+  "probe_date": "2026-05-21",
+  "probe_method": "Frappe REST API /api/method/frappe.client.get_list on Custom Field doctype",
+  "pi_has_field": true,
+  "se_has_field": true,
+  "evidence": {
+    "Purchase Invoice": {"dt": "Purchase Invoice", "fieldtype": "Link"},
+    "Stock Entry": {"dt": "Stock Entry", "fieldtype": "Link"}
+  },
+  "verdict": "PASS",
+  "gate_action": "PROCEED — both Custom Fields present on production"
+}
