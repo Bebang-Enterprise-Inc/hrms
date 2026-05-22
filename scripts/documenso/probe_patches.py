@@ -92,6 +92,12 @@ CHECKS: list[dict[str, str]] = [
         "expected_path_glob": "/app/apps/remix/build/server/hono/packages/auth/server/lib/session/session-cookies.js",
         "marker": "maxAge: Math.floor",
     },
+    {
+        "id": "e",
+        "label": "sign-all button (sam@bebang.ph)",
+        "expected_path_glob": "/app/apps/remix/build/client/assets/document-signing-page-view-v2-*.js",
+        "marker": "BEI patch: sign-all-button",
+    },
 ]
 
 

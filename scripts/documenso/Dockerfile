@@ -1,6 +1,6 @@
 # BEI Documenso — reproducible patched image
 #
-# Builds documenso/documenso:v2.8.1-bei-patched from upstream + the four
+# Builds documenso/documenso:v2.8.1-bei-patched from upstream + the five
 # patch scripts in this directory. Replaces the previous "manually sed-patch
 # a running container then docker commit" workflow — which lost patches
 # (b) and (c)-on-signing-email at some point in 2026 without anyone noticing.
@@ -12,11 +12,12 @@
 # (`docker stop documenso && docker rm documenso && docker run ...
 #  documenso/documenso:v2.8.1-bei-patched`).
 #
-# The four patches applied here:
+# The five patches applied here:
 #   (a) Field-size multipliers in the envelope-editor bundle.
 #   (b) CC recipients receive the initial signing email.
 #   (c) Resend message-id captured into DocumentAuditLog (both send sites).
 #   (d) Session-cookie maxAge (fixes the stale-closure 30-day OAuth outage).
+#   (e) Sign-All-My-Fields button (gated to sam@bebang.ph only).
 #
 # Each patch script is idempotent and supports --verify-only — we apply once
 # and re-verify in the same RUN layer to guarantee the image is good.
@@ -32,6 +33,7 @@ COPY patch_field_sizes.py \
      patch_cc_notifications.py \
      patch_resend_id_logging.py \
      patch_session_cookie_stale_closure.py \
+     patch_sign_all_button.py \
      /tmp/bei-patch/
 
 RUN set -eux; \
@@ -56,11 +58,15 @@ RUN set -eux; \
         --search-root /; \
     python3 /tmp/bei-patch/patch_session_cookie_stale_closure.py \
         --search-root / --verify-only; \
+    python3 /tmp/bei-patch/patch_sign_all_button.py \
+        --search-root /app/apps/remix/build/client/assets; \
+    python3 /tmp/bei-patch/patch_sign_all_button.py \
+        --search-root /app/apps/remix/build/client/assets --verify-only; \
     rm -rf /tmp/bei-patch; \
     apk del python3
 
 USER nodejs
 
-LABEL bei.documenso.patches="field-sizes,cc-notifications,resend-id-logging,session-cookie-maxage"
+LABEL bei.documenso.patches="field-sizes,cc-notifications,resend-id-logging,session-cookie-maxage,sign-all-button"
 LABEL bei.documenso.upstream="documenso/documenso:v2.8.1"
 LABEL bei.documenso.rebuild-cmd="docker build -t documenso/documenso:v2.8.1-bei-patched -f scripts/documenso/Dockerfile scripts/documenso/"
