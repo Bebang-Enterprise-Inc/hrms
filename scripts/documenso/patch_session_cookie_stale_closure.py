@@ -43,19 +43,28 @@ Hono cookie helper accepts `maxAge` in seconds. AUTH_SESSION_LIFETIME is in ms.
 
 USAGE
 -----
+File-on-disk mode (used in the Dockerfile build, or against an extracted file):
+    python patch_session_cookie_stale_closure.py --target /path/to/session-cookies.js
+    python patch_session_cookie_stale_closure.py --target /path/to/file --verify-only
+
+Live container mode (legacy path — patches the running container via AWS SSM):
     python scripts/documenso/patch_session_cookie_stale_closure.py
     python scripts/documenso/patch_session_cookie_stale_closure.py --verify-only
     python scripts/documenso/patch_session_cookie_stale_closure.py --no-restart
     python scripts/documenso/patch_session_cookie_stale_closure.py --no-commit
 
-After a successful patch, restarts the container so Node re-imports the module,
-then commits the patched container to documenso/documenso:v2.8.1-bei-patched
+The live mode restarts the container after patching so Node re-imports the
+module, then commits the patched container to documenso/documenso:v2.8.1-bei-patched
 (deleting the old tag first per the documenso-fields-size skill hygiene rule).
+This path predates the reproducible Dockerfile and is kept for emergency
+live-patching only. The preferred recovery path is now `docker build` from
+scripts/documenso/Dockerfile.
 """
 from __future__ import annotations
 
 import argparse
 import json
+import pathlib
 import subprocess
 import sys
 import time
@@ -170,6 +179,79 @@ def verify_cookies_have_no_expires() -> dict[str, Any]:
     return ssm_run(cmds, timeout=30)
 
 
+def detect_state_in_file(path: pathlib.Path) -> str:
+    """Return 'patched' / 'unpatched' / 'unknown' for an on-disk file."""
+    content = path.read_text(encoding="utf-8")
+    if NEW_LINE in content:
+        return "patched"
+    if OLD_LINE in content:
+        return "unpatched"
+    return "unknown"
+
+
+def apply_patch_to_file(path: pathlib.Path) -> None:
+    """Apply the patch to an on-disk file. Idempotent."""
+    content = path.read_text(encoding="utf-8")
+    new_content = content.replace(OLD_LINE, NEW_LINE, 1)
+    if NEW_LINE not in new_content:
+        raise RuntimeError(f"replacement did not take effect on {path}")
+    path.write_text(new_content, encoding="utf-8")
+
+
+def run_file_mode(target: str | None, search_root: str | None, verify_only: bool) -> int:
+    """Handle the file-on-disk (Dockerfile-friendly) path. No SSM, no Docker."""
+    if target:
+        path = pathlib.Path(target)
+        if not path.is_file():
+            print(f"ERROR: --target file not found: {target}", file=sys.stderr)
+            return 2
+    else:
+        # --search-root mode: PATCH_TARGET is the absolute path inside the container,
+        # so we can use it directly when search_root == "/" (i.e. running in the container).
+        root = pathlib.Path(search_root)
+        if not root.is_dir():
+            print(f"ERROR: --search-root not a directory: {search_root}", file=sys.stderr)
+            return 2
+        # The target is at a known relative path under root.
+        rel = PATCH_TARGET.lstrip("/")
+        path = root / rel
+        if not path.is_file():
+            # Fall back to recursive glob in case the build layout shifts.
+            matches = list(root.rglob("session-cookies.js"))
+            if not matches:
+                print(f"ERROR: session-cookies.js not found under {search_root}", file=sys.stderr)
+                return 2
+            if len(matches) > 1:
+                print(
+                    f"ERROR: multiple session-cookies.js found: {[str(p) for p in matches]}. "
+                    "Pass --target explicitly.",
+                    file=sys.stderr,
+                )
+                return 2
+            path = matches[0]
+
+    state = detect_state_in_file(path)
+    print(f"target: {path}")
+    print(f"state:  {state}")
+
+    if verify_only:
+        return 0 if state == "patched" else 1
+    if state == "patched":
+        print("Already patched. No changes made.")
+        return 0
+    if state == "unknown":
+        print(
+            "ERROR: file does not contain expected unpatched or patched markers. "
+            "Documenso may have changed session-cookies.js upstream.",
+            file=sys.stderr,
+        )
+        return 3
+
+    apply_patch_to_file(path)
+    print(f"OK: patched {path}")
+    return 0
+
+
 def commit_patched_image() -> dict[str, Any]:
     """Delete old patched tag, commit the running container as the new patched image."""
     cmds = [
@@ -183,6 +265,14 @@ def commit_patched_image() -> dict[str, Any]:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     parser.add_argument(
+        "--target",
+        help="File-on-disk mode: path to session-cookies.js. Bypasses SSM/Docker.",
+    )
+    parser.add_argument(
+        "--search-root",
+        help="File-on-disk mode: directory to search for session-cookies.js (e.g. `/` inside the container).",
+    )
+    parser.add_argument(
         "--verify-only",
         action="store_true",
         help="Only report the current patch state; do not modify anything.",
@@ -190,15 +280,20 @@ def main() -> int:
     parser.add_argument(
         "--no-restart",
         action="store_true",
-        help="Apply the patch but do not restart the container (no runtime effect until restart).",
+        help="Live mode only: apply the patch but do not restart the container.",
     )
     parser.add_argument(
         "--no-commit",
         action="store_true",
-        help="Apply + restart but do not commit a new Docker image. Patch will be lost if the container is ever recreated.",
+        help="Live mode only: apply + restart but do not commit a new Docker image.",
     )
     args = parser.parse_args()
 
+    # File-on-disk mode (used by the Dockerfile RUN step or for ad-hoc patching).
+    if args.target or args.search_root:
+        return run_file_mode(args.target, args.search_root, args.verify_only)
+
+    # Live-container mode (legacy): patches the running container via SSM.
     print(f"[1/5] Checking patch state on {CONTAINER}@{INSTANCE_ID}...")
     state = check_patch_state()
     print(f"      state = {state}")
