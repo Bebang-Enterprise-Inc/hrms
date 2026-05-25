@@ -380,12 +380,13 @@ def allow_bki_si_cancel_with_paired_docs(doc, method=None):
 	"""
 	if doc.company != BKI_COMPANY:
 		return
-	if not hasattr(frappe.flags, "ignore_links_for_doctype"):
-		frappe.flags.ignore_links_for_doctype = []
-	if "Purchase Invoice" not in frappe.flags.ignore_links_for_doctype:
-		frappe.flags.ignore_links_for_doctype.append("Purchase Invoice")
-	if "Stock Entry" not in frappe.flags.ignore_links_for_doctype:
-		frappe.flags.ignore_links_for_doctype.append("Stock Entry")
+	existing = getattr(frappe.flags, "ignore_links_for_doctype", None) or []
+	if not isinstance(existing, list):
+		existing = []
+	for dt in ("Purchase Invoice", "Stock Entry"):
+		if dt not in existing:
+			existing.append(dt)
+	frappe.flags.ignore_links_for_doctype = existing
 
 
 def cascade_cancel_store_pi(doc, method=None):
