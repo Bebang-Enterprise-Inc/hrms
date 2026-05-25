@@ -93,6 +93,19 @@ const INTERCO_AFFILIATE_PATTERNS = [
   /^TUNGSTEN\s+CAPITAL\s+HOLDINGS\s+OPC/i,
 ];
 
+// v3.10 (S256 Phase 5): 3PL bypass-supplier patterns (per Denise C2: 3MD, Pinnacle, RCS, Fourkoolitz, Suzuyo)
+// When a Denise PP row's PAYEE matches, sourceTag overrides to 'Denise PP - Manual' automatically.
+const BYPASS_3PL_PATTERNS = [
+  /3M\s*Dragon\s+Logistics/i,
+  /3MD\s+Logistics/i,
+  /Pinnacle\s+Cold\s+Storage/i,
+  /Royal\s+Cold\s+Storage/i,
+  /Four\s*Coolitz/i,
+  /Fourkoolitz/i,
+  /Suzuyo\s+Whitelands\s+Logistics/i,
+  /Suzuyo/i,
+];
+
 const ALERT_MIN_INTERVAL_HOURS = 6;
 const ALERT_PROP_KEY = 'last_alert_ts';
 const WEBAPP_TOKEN = 'bei-ap-sync-2026-04';
@@ -1273,6 +1286,9 @@ function formatTab(sheet, dataCount, headerRows) {
 //   SOA / Head Office. Dedupes against the same existingIndex used by the SOA/HO
 //   seed. Never overwrites existing rows. Logs each insert as 'invoice_seeded_from_fpm'.
 // ═══════════════════════════════════════════════════════════════════════════
+// NOTE (S256 Phase 5.3): BYPASS_3PL_PATTERNS auto-tag is applied in seedFromDenisePaymentPlan_ only.
+// FPM-side auto-tag for bypass suppliers (so FPM-sourced 3M Dragon rows also get 'Denise PP - Manual')
+// is deferred to S257 — requires design discussion with Sam about whether FPM SOURCE should be overridden.
 function seedNewInvoicesFromFPM_(ss, fpmLookup, taxLookup, existingIndex, dryRun) {
   const stats = { scanned: 0, appended: 0, skipped_paid_old: 0, skipped_empty: 0,
                   skipped_existing: 0, capex_count: 0, ho_count: 0, soa_count: 0,
@@ -1880,10 +1896,13 @@ function seedFromDenisePaymentPlan_(ss, fpmLookup, taxLookup, existingIndex, dry
       // Compute aging bucket
       var bucket = agingBucket(aging);
 
-      // v3.9 (S255 Phase 5): 3M Dragon manual-invoice detection — INVOICE NO starting with "INVOICE NO" prefix
-      // overrides cfg.sourceTag to 'Denise PP - Manual' so Sam can filter procurement-bypass entries
+      // v3.10 (S256 Phase 5): 3PL bypass-supplier auto-tag — PAYEE-pattern wins over all other tags
+      // Precedence: 3PL pattern > INVOICE NO prefix > cfg.sourceTag default
       var sourceTag = cfg.sourceTag;
-      if (/^INVOICE\s*NO/i.test(invoiceNo)) {
+      if (BYPASS_3PL_PATTERNS.some(function(rx) { return rx.test(supplier); })) {
+        sourceTag = 'Denise PP - Manual';
+      } else if (/^INVOICE\s*NO/i.test(invoiceNo)) {
+        // v3.9 (S255 Phase 5): 3M Dragon manual-invoice detection (lower priority than 3PL pattern)
         sourceTag = 'Denise PP - Manual';
       }
       var rowValues = [
