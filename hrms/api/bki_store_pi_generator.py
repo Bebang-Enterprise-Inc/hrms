@@ -407,7 +407,9 @@ def cancel_bki_si(si_name):
 	if doc.docstatus != 1:
 		frappe.throw(_("Sales Invoice {0} is not submitted (docstatus={1})").format(si_name, doc.docstatus))
 
-	# Set the flag BEFORE doc.cancel() — this is the critical ordering fix
+	# Set BOTH document-level and global flags before doc.cancel().
+	# Frappe v15 checks links via multiple code paths; cover all of them.
+	doc.flags.ignore_links = True
 	existing = getattr(frappe.flags, "ignore_links_for_doctype", None) or []
 	if not isinstance(existing, list):
 		existing = []
