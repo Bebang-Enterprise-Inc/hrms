@@ -1,0 +1,9 @@
+{
+  "repo": "Bebang-Enterprise-Inc/hrms",
+  "pr_number": 764,
+  "url": "https://github.com/Bebang-Enterprise-Inc/hrms/pull/764",
+  "title": "S256: AP Master v3.10 — intercompany broadening + source redesign + auto-tag + dedup fix",
+  "branch": "s256-ap-source-redesign",
+  "base": "production",
+  "created_at": "2026-05-25"
+}
