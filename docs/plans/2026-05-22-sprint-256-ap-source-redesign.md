@@ -1,11 +1,11 @@
 ---
 sprint_id: S256
 title: AP Master v3.10 + source-of-truth redesign per Denise's signed S255 closeout (Procurement App + 05-AP-Opening-HO + intercompany broadening + auto-tag bypass + dedup race fix + Bridge PII audit + skill refresh)
-status: PLANNED
+status: COMPLETED
 plan_version: 1.0
 created_date: 2026-05-22
 last_amended_date: null
-completed_date: null
+completed_date: 2026-05-25
 canonical_scope: none
 canonical_scope_rationale: |
   Google Apps Script patch (v3.9 → v3.10) + Google Sheets schema/data work +
@@ -59,7 +59,12 @@ evidence_transient:
   - tmp/s256/grep_*.txt
   - tmp/s256/traceback_*.txt
 
-execution_summary: null
+execution_summary: |
+  v3.10 deployed as version 17 on 2026-05-25. Procurement App seed WORKING (138 new rows).
+  Intercompany broadened to 14 affiliates. 94 bypass-supplier rows retagged. FPM-SOA dedup active.
+  Bridge PII audit: clean (no employee PII). Training doc + skill refreshed.
+  2 non-blocking defects deferred (HO opening header detection, FPM-side auto-tag).
+  Cloud Scheduler paused ~75 min, resumed.
 ---
 
 # Sprint S256 — AP Master v3.10 + Source-of-Truth Redesign
