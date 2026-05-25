@@ -1,0 +1,10 @@
+{
+  "assertions": {
+    "dryrun_returned_stats": true,
+    "dry_run_mode_was_set": true,
+    "no_seed_errors": false,
+    "v310_logic_active": true,
+    "status_sync_tabs": true
+  },
+  "all_assertions_passed": false
+}

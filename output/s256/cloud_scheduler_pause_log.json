@@ -1,10 +1,12 @@
 {
   "paused_at": "2026-05-25T14:30:00+08:00",
+  "resumed_at": "2026-05-25T15:45:00+08:00",
   "job_name": "ap-auto-view-hourly-refresh",
   "project": "quiet-walker-475722-s2",
   "location": "asia-southeast1",
   "original_state": "ENABLED",
-  "current_state": "PAUSED",
+  "current_state": "ENABLED",
   "paused_by": "S256 Phase 0.5",
-  "resume_at_phase": "Phase 8.6"
+  "resumed_by": "S256 Phase 8.6",
+  "pause_duration_minutes": 75
 }

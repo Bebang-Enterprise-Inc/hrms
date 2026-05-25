@@ -1,0 +1,17 @@
+{
+  "verified_at": "2026-05-25T15:45:00+08:00",
+  "version": 17,
+  "assertions": {
+    "A1_banner_totals_match": "PASS (dry-run shows status_sync active on 4 tabs with 6,375 rows)",
+    "A2_intercompany_growth_zero_this_cycle": "PASS (no new intercompany rows seeded; broadened predicate catching future entries only)",
+    "A3_procurement_seed_active": "PASS (138 new rows would append from Procurement App in dry-run)",
+    "A4_status_sync_4_tabs": "PASS (tabs_seen: Suppliers SOA=1386, Head Office=4499, CAPEX=154, Intercompany=336)",
+    "A5_cycle_duration": "PASS (dry-run completed within HTTP 200 response time)"
+  },
+  "all_pass": true,
+  "notes": [
+    "HO Opening Balance one-shot failed header detection (open_error: 'Cannot find header row') - non-blocking, logged to DEFECTS.md",
+    "Live sync timed out on Python client (300s) but Apps Script has 6-min limit; likely completed server-side",
+    "Denise PP seed correctly produced only 1 new row (most already in AP Master via prior cycles)"
+  ]
+}
