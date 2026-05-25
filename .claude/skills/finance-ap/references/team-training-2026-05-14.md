@@ -4,7 +4,7 @@
 >
 > All sheet links are clickable. Read the section for YOUR role.
 >
-> **Lock verification (2026-05-14):** All 6 AP Master writers were impersonated and tested against all 15 locked tabs. 90 / 90 lock checks PASS. Result file: `tmp/finance_ap_audit/audit_2026-05-13/impersonate_lock_test_results.json`.
+> **Lock verification (2026-05-20, updated S255):** All 6 AP Master writers tested against all 16 locked tabs (including Intercompany added in S255). **96 / 96 lock checks PASS.** Result file: `output/s255/lock_test_post_v1.json`.
 
 ---
 
@@ -168,7 +168,20 @@
 
 ### 🟦 Bethina, Izza (writers on AP Master)
 
-Same rules as Ms. Mel — use only the 3 entry tabs. All 15 locked tabs are blocked at the system level. Tested and verified.
+Same rules as Ms. Mel — use only the 3 entry tabs. All 16 locked tabs are blocked at the system level. Tested and verified.
+
+---
+
+### 🟦 Joevic Almajar (Supplier Payments)
+
+**Your job:** Handle supplier payment processing (confirmed by Denise, S255 closeout 2026-05-21).
+
+**Use this sheet:**
+- 🔗 **[Denise's 2-Week Payment Plan](https://docs.google.com/spreadsheets/d/13cyYaPLmjL0TPaeqyYd2esjJNYj-5qJCDS8OZLdhURU/edit)** — editor access (kept per Denise A3)
+
+**Do NOT touch:**
+- ❌ AP Master locked tabs (system enforces this)
+- ❌ FPM — Denise/Je-Ann's territory unless directed
 
 ---
 
@@ -224,6 +237,22 @@ You own everything. You can edit any tab. Use the read-only summary tabs (`All L
 - **Ms. Mel:** No change. Keep typing in Suppliers SOA / Head Office / CAPEX.
 - **Denise:** Choice. Keep using your standalone sheet (still mirrored automatically), OR tell Sam when you want to switch to working directly in AP Master `Payment Plan` tab. Either works.
 - **Everyone else:** No change.
+
+### S255 (PR #760, merged 2026-05-20) — AP v3.9 deployed
+- New `Intercompany` tab added — Bebang-entity fund transfers auto-route here instead of Head Office
+- 331 rows migrated to Intercompany; 19 duplicate rows cleaned
+- All 16 tabs now strict-locked (was 15; Intercompany added). **96/96 lock checks PASS.**
+- Denise PP ACL trimmed: Bea Garcia (intern, left), Liezel Acero, Maika Talisayon removed
+- Bridge (fractional CFO / DD auditor) granted reader on AP Master + FPM + Compliance + Bank Balances + Cashflow + PCM
+- Joevic Almajar confirmed as Supplier Payments handler (Denise A1)
+
+### S256 (in-flight) — AP v3.10
+- Intercompany broadened to 14 non-Bebang affiliated entities (per Denise's signed Section B addendum)
+- 3PL bypass suppliers (3MD, Pinnacle, RCS, Fourkoolitz, Suzuyo) auto-tagged 'Denise PP - Manual' at seed time
+- Procurement App now feeds Suppliers SOA (per Denise D2 source-of-truth directive)
+- HO opening balance one-shot seed from `05 - AP Opening Balance Head Office`
+- FPM-SOA-aware dedup prevents the script from re-adding already-tracked invoices
+- Bridge PII audit: no employee personal info or salary data found on any of the 5 upstream sheets. Bridge can see all tabs safely.
 
 ---
 
