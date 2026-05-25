@@ -363,20 +363,13 @@ def resolve_account_by_number(company, account_number):
 
 
 def allow_bki_si_cancel_with_paired_docs(doc, method=None):
-	"""S253 fix — Sales Invoice before_cancel hook.
+	"""S253 fix — Sales Invoice before_cancel hook (kept for documentation).
 
-	Frappe's cancel() calls check_if_doc_is_linked() BEFORE on_cancel hooks fire.
-	The bki_si_reference Custom Field (Link type) on paired PI and SE triggers
-	LinkExistsError, making it impossible to cancel any BKI SI that has generated
-	paired documents.
-
-	This before_cancel hook tells Frappe to skip the link check for Purchase Invoice
-	and Stock Entry, allowing the cancel to proceed to on_cancel where the cascade
-	handlers (cascade_cancel_store_stock_entry + cascade_cancel_store_pi) properly
-	handle the paired docs.
-
-	Only applies to BKI SIs (company == BEBANG KITCHEN INC.). Non-BKI SIs are
-	unaffected — their link checks proceed normally.
+	NOTE: Frappe's cancel() calls check_if_doc_is_linked() BEFORE before_cancel
+	hooks fire, so this hook alone can't prevent LinkExistsError. The actual fix
+	is the cancel_bki_si() whitelisted endpoint below, which sets the flag BEFORE
+	doc.cancel() runs. This hook remains as a safety net for direct doc.cancel()
+	calls from within the Frappe framework.
 	"""
 	if doc.company != BKI_COMPANY:
 		return
@@ -387,6 +380,44 @@ def allow_bki_si_cancel_with_paired_docs(doc, method=None):
 		if dt not in existing:
 			existing.append(dt)
 	frappe.flags.ignore_links_for_doctype = existing
+
+
+@frappe.whitelist()
+def cancel_bki_si(si_name):
+	"""S253 — Cancel a BKI Sales Invoice, bypassing the linked-doc check.
+
+	Frappe's doc.cancel() calls check_if_doc_is_linked() BEFORE any hooks fire.
+	The bki_si_reference Link field on paired PI/SE triggers LinkExistsError.
+	This endpoint sets frappe.flags.ignore_links_for_doctype BEFORE calling
+	doc.cancel(), allowing the on_cancel cascade handlers to fire and clean up
+	the paired docs properly.
+
+	Only works for BKI SIs (company == BEBANG KITCHEN INC.). Non-BKI SIs are
+	rejected — use the standard frappe.client.cancel for those.
+	"""
+	set_backend_observability_context(
+		module="billing",
+		action="cancel_bki_si",
+		mutation_type="delete",
+		extras={"si_name": si_name},
+	)
+	doc = frappe.get_doc("Sales Invoice", si_name)
+	if doc.company != BKI_COMPANY:
+		frappe.throw(_("cancel_bki_si is only for BKI Sales Invoices"))
+	if doc.docstatus != 1:
+		frappe.throw(_("Sales Invoice {0} is not submitted (docstatus={1})").format(si_name, doc.docstatus))
+
+	# Set the flag BEFORE doc.cancel() — this is the critical ordering fix
+	existing = getattr(frappe.flags, "ignore_links_for_doctype", None) or []
+	if not isinstance(existing, list):
+		existing = []
+	for dt in ("Purchase Invoice", "Stock Entry"):
+		if dt not in existing:
+			existing.append(dt)
+	frappe.flags.ignore_links_for_doctype = existing
+
+	doc.cancel()
+	return {"success": True, "name": si_name, "docstatus": doc.docstatus}
 
 
 def cascade_cancel_store_pi(doc, method=None):
