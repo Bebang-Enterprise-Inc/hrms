@@ -1,0 +1,921 @@
+{
+  "captured_at": "2026-05-25T13:41:59.116231+08:00",
+  "procurement_app_candidates": [
+    {
+      "sheet_id": "1QWdoZlT7XWLppfVKpJ2VRXhbMkYtE5TbUwg4lMbO03Q",
+      "name": "Procurement Compliance Appsheet Database",
+      "owner_email": "sam@bebang.ph",
+      "last_modified": "2026-05-25T05:39:21.312Z",
+      "structure": {
+        "title": "Procurement Compliance Appsheet Database",
+        "tabs": [
+          {
+            "title": "Home",
+            "rowCount": 1000,
+            "colCount": 26
+          },
+          {
+            "title": "Users",
+            "rowCount": 997,
+            "colCount": 30
+          },
+          {
+            "title": "Item List",
+            "rowCount": 999,
+            "colCount": 31
+          },
+          {
+            "title": "Suppliers",
+            "rowCount": 1000,
+            "colCount": 28
+          },
+          {
+            "title": "Purchase Requisitions",
+            "rowCount": 984,
+            "colCount": 28
+          },
+          {
+            "title": "PR Items",
+            "rowCount": 2025,
+            "colCount": 26
+          },
+          {
+            "title": "Purchase Order",
+            "rowCount": 994,
+            "colCount": 49
+          },
+          {
+            "title": "PO Items",
+            "rowCount": 2454,
+            "colCount": 28
+          },
+          {
+            "title": "POItemBackup",
+            "rowCount": 2186,
+            "colCount": 26
+          },
+          {
+            "title": "Sheet22",
+            "rowCount": 2175,
+            "colCount": 26
+          },
+          {
+            "title": "Goods Receipts",
+            "rowCount": 1458,
+            "colCount": 31
+          },
+          {
+            "title": "GR Items",
+            "rowCount": 2869,
+            "colCount": 27
+          },
+          {
+            "title": "Delivery Receipts",
+            "rowCount": 998,
+            "colCount": 31
+          },
+          {
+            "title": "Sheet24",
+            "rowCount": 1000,
+            "colCount": 26
+          },
+          {
+            "title": "DR Items",
+            "rowCount": 997,
+            "colCount": 28
+          },
+          {
+            "title": "Approval Matrix",
+            "rowCount": 999,
+            "colCount": 26
+          },
+          {
+            "title": "Documents",
+            "rowCount": 8601,
+            "colCount": 26
+          },
+          {
+            "title": "Advance Invoices",
+            "rowCount": 1000,
+            "colCount": 26
+          },
+          {
+            "title": "Reports",
+            "rowCount": 1000,
+            "colCount": 26
+          },
+          {
+            "title": "Sheet17",
+            "rowCount": 1000,
+            "colCount": 44
+          },
+          {
+            "title": "Gemini",
+            "rowCount": 999,
+            "colCount": 7
+          },
+          {
+            "title": "Tickets",
+            "rowCount": 1000,
+            "colCount": 27
+          },
+          {
+            "title": "Sheet20",
+            "rowCount": 1000,
+            "colCount": 26
+          }
+        ]
+      },
+      "tab_list": [
+        "Home",
+        "Users",
+        "Item List",
+        "Suppliers",
+        "Purchase Requisitions",
+        "PR Items",
+        "Purchase Order",
+        "PO Items",
+        "POItemBackup",
+        "Sheet22",
+        "Goods Receipts",
+        "GR Items",
+        "Delivery Receipts",
+        "Sheet24",
+        "DR Items",
+        "Approval Matrix",
+        "Documents",
+        "Advance Invoices",
+        "Reports",
+        "Sheet17",
+        "Gemini",
+        "Tickets",
+        "Sheet20"
+      ],
+      "candidate_tabs": [
+        {
+          "tab": "Suppliers",
+          "rows": 1000,
+          "cols": 28,
+          "header": [
+            "Timestamp",
+            "Supplier Code",
+            "Supplier Name",
+            "Contact No",
+            "Contact Person",
+            "Email ID",
+            "Address",
+            "Added by",
+            "Bank Name",
+            "Bank Account Name",
+            "Bank Account No",
+            "VAT Registered",
+            "TIN",
+            "EWT Rate"
+          ]
+        },
+        {
+          "tab": "PO Items",
+          "rows": 2454,
+          "cols": 28,
+          "header": [
+            "Timestamp",
+            "PR No",
+            "PO No",
+            "Uniqueid",
+            "Item No",
+            "Item Code",
+            "Item Name",
+            "Packaging size",
+            "Qty",
+            "UOM",
+            "Unit Cost",
+            "VAT",
+            "Amount",
+            "Delivery Schedule",
+            "Added By"
+          ]
+        },
+        {
+          "tab": "POItemBackup",
+          "rows": 2186,
+          "cols": 26,
+          "header": [
+            "Timestamp",
+            "PR No",
+            "PO No",
+            "Uniqueid",
+            "Item No",
+            "Item Code",
+            "Item Name",
+            "Packaging size",
+            "Qty",
+            "UOM",
+            "Unit Cost",
+            "VAT",
+            "Amount",
+            "Delivery Schedule",
+            "Added By",
+            "VAT",
+            "Amount"
+          ]
+        },
+        {
+          "tab": "Advance Invoices",
+          "rows": 1000,
+          "cols": 26,
+          "header": [
+            "Timestamp",
+            "Date",
+            "PO No",
+            "PR No",
+            "Supplier Code",
+            "Supplier Name",
+            "Supplier Email",
+            "Remarks",
+            "Invoice No",
+            "Invoice Amount",
+            "Invoice Date",
+            "Invoice Due Date",
+            "Uploaded by",
+            "Uploaded by Email",
+            "Invoice",
+            "Payment Status",
+            "Payment Date",
+            "Payment Amount",
+            "Mode of Payment",
+            "Outstanding Balance"
+          ]
+        },
+        {
+          "tab": "Reports",
+          "rows": 1000,
+          "cols": 26,
+          "header": [
+            "Sr No",
+            "Report Name",
+            "Category"
+          ]
+        }
+      ]
+    },
+    {
+      "sheet_id": "1ViV7oJMGX-3d5vno8UG4hAhLrXnKZ8VR4H4tZj0qM4E",
+      "name": "BEI Schedule — Procurement (2026)",
+      "owner_email": "sam@bebang.ph",
+      "last_modified": "2026-05-22T09:02:43.205Z",
+      "structure": {
+        "title": "BEI Schedule — Procurement (2026)",
+        "tabs": [
+          {
+            "title": "Cover",
+            "rowCount": 1000,
+            "colCount": 26
+          },
+          {
+            "title": "Schedule",
+            "rowCount": 1000,
+            "colCount": 26
+          },
+          {
+            "title": "Out-of-Office Log",
+            "rowCount": 1000,
+            "colCount": 26
+          }
+        ]
+      },
+      "tab_list": [
+        "Cover",
+        "Schedule",
+        "Out-of-Office Log"
+      ]
+    },
+    {
+      "sheet_id": "1A6Hw3Fpv0NwAaxZt3jFt1lAn0pbicBrLz-4WLxHG1Fw",
+      "name": "2026 PROCUREMENT MONITORING",
+      "owner_email": "unknown",
+      "last_modified": "2026-05-19T11:52:31.664Z",
+      "structure": {
+        "title": "2026 PROCUREMENT MONITORING",
+        "tabs": [
+          {
+            "title": "WEEKLY DASHBOARD",
+            "rowCount": 69,
+            "colCount": 12
+          },
+          {
+            "title": "MONTHLY DASHBOARD",
+            "rowCount": 69,
+            "colCount": 20
+          },
+          {
+            "title": "COST SAVINGS MONITORING",
+            "rowCount": 1203,
+            "colCount": 13
+          },
+          {
+            "title": "PROCUREMENT MONITORING",
+            "rowCount": 4191,
+            "colCount": 17
+          },
+          {
+            "title": "SAVINGS INITIATIVE FEB",
+            "rowCount": 999,
+            "colCount": 26
+          },
+          {
+            "title": "SAVINGS INITIATIVE MARCH",
+            "rowCount": 1000,
+            "colCount": 26
+          },
+          {
+            "title": "SAVINGS INITIATIVE APRIL",
+            "rowCount": 997,
+            "colCount": 26
+          },
+          {
+            "title": " SAVINGS INITIATIVE MAY",
+            "rowCount": 993,
+            "colCount": 26
+          },
+          {
+            "title": "PRICE INCREASE",
+            "rowCount": 970,
+            "colCount": 27
+          },
+          {
+            "title": "CONCERNS",
+            "rowCount": 970,
+            "colCount": 27
+          },
+          {
+            "title": "VALUES",
+            "rowCount": 999,
+            "colCount": 26
+          }
+        ]
+      },
+      "tab_list": [
+        "WEEKLY DASHBOARD",
+        "MONTHLY DASHBOARD",
+        "COST SAVINGS MONITORING",
+        "PROCUREMENT MONITORING",
+        "SAVINGS INITIATIVE FEB",
+        "SAVINGS INITIATIVE MARCH",
+        "SAVINGS INITIATIVE APRIL",
+        " SAVINGS INITIATIVE MAY",
+        "PRICE INCREASE",
+        "CONCERNS",
+        "VALUES"
+      ],
+      "candidate_tabs": [
+        {
+          "tab": "PROCUREMENT MONITORING",
+          "rows": 4191,
+          "cols": 17,
+          "header": [
+            "  "
+          ]
+        }
+      ]
+    },
+    {
+      "sheet_id": "18AC-yrAXTDzj6kjFjTSop7TLvZl3rcz7jJGIlFgadpQ",
+      "name": "BACKUP — Procurement Compliance AppSheet — 2026-04-17 (before VAT correction)",
+      "owner_email": "sam@bebang.ph",
+      "last_modified": "2026-04-16T23:38:20.514Z",
+      "structure": {
+        "title": "BACKUP — Procurement Compliance AppSheet — 2026-04-17 (before VAT correction)",
+        "tabs": [
+          {
+            "title": "Home",
+            "rowCount": 1000,
+            "colCount": 26
+          },
+          {
+            "title": "Users",
+            "rowCount": 997,
+            "colCount": 30
+          },
+          {
+            "title": "Item List",
+            "rowCount": 999,
+            "colCount": 31
+          },
+          {
+            "title": "Suppliers",
+            "rowCount": 1000,
+            "colCount": 28
+          },
+          {
+            "title": "Purchase Requisitions",
+            "rowCount": 984,
+            "colCount": 28
+          },
+          {
+            "title": "PR Items",
+            "rowCount": 1720,
+            "colCount": 26
+          },
+          {
+            "title": "Purchase Order",
+            "rowCount": 994,
+            "colCount": 49
+          },
+          {
+            "title": "PO Items",
+            "rowCount": 2174,
+            "colCount": 30
+          },
+          {
+            "title": "Goods Receipts",
+            "rowCount": 1044,
+            "colCount": 30
+          },
+          {
+            "title": "GR Items",
+            "rowCount": 2362,
+            "colCount": 27
+          },
+          {
+            "title": "Delivery Receipts",
+            "rowCount": 998,
+            "colCount": 27
+          },
+          {
+            "title": "DR Items",
+            "rowCount": 997,
+            "colCount": 28
+          },
+          {
+            "title": "Approval Matrix",
+            "rowCount": 999,
+            "colCount": 26
+          },
+          {
+            "title": "Documents",
+            "rowCount": 5635,
+            "colCount": 26
+          },
+          {
+            "title": "Advance Invoices",
+            "rowCount": 1000,
+            "colCount": 26
+          },
+          {
+            "title": "Reports",
+            "rowCount": 1000,
+            "colCount": 26
+          },
+          {
+            "title": "Sheet17",
+            "rowCount": 1000,
+            "colCount": 44
+          },
+          {
+            "title": "Gemini",
+            "rowCount": 999,
+            "colCount": 7
+          },
+          {
+            "title": "Tickets",
+            "rowCount": 1000,
+            "colCount": 27
+          },
+          {
+            "title": "Sheet20",
+            "rowCount": 1000,
+            "colCount": 26
+          }
+        ]
+      },
+      "tab_list": [
+        "Home",
+        "Users",
+        "Item List",
+        "Suppliers",
+        "Purchase Requisitions",
+        "PR Items",
+        "Purchase Order",
+        "PO Items",
+        "Goods Receipts",
+        "GR Items",
+        "Delivery Receipts",
+        "DR Items",
+        "Approval Matrix",
+        "Documents",
+        "Advance Invoices",
+        "Reports",
+        "Sheet17",
+        "Gemini",
+        "Tickets",
+        "Sheet20"
+      ],
+      "candidate_tabs": [
+        {
+          "tab": "Suppliers",
+          "rows": 1000,
+          "cols": 28,
+          "header": [
+            "Timestamp",
+            "Supplier Code",
+            "Supplier Name",
+            "Contact No",
+            "Contact Person",
+            "Email ID",
+            "Address",
+            "Added by",
+            "Bank Name",
+            "Bank Account Name",
+            "Bank Account No"
+          ]
+        },
+        {
+          "tab": "PO Items",
+          "rows": 2174,
+          "cols": 30,
+          "header": [
+            "Timestamp",
+            "PR No",
+            "PO No",
+            "Uniqueid",
+            "Item No",
+            "Item Code",
+            "Item Name",
+            "Packaging size",
+            "Qty",
+            "UOM",
+            "Unit Cost",
+            "VAT",
+            "Amount",
+            "Delivery Schedule",
+            "Added By"
+          ]
+        },
+        {
+          "tab": "Advance Invoices",
+          "rows": 1000,
+          "cols": 26,
+          "header": [
+            "Timestamp",
+            "Date",
+            "PO No",
+            "PR No",
+            "Supplier Code",
+            "Supplier Name",
+            "Supplier Email",
+            "Remarks",
+            "Invoice No",
+            "Invoice Amount",
+            "Invoice Date",
+            "Invoice Due Date",
+            "Uploaded by",
+            "Uploaded by Email",
+            "Invoice",
+            "Payment Status",
+            "Payment Date",
+            "Payment Amount",
+            "Mode of Payment",
+            "Outstanding Balance"
+          ]
+        },
+        {
+          "tab": "Reports",
+          "rows": 1000,
+          "cols": 26,
+          "header": [
+            "Sr No",
+            "Report Name",
+            "Category"
+          ]
+        }
+      ]
+    },
+    {
+      "sheet_id": "1To65iRw5NJDtOjJ0YRAvDGEPyuPtyary2vpeHjbWcBM",
+      "name": "BACKUP — Procurement Compliance AppSheet — 2026-03-30 (before S145 sync)",
+      "owner_email": "sam@bebang.ph",
+      "last_modified": "2026-03-30T07:18:54.043Z",
+      "structure": {
+        "title": "BACKUP — Procurement Compliance AppSheet — 2026-03-30 (before S145 sync)",
+        "tabs": [
+          {
+            "title": "Home",
+            "rowCount": 1000,
+            "colCount": 26
+          },
+          {
+            "title": "Users",
+            "rowCount": 997,
+            "colCount": 30
+          },
+          {
+            "title": "Item List",
+            "rowCount": 999,
+            "colCount": 31
+          },
+          {
+            "title": "Suppliers",
+            "rowCount": 1000,
+            "colCount": 28
+          },
+          {
+            "title": "Purchase Requisitions",
+            "rowCount": 984,
+            "colCount": 28
+          },
+          {
+            "title": "PR Items",
+            "rowCount": 1548,
+            "colCount": 26
+          },
+          {
+            "title": "Purchase Order",
+            "rowCount": 994,
+            "colCount": 49
+          },
+          {
+            "title": "PO Items",
+            "rowCount": 2039,
+            "colCount": 30
+          },
+          {
+            "title": "Goods Receipts",
+            "rowCount": 999,
+            "colCount": 30
+          },
+          {
+            "title": "GR Items",
+            "rowCount": 2285,
+            "colCount": 27
+          },
+          {
+            "title": "Delivery Receipts",
+            "rowCount": 998,
+            "colCount": 27
+          },
+          {
+            "title": "DR Items",
+            "rowCount": 997,
+            "colCount": 28
+          },
+          {
+            "title": "Approval Matrix",
+            "rowCount": 1000,
+            "colCount": 26
+          },
+          {
+            "title": "Documents",
+            "rowCount": 5162,
+            "colCount": 26
+          },
+          {
+            "title": "Advance Invoices",
+            "rowCount": 1000,
+            "colCount": 15
+          },
+          {
+            "title": "Reports",
+            "rowCount": 1000,
+            "colCount": 26
+          },
+          {
+            "title": "Sheet17",
+            "rowCount": 1000,
+            "colCount": 44
+          },
+          {
+            "title": "Gemini",
+            "rowCount": 999,
+            "colCount": 7
+          },
+          {
+            "title": "Tickets",
+            "rowCount": 1000,
+            "colCount": 27
+          },
+          {
+            "title": "Sheet20",
+            "rowCount": 1000,
+            "colCount": 26
+          }
+        ]
+      },
+      "tab_list": [
+        "Home",
+        "Users",
+        "Item List",
+        "Suppliers",
+        "Purchase Requisitions",
+        "PR Items",
+        "Purchase Order",
+        "PO Items",
+        "Goods Receipts",
+        "GR Items",
+        "Delivery Receipts",
+        "DR Items",
+        "Approval Matrix",
+        "Documents",
+        "Advance Invoices",
+        "Reports",
+        "Sheet17",
+        "Gemini",
+        "Tickets",
+        "Sheet20"
+      ],
+      "candidate_tabs": [
+        {
+          "tab": "Suppliers",
+          "rows": 1000,
+          "cols": 28,
+          "header": [
+            "Timestamp",
+            "Supplier Code",
+            "Supplier Name",
+            "Contact No",
+            "Contact Person",
+            "Email ID",
+            "Address",
+            "Added by",
+            "Bank Name",
+            "Bank Account Name",
+            "Bank Account No"
+          ]
+        },
+        {
+          "tab": "PO Items",
+          "rows": 2039,
+          "cols": 30,
+          "header": [
+            "Timestamp",
+            "PR No",
+            "PO No",
+            "Uniqueid",
+            "Item No",
+            "Item Code",
+            "Item Name",
+            "Packaging size",
+            "Qty",
+            "UOM",
+            "Unit Cost",
+            "VAT",
+            "Amount",
+            "Delivery Schedule",
+            "Added By"
+          ]
+        },
+        {
+          "tab": "Advance Invoices",
+          "rows": 1000,
+          "cols": 15,
+          "header": [
+            "Timestamp",
+            "Date",
+            "PO No",
+            "PR No",
+            "Supplier Code",
+            "Supplier Name",
+            "Supplier Email",
+            "Remarks",
+            "Invoice No",
+            "Invoice Amount",
+            "Invoice Date",
+            "Invoice Due Date",
+            "Uploaded by",
+            "Uploaded by Email",
+            "Invoice"
+          ]
+        },
+        {
+          "tab": "Reports",
+          "rows": 1000,
+          "cols": 26,
+          "header": [
+            "Sr No",
+            "Report Name",
+            "Category"
+          ]
+        }
+      ]
+    },
+    {
+      "sheet_id": "1UIzeVk3dou8JHstYEU5PAVDKFa_EoAy0C1ck9INkgtk",
+      "name": "Copy of Procurement Compliance Appsheet Database",
+      "owner_email": "sam@bebang.ph",
+      "last_modified": "2026-02-20T07:13:11.905Z"
+    },
+    {
+      "sheet_id": "1R9rg9jmMddEqw2OwYF8jXK7jt1P4zEpDbLd1bYAENoQ",
+      "name": "Copy of Procurement Compliance Appsheet Database",
+      "owner_email": "sam@bebang.ph",
+      "last_modified": "2026-02-20T07:13:09.304Z"
+    },
+    {
+      "sheet_id": "1F6AcEJUsGHFbKMv2pD32hgp4DsfK6lEpZ2SuU6KeLzs",
+      "name": "Procurement Manager",
+      "owner_email": "sam@bebang.ph",
+      "last_modified": "2026-01-29T01:33:55.864Z"
+    },
+    {
+      "sheet_id": "1IUDgj2AESSxQIiG7enbNzttqiI5Vqoiz0u6UYGNPzVU",
+      "name": "PROCUREMENT_ACTION_Verify_Suppliers_&_LeadTimes",
+      "owner_email": "cayla@bebang.ph",
+      "last_modified": "2026-01-13T07:17:49.286Z"
+    },
+    {
+      "sheet_id": "1NRSTOtaaUDZz2o1PREA7M4lHJmfzSJDpuv9sCFouA0k",
+      "name": "I uploaded the files: Automated_Procurement_Payme...",
+      "owner_email": "sam@bebang.ph",
+      "last_modified": "2025-08-31T14:32:29.879Z"
+    },
+    {
+      "sheet_id": "1-2xvSVhEI1_U_P5s6rG1-LnSvFil7LzJcdjkADeWAcg",
+      "name": "RFP App Database",
+      "owner_email": "sam@bebang.ph",
+      "last_modified": "2026-05-25T05:41:48.269Z"
+    },
+    {
+      "sheet_id": "14fdBT-pQoCpQuvoFcENiMiMY3cpa2YZ80-j2UTMI484",
+      "name": "Copy of RFP App Database",
+      "owner_email": "ashish@bebang.ph",
+      "last_modified": "2026-01-05T10:47:51.515Z"
+    },
+    {
+      "sheet_id": "1CJF-mgQVN9-7PGXMtOrnbwZ9RL5ZfYPgKNAwgXLH6HA",
+      "name": "Copy of RFP App Database",
+      "owner_email": "ashish@bebang.ph",
+      "last_modified": "2025-12-19T02:21:05.371Z"
+    }
+  ],
+  "procurement_app_chosen": {
+    "sheet_id": "1QWdoZlT7XWLppfVKpJ2VRXhbMkYtE5TbUwg4lMbO03Q",
+    "name": "Procurement Compliance Appsheet Database",
+    "owner": "sam@bebang.ph",
+    "chosen_tab": "Suppliers",
+    "schema": [
+      "Timestamp",
+      "Supplier Code",
+      "Supplier Name",
+      "Contact No",
+      "Contact Person",
+      "Email ID",
+      "Address",
+      "Added by",
+      "Bank Name",
+      "Bank Account Name",
+      "Bank Account No",
+      "VAT Registered",
+      "TIN",
+      "EWT Rate"
+    ],
+    "row_count": 1000
+  },
+  "ho_opening_balance_chosen": {
+    "file_id": "1jSwZRyIPisU4jiKS-Tn9VFoLukQI8UNoW13Hoov-75Y",
+    "title": "05 - AP Opening Balance Head Office",
+    "tabs": [
+      {
+        "title": "Detailed HEAD OFFICE",
+        "rowCount": 2560,
+        "colCount": 35
+      }
+    ],
+    "primary_tab": "Detailed HEAD OFFICE",
+    "header": [
+      "Head Office/Project/Commi/Stores Monitoring",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "352,000.00",
+      "0.00",
+      "42,240.00",
+      "0.00",
+      "352,000.00",
+      "",
+      "0.00",
+      "352,000.00",
+      "",
+      "5/24/2026",
+      "0.00",
+      "0.00",
+      "0.00",
+      "352,000.00",
+      "0.00",
+      "0.00"
+    ],
+    "row_count": 2560
+  },
+  "capex_legacy_file": {
+    "file_id": "1dfIyAeGH_5ga_mjA1o-WWN9xM6VO3v7XKKoU1Jtq1eI",
+    "name": "BGF, INVESTMENTS and CAPEX (native)",
+    "owner": "unknown"
+  },
+  "proceed_with_source_redesign": true
+}
