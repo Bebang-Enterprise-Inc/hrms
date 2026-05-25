@@ -1,0 +1,66 @@
+{
+  "captured_at": "2026-05-25T13:37:17.365455+08:00",
+  "denise_pp_id": "13cyYaPLmjL0TPaeqyYd2esjJNYj-5qJCDS8OZLdhURU",
+  "tab_count": 10,
+  "tabs": {
+    "Suppliers w/o FD & Middleby": {
+      "rowCount": 1401,
+      "colCount": 35
+    },
+    "Middleby": {
+      "rowCount": 780,
+      "colCount": 35
+    },
+    "Forward Dynamics": {
+      "rowCount": 799,
+      "colCount": 35
+    },
+    "Masterlist": {
+      "rowCount": 1738,
+      "colCount": 36
+    },
+    "Scheduled for Online Transfer - Due": {
+      "rowCount": 1000,
+      "colCount": 27
+    },
+    "Scheduled for Release Check - Due": {
+      "rowCount": 1000,
+      "colCount": 28
+    },
+    "Sheet12": {
+      "rowCount": 1000,
+      "colCount": 48
+    },
+    "Summary": {
+      "rowCount": 1001,
+      "colCount": 26
+    },
+    "Pivot Table 1": {
+      "rowCount": 1002,
+      "colCount": 26
+    },
+    "Copy of Pivot Table 1": {
+      "rowCount": 1023,
+      "colCount": 26
+    }
+  },
+  "acl_count": 16,
+  "bridge_user_count": 3,
+  "bridge_users": [
+    "anna.r@bridge-ph.com",
+    "flor.a@bridge-ph.com",
+    "bea.p@bridge-ph.com"
+  ],
+  "all_editors": [
+    "drew@bebang.ph",
+    "anna.r@bridge-ph.com",
+    "denise@bebang.ph",
+    "flor.a@bridge-ph.com",
+    "bea.p@bridge-ph.com",
+    "james.tamaca@bebang.ph",
+    "angelamel@bebang.ph",
+    "joevic@bebang.ph",
+    "marco@bebang.ph",
+    "je-ann@bebang.ph"
+  ]
+}

@@ -1,0 +1,16 @@
+Surface,Owner_Sprint,Read_Write,Notes
+Apps Script project 1pE8wt...,S256,RW,No other sprint touches until closeout
+scripts/google_apps/s256_ap_view_hourly_sync_v310.gs,S256,WRITE,New file save-as from v3.9
+AP Master - Suppliers SOA tab,S256 + Ms. Mel (data entry),R+MIGRATE(Phase 3),Script writes to SCRIPT_OWNED columns only
+AP Master - Head Office tab,S256 + Bethina (data entry),R+MIGRATE(Phase 3),Affiliate rows migrate out
+AP Master - CAPEX tab,S256 + data entry,READ,No structural changes
+AP Master - Payment Plan tab,S256,READ,Lock unchanged; mirror cutover documented only
+AP Master - Intercompany tab,S256,APPEND(Phase 3),Receives migrated affiliate rows
+Procurement App sheet (TBD),S256,READ ONLY (Phase 1+4a),No writes to external source
+FPM,existing sync,READ ONLY,No writes
+05 - AP Opening Balance HO,S256,READ ONLY (Phase 4c),No writes
+Denise PP sheet,existing sync,READ ONLY,Seed only reads; Phase 4b documents cutover
+5 upstream sheets (FPM/Compliance/Bank/Cashflow/PCM),S256 Phase 6,READ + protectedRange if PII,Bridge audit only
+/finance-ap skill (3 mirrors),S256 Phase 7,WRITE,Training refresh + PII outcome
+docs/plans/ + SPRINT_REGISTRY.md,S256,WRITE,Plan status updates
+Cloud Scheduler job,S256,PAUSE/RESUME,Phase 0.5 pause -> Phase 8.6 resume

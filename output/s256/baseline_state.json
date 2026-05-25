@@ -1,0 +1,102 @@
+{
+  "captured_at": "2026-05-25T13:37:17.365455+08:00",
+  "ap_master_id": "1bQ6mO1FXD4VYcLt8m-yklkV7pyYhSWqU7b8K0bVgG7c",
+  "tab_count": 19,
+  "tabs": {
+    "All Liabilities": {
+      "rowCount": 5000,
+      "colCount": 19,
+      "hidden": false
+    },
+    "_sync_log_v3": {
+      "rowCount": 2001,
+      "colCount": 26,
+      "hidden": false
+    },
+    "_dry_run_preview": {
+      "rowCount": 1000,
+      "colCount": 26,
+      "hidden": false
+    },
+    "_sync_log": {
+      "rowCount": 1000,
+      "colCount": 26,
+      "hidden": false
+    },
+    "Summary": {
+      "rowCount": 999,
+      "colCount": 26,
+      "hidden": false
+    },
+    "Commissary": {
+      "rowCount": 1000,
+      "colCount": 26,
+      "hidden": false
+    },
+    "Head Office (BEI)": {
+      "rowCount": 1000,
+      "colCount": 26,
+      "hidden": false
+    },
+    "Needs Attention": {
+      "rowCount": 1000,
+      "colCount": 26,
+      "hidden": false
+    },
+    "Suppliers SOA": {
+      "rowCount": 2124,
+      "colCount": 19,
+      "hidden": false
+    },
+    "Head Office": {
+      "rowCount": 4516,
+      "colCount": 19,
+      "hidden": false
+    },
+    "CAPEX": {
+      "rowCount": 173,
+      "colCount": 20,
+      "hidden": false
+    },
+    "Needs RFP": {
+      "rowCount": 5000,
+      "colCount": 19,
+      "hidden": false
+    },
+    "With Finance (No RFP)": {
+      "rowCount": 5000,
+      "colCount": 19,
+      "hidden": false
+    },
+    "Check Released": {
+      "rowCount": 5000,
+      "colCount": 19,
+      "hidden": false
+    },
+    "In Pipeline": {
+      "rowCount": 5000,
+      "colCount": 19,
+      "hidden": false
+    },
+    "VAT Gaps": {
+      "rowCount": 5000,
+      "colCount": 19,
+      "hidden": false
+    },
+    "PAID": {
+      "rowCount": 5000,
+      "colCount": 19,
+      "hidden": false
+    },
+    "Payment Plan": {
+      "rowCount": 1500,
+      "colCount": 30,
+      "hidden": false
+    },
+    "Intercompany": {
+      "rowCount": 1000,
+      "colCount": 19,
+      "hidden": false
+    }
+  }
+}
