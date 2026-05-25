@@ -44,6 +44,8 @@ const SOA_ID = '1ZHe2VoAFa94ET4I68C1jWM7nMzTdTCvttwZbICaLtB4';
 const HO_ID = '1jSwZRyIPisU4jiKS-Tn9VFoLukQI8UNoW13Hoov-75Y';
 const COMPLIANCE_ID = '1QWdoZlT7XWLppfVKpJ2VRXhbMkYtE5TbUwg4lMbO03Q';
 const DENISE_PP_ID = '13cyYaPLmjL0TPaeqyYd2esjJNYj-5qJCDS8OZLdhURU';  // v3.7 S248: Denise's 'Project: 2-Week Payment Plan' (4-tab read source)
+const PROCUREMENT_APP_ID = '1QWdoZlT7XWLppfVKpJ2VRXhbMkYtE5TbUwg4lMbO03Q';  // v3.10 S256: Procurement Compliance AppSheet Database (Purchase Order tab)
+const HO_OPENING_BALANCE_ID = '1jSwZRyIPisU4jiKS-Tn9VFoLukQI8UNoW13Hoov-75Y';  // v3.10 S256 Phase 4c: 05 - AP Opening Balance Head Office
 const NCOLS = 19;
 
 const LOG_TAB = '_sync_log';
@@ -66,6 +68,9 @@ const ALERT_EMAIL = 'sam@bebang.ph';
 // later for toggle-without-redeploy — S256.)
 // ───────────────────────────────────────────────────────────────────────────
 const payment_plan_mirror_disabled = false;
+// v3.10 (S256 Phase 4b): when true, seedFromDenisePaymentPlan_ early-exits (Denise PP becomes opening-balance-only)
+// Sam flips this AFTER Procurement App seed is verified producing correct rows for >= 3 consecutive cycles.
+const denise_pp_seed_disabled = false;
 
 // v3.10 (S256 Phase 2): Broadened intercompany affiliate allowlist per Denise's signed Section B addendum (2026-05-21)
 // Original v3.9 matched only Bebang Enterprise/Kitchen/Shaw Inc. Denise identified 14 additional non-Bebang-branded
@@ -628,9 +633,30 @@ function seedNewInvoicesFromSources_(ss, fpmLookup, taxLookup, dryRun) {
     stats.fpm_seed_error = String(e);
   }
 
+  // v3.10 (S256 Phase 4c): one-shot HO opening-balance seed (idempotent — runs once then no-ops)
+  try {
+    const hoObStats = seedHoOpeningBalanceOnce_(ss, existingIndex, dryRun);
+    stats.ho_opening_balance = hoObStats;
+  } catch (e) {
+    stats.ho_opening_balance_error = String(e);
+  }
+
+  // v3.10 (S256 Phase 4a): seed from Procurement App Purchase Order tab.
+  // Runs AFTER FPM seed and BEFORE Denise PP seed per Denise D2 source-of-truth directive.
+  // SOURCE = 'Procurement App'. Targets Suppliers SOA tab. Dedup via existingIndex.
+  try {
+    const procStats = seedFromProcurementApp_(ss, fpmLookup, taxLookup, existingIndex, dryRun);
+    stats.procurement_seed = procStats;
+    stats.appended += procStats.appended;
+    stats.skipped_existing += procStats.skipped_existing;
+  } catch (e) {
+    stats.procurement_seed_error = String(e);
+  }
+
   // v3.7 patch (2026-05-14, S248) — also seed from Denise's 2-Week Payment Plan sheet.
   // Reads 4 tabs in priority order: Suppliers w/o FD & Middleby, Middleby, Forward Dynamics, Masterlist.
   // Middleby + Forward Dynamics are tagged as 'Disputed - Eventually Payable' per CEO directive.
+  // v3.10 (S256 Phase 4b): when denise_pp_seed_disabled = true, this seed early-exits.
   try {
     const deniseStats = seedFromDenisePaymentPlan_(ss, fpmLookup, taxLookup, existingIndex, dryRun);
     stats.denise_seed = deniseStats;
@@ -1465,7 +1491,269 @@ function seedNewInvoicesFromFPM_(ss, fpmLookup, taxLookup, existingIndex, dryRun
 //   24:Status
 // ═══════════════════════════════════════════════════════════════════════════
 
+// ═══════════════════════════════════════════════════════════════════════════
+// v3.10 (S256 Phase 4a) — Seed from Procurement App Purchase Order tab
+// Per Denise D2: "For the suppliers soa get the source from Procurement App"
+// Reads approved POs with invoice data; appends to Suppliers SOA with SOURCE='Procurement App'
+// ═══════════════════════════════════════════════════════════════════════════
+function seedFromProcurementApp_(ss, fpmLookup, taxLookup, existingIndex, dryRun) {
+  const stats = { scanned: 0, appended: 0, skipped_existing: 0, skipped_no_invoice: 0, skipped_not_approved: 0, sample_appended: [] };
+
+  var procSS;
+  try {
+    procSS = SpreadsheetApp.openById(PROCUREMENT_APP_ID);
+  } catch (e) {
+    stats.open_error = String(e);
+    return stats;
+  }
+
+  var poSheet = procSS.getSheetByName('Purchase Order');
+  if (!poSheet) { stats.open_error = 'Purchase Order tab not found'; return stats; }
+
+  var data = poSheet.getDataRange().getValues();
+  if (data.length < 2) return stats;
+
+  // Header at row 1 (index 0); data starts at row 2 (index 1)
+  var header = data[0];
+  var hIdx = function(name) {
+    for (var k = 0; k < header.length; k++) {
+      if (String(header[k]).trim().toUpperCase() === name.toUpperCase()) return k;
+    }
+    return -1;
+  };
+
+  var iSupplier    = hIdx('Supplier Name');
+  var iInvoiceNo   = hIdx('Invoice No');
+  var iInvoiceAmt  = hIdx('Invoice Amount');
+  var iInvoiceDate = hIdx('Invoice Date');
+  var iApproval    = hIdx('Approval');
+  var iPONo        = hIdx('PO No');
+  var iPODate      = hIdx('PO Date');
+  var iTerms       = hIdx('Terms of Payment');
+
+  if (iSupplier < 0 || iInvoiceNo < 0 || iInvoiceAmt < 0) {
+    stats.open_error = 'Required columns missing: Supplier Name=' + iSupplier + ', Invoice No=' + iInvoiceNo + ', Invoice Amount=' + iInvoiceAmt;
+    return stats;
+  }
+
+  var newRows = [];
+
+  for (var rr = 1; rr < data.length; rr++) {
+    var r = data[rr];
+    stats.scanned++;
+
+    var supplier = String(r[iSupplier] || '').trim();
+    if (!supplier) continue;
+
+    var invoiceNo = String(r[iInvoiceNo] || '').trim();
+    if (!invoiceNo) { stats.skipped_no_invoice++; continue; }
+
+    var invoiceAmt = toNum(r[iInvoiceAmt]);
+    if (invoiceAmt <= 0) { stats.skipped_no_invoice++; continue; }
+
+    // Only seed approved POs
+    var approval = String(r[iApproval] || '').trim().toUpperCase();
+    if (approval !== 'APPROVED' && approval !== 'YES') { stats.skipped_not_approved++; continue; }
+
+    var invoiceDate = iInvoiceDate >= 0 ? r[iInvoiceDate] : '';
+    var poNo = iPONo >= 0 ? String(r[iPONo] || '').trim() : '';
+
+    // Dedup against existingIndex
+    var payeeKey = supplier.toUpperCase();
+    var amtK = Math.round(invoiceAmt * 100) / 100;
+    var dateStr = formatDateLike_(invoiceDate);
+    var invVariants = invNoVariants_(invoiceNo);
+
+    var foundInAp = false;
+    for (var iv = 0; iv < invVariants.length; iv++) {
+      if (existingIndex[payeeKey + '|' + invVariants[iv] + '|' + amtK]) { foundInAp = true; break; }
+    }
+    if (!foundInAp && existingIndex['FB|' + payeeKey + '|' + amtK + '|' + dateStr]) foundInAp = true;
+    if (foundInAp) { stats.skipped_existing++; continue; }
+
+    // Build AP Master row (19 cols matching Suppliers SOA schema)
+    var rowValues = [
+      'Procurement App',                      // SOURCE
+      supplier,                               // PAYEE
+      invoiceNo,                              // INVOICE NO.
+      invoiceDate || '',                      // INVOICE DATE
+      invoiceAmt,                             // AMOUNT
+      invoiceAmt,                             // OUTSTANDING (assume full until FPM updates)
+      '',                                     // AGING (computed at sync time)
+      '',                                     // AGING BUCKET
+      'NO RFP YET',                           // STATUS (default until FPM sync fills)
+      '',                                     // BEI-FIN No.
+      '',                                     // RFP No.
+      '',                                     // METHOD
+      '',                                     // CHECK NO.
+      'Supplier Payments',                    // CATEGORY
+      poNo ? 'PO ' + poNo : 'Procurement',   // CLASSIFICATION
+      '',                                     // BILLED TO
+      '',                                     // VATABLE (Compliance fills later)
+      '',                                     // VAT
+      '',                                     // EWT
+    ];
+
+    newRows.push({ rowValues: rowValues, sourceRowId: rr + 1 });
+
+    // Update existingIndex so subsequent seeds (Denise PP) don't re-add this
+    invVariants.forEach(function(iv) {
+      existingIndex[payeeKey + '|' + iv + '|' + amtK] = { tab: 'Suppliers SOA', row: null };
+    });
+    existingIndex['FB|' + payeeKey + '|' + amtK + '|' + dateStr] = { tab: 'Suppliers SOA', row: null };
+
+    if (stats.sample_appended.length < 5) {
+      stats.sample_appended.push({ payee: supplier, invoice: invoiceNo, amount: invoiceAmt, po: poNo });
+    }
+  }
+
+  // Append to Suppliers SOA
+  if (newRows.length > 0 && !dryRun) {
+    var sh = ss.getSheetByName('Suppliers SOA');
+    if (sh) {
+      var startRow = sh.getLastRow() + 1;
+      var values = newRows.map(function(x) { return x.rowValues; });
+      sh.getRange(startRow, 1, values.length, NCOLS).setValues(values);
+      newRows.forEach(function(x, ix) {
+        logEvent_v3_(ss, 'invoice_seeded_from_procurement_app', {
+          tab: 'Suppliers SOA', ap_master_row_idx: startRow + ix,
+          source_sheet: 'Procurement App', source_row_id: x.sourceRowId,
+          payee: x.rowValues[1], invoice: x.rowValues[2], amount: x.rowValues[4],
+        });
+      });
+    }
+  }
+  stats.appended = newRows.length;
+  return stats;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// v3.10 (S256 Phase 4c) — One-shot seed from '05 - AP Opening Balance Head Office'
+// Per Denise D2: "For the Head Office, beginning balances from '05 - AP Opening Balance Head Office'"
+// Runs once (checks for flag tab '_ho_opening_loaded'); after first load, creates flag tab.
+// Also handles CAPEX opening: current CAPEX tab on AP Master already serves as opening archive.
+// ═══════════════════════════════════════════════════════════════════════════
+function seedHoOpeningBalanceOnce_(ss, existingIndex, dryRun) {
+  var stats = { loaded: false, rows_imported: 0, already_loaded: false };
+
+  // Idempotency: check if flag tab exists
+  var flagTab = ss.getSheetByName('_ho_opening_loaded');
+  if (flagTab) { stats.already_loaded = true; return stats; }
+
+  // Read the opening balance file
+  var obSS;
+  try {
+    obSS = SpreadsheetApp.openById(HO_OPENING_BALANCE_ID);
+  } catch (e) {
+    stats.open_error = String(e);
+    return stats;
+  }
+
+  var obSheet = obSS.getSheetByName('Detailed HEAD OFFICE');
+  if (!obSheet) { stats.open_error = 'Detailed HEAD OFFICE tab not found'; return stats; }
+
+  var data = obSheet.getDataRange().getValues();
+  if (data.length < 3) { stats.open_error = 'Too few rows'; return stats; }
+
+  // Find header row (first row where a cell says 'PAYEE' or 'SOURCE')
+  var hdrIdx = -1;
+  for (var i = 0; i < Math.min(data.length, 25); i++) {
+    var rowStr = data[i].join('|').toUpperCase();
+    if (rowStr.indexOf('PAYEE') >= 0 || rowStr.indexOf('SOURCE') >= 0) { hdrIdx = i; break; }
+  }
+  if (hdrIdx < 0) { stats.open_error = 'Cannot find header row in opening balance file'; return stats; }
+
+  var header = data[hdrIdx];
+  var hIdx = function(name) {
+    for (var k = 0; k < header.length; k++) {
+      if (String(header[k]).trim().toUpperCase() === name.toUpperCase()) return k;
+    }
+    return -1;
+  };
+
+  var iPayee = hIdx('PAYEE');
+  var iInvNo = hIdx('INVOICE NO.') >= 0 ? hIdx('INVOICE NO.') : hIdx('INVOICE NO');
+  var iInvDate = hIdx('INVOICE DATE');
+  var iAmount = hIdx('AMOUNT');
+  var iOutstanding = hIdx('OUTSTANDING');
+
+  if (iPayee < 0 || iAmount < 0) { stats.open_error = 'Missing PAYEE or AMOUNT in header'; return stats; }
+
+  var newRows = [];
+  for (var rr = hdrIdx + 1; rr < data.length; rr++) {
+    var r = data[rr];
+    var payee = String(r[iPayee] || '').trim();
+    if (!payee) continue;
+    var amount = toNum(r[iAmount]);
+    if (amount <= 0) continue;
+
+    var invoiceNo = iInvNo >= 0 ? String(r[iInvNo] || '').trim() : '';
+    var invoiceDate = iInvDate >= 0 ? r[iInvDate] : '';
+    var outstanding = iOutstanding >= 0 ? toNum(r[iOutstanding]) : amount;
+
+    // Dedup against existingIndex
+    var payeeKey = payee.toUpperCase();
+    var amtK = Math.round(amount * 100) / 100;
+    var dateStr = formatDateLike_(invoiceDate);
+    var invVariants = invNoVariants_(invoiceNo);
+    var foundInAp = false;
+    for (var iv = 0; iv < invVariants.length; iv++) {
+      if (existingIndex[payeeKey + '|' + invVariants[iv] + '|' + amtK]) { foundInAp = true; break; }
+    }
+    if (!foundInAp && existingIndex['FB|' + payeeKey + '|' + amtK + '|' + dateStr]) foundInAp = true;
+    if (foundInAp) continue;
+
+    newRows.push([
+      '05 AP Opening Balance HO',   // SOURCE
+      payee,                          // PAYEE
+      invoiceNo,                      // INVOICE NO.
+      invoiceDate || '',              // INVOICE DATE
+      amount,                         // AMOUNT
+      outstanding,                    // OUTSTANDING
+      '',                             // AGING
+      '',                             // AGING BUCKET
+      'NO RFP YET',                   // STATUS
+      '',                             // BEI-FIN No.
+      '',                             // RFP No.
+      '',                             // METHOD
+      '',                             // CHECK NO.
+      'Head Office Payables',         // CATEGORY
+      'Opening Balance',              // CLASSIFICATION
+      '',                             // BILLED TO
+      '',                             // VATABLE
+      '',                             // VAT
+      '',                             // EWT
+    ]);
+  }
+
+  stats.rows_imported = newRows.length;
+
+  if (newRows.length > 0 && !dryRun) {
+    var hoSheet = ss.getSheetByName('Head Office');
+    if (hoSheet) {
+      var startRow = hoSheet.getLastRow() + 1;
+      hoSheet.getRange(startRow, 1, newRows.length, NCOLS).setValues(newRows);
+      logEvent_v3_(ss, 'ho_opening_balance_loaded', { rows: newRows.length, source: HO_OPENING_BALANCE_ID });
+    }
+    // Create flag tab (idempotency)
+    ss.insertSheet('_ho_opening_loaded');
+    var ft = ss.getSheetByName('_ho_opening_loaded');
+    if (ft) ft.getRange(1, 1).setValue('Loaded ' + new Date().toISOString() + ' | rows=' + newRows.length);
+    stats.loaded = true;
+  } else if (dryRun) {
+    stats.loaded = false;
+    stats.dry_run_would_import = newRows.length;
+  }
+
+  return stats;
+}
+
 function seedFromDenisePaymentPlan_(ss, fpmLookup, taxLookup, existingIndex, dryRun) {
+  // v3.10 (S256 Phase 4b): early-exit when Denise PP seed is disabled (source-of-truth cutover)
+  if (denise_pp_seed_disabled) {
+    return { seed_disabled: true, scanned: 0, appended: 0, skipped_paid: 0, skipped_blank: 0, skipped_existing: 0, deduped_intra_denise: 0 };
+  }
+
   const stats = {
     scanned: 0, appended: 0, skipped_paid: 0, skipped_blank: 0,
     skipped_existing: 0, deduped_intra_denise: 0,
