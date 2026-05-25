@@ -1,0 +1,348 @@
+{
+  "http_status": 200,
+  "raw_body_length": 4062,
+  "parsed": {
+    "dry_run": true,
+    "status_sync": {
+      "updates": 22,
+      "conflicts": 0,
+      "nochange": 2654,
+      "tabs_seen": {
+        "Suppliers SOA": 1386,
+        "Head Office": 4499,
+        "CAPEX": 154,
+        "Intercompany": 336
+      },
+      "sample_changes": [
+        {
+          "tab": "Head Office",
+          "row": 2127,
+          "payee": "RYAN DALE RUBIO",
+          "diff": {
+            "check": {
+              "old": "",
+              "new": "UB882623"
+            }
+          }
+        },
+        {
+          "tab": "Head Office",
+          "row": 3581,
+          "payee": "Ryan Dale Rubio",
+          "diff": {
+            "check": {
+              "old": "",
+              "new": "UB882623"
+            }
+          }
+        },
+        {
+          "tab": "Head Office",
+          "row": 3987,
+          "payee": "Ryan Dale Rubio",
+          "diff": {
+            "check": {
+              "old": "",
+              "new": "UB882977"
+            }
+          }
+        },
+        {
+          "tab": "Head Office",
+          "row": 3988,
+          "payee": "Ryan Dale Rubio",
+          "diff": {
+            "check": {
+              "old": "",
+              "new": "UB882623"
+            }
+          }
+        },
+        {
+          "tab": "Head Office",
+          "row": 4304,
+          "payee": "Mary Grace Andres",
+          "diff": {
+            "check": {
+              "old": "",
+              "new": "UB882731"
+            }
+          }
+        },
+        {
+          "tab": "Head Office",
+          "row": 4305,
+          "payee": "Mary Grace Andres",
+          "diff": {
+            "check": {
+              "old": "",
+              "new": "UB882717"
+            }
+          }
+        },
+        {
+          "tab": "Head Office",
+          "row": 4306,
+          "payee": "Mary Grace Andres",
+          "diff": {
+            "check": {
+              "old": "",
+              "new": "UB882705"
+            }
+          }
+        },
+        {
+          "tab": "Head Office",
+          "row": 4307,
+          "payee": "Mary Grace Andres",
+          "diff": {
+            "check": {
+              "old": "",
+              "new": "UB883090"
+            }
+          }
+        },
+        {
+          "tab": "Head Office",
+          "row": 4308,
+          "payee": "GERIZA LADY GRACE EYAS",
+          "diff": {
+            "check": {
+              "old": "",
+              "new": "UB882679"
+            }
+          }
+        },
+        {
+          "tab": "Head Office",
+          "row": 4309,
+          "payee": "Mary Grace Andres",
+          "diff": {
+            "check": {
+              "old": "",
+              "new": "UB882658"
+            }
+          }
+        },
+        {
+          "tab": "Head Office",
+          "row": 4311,
+          "payee": "Mary Grace Andres",
+          "diff": {
+            "check": {
+              "old": "",
+              "new": "UB882937"
+            }
+          }
+        },
+        {
+          "tab": "Head Office",
+          "row": 4312,
+          "payee": "Mary Grace Andres",
+          "diff": {
+            "check": {
+              "old": "",
+              "new": "UB882552"
+            }
+          }
+        },
+        {
+          "tab": "Head Office",
+          "row": 4314,
+          "payee": "JOSHUA ESTUR",
+          "diff": {
+            "check": {
+              "old": "",
+              "new": "UB882455"
+            }
+          }
+        },
+        {
+          "tab": "Head Office",
+          "row": 4417,
+          "payee": "Mary Grace Andres",
+          "diff": {
+            "check": {
+              "old": "",
+              "new": "UB882731"
+            }
+          }
+        },
+        {
+          "tab": "Head Office",
+          "row": 4418,
+          "payee": "Mary Grace Andres",
+          "diff": {
+            "check": {
+              "old": "",
+              "new": "UB882717"
+            }
+          }
+        },
+        {
+          "tab": "Head Office",
+          "row": 4419,
+          "payee": "Mary Grace Andres",
+          "diff": {
+            "check": {
+              "old": "",
+              "new": "UB882705"
+            }
+          }
+        },
+        {
+          "tab": "Head Office",
+          "row": 4420,
+          "payee": "Mary Grace Andres",
+          "diff": {
+            "check": {
+              "old": "",
+              "new": "UB883090"
+            }
+          }
+        },
+        {
+          "tab": "Head Office",
+          "row": 4421,
+          "payee": "GERIZA LADY GRACE EYAS",
+          "diff": {
+            "check": {
+              "old": "",
+              "new": "UB882679"
+            }
+          }
+        },
+        {
+          "tab": "Head Office",
+          "row": 4422,
+          "payee": "Mary Grace Andres",
+          "diff": {
+            "check": {
+              "old": "",
+              "new": "UB882658"
+            }
+          }
+        },
+        {
+          "tab": "Head Office",
+          "row": 4424,
+          "payee": "Mary Grace Andres",
+          "diff": {
+            "check": {
+              "old": "",
+              "new": "UB882937"
+            }
+          }
+        }
+      ]
+    },
+    "tax_sync": {
+      "updates": 0,
+      "conflicts": 0,
+      "nochange": 915
+    },
+    "seed": {
+      "scanned": 3154,
+      "appended": 139,
+      "duplicate_conflicts": 0,
+      "skipped_paid": 381,
+      "skipped_existing": 6578,
+      "fpm_seed": {
+        "scanned": 2877,
+        "appended": 0,
+        "skipped_paid_old": 37,
+        "skipped_empty": 62,
+        "skipped_existing": 2778,
+        "capex_count": 0,
+        "ho_count": 0,
+        "soa_count": 0,
+        "sample_appended": []
+      },
+      "ho_opening_balance": {
+        "loaded": false,
+        "rows_imported": 0,
+        "already_loaded": false,
+        "open_error": "Cannot find header row in opening balance file"
+      },
+      "procurement_seed": {
+        "scanned": 841,
+        "appended": 138,
+        "skipped_existing": 53,
+        "skipped_no_invoice": 645,
+        "skipped_not_approved": 4,
+        "sample_appended": [
+          {
+            "payee": "1 To 1 Marketing, Inc.",
+            "invoice": "1600536",
+            "amount": 51857,
+            "po": "PO-20252"
+          },
+          {
+            "payee": "NEW SO'S ENTERPRISES, INC.",
+            "invoice": "122952",
+            "amount": 39750,
+            "po": "PO-20253"
+          },
+          {
+            "payee": "Vanj's Homemade Native Delicacies Store",
+            "invoice": "10525",
+            "amount": 375000,
+            "po": "PO-20258"
+          },
+          {
+            "payee": "JOVYLYN AND VIOLETA UBE HOUSE",
+            "invoice": "286",
+            "amount": 25152,
+            "po": "PO-20259"
+          },
+          {
+            "payee": "Marivic's Ube",
+            "invoice": "UHMU0005",
+            "amount": 29900,
+            "po": "PO-202511"
+          }
+        ]
+      },
+      "denise_seed": {
+        "scanned": 1738,
+        "appended": 1,
+        "skipped_paid": 721,
+        "skipped_blank": 42,
+        "skipped_existing": 974,
+        "deduped_intra_denise": 0,
+        "by_tab": {
+          "Suppliers w/o FD & Middleby": 0,
+          "Middleby": 0,
+          "Forward Dynamics": 0,
+          "Masterlist": 1
+        },
+        "sample_appended": [
+          {
+            "tab": "Masterlist",
+            "source_tag": "Denise PP - Masterlist",
+            "payee": "COMCOM FOODSERVICE SUPPLIES CORPORATION",
+            "invoice": "126610",
+            "amount": 24290.665178571428,
+            "outstanding": 24290.665178571428,
+            "status": "",
+            "ap_status": "WITH FINANCE"
+          }
+        ]
+      },
+      "payment_plan_mirror": {
+        "scanned": 1738,
+        "mirrored": 655,
+        "skipped_paid": 721,
+        "skipped_blank": 42,
+        "deduped_intra_denise": 320,
+        "by_tab": {
+          "Suppliers w/o FD & Middleby": 344,
+          "Middleby": 72,
+          "Forward Dynamics": 135,
+          "Masterlist": 104
+        }
+      }
+    },
+    "duration_ms": 49923
+  }
+}

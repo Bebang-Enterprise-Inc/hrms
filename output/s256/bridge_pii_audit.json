@@ -1,0 +1,37 @@
+{
+  "audit_date": "2026-05-25",
+  "sheets_audited": 5,
+  "sheets": {
+    "FPM": {"tabs_count": 5, "flagged_tabs": 0, "note": "No PII keywords in any header"},
+    "Compliance App": {
+      "tabs_count": 23,
+      "flagged_tabs": 2,
+      "flagged_details": [
+        {
+          "tab": "Suppliers",
+          "keywords_matched": ["tin", "address"],
+          "sample_data": ["131-238-221-00000 (supplier TIN)", "business address"],
+          "confirmed_employee_pii": false,
+          "reason": "Supplier TIN and business address — commercial vendor data, NOT employee personal info"
+        },
+        {
+          "tab": "Sheet17",
+          "keywords_matched": ["tin"],
+          "sample_data": ["PV'S TISSUE TRADING (supplier name in TIN column)"],
+          "confirmed_employee_pii": false,
+          "reason": "Supplier TIN lookup — commercial data, NOT employee personal info"
+        }
+      ]
+    },
+    "Bank Balances LIVE": {"tabs_count": 1, "flagged_tabs": 0, "note": "No PII keywords"},
+    "Cashflow Tracker CEO": {"tabs_count": 4, "flagged_tabs": 0, "note": "No PII keywords"},
+    "PCM": {"tabs_count": 67, "flagged_tabs": 0, "note": "No PII keywords"}
+  },
+  "flagged_tabs_count": 2,
+  "confirmed_pii_tabs": [],
+  "restrictions_applied": 0,
+  "recommendations": [
+    "No restrictions needed. 2 tabs flagged (Compliance App / Suppliers, Sheet17) contain supplier TINs and business addresses — commercial vendor data that Bridge needs for AP reconciliation work. NOT employee personal info or salary data per Denise E2 scope.",
+    "All 5 upstream sheets are safe for Bridge reader access."
+  ]
+}

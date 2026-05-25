@@ -184,16 +184,18 @@ The 3 data-entry tabs on AP Master:
 
 Bridge (`bridge-ph.com`) is BEI's fractional CFO + DD auditor (engaged ~2026-05-14). The 3 Bridge writers `anna.r@`, `flor.a@`, `bea.p@` are AUTHORIZED contractors on Denise PP. They may need expanded read access to other sheets during DD.
 
-### Bridge access matrix (live audit 2026-05-20)
+### Bridge access matrix (live audit 2026-05-25, updated S256)
 
-- **BEI AP Master**: no Bridge access
-- **FPM**: `anna.r@bridge-ph.com` (reader), `kim.c@bridge-ph.com` (reader), `flor.a@bridge-ph.com` (reader), `accountant.outsource@bridge-ph.com` (reader), `erica.d@bridge-ph.com` (reader)
-- **Compliance AppSheet**: no Bridge access
-- **PCM**: no Bridge access
+- **BEI AP Master**: Bridge readers (4 users) granted 2026-05-22 per Denise E approval
+- **FPM**: 5 Bridge users (reader)
+- **Compliance AppSheet**: 3 Bridge users (reader) — S255 closeout grant. PII audit (S256 P6): 2 tabs flagged for supplier TINs/addresses — NOT employee PII, no restrictions needed.
+- **PCM**: 3 Bridge users (reader)
 - **BGF**: no Bridge access
-- **Bank Balances LIVE**: no Bridge access
-- **Cashflow Tracker - CEO**: no Bridge access
+- **Bank Balances LIVE**: 3 Bridge users (reader)
+- **Cashflow Tracker - CEO**: 3 Bridge users (reader)
 - **Project: 2-Week Payment Plan (Denise)**: `anna.r@bridge-ph.com` (writer), `flor.a@bridge-ph.com` (writer), `bea.p@bridge-ph.com` (writer)
+
+**PII audit (S256 Phase 6):** All 5 upstream sheets audited for employee personal info / salary data per Denise E2 restriction. No employee PII found. Supplier TINs and business addresses present but are commercial vendor data Bridge needs for AP reconciliation.
 
 ### DD package recommended exports
 

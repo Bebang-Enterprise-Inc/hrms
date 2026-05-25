@@ -1,0 +1,57 @@
+{
+  "captured_at": "2026-05-25T13:37:17.365455+08:00",
+  "sheets": {
+    "FPM": {
+      "sheet_id": "1t4wJLiAfIMJm6fe-x6h4eZn_S_Lx1AGN5ORd5Ywhcyw",
+      "total_permissions": 28,
+      "bridge_count": 5,
+      "bridge_emails": [
+        "anna.r@bridge-ph.com",
+        "kim.c@bridge-ph.com",
+        "flor.a@bridge-ph.com",
+        "accountant.outsource@bridge-ph.com",
+        "erica.d@bridge-ph.com"
+      ]
+    },
+    "Compliance App": {
+      "sheet_id": "1QWdoZlT7XWLppfVKpJ2VRXhbMkYtE5TbUwg4lMbO03Q",
+      "total_permissions": 10,
+      "bridge_count": 3,
+      "bridge_emails": [
+        "anna.r@bridge-ph.com",
+        "flor.a@bridge-ph.com",
+        "bea.p@bridge-ph.com"
+      ]
+    },
+    "Bank Balances LIVE": {
+      "sheet_id": "19kSR8HQdveZVleMZORGQetHXVCxaeDy6EMlKfe2G77w",
+      "total_permissions": 9,
+      "bridge_count": 3,
+      "bridge_emails": [
+        "anna.r@bridge-ph.com",
+        "flor.a@bridge-ph.com",
+        "bea.p@bridge-ph.com"
+      ]
+    },
+    "Cashflow Tracker CEO": {
+      "sheet_id": "1W2GERTwbODqfbHM70XpJJEtFwL-jIPbb2zzwC0Rcfeg",
+      "total_permissions": 9,
+      "bridge_count": 3,
+      "bridge_emails": [
+        "anna.r@bridge-ph.com",
+        "flor.a@bridge-ph.com",
+        "bea.p@bridge-ph.com"
+      ]
+    },
+    "PCM": {
+      "sheet_id": "1_5BSZeNL9A_o5QO6WD4L42gGjYY6-yCDfgTp01y0fpo",
+      "total_permissions": 5,
+      "bridge_count": 3,
+      "bridge_emails": [
+        "anna.r@bridge-ph.com",
+        "flor.a@bridge-ph.com",
+        "bea.p@bridge-ph.com"
+      ]
+    }
+  }
+}

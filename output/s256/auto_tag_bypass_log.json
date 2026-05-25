@@ -1,0 +1,581 @@
+{
+  "historical_retagged_count": 94,
+  "audit": {
+    "audit_tabs": [
+      "Suppliers SOA",
+      "Head Office"
+    ],
+    "needs_retag_count": 94,
+    "delta_vs_s255": 94,
+    "s255_baseline": {
+      "3m_dragon": 6,
+      "suzuyo": 18
+    },
+    "rows": [
+      {
+        "tab": "Head Office",
+        "sheet_row": 2790,
+        "payee": "3M Dragon Logistics Corporation",
+        "current_source": "FPM"
+      },
+      {
+        "tab": "Head Office",
+        "sheet_row": 2791,
+        "payee": "3M Dragon Logistics Corporation",
+        "current_source": "FPM"
+      },
+      {
+        "tab": "Head Office",
+        "sheet_row": 2792,
+        "payee": "3M Dragon Logistics Corporation",
+        "current_source": "FPM"
+      },
+      {
+        "tab": "Head Office",
+        "sheet_row": 2793,
+        "payee": "3M Dragon Logistics Corporation",
+        "current_source": "FPM"
+      },
+      {
+        "tab": "Head Office",
+        "sheet_row": 2794,
+        "payee": "3M Dragon Logistics Corporation",
+        "current_source": "FPM"
+      },
+      {
+        "tab": "Head Office",
+        "sheet_row": 2797,
+        "payee": "Suzuyo Whitelands Logistics, Inc",
+        "current_source": "FPM"
+      },
+      {
+        "tab": "Head Office",
+        "sheet_row": 2798,
+        "payee": "Suzuyo Whitelands Logistics, Inc",
+        "current_source": "FPM"
+      },
+      {
+        "tab": "Head Office",
+        "sheet_row": 2799,
+        "payee": "Suzuyo Whitelands Logistics, Inc",
+        "current_source": "FPM"
+      },
+      {
+        "tab": "Head Office",
+        "sheet_row": 2800,
+        "payee": "Four Coolitz Enterprise Corporation",
+        "current_source": "FPM"
+      },
+      {
+        "tab": "Head Office",
+        "sheet_row": 2801,
+        "payee": "Four Coolitz Enterprise Corporation",
+        "current_source": "FPM"
+      },
+      {
+        "tab": "Head Office",
+        "sheet_row": 2809,
+        "payee": "Pinnacle Cold Storage Inc.",
+        "current_source": "FPM"
+      },
+      {
+        "tab": "Head Office",
+        "sheet_row": 2838,
+        "payee": "Suzuyo Whitelands Logistics, Inc",
+        "current_source": "FPM"
+      },
+      {
+        "tab": "Head Office",
+        "sheet_row": 2891,
+        "payee": "3M Dragon Logistics Corporation",
+        "current_source": "FPM"
+      },
+      {
+        "tab": "Head Office",
+        "sheet_row": 2892,
+        "payee": "3M Dragon Logistics Corporation",
+        "current_source": "FPM"
+      },
+      {
+        "tab": "Head Office",
+        "sheet_row": 2893,
+        "payee": "3M Dragon Logistics Corporation",
+        "current_source": "FPM"
+      },
+      {
+        "tab": "Head Office",
+        "sheet_row": 2915,
+        "payee": "Suzuyo Whitelands Logistics, Inc",
+        "current_source": "FPM"
+      },
+      {
+        "tab": "Head Office",
+        "sheet_row": 3061,
+        "payee": "Suzuyo Whitelands Logistics, Inc",
+        "current_source": "FPM"
+      },
+      {
+        "tab": "Head Office",
+        "sheet_row": 3577,
+        "payee": "Four Coolitz Enterprises Corporation",
+        "current_source": "FPM"
+      },
+      {
+        "tab": "Head Office",
+        "sheet_row": 3582,
+        "payee": "Four Coolitz Enterprises Corporation",
+        "current_source": "FPM"
+      },
+      {
+        "tab": "Head Office",
+        "sheet_row": 3782,
+        "payee": "Pinnacle Cold Storage Inc",
+        "current_source": "FPM"
+      },
+      {
+        "tab": "Head Office",
+        "sheet_row": 3783,
+        "payee": "Pinnacle Cold Storage Inc",
+        "current_source": "FPM"
+      },
+      {
+        "tab": "Head Office",
+        "sheet_row": 3784,
+        "payee": "Pinnacle Cold Storage Inc",
+        "current_source": "FPM"
+      },
+      {
+        "tab": "Head Office",
+        "sheet_row": 3785,
+        "payee": "Pinnacle Cold Storage Inc",
+        "current_source": "FPM"
+      },
+      {
+        "tab": "Head Office",
+        "sheet_row": 3786,
+        "payee": "Pinnacle Cold Storage Inc",
+        "current_source": "FPM"
+      },
+      {
+        "tab": "Head Office",
+        "sheet_row": 3787,
+        "payee": "Pinnacle Cold Storage Inc",
+        "current_source": "FPM"
+      },
+      {
+        "tab": "Head Office",
+        "sheet_row": 3788,
+        "payee": "Pinnacle Cold Storage Inc",
+        "current_source": "FPM"
+      },
+      {
+        "tab": "Head Office",
+        "sheet_row": 3789,
+        "payee": "Suzuyo Whitelands Logistics Inc.",
+        "current_source": "FPM"
+      },
+      {
+        "tab": "Head Office",
+        "sheet_row": 3793,
+        "payee": "Suzuyo Whitelands Logistics Inc.",
+        "current_source": "FPM"
+      },
+      {
+        "tab": "Head Office",
+        "sheet_row": 3794,
+        "payee": "Four Coolitz Enterprises Corporation",
+        "current_source": "FPM"
+      },
+      {
+        "tab": "Head Office",
+        "sheet_row": 3795,
+        "payee": "Four Coolitz Enterprises Corporation",
+        "current_source": "FPM"
+      },
+      {
+        "tab": "Head Office",
+        "sheet_row": 3796,
+        "payee": "Suzuyo Whitelands Logistics Inc.",
+        "current_source": "FPM"
+      },
+      {
+        "tab": "Head Office",
+        "sheet_row": 3800,
+        "payee": "Four Coolitz Enterprises Corporation",
+        "current_source": "FPM"
+      },
+      {
+        "tab": "Head Office",
+        "sheet_row": 3801,
+        "payee": "Four Coolitz Enterprises Corporation",
+        "current_source": "FPM"
+      },
+      {
+        "tab": "Head Office",
+        "sheet_row": 3802,
+        "payee": "Four Coolitz Enterprises Corporation",
+        "current_source": "FPM"
+      },
+      {
+        "tab": "Head Office",
+        "sheet_row": 3803,
+        "payee": "Four Coolitz Enterprises Corporation",
+        "current_source": "FPM"
+      },
+      {
+        "tab": "Head Office",
+        "sheet_row": 3837,
+        "payee": "3M Dragon Logistics Corporation",
+        "current_source": "FPM"
+      },
+      {
+        "tab": "Head Office",
+        "sheet_row": 3838,
+        "payee": "3M Dragon Logistics Corporation",
+        "current_source": "FPM"
+      },
+      {
+        "tab": "Head Office",
+        "sheet_row": 3839,
+        "payee": "3M Dragon Logistics Corporation",
+        "current_source": "FPM"
+      },
+      {
+        "tab": "Head Office",
+        "sheet_row": 3840,
+        "payee": "3M Dragon Logistics Corporation",
+        "current_source": "FPM"
+      },
+      {
+        "tab": "Head Office",
+        "sheet_row": 3841,
+        "payee": "Suzuyo Whitelands Logistics Inc.",
+        "current_source": "FPM"
+      },
+      {
+        "tab": "Head Office",
+        "sheet_row": 3842,
+        "payee": "Suzuyo Whitelands Logistics Inc.",
+        "current_source": "FPM"
+      },
+      {
+        "tab": "Head Office",
+        "sheet_row": 3844,
+        "payee": "3M Dragon Logistics Corporation",
+        "current_source": "FPM"
+      },
+      {
+        "tab": "Head Office",
+        "sheet_row": 3845,
+        "payee": "3M Dragon Logistics Corporation",
+        "current_source": "FPM"
+      },
+      {
+        "tab": "Head Office",
+        "sheet_row": 3846,
+        "payee": "3M Dragon Logistics Corporation",
+        "current_source": "FPM"
+      },
+      {
+        "tab": "Head Office",
+        "sheet_row": 3847,
+        "payee": "3M Dragon Logistics Corporation",
+        "current_source": "FPM"
+      },
+      {
+        "tab": "Head Office",
+        "sheet_row": 3848,
+        "payee": "3M Dragon Logistics Corporation",
+        "current_source": "FPM"
+      },
+      {
+        "tab": "Head Office",
+        "sheet_row": 3849,
+        "payee": "3M Dragon Logistics Corporation",
+        "current_source": "FPM"
+      },
+      {
+        "tab": "Head Office",
+        "sheet_row": 3850,
+        "payee": "3M Dragon Logistics Corporation",
+        "current_source": "FPM"
+      },
+      {
+        "tab": "Head Office",
+        "sheet_row": 3851,
+        "payee": "3M Dragon Logistics Corporation",
+        "current_source": "FPM"
+      },
+      {
+        "tab": "Head Office",
+        "sheet_row": 3852,
+        "payee": "3M Dragon Logistics Corporation",
+        "current_source": "FPM"
+      },
+      {
+        "tab": "Head Office",
+        "sheet_row": 3853,
+        "payee": "3M Dragon Logistics Corporation",
+        "current_source": "FPM"
+      },
+      {
+        "tab": "Head Office",
+        "sheet_row": 3854,
+        "payee": "3M Dragon Logistics Corporation",
+        "current_source": "FPM"
+      },
+      {
+        "tab": "Head Office",
+        "sheet_row": 3855,
+        "payee": "3M Dragon Logistics Corporation",
+        "current_source": "FPM"
+      },
+      {
+        "tab": "Head Office",
+        "sheet_row": 3856,
+        "payee": "3M Dragon Logistics Corporation",
+        "current_source": "FPM"
+      },
+      {
+        "tab": "Head Office",
+        "sheet_row": 3857,
+        "payee": "3M Dragon Logistics Corporation",
+        "current_source": "FPM"
+      },
+      {
+        "tab": "Head Office",
+        "sheet_row": 3858,
+        "payee": "3M Dragon Logistics Corporation",
+        "current_source": "FPM"
+      },
+      {
+        "tab": "Head Office",
+        "sheet_row": 3859,
+        "payee": "3M Dragon Logistics Corporation",
+        "current_source": "FPM"
+      },
+      {
+        "tab": "Head Office",
+        "sheet_row": 3860,
+        "payee": "3M Dragon Logistics Corporation",
+        "current_source": "FPM"
+      },
+      {
+        "tab": "Head Office",
+        "sheet_row": 3861,
+        "payee": "3M Dragon Logistics Corporation",
+        "current_source": "FPM"
+      },
+      {
+        "tab": "Head Office",
+        "sheet_row": 3862,
+        "payee": "3M Dragon Logistics Corporation",
+        "current_source": "FPM"
+      },
+      {
+        "tab": "Head Office",
+        "sheet_row": 3863,
+        "payee": "3M Dragon Logistics Corporation",
+        "current_source": "FPM"
+      },
+      {
+        "tab": "Head Office",
+        "sheet_row": 3864,
+        "payee": "Four Coolitz Enterprises Corporation",
+        "current_source": "FPM"
+      },
+      {
+        "tab": "Head Office",
+        "sheet_row": 3865,
+        "payee": "Four Coolitz Enterprises Corporation",
+        "current_source": "FPM"
+      },
+      {
+        "tab": "Head Office",
+        "sheet_row": 3866,
+        "payee": "Four Coolitz Enterprises Corporation",
+        "current_source": "FPM"
+      },
+      {
+        "tab": "Head Office",
+        "sheet_row": 3867,
+        "payee": "Four Coolitz Enterprises Corporation",
+        "current_source": "FPM"
+      },
+      {
+        "tab": "Head Office",
+        "sheet_row": 3880,
+        "payee": "3M DRAGON LOGISTICS CORPORATION",
+        "current_source": "FPM"
+      },
+      {
+        "tab": "Head Office",
+        "sheet_row": 3881,
+        "payee": "3M DRAGON LOGISTICS CORPORATION",
+        "current_source": "FPM"
+      },
+      {
+        "tab": "Head Office",
+        "sheet_row": 3882,
+        "payee": "3M DRAGON LOGISTICS CORPORATION",
+        "current_source": "FPM"
+      },
+      {
+        "tab": "Head Office",
+        "sheet_row": 3883,
+        "payee": "3M DRAGON LOGISTICS CORPORATION",
+        "current_source": "FPM"
+      },
+      {
+        "tab": "Head Office",
+        "sheet_row": 3884,
+        "payee": "3M DRAGON LOGISTICS CORPORATION",
+        "current_source": "FPM"
+      },
+      {
+        "tab": "Head Office",
+        "sheet_row": 3885,
+        "payee": "3M DRAGON LOGISTICS CORPORATION",
+        "current_source": "FPM"
+      },
+      {
+        "tab": "Head Office",
+        "sheet_row": 3889,
+        "payee": "3M DRAGON LOGISTICS CORPORATION",
+        "current_source": "FPM"
+      },
+      {
+        "tab": "Head Office",
+        "sheet_row": 3890,
+        "payee": "3M DRAGON LOGISTICS CORPORATION",
+        "current_source": "FPM"
+      },
+      {
+        "tab": "Head Office",
+        "sheet_row": 3900,
+        "payee": "3M Dragon Logistics Corporation",
+        "current_source": "FPM"
+      },
+      {
+        "tab": "Head Office",
+        "sheet_row": 3901,
+        "payee": "3M Dragon Logistics Corporation",
+        "current_source": "FPM"
+      },
+      {
+        "tab": "Head Office",
+        "sheet_row": 3902,
+        "payee": "3M Dragon Logistics Corporation",
+        "current_source": "FPM"
+      },
+      {
+        "tab": "Head Office",
+        "sheet_row": 3903,
+        "payee": "3M Dragon Logistics Corporation",
+        "current_source": "FPM"
+      },
+      {
+        "tab": "Head Office",
+        "sheet_row": 3904,
+        "payee": "3M Dragon Logistics Corporation",
+        "current_source": "FPM"
+      },
+      {
+        "tab": "Head Office",
+        "sheet_row": 3905,
+        "payee": "3M Dragon Logistics Corporation",
+        "current_source": "FPM"
+      },
+      {
+        "tab": "Head Office",
+        "sheet_row": 3906,
+        "payee": "3M Dragon Logistics Corporation",
+        "current_source": "FPM"
+      },
+      {
+        "tab": "Head Office",
+        "sheet_row": 3907,
+        "payee": "3M Dragon Logistics Corporation",
+        "current_source": "FPM"
+      },
+      {
+        "tab": "Head Office",
+        "sheet_row": 3913,
+        "payee": "Pinnacle Cold Storage Inc",
+        "current_source": "FPM"
+      },
+      {
+        "tab": "Head Office",
+        "sheet_row": 3914,
+        "payee": "Pinnacle Cold Storage Inc",
+        "current_source": "FPM"
+      },
+      {
+        "tab": "Head Office",
+        "sheet_row": 4216,
+        "payee": "Four Coolitz Enterprises Corporation",
+        "current_source": "FPM"
+      },
+      {
+        "tab": "Head Office",
+        "sheet_row": 4217,
+        "payee": "Four Coolitz Enterprises Corporation",
+        "current_source": "FPM"
+      },
+      {
+        "tab": "Head Office",
+        "sheet_row": 4218,
+        "payee": "Four Coolitz Enterprises Corporation",
+        "current_source": "FPM"
+      },
+      {
+        "tab": "Head Office",
+        "sheet_row": 4219,
+        "payee": "Four Coolitz Enterprises Corporation",
+        "current_source": "FPM"
+      },
+      {
+        "tab": "Head Office",
+        "sheet_row": 4481,
+        "payee": "3M DRAGON LOGISTICS CORPORATION",
+        "current_source": "FPM"
+      },
+      {
+        "tab": "Head Office",
+        "sheet_row": 4482,
+        "payee": "3M DRAGON LOGISTICS CORPORATION",
+        "current_source": "FPM"
+      },
+      {
+        "tab": "Head Office",
+        "sheet_row": 4483,
+        "payee": "3M DRAGON LOGISTICS CORPORATION",
+        "current_source": "FPM"
+      },
+      {
+        "tab": "Head Office",
+        "sheet_row": 4484,
+        "payee": "3M DRAGON LOGISTICS CORPORATION",
+        "current_source": "FPM"
+      },
+      {
+        "tab": "Head Office",
+        "sheet_row": 4485,
+        "payee": "3M DRAGON LOGISTICS CORPORATION",
+        "current_source": "FPM"
+      },
+      {
+        "tab": "Head Office",
+        "sheet_row": 4486,
+        "payee": "3M DRAGON LOGISTICS CORPORATION",
+        "current_source": "FPM"
+      },
+      {
+        "tab": "Head Office",
+        "sheet_row": 4487,
+        "payee": "3M DRAGON LOGISTICS CORPORATION",
+        "current_source": "FPM"
+      }
+    ]
+  }
+}
