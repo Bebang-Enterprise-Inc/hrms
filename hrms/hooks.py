@@ -230,6 +230,12 @@ doc_events = {
 			"hrms.api.bki_store_pi_generator.maybe_generate_store_pi",
 			"hrms.api.bki_store_stock_entry_generator.maybe_generate_store_stock_entry",
 		],
+		# S253 fix — Frappe's cancel() calls check_if_doc_is_linked() BEFORE
+		# on_cancel hooks fire. The bki_si_reference Link field on paired PI/SE
+		# triggers LinkExistsError, preventing cancellation entirely. The
+		# before_cancel hook sets ignore_links_for_doctype so the link check
+		# passes, then on_cancel cascade handles the paired docs correctly.
+		"before_cancel": "hrms.api.bki_store_pi_generator.allow_bki_si_cancel_with_paired_docs",
 		# S238/S247 — cascade-cancel paired docs on SI cancel. ORDER: SE FIRST, PI SECOND
 		# (reverse-creation, textbook cancellation pattern). Cancelling SE first keeps
 		# SRBNB net at zero throughout the cancellation window. v3 (S247): converted

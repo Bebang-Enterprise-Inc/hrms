@@ -362,6 +362,32 @@ def resolve_account_by_number(company, account_number):
 	return rows[0]["name"]
 
 
+def allow_bki_si_cancel_with_paired_docs(doc, method=None):
+	"""S253 fix — Sales Invoice before_cancel hook.
+
+	Frappe's cancel() calls check_if_doc_is_linked() BEFORE on_cancel hooks fire.
+	The bki_si_reference Custom Field (Link type) on paired PI and SE triggers
+	LinkExistsError, making it impossible to cancel any BKI SI that has generated
+	paired documents.
+
+	This before_cancel hook tells Frappe to skip the link check for Purchase Invoice
+	and Stock Entry, allowing the cancel to proceed to on_cancel where the cascade
+	handlers (cascade_cancel_store_stock_entry + cascade_cancel_store_pi) properly
+	handle the paired docs.
+
+	Only applies to BKI SIs (company == BEBANG KITCHEN INC.). Non-BKI SIs are
+	unaffected — their link checks proceed normally.
+	"""
+	if doc.company != BKI_COMPANY:
+		return
+	if not hasattr(frappe.flags, "ignore_links_for_doctype"):
+		frappe.flags.ignore_links_for_doctype = []
+	if "Purchase Invoice" not in frappe.flags.ignore_links_for_doctype:
+		frappe.flags.ignore_links_for_doctype.append("Purchase Invoice")
+	if "Stock Entry" not in frappe.flags.ignore_links_for_doctype:
+		frappe.flags.ignore_links_for_doctype.append("Stock Entry")
+
+
 def cascade_cancel_store_pi(doc, method=None):
 	"""v2-B3: Sales Invoice on_cancel — cascade to paired store-side PI.
 
