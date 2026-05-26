@@ -1,0 +1,491 @@
+{
+  "stores": [
+    {
+      "store": "AYALA EVO CITY - BEBANG MEGA INC.",
+      "verdict": "PASS",
+      "batch": "batch1",
+      "si_name": "BKI-SI-2026-01182-1",
+      "pi_name": "ACC-PINV-2026-00768",
+      "se_name": "MAT-STE-2026-03239",
+      "gl_rows_count": 5,
+      "srbnb_net": 0
+    },
+    {
+      "store": "AYALA FAIRVIEW TERRACES - BEBANG FT INC.",
+      "verdict": "FAIL",
+      "batch": "batch1",
+      "si_name": "BKI-SI-2026-01183-1",
+      "pi_name": "ACC-PINV-2026-00769",
+      "se_name": "MAT-STE-2026-03242",
+      "error": "submitDoc Purchase Invoice/ACC-PINV-2026-00769 failed (417): {\"exception\":\"frappe.exceptions.ValidationError: Purchase Invoice ACC-PINV-2026-00769: Cost Center Main - BFI2 does not belong to Company AYALA FAIRVIEW TERRACES - BEBANG FT INC.\",\"exc_type\":\"ValidationError\",\"_exc_source\":\"erpnext (app)\",\"exc\":\"[\\\"Traceback (most recent call last):\\\\n  File \\\\\\\"apps/frappe/frappe/app.py\\\\\\\", line 120, in application\\\\n    response = frappe.api.handle(request)\\\\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^\\\\n  File \\\\\\\"apps/frappe/frappe/api/__init__.py\\\\\\\", line 5"
+    },
+    {
+      "store": "AYALA MARKET MARKET - BEBANG MARKET MARKET INC.",
+      "verdict": "PASS",
+      "batch": "batch1",
+      "si_name": "BKI-SI-2026-01184-1",
+      "pi_name": "ACC-PINV-2026-00770",
+      "se_name": "MAT-STE-2026-03245",
+      "gl_rows_count": 5,
+      "srbnb_net": 0
+    },
+    {
+      "store": "AYALA SOLENAD - HFFM SOLENAD FOOD SERVICES INC.",
+      "verdict": "PASS",
+      "batch": "batch1",
+      "si_name": "BKI-SI-2026-01185-1",
+      "pi_name": "ACC-PINV-2026-00771",
+      "se_name": "MAT-STE-2026-03248",
+      "gl_rows_count": 5,
+      "srbnb_net": 0
+    },
+    {
+      "store": "AYALA UP TOWN CENTER - BEBANG UP TOWN CENTER INC.",
+      "verdict": "PASS",
+      "batch": "batch1",
+      "si_name": "BKI-SI-2026-01186-1",
+      "pi_name": "ACC-PINV-2026-00772",
+      "se_name": "MAT-STE-2026-03251",
+      "gl_rows_count": 5,
+      "srbnb_net": 0
+    },
+    {
+      "store": "AYALA VERMOSA - BEBANG MEGA INC.",
+      "verdict": "PASS",
+      "batch": "batch1",
+      "si_name": "BKI-SI-2026-01187-1",
+      "pi_name": "ACC-PINV-2026-00773",
+      "se_name": "MAT-STE-2026-03254",
+      "gl_rows_count": 5,
+      "srbnb_net": 0
+    },
+    {
+      "store": "BF HOMES - BEBANG BF HOMES INC.",
+      "verdict": "PASS",
+      "batch": "batch1",
+      "si_name": "BKI-SI-2026-01188-1",
+      "pi_name": "ACC-PINV-2026-00774",
+      "se_name": "MAT-STE-2026-03257",
+      "gl_rows_count": 5,
+      "srbnb_net": 0
+    },
+    {
+      "store": "CTTM TOMAS MORATO - B CUBED VENTURES CORP.",
+      "verdict": "PASS",
+      "batch": "batch1",
+      "si_name": "BKI-SI-2026-01189-1",
+      "pi_name": "ACC-PINV-2026-00775",
+      "se_name": "MAT-STE-2026-03260",
+      "gl_rows_count": 5,
+      "srbnb_net": 0
+    },
+    {
+      "store": "D'VERDE CALAMBA - TAJ FOOD CORP.",
+      "verdict": "PASS",
+      "batch": "batch1",
+      "si_name": "BKI-SI-2026-01190-1",
+      "pi_name": "ACC-PINV-2026-00776",
+      "se_name": "MAT-STE-2026-03263",
+      "gl_rows_count": 5,
+      "srbnb_net": 0
+    },
+    {
+      "store": "EVER COMMONWEALTH - DLS DESSERT CRAFT INC.",
+      "verdict": "PASS",
+      "batch": "batch1",
+      "si_name": "BKI-SI-2026-01191-1",
+      "pi_name": "ACC-PINV-2026-00777",
+      "se_name": "MAT-STE-2026-03266",
+      "gl_rows_count": 5,
+      "srbnb_net": 0
+    },
+    {
+      "store": "FESTIVAL MALL ALABANG - BEBANG FESTIVAL INC.",
+      "verdict": "PASS",
+      "batch": "batch1",
+      "si_name": "BKI-SI-2026-01192-1",
+      "pi_name": "ACC-PINV-2026-00778",
+      "se_name": "MAT-STE-2026-03269",
+      "gl_rows_count": 5,
+      "srbnb_net": 0
+    },
+    {
+      "store": "LUCKY CHINATOWN - BEBANG LCT INC.",
+      "verdict": "PASS",
+      "batch": "batch1",
+      "si_name": "BKI-SI-2026-01193-1",
+      "pi_name": "ACC-PINV-2026-00779",
+      "se_name": "MAT-STE-2026-03272",
+      "gl_rows_count": 5,
+      "srbnb_net": 0
+    },
+    {
+      "store": "MEGAWIDE PITX - BEBANG PITX INC.",
+      "verdict": "PASS",
+      "batch": "batch1",
+      "si_name": "BKI-SI-2026-01194-1",
+      "pi_name": "ACC-PINV-2026-00780",
+      "se_name": "MAT-STE-2026-03275",
+      "gl_rows_count": 5,
+      "srbnb_net": 0
+    },
+    {
+      "store": "MEGAWORLD PASEO CENTER - BEBANG PASEO INC.",
+      "verdict": "PASS",
+      "batch": "batch1",
+      "si_name": "BKI-SI-2026-01195-1",
+      "pi_name": "ACC-PINV-2026-00781",
+      "se_name": "MAT-STE-2026-03278",
+      "gl_rows_count": 5,
+      "srbnb_net": 0
+    },
+    {
+      "store": "MEGAWORLD VENICE GRAND CANAL - BEBANG VENICE GRAND CANAL INC.",
+      "verdict": "PASS",
+      "batch": "batch1",
+      "si_name": "BKI-SI-2026-01196-1",
+      "pi_name": "ACC-PINV-2026-00782",
+      "se_name": "MAT-STE-2026-03281",
+      "gl_rows_count": 5,
+      "srbnb_net": 0
+    },
+    {
+      "store": "ORTIGAS ESTANCIA - BB ESTANCIA FOOD CORP.",
+      "verdict": "PASS",
+      "batch": "batch1",
+      "si_name": "BKI-SI-2026-01197-1",
+      "pi_name": "ACC-PINV-2026-00783",
+      "se_name": "MAT-STE-2026-03284",
+      "gl_rows_count": 5,
+      "srbnb_net": 0
+    },
+    {
+      "store": "ORTIGAS GREENHILLS - BEIFRANCHISE FOOD OPC",
+      "verdict": "PASS",
+      "batch": "batch1",
+      "si_name": "BKI-SI-2026-01198-1",
+      "pi_name": "ACC-PINV-2026-00784",
+      "se_name": "MAT-STE-2026-03287",
+      "gl_rows_count": 5,
+      "srbnb_net": 0
+    },
+    {
+      "store": "ROBINSONS ANTIPOLO - BEBANG ENTERPRISE INC.",
+      "verdict": "FAIL",
+      "batch": "batch1",
+      "si_name": "BKI-SI-2026-01199-1",
+      "pi_name": "ACC-PINV-2026-00785",
+      "se_name": "MAT-STE-2026-03290",
+      "error": "submitDoc Purchase Invoice/ACC-PINV-2026-00785 failed (417): {\"exception\":\"frappe.exceptions.ValidationError: Please mention '<strong>Round Off Account</strong>' in Company: <a href=\\\"https://hq.bebang.ph/app/company/ROBINSONS%20ANTIPOLO%20-%20BEBANG%20ENTERPRISE%20INC.\\\">ROBINSONS ANTIPOLO - BEBANG ENTERPRISE INC.</a>\",\"exc_type\":\"ValidationError\",\"_exc_source\":\"erpnext (app)\",\"exc\":\"[\\\"Traceback (most recent call last):\\\\n  File \\\\\\\"apps/frappe/frappe/app.py\\\\\\\", line 120, in application\\\\n    response = frappe.api.handle(request)\\\\n               ^^^^^"
+    },
+    {
+      "store": "ROBINSONS GALLERIA SOUTH - TUNGSTEN CAPITAL HOLDINGS OPC",
+      "verdict": "PASS",
+      "batch": "batch1",
+      "si_name": "BKI-SI-2026-01200-1",
+      "pi_name": "ACC-PINV-2026-00786",
+      "se_name": "MAT-STE-2026-03293",
+      "gl_rows_count": 5,
+      "srbnb_net": 0
+    },
+    {
+      "store": "ROBINSONS GENERAL TRIAS - BEBANG MEGA INC.",
+      "verdict": "PASS",
+      "batch": "batch1",
+      "si_name": "BKI-SI-2026-01201-1",
+      "pi_name": "ACC-PINV-2026-00787",
+      "se_name": "MAT-STE-2026-03296",
+      "gl_rows_count": 5,
+      "srbnb_net": 0
+    },
+    {
+      "store": "ROBINSONS IMUS - BEBANG MEGA INC.",
+      "verdict": "PASS",
+      "batch": "batch1",
+      "si_name": "BKI-SI-2026-01202-1",
+      "pi_name": "ACC-PINV-2026-00788",
+      "se_name": "MAT-STE-2026-03299",
+      "gl_rows_count": 5,
+      "srbnb_net": 0
+    },
+    {
+      "store": "ROBINSONS PLACE DASMARINAS - FREEZE DELIGHT INC.",
+      "verdict": "FAIL",
+      "batch": "batch1",
+      "si_name": "BKI-SI-2026-01203-1",
+      "pi_name": "ACC-PINV-2026-00789",
+      "se_name": "MAT-STE-2026-03302",
+      "error": "S253: paired-doc buyer-side GL rows for SI BKI-SI-2026-01203-1 (SE=MAT-STE-2026-03302, PI=ACC-PINV-2026-00789), excluding Round Off\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m5\u001b[39m\nReceived: \u001b[31m6\u001b[39m"
+    },
+    {
+      "store": "SM BICUTAN - BEBANG SM BICUTAN INC.",
+      "verdict": "PASS",
+      "batch": "batch2",
+      "si_name": "BKI-SI-2026-01204-1",
+      "pi_name": "ACC-PINV-2026-00790",
+      "se_name": "MAT-STE-2026-03305",
+      "gl_rows_count": 5,
+      "srbnb_net": 0
+    },
+    {
+      "store": "SM CALOOCAN - TAJ FOOD CORP.",
+      "verdict": "PASS",
+      "batch": "batch2",
+      "si_name": "BKI-SI-2026-01205-1",
+      "pi_name": "ACC-PINV-2026-00791",
+      "se_name": "MAT-STE-2026-03308",
+      "gl_rows_count": 5,
+      "srbnb_net": 0
+    },
+    {
+      "store": "SM CLARK - RED TALDAWA FOODS OPC",
+      "verdict": "PASS",
+      "batch": "batch2",
+      "si_name": "BKI-SI-2026-01206-1",
+      "pi_name": "ACC-PINV-2026-00792",
+      "se_name": "MAT-STE-2026-03311",
+      "gl_rows_count": 5,
+      "srbnb_net": 0
+    },
+    {
+      "store": "SM EAST ORTIGAS - BEBANG SMEO INC.",
+      "verdict": "PASS",
+      "batch": "batch2",
+      "si_name": "BKI-SI-2026-01207-1",
+      "pi_name": "ACC-PINV-2026-00793",
+      "se_name": "MAT-STE-2026-03314",
+      "gl_rows_count": 5,
+      "srbnb_net": 0
+    },
+    {
+      "store": "SM GRAND CENTRAL - BEBANG GRAND CENTRAL INC.",
+      "verdict": "PASS",
+      "batch": "batch2",
+      "si_name": "BKI-SI-2026-01208-1",
+      "pi_name": "ACC-PINV-2026-00794",
+      "se_name": "MAT-STE-2026-03317",
+      "gl_rows_count": 5,
+      "srbnb_net": 0
+    },
+    {
+      "store": "SM MALL OF ASIA - BEBANG SMOA INC.",
+      "verdict": "PASS",
+      "batch": "batch2",
+      "si_name": "BKI-SI-2026-01209-1",
+      "pi_name": "ACC-PINV-2026-00795",
+      "se_name": "MAT-STE-2026-03320",
+      "gl_rows_count": 5,
+      "srbnb_net": 0
+    },
+    {
+      "store": "SM MANILA - BEBANG ENTERPRISE INC.",
+      "verdict": "FAIL",
+      "batch": "batch2",
+      "si_name": "BKI-SI-2026-01210-1",
+      "pi_name": "ACC-PINV-2026-00796",
+      "se_name": "MAT-STE-2026-03323",
+      "error": "S253: paired-doc buyer-side GL rows for SI BKI-SI-2026-01210-1 (SE=MAT-STE-2026-03323, PI=ACC-PINV-2026-00796), excluding Round Off\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m5\u001b[39m\nReceived: \u001b[31m6\u001b[39m"
+    },
+    {
+      "store": "SM MARIKINA - BEBANG SM MARIKINA INC.",
+      "verdict": "FAIL",
+      "batch": "batch2",
+      "error": "No BEI Warehouse Receiving produced for MR MAT-MR-2026-01308"
+    },
+    {
+      "store": "SM MARILAO - BEBANG MARILAO INC.",
+      "verdict": "PASS",
+      "batch": "batch2",
+      "si_name": "BKI-SI-2026-01212-1",
+      "pi_name": "ACC-PINV-2026-00797",
+      "se_name": "MAT-STE-2026-03327",
+      "gl_rows_count": 5,
+      "srbnb_net": 0
+    },
+    {
+      "store": "SM NORTH EDSA - BEBANG NORTH EDSA INC.",
+      "verdict": "PASS",
+      "batch": "batch2",
+      "si_name": "BKI-SI-2026-01213-1",
+      "pi_name": "ACC-PINV-2026-00798",
+      "se_name": "MAT-STE-2026-03330",
+      "gl_rows_count": 5,
+      "srbnb_net": 0
+    },
+    {
+      "store": "SM PULILAN - BEBANG SMM INC.",
+      "verdict": "PASS",
+      "batch": "batch2",
+      "si_name": "BKI-SI-2026-01214-1",
+      "pi_name": "ACC-PINV-2026-00799",
+      "se_name": "MAT-STE-2026-03333",
+      "gl_rows_count": 5,
+      "srbnb_net": 0
+    },
+    {
+      "store": "SM SAN JOSE DEL MONTE - JL TRADE OPC",
+      "verdict": "PASS",
+      "batch": "batch2",
+      "si_name": "BKI-SI-2026-01215-1",
+      "pi_name": "ACC-PINV-2026-00800",
+      "se_name": "MAT-STE-2026-03336",
+      "gl_rows_count": 5,
+      "srbnb_net": 0
+    },
+    {
+      "store": "SM SANGANDAAN - TUNGSTEN CAPITAL HOLDINGS OPC",
+      "verdict": "PASS",
+      "batch": "batch2",
+      "si_name": "BKI-SI-2026-01216-1",
+      "pi_name": "ACC-PINV-2026-00801",
+      "se_name": "MAT-STE-2026-03339",
+      "gl_rows_count": 5,
+      "srbnb_net": 0
+    },
+    {
+      "store": "SM SOUTHMALL - BEBANG ENTERPRISE INC.",
+      "verdict": "FAIL",
+      "batch": "batch2",
+      "si_name": "BKI-SI-2026-01217-1",
+      "pi_name": "ACC-PINV-2026-00802",
+      "se_name": "MAT-STE-2026-03342",
+      "error": "S253: paired-doc buyer-side GL rows for SI BKI-SI-2026-01217-1 (SE=MAT-STE-2026-03342, PI=ACC-PINV-2026-00802), excluding Round Off\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m5\u001b[39m\nReceived: \u001b[31m6\u001b[39m"
+    },
+    {
+      "store": "SM STA. ROSA - SWEET HARMONY FOOD CORP.",
+      "verdict": "PASS",
+      "batch": "batch2",
+      "si_name": "BKI-SI-2026-01218-1",
+      "pi_name": "ACC-PINV-2026-00803",
+      "se_name": "MAT-STE-2026-03345",
+      "gl_rows_count": 5,
+      "srbnb_net": 0
+    },
+    {
+      "store": "SM TAYTAY - DAY ONES FOOD AND DRINK ESTABLISHMENTS CORP.",
+      "verdict": "PASS",
+      "batch": "batch2",
+      "si_name": "BKI-SI-2026-01219-1",
+      "pi_name": "ACC-PINV-2026-00804",
+      "se_name": "MAT-STE-2026-03348",
+      "gl_rows_count": 5,
+      "srbnb_net": 0
+    },
+    {
+      "store": "SM VALENZUELA - BEBANG SMV INC.",
+      "verdict": "PASS",
+      "batch": "batch2",
+      "si_name": "BKI-SI-2026-01220-1",
+      "pi_name": "ACC-PINV-2026-00805",
+      "se_name": "MAT-STE-2026-03351",
+      "gl_rows_count": 5,
+      "srbnb_net": 0
+    },
+    {
+      "store": "STA. LUCIA EAST GRAND MALL - BEBANG SM MARIKINA INC.",
+      "verdict": "PASS",
+      "batch": "batch2",
+      "si_name": "BKI-SI-2026-01221-1",
+      "pi_name": "ACC-PINV-2026-00806",
+      "se_name": "MAT-STE-2026-03354",
+      "gl_rows_count": 5,
+      "srbnb_net": 0
+    },
+    {
+      "store": "THE GRID ROCKWELL - TASTECARTEL CORP.",
+      "verdict": "PASS",
+      "batch": "batch2",
+      "si_name": "BKI-SI-2026-01222-1",
+      "pi_name": "ACC-PINV-2026-00807",
+      "se_name": "MAT-STE-2026-03357",
+      "gl_rows_count": 5,
+      "srbnb_net": 0
+    },
+    {
+      "store": "THE TERMINAL - BEBANG STARMALL ALABANG INC.",
+      "verdict": "PASS",
+      "batch": "batch2",
+      "si_name": "BKI-SI-2026-01223-1",
+      "pi_name": "ACC-PINV-2026-00808",
+      "se_name": "MAT-STE-2026-03360",
+      "gl_rows_count": 5,
+      "srbnb_net": 0
+    },
+    {
+      "store": "UP TOWN MALL BGC - DMD HOLDINGS INC.",
+      "verdict": "PASS",
+      "batch": "batch2",
+      "si_name": "BKI-SI-2026-01224-1",
+      "pi_name": "ACC-PINV-2026-00809",
+      "se_name": "MAT-STE-2026-03363",
+      "gl_rows_count": 5,
+      "srbnb_net": 0
+    },
+    {
+      "store": "VISTA MALL TAGUIG - TRICERN FOOD CORP.",
+      "verdict": "PASS",
+      "batch": "batch2",
+      "si_name": "BKI-SI-2026-01225-1",
+      "pi_name": "ACC-PINV-2026-00810",
+      "se_name": "MAT-STE-2026-03366",
+      "gl_rows_count": 5,
+      "srbnb_net": 0
+    },
+    {
+      "store": "AYALA FAIRVIEW TERRACES - BEBANG FT INC.",
+      "verdict": "PASS",
+      "batch": "batch1",
+      "si_name": "BKI-SI-2026-01226-1",
+      "pi_name": "ACC-PINV-2026-00811",
+      "se_name": "MAT-STE-2026-03369",
+      "gl_rows_count": 5,
+      "srbnb_net": 0
+    },
+    {
+      "store": "ROBINSONS ANTIPOLO - BEBANG ENTERPRISE INC.",
+      "verdict": "PASS",
+      "batch": "batch1",
+      "si_name": "BKI-SI-2026-01228-1",
+      "pi_name": "ACC-PINV-2026-00813",
+      "se_name": "MAT-STE-2026-03375",
+      "gl_rows_count": 5,
+      "srbnb_net": 0
+    },
+    {
+      "store": "SM MANILA - BEBANG ENTERPRISE INC.",
+      "verdict": "PASS",
+      "batch": "batch2",
+      "si_name": "BKI-SI-2026-01229-1",
+      "pi_name": "ACC-PINV-2026-00814",
+      "se_name": "MAT-STE-2026-03378",
+      "gl_rows_count": 5,
+      "srbnb_net": 0
+    },
+    {
+      "store": "SM SOUTHMALL - BEBANG ENTERPRISE INC.",
+      "verdict": "PASS",
+      "batch": "batch2",
+      "si_name": "BKI-SI-2026-01230-1",
+      "pi_name": "ACC-PINV-2026-00815",
+      "se_name": "MAT-STE-2026-03381",
+      "gl_rows_count": 5,
+      "srbnb_net": 0
+    },
+    {
+      "store": "SM MARIKINA - BEBANG SM MARIKINA INC.",
+      "verdict": "FAIL",
+      "batch": "batch2",
+      "error": "No BEI Warehouse Receiving produced for MR MAT-MR-2026-01328"
+    },
+    {
+      "store": "STA. LUCIA EAST GRAND MALL - BEBANG SM MARIKINA INC.",
+      "verdict": "PASS",
+      "batch": "batch2",
+      "si_name": "BKI-SI-2026-01232-1",
+      "pi_name": "ACC-PINV-2026-00816",
+      "se_name": "MAT-STE-2026-03385",
+      "gl_rows_count": 5,
+      "srbnb_net": 0
+    }
+  ]
+}
