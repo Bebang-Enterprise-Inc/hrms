@@ -1,0 +1,8 @@
+{
+  "captured_at": "2026-06-04T15:41:03+0800",
+  "cleanroom_csv_found": false,
+  "sql_fallback_used": true,
+  "found_inconsistencies": [],
+  "scope_expansion_required": false,
+  "rationale": "Phase 0.6.5 v1.2 P1-7 SQL fallback executed (cleanroom find returned 0 hits per plan-amendment)."
+}

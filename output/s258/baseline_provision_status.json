@@ -1,0 +1,239 @@
+{
+  "captured_at": "2026-06-04T15:41:03+0800",
+  "rows": [
+    {
+      "name": "ARANETA GATEWAY - TUNGSTEN CAPITAL HOLDINGS OPC",
+      "first_provision_done": 1
+    },
+    {
+      "name": "AYALA EVO CITY - BEBANG MEGA INC.",
+      "first_provision_done": 1
+    },
+    {
+      "name": "AYALA FAIRVIEW TERRACES - BEBANG FT INC.",
+      "first_provision_done": 1
+    },
+    {
+      "name": "AYALA MARKET MARKET - BEBANG MARKET MARKET INC.",
+      "first_provision_done": 1
+    },
+    {
+      "name": "AYALA SOLENAD - HFFM SOLENAD FOOD SERVICES INC.",
+      "first_provision_done": 1
+    },
+    {
+      "name": "AYALA UP TOWN CENTER - BEBANG UP TOWN CENTER INC.",
+      "first_provision_done": 1
+    },
+    {
+      "name": "AYALA VERMOSA - BEBANG MEGA INC.",
+      "first_provision_done": 1
+    },
+    {
+      "name": "BEBANG ENTERPRISE INC.",
+      "first_provision_done": 1
+    },
+    {
+      "name": "BEBANG FRANCHISE CORP.",
+      "first_provision_done": 0
+    },
+    {
+      "name": "BEBANG FT INC.",
+      "first_provision_done": 0
+    },
+    {
+      "name": "BEBANG KITCHEN INC.",
+      "first_provision_done": 1
+    },
+    {
+      "name": "BEBANG MEGA INC.",
+      "first_provision_done": 1
+    },
+    {
+      "name": "BF HOMES - BEBANG BF HOMES INC.",
+      "first_provision_done": 1
+    },
+    {
+      "name": "CTTM TOMAS MORATO - B CUBED VENTURES CORP.",
+      "first_provision_done": 1
+    },
+    {
+      "name": "D'VERDE CALAMBA - TAJ FOOD CORP.",
+      "first_provision_done": 1
+    },
+    {
+      "name": "EVER COMMONWEALTH - DLS DESSERT CRAFT INC.",
+      "first_provision_done": 1
+    },
+    {
+      "name": "FESTIVAL MALL ALABANG - BEBANG FESTIVAL INC.",
+      "first_provision_done": 1
+    },
+    {
+      "name": "IRRESISTIBLE INFUSIONS INC.",
+      "first_provision_done": 1
+    },
+    {
+      "name": "LEGACY77 FOOD CORP.",
+      "first_provision_done": 1
+    },
+    {
+      "name": "LUCKY CHINATOWN - BEBANG LCT INC.",
+      "first_provision_done": 1
+    },
+    {
+      "name": "MEGAWIDE PITX - BEBANG PITX INC.",
+      "first_provision_done": 1
+    },
+    {
+      "name": "MEGAWORLD PASEO CENTER - BEBANG PASEO INC.",
+      "first_provision_done": 1
+    },
+    {
+      "name": "MEGAWORLD VENICE GRAND CANAL - BEBANG VENICE GRAND CANAL INC.",
+      "first_provision_done": 1
+    },
+    {
+      "name": "NAIA T3 - HALO-HALO TERMINAL FOOD CORP.",
+      "first_provision_done": 1
+    },
+    {
+      "name": "ORTIGAS ESTANCIA - BB ESTANCIA FOOD CORP.",
+      "first_provision_done": 1
+    },
+    {
+      "name": "ORTIGAS GREENHILLS - BEIFRANCHISE FOOD OPC",
+      "first_provision_done": 1
+    },
+    {
+      "name": "ROBINSONS ANTIPOLO - BEBANG ENTERPRISE INC.",
+      "first_provision_done": 1
+    },
+    {
+      "name": "ROBINSONS GALLERIA SOUTH - TUNGSTEN CAPITAL HOLDINGS OPC",
+      "first_provision_done": 1
+    },
+    {
+      "name": "ROBINSONS GENERAL TRIAS - BEBANG MEGA INC.",
+      "first_provision_done": 1
+    },
+    {
+      "name": "ROBINSONS IMUS - BEBANG MEGA INC.",
+      "first_provision_done": 1
+    },
+    {
+      "name": "ROBINSONS PLACE DASMARINAS - FREEZE DELIGHT INC.",
+      "first_provision_done": 1
+    },
+    {
+      "name": "SM BICUTAN - BEBANG SM BICUTAN INC.",
+      "first_provision_done": 1
+    },
+    {
+      "name": "SM CALOOCAN - TAJ FOOD CORP.",
+      "first_provision_done": 1
+    },
+    {
+      "name": "SM CLARK - RED TALDAWA FOODS OPC",
+      "first_provision_done": 1
+    },
+    {
+      "name": "SM EAST ORTIGAS - BEBANG SMEO INC.",
+      "first_provision_done": 1
+    },
+    {
+      "name": "SM GRAND CENTRAL - BEBANG GRAND CENTRAL INC.",
+      "first_provision_done": 1
+    },
+    {
+      "name": "SM MALL OF ASIA - BEBANG SMOA INC.",
+      "first_provision_done": 1
+    },
+    {
+      "name": "SM MANILA - BEBANG ENTERPRISE INC.",
+      "first_provision_done": 1
+    },
+    {
+      "name": "SM MARIKINA - BEBANG SM MARIKINA INC.",
+      "first_provision_done": 1
+    },
+    {
+      "name": "SM MARILAO - BEBANG MARILAO INC.",
+      "first_provision_done": 1
+    },
+    {
+      "name": "SM MEGAMALL - BEBANG ENTERPRISE INC.",
+      "first_provision_done": 1
+    },
+    {
+      "name": "SM NORTH EDSA - BEBANG NORTH EDSA INC.",
+      "first_provision_done": 1
+    },
+    {
+      "name": "SM PULILAN - BEBANG SMM INC.",
+      "first_provision_done": 1
+    },
+    {
+      "name": "SM SAN JOSE DEL MONTE - JL TRADE OPC",
+      "first_provision_done": 1
+    },
+    {
+      "name": "SM SANGANDAAN - TUNGSTEN CAPITAL HOLDINGS OPC",
+      "first_provision_done": 1
+    },
+    {
+      "name": "SM SOUTHMALL - BEBANG ENTERPRISE INC.",
+      "first_provision_done": 1
+    },
+    {
+      "name": "SM STA. ROSA - SWEET HARMONY FOOD CORP.",
+      "first_provision_done": 1
+    },
+    {
+      "name": "SM TANZA - BEBANG MEGA INC.",
+      "first_provision_done": 1
+    },
+    {
+      "name": "SM TAYTAY - DAY ONES FOOD AND DRINK ESTABLISHMENTS CORP.",
+      "first_provision_done": 1
+    },
+    {
+      "name": "SM VALENZUELA - BEBANG SMV INC.",
+      "first_provision_done": 1
+    },
+    {
+      "name": "STA. LUCIA EAST GRAND MALL - BEBANG SM MARIKINA INC.",
+      "first_provision_done": 1
+    },
+    {
+      "name": "TAJ FOOD CORP.",
+      "first_provision_done": 1
+    },
+    {
+      "name": "THE GRID ROCKWELL - TASTECARTEL CORP.",
+      "first_provision_done": 1
+    },
+    {
+      "name": "THE TERMINAL - BEBANG STARMALL ALABANG INC.",
+      "first_provision_done": 1
+    },
+    {
+      "name": "TUNGSTEN CAPITAL HOLDINGS OPC",
+      "first_provision_done": 1
+    },
+    {
+      "name": "UP TOWN MALL BGC - DMD HOLDINGS INC.",
+      "first_provision_done": 1
+    },
+    {
+      "name": "VISTA MALL TAGUIG - TRICERN FOOD CORP.",
+      "first_provision_done": 1
+    },
+    {
+      "name": "XENTROMALL MONTALBAN - PERPETUAL FOOD CORP.",
+      "first_provision_done": 1
+    }
+  ],
+  "count_done": 56,
+  "count_not_done": 2
+}

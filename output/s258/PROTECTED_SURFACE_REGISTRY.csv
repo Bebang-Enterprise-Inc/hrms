@@ -1,0 +1,6 @@
+kind,path,sprint,rationale,status,detail
+file,hrms/api/bki_store_pi_generator.py,S253,BKI Store paired-doc generator — DO NOT modify,VERIFIED,exists on disk
+file,hrms/utils/labor_allocation.py,S206,Reliever labor cost-sharing — DO NOT modify,VERIFIED,exists on disk
+sprint,docs/plans/SPRINT_REGISTRY.md,S238,Store-side PI generator (in flight) — DO NOT modify,REMOVED-STALE,"grep failed: Command '['grep', '-c', 'S238', 'docs/plans/SPRINT_REGISTRY.md']' returned non-zero exit status 1."
+note,tabCustomer 49 store records,S196/S206,All 49 per-store P&L Customer records — DO NOT touch,VERIFIED,plan claim retained (no path to validate)
+note,tabWarehouse 49 store routes,S196,All 49 store warehouse->company resolver paths — DO NOT touch,VERIFIED,plan claim retained (no path to validate)

@@ -1,0 +1,115 @@
+account_name,account_number,root_type,account_type,parent_account_stem,is_group,appears_in_count,appears_in_companies
+1104210 - Inventory-from-Commissary,1104210,Asset,Stock,Stock Assets,0,3,AYVER;GHO;SMK
+1106210 - Input VAT - BKI Inter-Co,1106210,Asset,Tax,Current Assets,0,3,AYVER;GHO;SMK
+2103210 - AP-Trade-BKI,2103210,Liability,Payable,Accounts Payable,0,3,AYVER;GHO;SMK
+SALES,4000000,Income,,,1,5,AYVER;BMI2;SMK;BDV;BAG
+STORE SALES,4000100,Income,,4000000 - SALES,1,5,AYVER;BMI2;SMK;BDV;BAG
+IN-STORE SALES,4000110,Income,Income Account,4000100 - STORE SALES,0,5,AYVER;BMI2;SMK;BDV;BAG
+ONLINE SALES,4000120,Income,,4000100 - STORE SALES,1,5,AYVER;BMI2;SMK;BDV;BAG
+BEI WEBSITE,4000121,Income,Income Account,4000120 - ONLINE SALES,0,5,AYVER;BMI2;SMK;BDV;BAG
+FOOD PANDA,4000122,Income,Income Account,4000120 - ONLINE SALES,0,5,AYVER;BMI2;SMK;BDV;BAG
+GRAB,4000123,Income,Income Account,4000120 - ONLINE SALES,0,5,AYVER;BMI2;SMK;BDV;BAG
+BKI SALES,4000200,Income,,4000000 - SALES,1,5,AYVER;BMI2;SMK;BDV;BAG
+DELIVERIES,4000210,Income,Income Account,4000200 - BKI SALES,0,5,AYVER;BMI2;SMK;BDV;BAG
+LOGISTICS,4000220,Income,,4000200 - BKI SALES,1,5,AYVER;BMI2;SMK;BDV;BAG
+DELIVERY INCOME,4000221,Income,Income Account,4000220 - LOGISTICS,0,5,AYVER;BMI2;SMK;BDV;BAG
+LOGISTICS INCOME,4000222,Income,Income Account,4000220 - LOGISTICS,0,5,AYVER;BMI2;SMK;BDV;BAG
+FEES,4000230,Income,,4000000 - SALES,1,5,AYVER;BMI2;SMK;BDV;BAG
+ROYALTY FEES,4000231,Income,Income Account,4000230 - FEES,0,5,AYVER;BMI2;SMK;BDV;BAG
+MANAGEMENT FEES,4000232,Income,Income Account,4000230 - FEES,0,5,AYVER;BMI2;SMK;BDV;BAG
+FRANCHISE FEES,4000233,Income,Income Account,4000230 - FEES,0,5,AYVER;BMI2;SMK;BDV;BAG
+MARKETING FEES,4000234,Income,Income Account,4000230 - FEES,0,5,AYVER;BMI2;SMK;BDV;BAG
+E-COMMERCE FEES,4000235,Income,Income Account,4000230 - FEES,0,5,AYVER;BMI2;SMK;BDV;BAG
+DISCOUNTS AND PROMO,4000900,Income,,4000000 - SALES,1,5,AYVER;BMI2;SMK;BDV;BAG
+SALES DISCOUNT DUE TO FREE HALOHALO,4000901,Income,Income Account,4000900 - DISCOUNTS AND PROMO,0,5,AYVER;BMI2;SMK;BDV;BAG
+SALES DISCOUNT OF SENIOR CITIZENS,4000902,Income,Income Account,4000900 - DISCOUNTS AND PROMO,0,5,AYVER;BMI2;SMK;BDV;BAG
+SALES DISCOUNTS OF PWDS,4000903,Income,Income Account,4000900 - DISCOUNTS AND PROMO,0,5,AYVER;BMI2;SMK;BDV;BAG
+SALES DISCOUNTS OF STAFFS AND EMPLOYEES,4000904,Income,Income Account,4000900 - DISCOUNTS AND PROMO,0,5,AYVER;BMI2;SMK;BDV;BAG
+SALES DISCOUNTS FROM VAT OF PWD,4000905,Income,Income Account,4000900 - DISCOUNTS AND PROMO,0,5,AYVER;BMI2;SMK;BDV;BAG
+SALES DISCOUNTS FROM VAT OF SENIOR CITIZENS,4000906,Income,Income Account,4000900 - DISCOUNTS AND PROMO,0,5,AYVER;BMI2;SMK;BDV;BAG
+SALES REFUNDS TO CUSTOMER,4000907,Income,Income Account,4000900 - DISCOUNTS AND PROMO,0,5,AYVER;BMI2;SMK;BDV;BAG
+SALES DISCOUNTS - EMPLOYEE DISC,4000908,Income,Income Account,4000900 - DISCOUNTS AND PROMO,0,5,AYVER;BMI2;SMK;BDV;BAG
+1104200 - DUE FROM GROUP ENTITIES,,Asset,Receivable,Accounts Receivable,0,3,AYVER;GHO;SMK
+2104200 - DUE TO GROUP ENTITIES,,Liability,Payable,Accounts Payable,0,3,AYVER;GHO;SMK
+Accounts Payable,,Liability,,Current Liabilities,1,6,AYVER;BMI2;GHO;SMK;BDV;BAG
+Accounts Receivable,,Asset,,Current Assets,1,6,AYVER;BMI2;GHO;SMK;BDV;BAG
+Accumulated Depreciation,,Asset,Accumulated Depreciation,Fixed Assets,0,6,AYVER;BMI2;GHO;SMK;BDV;BAG
+Administrative Expenses,,Expense,,Indirect Expenses,0,6,AYVER;BMI2;GHO;SMK;BDV;BAG
+Application of Funds (Assets),,Asset,,,1,6,AYVER;BMI2;GHO;SMK;BDV;BAG
+Asset Received But Not Billed,,Liability,Asset Received But Not Billed,Stock Liabilities,0,6,AYVER;BMI2;GHO;SMK;BDV;BAG
+Bank Accounts,,Asset,Bank,Current Assets,1,6,AYVER;BMI2;GHO;SMK;BDV;BAG
+Bank Overdraft Account,,Liability,,Loans (Liabilities),0,6,AYVER;BMI2;GHO;SMK;BDV;BAG
+Buildings,,Asset,Fixed Asset,Fixed Assets,0,6,AYVER;BMI2;GHO;SMK;BDV;BAG
+CWIP Account,,Asset,Capital Work in Progress,Fixed Assets,0,6,AYVER;BMI2;GHO;SMK;BDV;BAG
+Capital Equipments,,Asset,Fixed Asset,Fixed Assets,0,6,AYVER;BMI2;GHO;SMK;BDV;BAG
+Capital Stock,,Equity,Equity,Equity,0,6,AYVER;BMI2;GHO;SMK;BDV;BAG
+Cash,,Asset,Cash,Cash In Hand,0,6,AYVER;BMI2;GHO;SMK;BDV;BAG
+Cash In Hand,,Asset,Cash,Current Assets,1,6,AYVER;BMI2;GHO;SMK;BDV;BAG
+Commission on Sales,,Expense,,Indirect Expenses,0,6,AYVER;BMI2;GHO;SMK;BDV;BAG
+Cost of Goods Sold,,Expense,Cost of Goods Sold,Stock Expenses,0,6,AYVER;BMI2;GHO;SMK;BDV;BAG
+Creditors,,Liability,Payable,Accounts Payable,0,6,AYVER;BMI2;GHO;SMK;BDV;BAG
+Current Assets,,Asset,,Application of Funds (Assets),1,6,AYVER;BMI2;GHO;SMK;BDV;BAG
+Current Liabilities,,Liability,,Source of Funds (Liabilities),1,6,AYVER;BMI2;GHO;SMK;BDV;BAG
+Debtors,,Asset,Receivable,Accounts Receivable,0,6,AYVER;BMI2;GHO;SMK;BDV;BAG
+Depreciation,,Expense,Depreciation,Indirect Expenses,0,6,AYVER;BMI2;GHO;SMK;BDV;BAG
+Direct Expenses,,Expense,,Expenses,1,6,AYVER;BMI2;GHO;SMK;BDV;BAG
+Direct Income,,Income,,Income,1,6,AYVER;BMI2;GHO;SMK;BDV;BAG
+Dividends Paid,,Equity,Equity,Equity,0,6,AYVER;BMI2;GHO;SMK;BDV;BAG
+Duties and Taxes,,Liability,Tax,Current Liabilities,1,6,AYVER;BMI2;GHO;SMK;BDV;BAG
+Earnest Money,,Asset,,Securities and Deposits,0,6,AYVER;BMI2;GHO;SMK;BDV;BAG
+Electronic Equipments,,Asset,Fixed Asset,Fixed Assets,0,6,AYVER;BMI2;GHO;SMK;BDV;BAG
+Employee Advances,,Asset,Payable,Loans and Advances (Assets),0,6,AYVER;BMI2;GHO;SMK;BDV;BAG
+Entertainment Expenses,,Expense,,Indirect Expenses,0,6,AYVER;BMI2;GHO;SMK;BDV;BAG
+Equity,,Equity,,,1,6,AYVER;BMI2;GHO;SMK;BDV;BAG
+Exchange Gain/Loss,,Expense,,Indirect Expenses,0,6,AYVER;BMI2;GHO;SMK;BDV;BAG
+Expenses,,Expense,,,1,6,AYVER;BMI2;GHO;SMK;BDV;BAG
+Expenses Included In Asset Valuation,,Expense,Expenses Included In Asset Valuation,Stock Expenses,0,6,AYVER;BMI2;GHO;SMK;BDV;BAG
+Expenses Included In Valuation,,Expense,Expenses Included In Valuation,Stock Expenses,0,6,AYVER;BMI2;GHO;SMK;BDV;BAG
+Fixed Assets,,Asset,,Application of Funds (Assets),1,6,AYVER;BMI2;GHO;SMK;BDV;BAG
+Freight and Forwarding Charges,,Expense,Chargeable,Indirect Expenses,0,6,AYVER;BMI2;GHO;SMK;BDV;BAG
+Furnitures and Fixtures,,Asset,Fixed Asset,Fixed Assets,0,6,AYVER;BMI2;GHO;SMK;BDV;BAG
+Gain/Loss on Asset Disposal,,Expense,,Indirect Expenses,0,6,AYVER;BMI2;GHO;SMK;BDV;BAG
+Impairment,,Expense,,Indirect Expenses,0,6,AYVER;BMI2;GHO;SMK;BDV;BAG
+Income,,Income,,,1,6,AYVER;BMI2;GHO;SMK;BDV;BAG
+Indirect Expenses,,Expense,,Expenses,1,6,AYVER;BMI2;GHO;SMK;BDV;BAG
+Indirect Income,,Income,,Income,1,6,AYVER;BMI2;GHO;SMK;BDV;BAG
+Investments,,Asset,,Application of Funds (Assets),1,6,AYVER;BMI2;GHO;SMK;BDV;BAG
+Legal Expenses,,Expense,,Indirect Expenses,0,6,AYVER;BMI2;GHO;SMK;BDV;BAG
+Loans (Liabilities),,Liability,,Current Liabilities,1,6,AYVER;BMI2;GHO;SMK;BDV;BAG
+Loans and Advances (Assets),,Asset,,Current Assets,1,6,AYVER;BMI2;GHO;SMK;BDV;BAG
+Marketing Expenses,,Expense,Chargeable,Indirect Expenses,0,6,AYVER;BMI2;GHO;SMK;BDV;BAG
+Miscellaneous Expenses,,Expense,Chargeable,Indirect Expenses,0,6,AYVER;BMI2;GHO;SMK;BDV;BAG
+Office Equipments,,Asset,Fixed Asset,Fixed Assets,0,6,AYVER;BMI2;GHO;SMK;BDV;BAG
+Office Maintenance Expenses,,Expense,,Indirect Expenses,0,6,AYVER;BMI2;GHO;SMK;BDV;BAG
+Office Rent,,Expense,,Indirect Expenses,0,6,AYVER;BMI2;GHO;SMK;BDV;BAG
+Opening Balance Equity,,Equity,Equity,Equity,0,6,AYVER;BMI2;GHO;SMK;BDV;BAG
+Payroll Payable,,Liability,,Accounts Payable,0,6,AYVER;BMI2;GHO;SMK;BDV;BAG
+Plants and Machineries,,Asset,Fixed Asset,Fixed Assets,0,6,AYVER;BMI2;GHO;SMK;BDV;BAG
+Postal Expenses,,Expense,,Indirect Expenses,0,6,AYVER;BMI2;GHO;SMK;BDV;BAG
+Print and Stationery,,Expense,,Indirect Expenses,0,6,AYVER;BMI2;GHO;SMK;BDV;BAG
+Retained Earnings,,Equity,Equity,Equity,0,6,AYVER;BMI2;GHO;SMK;BDV;BAG
+Revaluation Surplus,,Equity,Equity,Equity,0,6,AYVER;BMI2;GHO;SMK;BDV;BAG
+Round Off,,Expense,Round Off,Indirect Expenses,0,6,AYVER;BMI2;GHO;SMK;BDV;BAG
+Salary,,Expense,,Indirect Expenses,0,6,AYVER;BMI2;GHO;SMK;BDV;BAG
+Sales,,Income,,Direct Income,0,6,AYVER;BMI2;GHO;SMK;BDV;BAG
+Sales Expenses,,Expense,,Indirect Expenses,0,6,AYVER;BMI2;GHO;SMK;BDV;BAG
+Secured Loans,,Liability,,Loans (Liabilities),0,6,AYVER;BMI2;GHO;SMK;BDV;BAG
+Securities and Deposits,,Asset,,Current Assets,1,6,AYVER;BMI2;GHO;SMK;BDV;BAG
+Service,,Income,,Direct Income,0,6,AYVER;BMI2;GHO;SMK;BDV;BAG
+Softwares,,Asset,Fixed Asset,Fixed Assets,0,6,AYVER;BMI2;GHO;SMK;BDV;BAG
+Source of Funds (Liabilities),,Liability,,,1,6,AYVER;BMI2;GHO;SMK;BDV;BAG
+Stock Adjustment,,Expense,Stock Adjustment,Stock Expenses,0,6,AYVER;BMI2;GHO;SMK;BDV;BAG
+Stock Assets,,Asset,Stock,Current Assets,1,6,AYVER;BMI2;GHO;SMK;BDV;BAG
+Stock Expenses,,Expense,,Direct Expenses,1,6,AYVER;BMI2;GHO;SMK;BDV;BAG
+Stock In Hand,,Asset,Stock,Stock Assets,0,6,AYVER;BMI2;GHO;SMK;BDV;BAG
+Stock Liabilities,,Liability,,Current Liabilities,1,6,AYVER;BMI2;GHO;SMK;BDV;BAG
+Stock Received But Not Billed,,Liability,Stock Received But Not Billed,Stock Liabilities,0,6,AYVER;BMI2;GHO;SMK;BDV;BAG
+Tax Assets,,Asset,,Current Assets,1,6,AYVER;BMI2;GHO;SMK;BDV;BAG
+Telephone Expenses,,Expense,,Indirect Expenses,0,6,AYVER;BMI2;GHO;SMK;BDV;BAG
+Temporary Accounts,,Asset,,Application of Funds (Assets),1,6,AYVER;BMI2;GHO;SMK;BDV;BAG
+Temporary Opening,,Asset,Temporary,Temporary Accounts,0,6,AYVER;BMI2;GHO;SMK;BDV;BAG
+Travel Expenses,,Expense,,Indirect Expenses,0,6,AYVER;BMI2;GHO;SMK;BDV;BAG
+Unsecured Loans,,Liability,,Loans (Liabilities),0,6,AYVER;BMI2;GHO;SMK;BDV;BAG
+Utility Expenses,,Expense,,Indirect Expenses,0,6,AYVER;BMI2;GHO;SMK;BDV;BAG
+VAT,,Liability,Tax,Duties and Taxes,0,6,AYVER;BMI2;GHO;SMK;BDV;BAG
+Write Off,,Expense,,Indirect Expenses,0,6,AYVER;BMI2;GHO;SMK;BDV;BAG

@@ -1,0 +1,36 @@
+{
+  "sprint": "S258",
+  "sprint_title": "COA + GL Finalization for ALL 58 Companies (Bridge QBO Handoff)",
+  "branch": "s258-coa-gl-finalization-bridge-handoff",
+  "owned_surfaces": [
+    "tabAccount",
+    "tabCompany.abbr",
+    "tabCompany.round_off_account",
+    "tabCompany.round_off_cost_center",
+    "tabCompany.default_inventory_account",
+    "tabCompany.stock_received_but_not_billed",
+    "tabCompany.default_receivable_account",
+    "tabCompany.default_payable_account",
+    "tabCompany.default_expense_account",
+    "tabCompany.default_income_account",
+    "tabCompany.exchange_gain_loss_account",
+    "tabCompany.write_off_account",
+    "data/_CONSOLIDATED/01_FINANCE/DECISIONS.md (APPEND-ONLY rows COA-175-001..030)",
+    "scripts/coa_fix/* (NEW)",
+    "data/_FINAL/COA_*.csv (NEW)",
+    "output/s258/*"
+  ],
+  "forbidden_surfaces": [
+    "hrms/api/*",
+    "hrms/utils/*",
+    "bei-tasks/*",
+    "tabGL Entry (preserved untouched)",
+    "tabWarehouse",
+    "tabCustomer",
+    "tabSupplier",
+    "tabItem"
+  ],
+  "start_timestamp_pht": "2026-06-04T15:35:41.766893+08:00",
+  "end_timestamp_pht": null,
+  "status": "ACTIVE"
+}
