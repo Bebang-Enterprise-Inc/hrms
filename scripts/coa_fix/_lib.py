@@ -75,6 +75,25 @@ def api_put(path: str, payload: dict) -> dict:
             time.sleep(2 ** attempt)
 
 
+def submit_doc(doctype: str, name: str) -> dict:
+    """Submit a draft document via frappe.client.submit.
+
+    Frappe expects the FULL doc dict (form-encoded), not just (doctype, name).
+    We fetch first, then submit.
+    """
+    full = api_get(f"/api/resource/{doctype}/{name}")
+    doc = full.get("data") or {}
+    headers_no_json = {"Authorization": HEADERS["Authorization"], "Accept": "application/json"}
+    r = requests.post(
+        f"{BASE}/api/method/frappe.client.submit",
+        headers=headers_no_json,
+        data={"doc": json.dumps(doc)},
+        timeout=60,
+    )
+    r.raise_for_status()
+    return r.json()
+
+
 def get_companies_by_status(status: str) -> list[dict]:
     """Read baseline_state.json and return Companies matching status."""
     state = json.load(open("output/s258/baseline_state.json"))
@@ -87,9 +106,12 @@ def get_company_by_name(name: str) -> dict:
 
 
 def account_exists(account_name: str) -> bool:
-    res = api_get("/api/method/frappe.client.exists",
-                  params={"doctype": "Account", "name": account_name})
-    return bool(res.get("message"))
+    res = api_get(
+        "/api/method/frappe.client.get_count",
+        params={"doctype": "Account",
+                "filters": json.dumps([["name", "=", account_name]])},
+    )
+    return (res.get("message") or 0) > 0
 
 
 def create_account(name: str, account_name: str, parent_account: str,

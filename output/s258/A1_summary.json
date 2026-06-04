@@ -1,0 +1,260 @@
+{
+  "captured_at": "2026-06-04T17:28:05+0800",
+  "dry_run": false,
+  "partial_total": 44,
+  "null_default_count": 44,
+  "defects": [
+    {
+      "company": "ARANETA GATEWAY - TUNGSTEN CAPITAL HOLDINGS OPC",
+      "abbr": "ARGW",
+      "bins_nonzero": 83,
+      "note": "tabBin count=83 (W9 \u2014 proceeding; Bins track movement independently)"
+    },
+    {
+      "company": "AYALA EVO CITY - BEBANG MEGA INC.",
+      "abbr": "AYEVO",
+      "bins_nonzero": 2,
+      "note": "tabBin count=2 (W9 \u2014 proceeding; Bins track movement independently)"
+    },
+    {
+      "company": "AYALA FAIRVIEW TERRACES - BEBANG FT INC.",
+      "abbr": "AFT",
+      "bins_nonzero": 57,
+      "note": "tabBin count=57 (W9 \u2014 proceeding; Bins track movement independently)"
+    },
+    {
+      "company": "AYALA MARKET MARKET - BEBANG MARKET MARKET INC.",
+      "abbr": "AMM",
+      "bins_nonzero": 62,
+      "note": "tabBin count=62 (W9 \u2014 proceeding; Bins track movement independently)"
+    },
+    {
+      "company": "AYALA SOLENAD - HFFM SOLENAD FOOD SERVICES INC.",
+      "abbr": "AYSOL",
+      "bins_nonzero": 79,
+      "note": "tabBin count=79 (W9 \u2014 proceeding; Bins track movement independently)"
+    },
+    {
+      "company": "AYALA UP TOWN CENTER - BEBANG UP TOWN CENTER INC.",
+      "abbr": "UPTC",
+      "bins_nonzero": 61,
+      "note": "tabBin count=61 (W9 \u2014 proceeding; Bins track movement independently)"
+    },
+    {
+      "company": "BF HOMES - BEBANG BF HOMES INC.",
+      "abbr": "BFH",
+      "bins_nonzero": 78,
+      "note": "tabBin count=78 (W9 \u2014 proceeding; Bins track movement independently)"
+    },
+    {
+      "company": "CTTM TOMAS MORATO - B CUBED VENTURES CORP.",
+      "abbr": "CTTM",
+      "bins_nonzero": 75,
+      "note": "tabBin count=75 (W9 \u2014 proceeding; Bins track movement independently)"
+    },
+    {
+      "company": "D'VERDE CALAMBA - TAJ FOOD CORP.",
+      "abbr": "DVCAL",
+      "bins_nonzero": 75,
+      "note": "tabBin count=75 (W9 \u2014 proceeding; Bins track movement independently)"
+    },
+    {
+      "company": "EVER COMMONWEALTH - DLS DESSERT CRAFT INC.",
+      "abbr": "EGC",
+      "bins_nonzero": 59,
+      "note": "tabBin count=59 (W9 \u2014 proceeding; Bins track movement independently)"
+    },
+    {
+      "company": "FESTIVAL MALL ALABANG - BEBANG FESTIVAL INC.",
+      "abbr": "FMA",
+      "bins_nonzero": 78,
+      "note": "tabBin count=78 (W9 \u2014 proceeding; Bins track movement independently)"
+    },
+    {
+      "company": "IRRESISTIBLE INFUSIONS INC.",
+      "abbr": "III",
+      "reason": "CREATE failed: 417 Client Error: Expectation Failed for url: https://hq.bebang.ph/api/resource/Account"
+    },
+    {
+      "company": "LUCKY CHINATOWN - BEBANG LCT INC.",
+      "abbr": "LCT",
+      "bins_nonzero": 60,
+      "note": "tabBin count=60 (W9 \u2014 proceeding; Bins track movement independently)"
+    },
+    {
+      "company": "MEGAWIDE PITX - BEBANG PITX INC.",
+      "abbr": "PTX",
+      "bins_nonzero": 78,
+      "note": "tabBin count=78 (W9 \u2014 proceeding; Bins track movement independently)"
+    },
+    {
+      "company": "MEGAWORLD PASEO CENTER - BEBANG PASEO INC.",
+      "abbr": "MPD",
+      "bins_nonzero": 78,
+      "note": "tabBin count=78 (W9 \u2014 proceeding; Bins track movement independently)"
+    },
+    {
+      "company": "MEGAWORLD VENICE GRAND CANAL - BEBANG VENICE GRAND CANAL INC.",
+      "abbr": "VGC",
+      "bins_nonzero": 79,
+      "note": "tabBin count=79 (W9 \u2014 proceeding; Bins track movement independently)"
+    },
+    {
+      "company": "NAIA T3 - HALO-HALO TERMINAL FOOD CORP.",
+      "abbr": "NAIA",
+      "bins_nonzero": 78,
+      "note": "tabBin count=78 (W9 \u2014 proceeding; Bins track movement independently)"
+    },
+    {
+      "company": "ORTIGAS ESTANCIA - BB ESTANCIA FOOD CORP.",
+      "abbr": "ESM",
+      "bins_nonzero": 3,
+      "note": "tabBin count=3 (W9 \u2014 proceeding; Bins track movement independently)"
+    },
+    {
+      "company": "ROBINSONS GALLERIA SOUTH - TUNGSTEN CAPITAL HOLDINGS OPC",
+      "abbr": "ROBGS",
+      "bins_nonzero": 57,
+      "note": "tabBin count=57 (W9 \u2014 proceeding; Bins track movement independently)"
+    },
+    {
+      "company": "ROBINSONS GENERAL TRIAS - BEBANG MEGA INC.",
+      "abbr": "ROBGT",
+      "bins_nonzero": 2,
+      "note": "tabBin count=2 (W9 \u2014 proceeding; Bins track movement independently)"
+    },
+    {
+      "company": "ROBINSONS IMUS - BEBANG MEGA INC.",
+      "abbr": "ROBIM",
+      "bins_nonzero": 2,
+      "note": "tabBin count=2 (W9 \u2014 proceeding; Bins track movement independently)"
+    },
+    {
+      "company": "ROBINSONS PLACE DASMARINAS - FREEZE DELIGHT INC.",
+      "abbr": "ROBDA",
+      "bins_nonzero": 2,
+      "note": "tabBin count=2 (W9 \u2014 proceeding; Bins track movement independently)"
+    },
+    {
+      "company": "SM BICUTAN - BEBANG SM BICUTAN INC.",
+      "abbr": "SMBIC",
+      "bins_nonzero": 83,
+      "note": "tabBin count=83 (W9 \u2014 proceeding; Bins track movement independently)"
+    },
+    {
+      "company": "SM CALOOCAN - TAJ FOOD CORP.",
+      "abbr": "SMCAL",
+      "bins_nonzero": 67,
+      "note": "tabBin count=67 (W9 \u2014 proceeding; Bins track movement independently)"
+    },
+    {
+      "company": "SM CLARK - RED TALDAWA FOODS OPC",
+      "abbr": "SMCLK",
+      "bins_nonzero": 76,
+      "note": "tabBin count=76 (W9 \u2014 proceeding; Bins track movement independently)"
+    },
+    {
+      "company": "SM EAST ORTIGAS - BEBANG SMEO INC.",
+      "abbr": "SMEO",
+      "bins_nonzero": 78,
+      "note": "tabBin count=78 (W9 \u2014 proceeding; Bins track movement independently)"
+    },
+    {
+      "company": "SM GRAND CENTRAL - BEBANG GRAND CENTRAL INC.",
+      "abbr": "SMGC",
+      "bins_nonzero": 54,
+      "note": "tabBin count=54 (W9 \u2014 proceeding; Bins track movement independently)"
+    },
+    {
+      "company": "SM MALL OF ASIA - BEBANG SMOA INC.",
+      "abbr": "SMMOA",
+      "bins_nonzero": 73,
+      "note": "tabBin count=73 (W9 \u2014 proceeding; Bins track movement independently)"
+    },
+    {
+      "company": "SM MARILAO - BEBANG MARILAO INC.",
+      "abbr": "SMMAR",
+      "bins_nonzero": 66,
+      "note": "tabBin count=66 (W9 \u2014 proceeding; Bins track movement independently)"
+    },
+    {
+      "company": "SM NORTH EDSA - BEBANG NORTH EDSA INC.",
+      "abbr": "SMNE",
+      "bins_nonzero": 79,
+      "note": "tabBin count=79 (W9 \u2014 proceeding; Bins track movement independently)"
+    },
+    {
+      "company": "SM PULILAN - BEBANG SMM INC.",
+      "abbr": "SMPUL",
+      "bins_nonzero": 59,
+      "note": "tabBin count=59 (W9 \u2014 proceeding; Bins track movement independently)"
+    },
+    {
+      "company": "SM SAN JOSE DEL MONTE - JL TRADE OPC",
+      "abbr": "SJDM",
+      "bins_nonzero": 60,
+      "note": "tabBin count=60 (W9 \u2014 proceeding; Bins track movement independently)"
+    },
+    {
+      "company": "SM SANGANDAAN - TUNGSTEN CAPITAL HOLDINGS OPC",
+      "abbr": "SMSDN",
+      "bins_nonzero": 57,
+      "note": "tabBin count=57 (W9 \u2014 proceeding; Bins track movement independently)"
+    },
+    {
+      "company": "SM STA. ROSA - SWEET HARMONY FOOD CORP.",
+      "abbr": "SMSTR",
+      "bins_nonzero": 73,
+      "note": "tabBin count=73 (W9 \u2014 proceeding; Bins track movement independently)"
+    },
+    {
+      "company": "SM TANZA - BEBANG MEGA INC.",
+      "abbr": "SMTZ",
+      "bins_nonzero": 72,
+      "note": "tabBin count=72 (W9 \u2014 proceeding; Bins track movement independently)"
+    },
+    {
+      "company": "SM TAYTAY - DAY ONES FOOD AND DRINK ESTABLISHMENTS CORP.",
+      "abbr": "SMTAY",
+      "bins_nonzero": 81,
+      "note": "tabBin count=81 (W9 \u2014 proceeding; Bins track movement independently)"
+    },
+    {
+      "company": "SM VALENZUELA - BEBANG SMV INC.",
+      "abbr": "SMV",
+      "bins_nonzero": 67,
+      "note": "tabBin count=67 (W9 \u2014 proceeding; Bins track movement independently)"
+    },
+    {
+      "company": "STA. LUCIA EAST GRAND MALL - BEBANG SM MARIKINA INC.",
+      "abbr": "SLGM",
+      "bins_nonzero": 83,
+      "note": "tabBin count=83 (W9 \u2014 proceeding; Bins track movement independently)"
+    },
+    {
+      "company": "THE GRID ROCKWELL - TASTECARTEL CORP.",
+      "abbr": "TGR",
+      "bins_nonzero": 47,
+      "note": "tabBin count=47 (W9 \u2014 proceeding; Bins track movement independently)"
+    },
+    {
+      "company": "THE TERMINAL - BEBANG STARMALL ALABANG INC.",
+      "abbr": "TTA",
+      "bins_nonzero": 71,
+      "note": "tabBin count=71 (W9 \u2014 proceeding; Bins track movement independently)"
+    },
+    {
+      "company": "UP TOWN MALL BGC - DMD HOLDINGS INC.",
+      "abbr": "UMBGC",
+      "bins_nonzero": 75,
+      "note": "tabBin count=75 (W9 \u2014 proceeding; Bins track movement independently)"
+    },
+    {
+      "company": "VISTA MALL TAGUIG - TRICERN FOOD CORP.",
+      "abbr": "VMTAG",
+      "bins_nonzero": 66,
+      "note": "tabBin count=66 (W9 \u2014 proceeding; Bins track movement independently)"
+    }
+  ],
+  "actions": null
+}
