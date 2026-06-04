@@ -1,0 +1,114 @@
+account_number,account_name,root_type,account_type,parent_account_stem,is_group,role_populated
+,Asset,Asset,,,1,yes (root group; all roles)
+,Liability,Liability,,,1,yes (root group; all roles)
+,Equity,Equity,,,1,yes (root group; all roles)
+,Income,Income,,,1,yes (root group; all roles)
+,Expense,Expense,,,1,yes (root group; all roles)
+4000000,SALES,Income,,Income,1,yes
+4000100,STORE SALES,Income,,SALES,1,yes
+4000110,IN-STORE SALES,Income,Income Account,STORE SALES,0,no — group/leaf reserved per Butch COA-175-003
+4000120,ONLINE SALES,Income,,STORE SALES,1,yes
+4000121,BEI WEBSITE,Income,Income Account,ONLINE SALES,0,no — group/leaf reserved per Butch COA-175-003
+4000122,FOOD PANDA,Income,Income Account,ONLINE SALES,0,no — group/leaf reserved per Butch COA-175-003
+4000123,GRAB,Income,Income Account,ONLINE SALES,0,no — group/leaf reserved per Butch COA-175-003
+4000200,BKI SALES,Income,,SALES,1,yes
+4000210,DELIVERIES,Income,Income Account,BKI SALES,0,yes
+4000220,LOGISTICS,Income,,BKI SALES,1,yes
+4000221,DELIVERY INCOME,Income,Income Account,LOGISTICS,0,yes
+4000222,LOGISTICS INCOME,Income,Income Account,LOGISTICS,0,yes
+4000230,FEES,Income,,SALES,1,yes
+4000231,ROYALTY FEES,Income,Income Account,FEES,0,no — group/leaf reserved per Butch COA-175-003
+4000232,MANAGEMENT FEES,Income,Income Account,FEES,0,no — group/leaf reserved per Butch COA-175-003
+4000233,FRANCHISE FEES,Income,Income Account,FEES,0,no — group/leaf reserved per Butch COA-175-003
+4000234,MARKETING FEES,Income,Income Account,FEES,0,no — group/leaf reserved per Butch COA-175-003
+4000235,E-COMMERCE FEES,Income,Income Account,FEES,0,no — group/leaf reserved per Butch COA-175-003
+4000900,DISCOUNTS AND PROMO,Income,,SALES,1,yes
+4000901,SALES DISCOUNT DUE TO FREE HALOHALO,Income,Income Account,DISCOUNTS AND PROMO,0,no — group/leaf reserved per Butch COA-175-003
+4000902,SALES DISCOUNTS OF PWDS,Income,Income Account,DISCOUNTS AND PROMO,0,no — group/leaf reserved per Butch COA-175-003
+4000903,SALES DISCOUNTS OF SENIOR CITIZENS,Income,Income Account,DISCOUNTS AND PROMO,0,no — group/leaf reserved per Butch COA-175-003
+4000904,SALES DISCOUNTS - PROMO,Income,Income Account,DISCOUNTS AND PROMO,0,no — group/leaf reserved per Butch COA-175-003
+4000905,SALES DISCOUNTS - EMPLOYEE,Income,Income Account,DISCOUNTS AND PROMO,0,no — group/leaf reserved per Butch COA-175-003
+4000906,SALES DISCOUNTS - REFUND,Income,Income Account,DISCOUNTS AND PROMO,0,no — group/leaf reserved per Butch COA-175-003
+4000907,SALES DISCOUNTS - GIFT CARDS,Income,Income Account,DISCOUNTS AND PROMO,0,no — group/leaf reserved per Butch COA-175-003
+4000908,SALES DISCOUNTS - OTHERS,Income,Income Account,DISCOUNTS AND PROMO,0,no — group/leaf reserved per Butch COA-175-003
+1104210,1104210 - Inventory-from-Commissary,Asset,Stock,Stock Assets,0,yes (inherited from HEALTHY store template)
+1106210,1106210 - Input VAT - BKI Inter-Co,Asset,Tax,Current Assets,0,yes (inherited from HEALTHY store template)
+2103210,2103210 - AP-Trade-BKI,Liability,Payable,Accounts Payable,0,yes (inherited from HEALTHY store template)
+,1104200 - DUE FROM GROUP ENTITIES,Asset,Receivable,Accounts Receivable,0,yes (inherited from HEALTHY store template)
+,2104200 - DUE TO GROUP ENTITIES,Liability,Payable,Accounts Payable,0,yes (inherited from HEALTHY store template)
+,Accounts Payable,Liability,,Current Liabilities,1,yes (inherited from HEALTHY store template)
+,Accounts Receivable,Asset,,Current Assets,1,yes (inherited from HEALTHY store template)
+,Accumulated Depreciation,Asset,Accumulated Depreciation,Fixed Assets,0,yes (inherited from HEALTHY store template)
+,Administrative Expenses,Expense,,Indirect Expenses,0,yes (inherited from HEALTHY store template)
+,Application of Funds (Assets),Asset,,,1,yes (inherited from HEALTHY store template)
+,Asset Received But Not Billed,Liability,Asset Received But Not Billed,Stock Liabilities,0,yes (inherited from HEALTHY store template)
+,Bank Accounts,Asset,Bank,Current Assets,1,yes (inherited from HEALTHY store template)
+,Bank Overdraft Account,Liability,,Loans (Liabilities),0,yes (inherited from HEALTHY store template)
+,Buildings,Asset,Fixed Asset,Fixed Assets,0,yes (inherited from HEALTHY store template)
+,CWIP Account,Asset,Capital Work in Progress,Fixed Assets,0,yes (inherited from HEALTHY store template)
+,Capital Equipments,Asset,Fixed Asset,Fixed Assets,0,yes (inherited from HEALTHY store template)
+,Capital Stock,Equity,Equity,Equity,0,yes (inherited from HEALTHY store template)
+,Cash,Asset,Cash,Cash In Hand,0,yes (inherited from HEALTHY store template)
+,Cash In Hand,Asset,Cash,Current Assets,1,yes (inherited from HEALTHY store template)
+,Commission on Sales,Expense,,Indirect Expenses,0,yes (inherited from HEALTHY store template)
+,Cost of Goods Sold,Expense,Cost of Goods Sold,Stock Expenses,0,yes (inherited from HEALTHY store template)
+,Creditors,Liability,Payable,Accounts Payable,0,yes (inherited from HEALTHY store template)
+,Current Assets,Asset,,Application of Funds (Assets),1,yes (inherited from HEALTHY store template)
+,Current Liabilities,Liability,,Source of Funds (Liabilities),1,yes (inherited from HEALTHY store template)
+,Debtors,Asset,Receivable,Accounts Receivable,0,yes (inherited from HEALTHY store template)
+,Depreciation,Expense,Depreciation,Indirect Expenses,0,yes (inherited from HEALTHY store template)
+,Direct Expenses,Expense,,Expenses,1,yes (inherited from HEALTHY store template)
+,Dividends Paid,Equity,Equity,Equity,0,yes (inherited from HEALTHY store template)
+,Duties and Taxes,Liability,Tax,Current Liabilities,1,yes (inherited from HEALTHY store template)
+,Earnest Money,Asset,,Securities and Deposits,0,yes (inherited from HEALTHY store template)
+,Electronic Equipments,Asset,Fixed Asset,Fixed Assets,0,yes (inherited from HEALTHY store template)
+,Employee Advances,Asset,Payable,Loans and Advances (Assets),0,yes (inherited from HEALTHY store template)
+,Entertainment Expenses,Expense,,Indirect Expenses,0,yes (inherited from HEALTHY store template)
+,Exchange Gain/Loss,Expense,,Indirect Expenses,0,yes (inherited from HEALTHY store template)
+,Expenses,Expense,,,1,yes (inherited from HEALTHY store template)
+,Expenses Included In Asset Valuation,Expense,Expenses Included In Asset Valuation,Stock Expenses,0,yes (inherited from HEALTHY store template)
+,Expenses Included In Valuation,Expense,Expenses Included In Valuation,Stock Expenses,0,yes (inherited from HEALTHY store template)
+,Fixed Assets,Asset,,Application of Funds (Assets),1,yes (inherited from HEALTHY store template)
+,Freight and Forwarding Charges,Expense,Chargeable,Indirect Expenses,0,yes (inherited from HEALTHY store template)
+,Furnitures and Fixtures,Asset,Fixed Asset,Fixed Assets,0,yes (inherited from HEALTHY store template)
+,Gain/Loss on Asset Disposal,Expense,,Indirect Expenses,0,yes (inherited from HEALTHY store template)
+,Impairment,Expense,,Indirect Expenses,0,yes (inherited from HEALTHY store template)
+,Indirect Expenses,Expense,,Expenses,1,yes (inherited from HEALTHY store template)
+,Investments,Asset,,Application of Funds (Assets),1,yes (inherited from HEALTHY store template)
+,Legal Expenses,Expense,,Indirect Expenses,0,yes (inherited from HEALTHY store template)
+,Loans (Liabilities),Liability,,Current Liabilities,1,yes (inherited from HEALTHY store template)
+,Loans and Advances (Assets),Asset,,Current Assets,1,yes (inherited from HEALTHY store template)
+,Marketing Expenses,Expense,Chargeable,Indirect Expenses,0,yes (inherited from HEALTHY store template)
+,Miscellaneous Expenses,Expense,Chargeable,Indirect Expenses,0,yes (inherited from HEALTHY store template)
+,Office Equipments,Asset,Fixed Asset,Fixed Assets,0,yes (inherited from HEALTHY store template)
+,Office Maintenance Expenses,Expense,,Indirect Expenses,0,yes (inherited from HEALTHY store template)
+,Office Rent,Expense,,Indirect Expenses,0,yes (inherited from HEALTHY store template)
+,Opening Balance Equity,Equity,Equity,Equity,0,yes (inherited from HEALTHY store template)
+,Payroll Payable,Liability,,Accounts Payable,0,yes (inherited from HEALTHY store template)
+,Plants and Machineries,Asset,Fixed Asset,Fixed Assets,0,yes (inherited from HEALTHY store template)
+,Postal Expenses,Expense,,Indirect Expenses,0,yes (inherited from HEALTHY store template)
+,Print and Stationery,Expense,,Indirect Expenses,0,yes (inherited from HEALTHY store template)
+,Retained Earnings,Equity,Equity,Equity,0,yes (inherited from HEALTHY store template)
+,Revaluation Surplus,Equity,Equity,Equity,0,yes (inherited from HEALTHY store template)
+,Round Off,Expense,Round Off,Indirect Expenses,0,yes (inherited from HEALTHY store template)
+,Salary,Expense,,Indirect Expenses,0,yes (inherited from HEALTHY store template)
+,Sales Expenses,Expense,,Indirect Expenses,0,yes (inherited from HEALTHY store template)
+,Secured Loans,Liability,,Loans (Liabilities),0,yes (inherited from HEALTHY store template)
+,Securities and Deposits,Asset,,Current Assets,1,yes (inherited from HEALTHY store template)
+,Softwares,Asset,Fixed Asset,Fixed Assets,0,yes (inherited from HEALTHY store template)
+,Source of Funds (Liabilities),Liability,,,1,yes (inherited from HEALTHY store template)
+,Stock Adjustment,Expense,Stock Adjustment,Stock Expenses,0,yes (inherited from HEALTHY store template)
+,Stock Assets,Asset,Stock,Current Assets,1,yes (inherited from HEALTHY store template)
+,Stock Expenses,Expense,,Direct Expenses,1,yes (inherited from HEALTHY store template)
+,Stock In Hand,Asset,Stock,Stock Assets,0,yes (inherited from HEALTHY store template)
+,Stock Liabilities,Liability,,Current Liabilities,1,yes (inherited from HEALTHY store template)
+,Stock Received But Not Billed,Liability,Stock Received But Not Billed,Stock Liabilities,0,yes (inherited from HEALTHY store template)
+,Tax Assets,Asset,,Current Assets,1,yes (inherited from HEALTHY store template)
+,Telephone Expenses,Expense,,Indirect Expenses,0,yes (inherited from HEALTHY store template)
+,Temporary Accounts,Asset,,Application of Funds (Assets),1,yes (inherited from HEALTHY store template)
+,Temporary Opening,Asset,Temporary,Temporary Accounts,0,yes (inherited from HEALTHY store template)
+,Travel Expenses,Expense,,Indirect Expenses,0,yes (inherited from HEALTHY store template)
+,Unsecured Loans,Liability,,Loans (Liabilities),0,yes (inherited from HEALTHY store template)
+,Utility Expenses,Expense,,Indirect Expenses,0,yes (inherited from HEALTHY store template)
+,VAT,Liability,Tax,Duties and Taxes,0,yes (inherited from HEALTHY store template)
+,Write Off,Expense,,Indirect Expenses,0,yes (inherited from HEALTHY store template)

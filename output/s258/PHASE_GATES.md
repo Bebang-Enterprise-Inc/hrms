@@ -22,14 +22,14 @@
 | 1 | 1.4 A4 — extract canonical store template | PASS | `data/_FINAL/COA_HEALTHY_REFERENCE.csv` — 114 unique account stems unioned from 6 HEALTHY Companies (AYVER, BMI2, GHO, SMK, BDV, BAG). 82 stems appear in ALL 6. |
 | 1 | 1.5 A5 — BFI2→BFT abbr rename | PASS | `scripts/coa_fix/A5_rename_bfi2_to_bft.py` via SSM bench execute. `tabCompany.abbr` BFI2→BFT on BEBANG FT INC.; SEC tax_id `663-440-106-00000` preserved; 0 tabAccount rows with `- BFI2` (BFT had 0 accounts pre-rename); 2 Cost Centers renamed (`BEBANG FT INC. - BFT`, `Main - BFT`); all `cost_center` / `round_off_cost_center` / `depreciation_cost_center` references cascade-updated. |
 | 1 | verify_phase1.py | PASS | All 5 subtask groups PASS: A1 43/43, A2 1/1, A3 ROBDA+XMM, A4 csv, A5 abbr+tax+CCs. |
-| 2 | 2.0 Build per-Company migration map (BEI/BKI/III) | PENDING | — |
-| 2 | 2.0a Generate rollback SQL | PENDING | — |
-| 2 | 2.1 Head Office template | PENDING | — |
-| 2 | 2.2 Commissary template | PENDING | — |
-| 2 | 2.3 Franchisor template | PENDING | — |
-| 2 | 2.4 B1 seed BFC | PENDING | — |
-| 2 | 2.5 B2 seed BFT | PENDING | — |
-| 2 | 2.6 B3 seed 4 BEI-TIN stubs | PENDING | — |
+| 2 | 2.0 Build per-Company migration map (BEI/BKI/III) | PENDING | Migration map for BEI/BKI/III Apex→canonical not yet built. Inputs available: data/_FINAL/COA_TEMPLATE_HEAD_OFFICE.csv (Phase 2.1), COA_TEMPLATE_COMMISSARY.csv (Phase 2.2), COA_HEALTHY_REFERENCE.csv (Phase 1.4), plan Appendix C (Sales tree) + Appendix E (Apex unnumbered derivation rule). Builder needs to: (1) fetch live tabAccount per Company, (2) join on account_number, (3) apply Appendix E rule for unnumbered Apex rows, (4) topological sort via graphlib.TopologicalSorter. |
+| 2 | 2.0a Generate rollback SQL | PENDING | Per-Phase rollback SQL not yet generated for Phase 2. |
+| 2 | 2.1 Head Office template | PASS | `data/_FINAL/COA_TEMPLATE_HEAD_OFFICE.csv` — 114 rows (5-root tree + Butch 27-account Sales tree + 4000005 BRAND GROWTH FEE per COA-175-016 + HEALTHY store stems). Populates 4000110 IN-STORE SALES + JV fees (4000234, 4000235, 4000005). |
+| 2 | 2.2 Commissary template | PASS | `data/_FINAL/COA_TEMPLATE_COMMISSARY.csv` — 113 rows. Populates ONLY 4000200 BKI SALES sub-tree (DELIVERIES, DELIVERY INCOME, LOGISTICS INCOME) per COA-175-011. |
+| 2 | 2.3 Franchisor template | PASS | `data/_FINAL/COA_TEMPLATE_FRANCHISOR.csv` — 115 rows. Populates 4000230 FEES sub-tree + Fork 1 scaffolding (1104200 DUE FROM BEI Asset/Receivable, 2102205 OUTPUT VAT PAYABLE Liability/Tax) per COA-175-013/015. |
+| 2 | 2.4 B1 seed BFC | PENDING | Requires SSM bench execute with `frappe.local.flags.ignore_root_company_validation = True` (same constraint as 1.3.5 + A1-III; BFC is child of BEI which is child of III). Plan §2.4 — apply Franchisor template + seed BEI-side scaffolding (2104200 DUE TO BFC - BEI). |
+| 2 | 2.5 B2 seed BFT | PENDING | Requires SSM bench execute (same root-cascade constraint). Plan §2.5 — apply Head Office template variant (BFT is parent of AFT store; treats as legal-entity-parent-of-one-store). |
+| 2 | 2.6 B3 seed 4 BEI-TIN stubs | PENDING | Requires SSM bench execute. Plan §2.6 — apply Standard Store template (COA_HEALTHY_REFERENCE.csv); each stub has 12 pre-existing accounts to merge/reparent. Phase 2.6 v1.2 P1-9 collision pre-check before seeding. |
 | 3a | III canonical tree seed + per-Company 5-root loop | PENDING | — |
 | 3b | BKI Commissary rewrite | PENDING | — |
 | 3c | BEI Head Office rewrite | PENDING | — |

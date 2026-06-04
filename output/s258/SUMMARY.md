@@ -1,42 +1,70 @@
 # S258 — Running Summary
 
-**Status:** IN-PROGRESS — Phase 0 complete + Phase 1 partial (1.4 PASS, 1.5 grep gate PASS, 1.3 + 1.3.5 probed). Subtask scripts for 1.0/1.1/1.2/1.3/1.3.5/1.5 not yet executed against live.
+**Status:** IN-PROGRESS — Phases 0 + 1 + 2 (templates) DONE; Phase 2.0 migration map + Phase 2.4/2.5/2.6 stub seeds + Phases 3-7 PENDING.
 
-**Branch:** `s258-coa-gl-finalization-bridge-handoff`
+**Branch:** `s258-coa-gl-finalization-bridge-handoff` (pushed to origin)
 **Worktree:** `F:/Dropbox/Projects/BEI-ERP-s258-coa-gl-finalization-bridge-handoff`
 **Base SHA:** `94443fa79` (origin/production)
-**Phase 0 commit:** `8a66a0ecd`
+
+## Commits on branch
+
+1. `8a66a0ecd` — `feat(S258 P0): Boot + Preflight + Audit + Canonical DECISIONS.md ratification`
+2. `84635b8ad` — `feat(S258 P1 partial): A4 template extract + probes + scripts library + Phase 1 handoff`
+3. `b80f47de6` — `feat(S258 P1): Safe sync — A1+A2+A3+A4+A5 LIVE PASS; 1.3.5 + A1-on-III deferred`
+4. (this commit, pending) — `feat(S258 P2 partial): 3 NEW canonical templates + Phase 2.0/3 handoff`
 
 ## What's done
 
-- **Phase 0 (all 9 subtasks):** Boot, worktree, Doppler, canonical preflight (49 stores, 0 violations), baseline evidence copy, REMOTE_TRUTH_BASELINE, first_provision_done audit (56 done / 2 not — BFC + BFT, expected), live Frappe state audit with GL counts (matches plan: HEALTHY=6, PARTIAL=46, MINIMAL=4, MISSING=2), abbr inconsistency audit (0 case-issues), active-run claim, protected surface registry validation (4 VERIFIED, 1 REMOVED-STALE for S238).
-- **Canonical DECISIONS.md ratification (Phase 0.0):** 20 cleanroom COA-175 locks transcribed into `data/_CONSOLIDATED/01_FINANCE/DECISIONS.md` in the canonical 6-column table format under a new `### COA-175 — Canonical Sales Tree Locks` sub-banner. Plan gate adjusted from `≥23` to `≥20` (cleanroom only ever had 20 rows; D0-1 in DEFECTS.md).
-- **Phase 1.4 (A4 — extract canonical store template):** `data/_FINAL/COA_HEALTHY_REFERENCE.csv` built from union of 6 HEALTHY Companies. 114 unique account stems; 82 appear in all 6.
-- **Phase 1 probes:** ROBDA + XMM round_off state (`tmp/s258/probe_round_off.json`), BEI round_off state (`tmp/s258/probe_bei_round_off.json`). Key finding: ROBDA UPPER form has 2 GL postings → JE+DELETE path; BEI's old round_off pointer has 0 GL → no JE transfer needed (simpler than v1.1 worst-case).
-- **Phase 1.5 grep gate:** 0 hits for "BFI2" in `hrms/api/` + `hrms/utils/`. Safe to proceed with the abbr rename.
-- **Shared library:** `scripts/coa_fix/_lib.py` — Doppler creds, api_get/post/put, create_account, set_company_field, write_rollback_sql, log_action helpers.
+### Phase 0 — Boot + Preflight + Audit (12u, PASS)
 
-## What's pending
+- Worktree spawned from origin/production (SHA 94443fa79).
+- Canonical preflight: 49 stores, 0 violations.
+- 20 cleanroom COA-175-001..020 transcribed into `data/_CONSOLIDATED/01_FINANCE/DECISIONS.md` (canonical 6-column table format; gate adjusted from ≥23 to ≥20 — D0-1).
+- Live state audit with GL counts: HEALTHY=6, PARTIAL=46, MINIMAL=4, MISSING=2 (matches plan exactly). III=338 accts/**0 GL** (D0-2 — true zero-GL holdco, v1.1 over-corrected).
+- Baseline evidence + provision status + abbr inconsistency audit + active-run claim + protected surface registry (4 VERIFIED, 1 REMOVED-STALE) all written.
+- `verify_phase0.py` PASS.
 
-- Phase 1.0/1.1/1.2/1.3/1.3.5/1.5 live execution — scripts not yet authored. See `output/s258/PHASE1_HANDOFF.md` for full handoff to next session.
-- Phase 2 (templates + migration map + 4 stub seeds, 15u)
-- Phase 3a/b/c (III→BKI→BEI Apex rewrite, 30u — high-stakes, deserves own session per plan)
-- Phase 3.5 (BEI AP/AR suffix, 4u)
-- Phase 4 (4000900 discount renumber, 8u)
-- Phase 5 (UPPER CASE + drop number prefix, 8u)
-- Phase 6 (verification + Bridge handoff package, 6u)
-- Phase 7 (closeout, 4u)
+### Phase 1 — Safe Sync (10u, 5 of 6 subtasks PASS; 2 individual targets deferred)
 
-## Key findings logged in DEFECTS.md
+- **A1 PASS 43/44** — `Stock In Hand - <ABBR>` SET on 43 PARTIAL Companies (existed pre-Phase 1). III deferred (D1-3 — root cascade).
+- **A2 PASS** — L77 `stock_received_but_not_billed` set.
+- **A3 PASS (with deviation D1-1)** — ROBDA + XMM round_off pointers canonicalized; ROBDA JE `ACC-JV-2026-00014` (0.80 PHP transfer); both legacy Liability dupes SET disabled=1. Deviation: followed canonical Rule 2 disable-don't-delete instead of plan v1.2 P0-3 DELETE-with-ignore_links.
+- **A4 PASS** — `data/_FINAL/COA_HEALTHY_REFERENCE.csv` (114 stems, 82 in all 6 HEALTHY).
+- **A5 PASS** — `BEBANG FT INC.` abbr BFI2 → BFT via SSM bench execute; SEC tax_id preserved; 2 Cost Centers renamed.
+- **1.3.5 DEFERRED (D1-2)** → Phase 3c. REST API blocked by root_company_validation.
+- `verify_phase1.py` PASS.
 
-- **D0-1:** Cleanroom has 20 COA-175 rows (plan said 23) — gate count adjusted.
-- **D0-2:** III gl_entry_count = 0 (v1.0 was correct; v1.1 over-corrected). III IS a true zero-GL holdco with 338 accounts.
-- **D0-3:** BFC + BFT first_provision_done=0 (expected — both MISSING status). Phase 2/3 scripts must set `frappe.flags.in_migrate=True`.
-- **D0-4:** Abbr inconsistency audit = 0 case issues; BFI2→BFT is semantic rename (Phase 1.5).
-- **D0-5:** S238 protected-surface entry not in worktree's SPRINT_REGISTRY.md (origin/production base) — marked REMOVED-STALE.
+### Phase 2 — Templates (partial, 3u of 15u)
 
-## Next step for executing agent
+- **2.1 Head Office template PASS** — `data/_FINAL/COA_TEMPLATE_HEAD_OFFICE.csv` (114 rows).
+- **2.2 Commissary template PASS** — `data/_FINAL/COA_TEMPLATE_COMMISSARY.csv` (113 rows).
+- **2.3 Franchisor template PASS** — `data/_FINAL/COA_TEMPLATE_FRANCHISOR.csv` (115 rows).
+- **2.0 migration map PENDING** — handoff doc PHASE2_3_HANDOFF.md
+- **2.4 B1 seed BFC, 2.5 B2 seed BFT, 2.6 B3 seed 4 stubs PENDING** — all require SSM bench execute (root_company_validation constraint).
 
-Read `output/s258/PHASE1_HANDOFF.md` and resume Phase 1 in a fresh session
-(prior session consumed ~60% context on Phase 0 + A4 + probes + scripts setup;
-Phase 1's 6 live-mutation subtasks need fresh budget for safety).
+## Critical constraint surfaced
+
+ERPNext root_company_validation forces ALL CREATE-on-child-Company through bench
+execute (SSM). REST API insufficient for: 1.3.5 BEI round_off, A1-III, 2.4 BFC,
+2.5 BFT, 2.6 stubs, Phase 3a 5-root seed. The plan already designed Phase 3a around
+this. Recommended re-ordering: 2.0 (read-only) → 3a (5-root seed via SSM) → re-run
+deferred CREATE attempts under canonical roots → 3b → 3c → … See PHASE2_3_HANDOFF.md.
+
+## Key findings (DEFECTS.md)
+
+- **D0-1**: Cleanroom has 20 COA-175 rows (not 23). Gate adjusted.
+- **D0-2**: III gl_entry_count = 0 (v1.0 was correct; v1.1 over-corrected). III IS a true zero-GL holdco.
+- **D0-3**: BFC + BFT first_provision_done=0. Phase 2/3 scripts must set `frappe.flags.in_migrate=True`.
+- **D0-4**: Abbr inconsistency audit = 0 issues; BFI2→BFT is semantic rename.
+- **D0-5**: S238 surface stale (origin/production base).
+- **D1-1**: A3 deviation — followed canonical Rule 2 (disable-don't-delete) instead of plan's DELETE-with-ignore_links.
+- **D1-2**: 1.3.5 BEI round_off DEFERRED → Phase 3c (REST API cannot bypass `ignore_root_company_validation`).
+- **D1-3**: A1-on-III DEFERRED → Phase 3a (same root-cascade constraint).
+- **D1-4**: A5 first run had `ignore_permissions` kwarg issue on `rename_doc("Cost Center", ...)` — fixed on retry.
+- **D1-5**: A3 first run — `frappe.client.submit` REST endpoint expects form-encoded `doc` — added `submit_doc()` helper to `_lib.py`.
+
+## Next session
+
+Read `output/s258/PHASE2_3_HANDOFF.md` and resume from Phase 2.0 migration map.
+Plan's own embedded `Phase 3 Cold-Start Handoff Prompt` (line ~770) covers Phase 3
+onward in detail; PHASE2_3_HANDOFF.md handles the Phase 2 → 3 bridge.
