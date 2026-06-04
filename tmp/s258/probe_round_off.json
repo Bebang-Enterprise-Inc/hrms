@@ -1,0 +1,65 @@
+{
+  "captured_at": "2026-06-04T15:45:40+0800",
+  "companies": {
+    "ROBDA": {
+      "company": "ROBINSONS PLACE DASMARINAS - FREEZE DELIGHT INC.",
+      "round_off_accounts": [
+        {
+          "name": "2120000 - ROUND OFF - ROBDA",
+          "account_name": "ROUND OFF",
+          "account_number": "2120000",
+          "root_type": "Liability",
+          "account_type": "Round Off",
+          "is_group": 0,
+          "parent_account": "2100000 - CURRENT LIABILITIES - ROBDA",
+          "disabled": 0,
+          "gl_entry_count": 2
+        },
+        {
+          "name": "Round Off - ROBDA",
+          "account_name": "Round Off",
+          "account_number": "",
+          "root_type": "Expense",
+          "account_type": "Round Off",
+          "is_group": 0,
+          "parent_account": "Indirect Expenses - ROBDA",
+          "disabled": 0,
+          "gl_entry_count": 0
+        }
+      ],
+      "upper_form_count": 1,
+      "canonical_form_count": 1,
+      "fallback_path": "JE+DELETE"
+    },
+    "XMM": {
+      "company": "XENTROMALL MONTALBAN - PERPETUAL FOOD CORP.",
+      "round_off_accounts": [
+        {
+          "name": "2120000 - ROUND OFF - XMM",
+          "account_name": "ROUND OFF",
+          "account_number": "2120000",
+          "root_type": "Liability",
+          "account_type": "Round Off",
+          "is_group": 0,
+          "parent_account": "2100000 - CURRENT LIABILITIES - XMM",
+          "disabled": 0,
+          "gl_entry_count": 0
+        },
+        {
+          "name": "Round Off - XMM",
+          "account_name": "Round Off",
+          "account_number": "",
+          "root_type": "Expense",
+          "account_type": "Round Off",
+          "is_group": 0,
+          "parent_account": "Indirect Expenses - XMM",
+          "disabled": 0,
+          "gl_entry_count": 0
+        }
+      ],
+      "upper_form_count": 1,
+      "canonical_form_count": 1,
+      "fallback_path": "JE+DELETE"
+    }
+  }
+}

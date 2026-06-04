@@ -14,13 +14,13 @@
 | 0 | 0.7 Active-run claim | PASS | `output/s258/state/ACTIVE_RUN_COORDINATION.json` — sprint=S258, status=ACTIVE |
 | 0 | 0.8 Protected surface registry | PASS | `output/s258/PROTECTED_SURFACE_REGISTRY.csv` — 4 VERIFIED, 1 REMOVED-STALE (S238) |
 | 0 | verify_phase0.py | PASS | All assertions met |
-| 1 | 1.0 Generate rollback SQL | PENDING | — |
-| 1 | 1.1 A1 — default_inventory_account on 45 PARTIAL | PENDING | — |
-| 1 | 1.2 A2 — stock_received_but_not_billed on L77 | PENDING | — |
-| 1 | 1.3 A3 — dedupe ROUND OFF on ROBDA + XMM | PENDING | — |
-| 1 | 1.3.5 BEI round_off_account canonicalization | PENDING | — |
-| 1 | 1.4 A4 — extract canonical store template | PENDING | — |
-| 1 | 1.5 A5 — BFI2→BFT abbr rename | PENDING | — |
+| 1 | 1.0 Generate rollback SQL | PARTIAL | `scripts/coa_fix/_lib.py::write_rollback_sql()` helper ready; Phase 1 rollback SQL is generated on-demand by each Axx script before mutation. |
+| 1 | 1.1 A1 — default_inventory_account on 45 PARTIAL | PENDING | Script not yet written. Probe shows 43 PARTIAL Companies have `default_inventory_account=NULL`; BEI/BKI have non-canonical Apex names. Pattern: create `Stock In Hand - <ABBR>` Stock leaf under `Current Assets - <ABBR>`; SET tabCompany.default_inventory_account. AYVER quirk: currently points to `Stock In Hand - BMI2` (parent) — needs Sam decision whether to relocate to own ABBR. |
+| 1 | 1.2 A2 — stock_received_but_not_billed on L77 | PENDING | Script not yet written. Pattern: simple `tabCompany.stock_received_but_not_billed = "Stock Received But Not Billed - L77"`. L77 = Legacy77 Food Corp. |
+| 1 | 1.3 A3 — dedupe ROUND OFF on ROBDA + XMM | PARTIAL (probed; script pending) | `scripts/coa_fix/_probe_round_off.py` ran. Findings: ROBDA UPPER form `2120000 - ROUND OFF - ROBDA` is Liability w/ **2 GL postings** → JE+DELETE fallback path required. XMM UPPER form has 0 GL → direct DELETE acceptable (still cross-root_type, so JE-or-flags.ignore_links DELETE per v1.2 P0-3). Canonical `Round Off - ROBDA` and `Round Off - XMM` (Expense) already exist with 0 GL. `tmp/s258/probe_round_off.json`. |
+| 1 | 1.3.5 BEI round_off_account canonicalization | PARTIAL (probed; script pending) | `_probe_bei_round_off.py` ran. Findings: BEI tabCompany.round_off_account currently `Stock Adjustment - Bebang Enterprise Inc.` (Expense, **0 GL** — JE transfer NOT needed, simpler than plan's worst-case). Action: CREATE canonical `Round Off - BEI` Expense under `Indirect Expenses - BEI`, UPDATE tabCompany.round_off_account. `tmp/s258/probe_bei_round_off.json`. |
+| 1 | 1.4 A4 — extract canonical store template | PASS | `data/_FINAL/COA_HEALTHY_REFERENCE.csv` — 114 unique account stems unioned from 6 HEALTHY Companies (AYVER, BMI2, GHO, SMK, BDV, BAG). 82 stems appear in ALL 6. Sales tree (4000000..4000235) fully canonical. |
+| 1 | 1.5 A5 — BFI2→BFT abbr rename | PARTIAL (grep gate PASS; script pending) | Step a grep of `hrms/api/` + `hrms/utils/` for literal "BFI2": **0 hits** (PASS — safe to proceed). Script not yet written. BFI2 abbr exists on Frappe Company "BEBANG FT INC." with 0 accounts (status=MISSING per baseline) — so the per-Account rename loop touches 0 rows. Only the abbr field itself needs updating via `flags.ignore_validate_constants` + `frappe.db.set_value`. Lower risk than v1.1 assumed (no cascading account renames since BFT has 0 accounts yet — Phase 2.5 B2 seeds them under the new BFT abbr). |
 | 2 | 2.0 Build per-Company migration map (BEI/BKI/III) | PENDING | — |
 | 2 | 2.0a Generate rollback SQL | PENDING | — |
 | 2 | 2.1 Head Office template | PENDING | — |
