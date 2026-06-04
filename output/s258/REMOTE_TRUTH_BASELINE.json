@@ -1,0 +1,8 @@
+{
+  "repo": "hrms",
+  "release_branch": "production",
+  "release_head_sha": "94443fa79726398e80927edf5b7b6b1b69ff1906",
+  "live_evidence_basis": "tmp/coa_audit/REPORT.md (2026-06-04 audit)",
+  "captured_by_sprint": "S258",
+  "captured_date": "2026-06-04"
+}

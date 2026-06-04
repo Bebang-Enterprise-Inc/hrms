@@ -1,0 +1,13 @@
+# S258 DEFECTS — running register
+
+Each row = a deviation from the planned state surfaced during execution. Mode classification per plan §Failure Response (A=app, B=script, C=data, D=Sam policy).
+
+## Phase 0 — Boot + Preflight + Audit
+
+| # | Mode | Subtask | Finding | Disposition |
+|---|---|---|---|---|
+| D0-1 | D (plan-author) | 0.0 verification gate | Plan said `grep -c "^\| COA-175-0" ≥ 23`. Cleanroom `02_LOCKED_DECISIONS.md` contains exactly 20 numbered locks (COA-175-001..020). No 021/022/023 exist in any cleanroom or canonical source. Gate adjusted to `≥20` at Phase 0.0; total reaches `≥27` after Phase 7.1 adds COA-175-024..030. | ACCEPTED. Source truth (cleanroom) governs; gate recount documented in `verify_phase0.py`. |
+| D0-2 | D (plan-author) | 0.6 (audit C5 amend) | v1.1 amendment said III gl_entry_count is non-zero (asserted to "correct v1.0 zero-postings holdco assumption"). Live audit shows III gl_entry_count = 0. v1.0 zero-GL assumption was correct; v1.1 over-corrected. Note: III IS a true zero-GL holdco with 338 accounts (highest of three Apex parents). Design Rationale ordering (III→BKI→BEI) remains valid for *combined* reasons: III has zero-GL (low blast radius) + smallest sales sub-tree complexity. | ACCEPTED. Verified live: III=0 GL, BKI=13660 GL, BEI=2031 GL. Phase 3a still runs first per plan ordering. |
+| D0-3 | C (data) | 0.5.5 | 2 Companies have `first_provision_done` != 1: `BEBANG FRANCHISE CORP.` and `BEBANG FT INC.` Both are MISSING status (0 accounts). Expected — they haven't been provisioned yet. Per W7 amendment, Phase 2 + 3 scripts that seed these Companies MUST set `frappe.flags.in_migrate = True` in script preamble to prevent the `auto_provision_company` hook re-firing during seeding. | ACCEPTED. Phase 2.4 (B1 BFC seed) + Phase 2.5 (B2 BFT seed) scripts will include the flag. |
+| D0-4 | C (data) | 0.6.5 | Abbr inconsistency audit found 0 inconsistencies (SQL fallback used per v1.2 P1-7; cleanroom `find` returned 0 hits as expected). All Company names + abbrs already UPPER. BFI2→BFT is a SEMANTIC rename (Sam directive) not a case-fix; Phase 1.5 handles it independently. `scope_expansion_required = false`. | ACCEPTED. Phase 1.5 scope unchanged. |
+| D0-5 | C (data) | 0.8 | Protected surface registry entry for S238 (store-side PI generator in flight) did NOT appear in worktree's SPRINT_REGISTRY.md (origin/production base). Marked REMOVED-STALE per Phase 0.8 mechanic. Two `[VERIFIED]` file-on-disk entries (S253 bki_store_pi_generator.py, S206 labor_allocation.py) confirmed. | ACCEPTED per plan procedure ("Remove dead entries; cite real paths verified by grep + glob"). |
