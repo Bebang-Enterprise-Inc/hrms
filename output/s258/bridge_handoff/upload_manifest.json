@@ -1,0 +1,25 @@
+{
+  "generated_at": "2026-06-04T18:37:53+0800",
+  "files": [
+    {
+      "filename": "per_company_coa.zip",
+      "byte_count": 118664,
+      "sha256": "e0b4d519691a18f6ebe3ca85d1ecbef24088d02d40d6fc2cee17535123f7e7c5"
+    },
+    {
+      "filename": "coa_export_zip_manifest.csv",
+      "byte_count": 6475,
+      "sha256": "de22268c3e8a11ae83f61b518330dd4d46b81077ab0546e654ab7bb7aa4b5b27"
+    },
+    {
+      "filename": "master_reconciliation.csv",
+      "byte_count": 3995,
+      "sha256": "ee6d8e2a2cf0196ed428e6d99754e53a6aa1fcc035f446f6a8dd06786604e263"
+    },
+    {
+      "filename": "validation.md",
+      "byte_count": 3902,
+      "sha256": "e73d4a3b5096e5e67e8d08138c0063951748a2a958b25bb9f9fb450f75f3eacf"
+    }
+  ]
+}

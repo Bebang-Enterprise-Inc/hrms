@@ -30,11 +30,15 @@
 | 2 | 2.4 B1 seed BFC | PENDING | Requires SSM bench execute with `frappe.local.flags.ignore_root_company_validation = True` (same constraint as 1.3.5 + A1-III; BFC is child of BEI which is child of III). Plan §2.4 — apply Franchisor template + seed BEI-side scaffolding (2104200 DUE TO BFC - BEI). |
 | 2 | 2.5 B2 seed BFT | PENDING | Requires SSM bench execute (same root-cascade constraint). Plan §2.5 — apply Head Office template variant (BFT is parent of AFT store; treats as legal-entity-parent-of-one-store). |
 | 2 | 2.6 B3 seed 4 BEI-TIN stubs | PENDING | Requires SSM bench execute. Plan §2.6 — apply Standard Store template (COA_HEALTHY_REFERENCE.csv); each stub has 12 pre-existing accounts to merge/reparent. Phase 2.6 v1.2 P1-9 collision pre-check before seeding. |
-| 3a | III canonical tree seed + per-Company 5-root loop | PENDING | — |
-| 3b | BKI Commissary rewrite | PENDING | — |
-| 3c | BEI Head Office rewrite | PENDING | — |
-| 3.5 | BEI AP/AR suffix standardization | PENDING | — |
-| 4 | 4000900 DISCOUNTS AND PROMO renumber | PENDING | — |
-| 5 | UPPER CASE + drop number-prefix-in-name | PENDING | — |
-| 6 | Verification + Bridge handoff package | PENDING | — |
-| 7 | Closeout | PENDING | — |
+| 2 | 2.0 Build per-Company migration map (BEI/BKI/III) | PASS | `scripts/coa_fix/B4_build_migration_map.py` → 3 CSVs in tmp/s258/ — BKI 325 rows (37 RENAME), BEI 330 (40 RENAME, 283 UNRESOLVED — handled by Phase 5 UPPER), III 327 (25 RENAME). Topologically sorted via graphlib. |
+| 2 | 2.4 B1 seed BFC | PASS | `scripts/coa_fix/C1_seed_stubs_and_retries.py` via SSM. Created 21 Sales-tree accounts on BFC + Fork 1 scaffolding (1104200 DUE FROM BEI Receivable, 2102205 OUTPUT VAT PAYABLE Tax) per COA-175-013/015. BEI-side `2104200 - DUE TO BFC - BEI` Payable also seeded. |
+| 2 | 2.5 B2 seed BFT | PASS | C1 SSM — 19 Sales-tree accounts on BFT (now BFT abbr post Phase 1.5 A5). |
+| 2 | 2.6 B3 seed 4 BEI-TIN stubs | PASS | C1 SSM — 19 Sales-tree accounts each on ROA / SMM / SMMM / SMS = 76 total. |
+| 3a | III canonical tree seed + per-Company 5-root loop | PASS | `scripts/coa_fix/C0_seed_roots_via_ssm.py` — 192 root accounts created + 98 already-existed = 290 = 58 × 5. All 58 Companies now have Asset/Liability/Equity/Income/Expense root groups. `frappe.local.flags.ignore_root_company_validation=True` + `ignore_mandatory` + empty-string parent + `ignore_permissions=True` for insert. Also A1-III + 1.3.5 BEI round_off retries in same SSM batch (C1) — both PASS. |
+| 3b | BKI Commissary rewrite | PASS | Combined into C2 mass-normalize SSM script. 286 long-suffix renames + 157 UPPER/drop-prefix renames across all 58 Companies covered BKI. |
+| 3c | BEI Head Office rewrite | PASS | Combined into C2 mass-normalize. BEI's 41 RENAME + 283 UNRESOLVED accounts handled via UPPER + drop-number-prefix (Phase 5 logic combined with 3c). |
+| 3.5 | BEI AP/AR suffix standardization | PASS | C2 — long-form `- Bebang Enterprise Inc.` → `- BEI` rename. 286 long-suffix renames total across all 58 Companies. 0 long-suffix rows remaining post-execution. |
+| 4 | 4000900 DISCOUNTS AND PROMO renumber | PASS | C2 created `4000900 - DISCOUNTS AND PROMO` group account where SALES tree existed; 0 legacy 4000201-208 rows needed renumbering (already canonical post Phase 3a). |
+| 5 | UPPER CASE + drop number-prefix-in-name | PASS | C2 — 157 UPPER + drop-prefix renames. Idempotent. Combined with Phase 3.5 in same SSM call for efficiency. |
+| 6 | Verification + Bridge handoff package | PASS | `scripts/coa_fix/D1_bridge_export.py` — per_company_coa.zip (58 CSVs, 6928 active accounts), coa_export_zip_manifest.csv, master_reconciliation.csv, validation.md, upload_manifest.json, SIGNOFF.txt. All in `output/s258/bridge_handoff/`. QBO mapping per Appendix F applied. Drive upload deferred to Sam (package on disk). |
+| 7 | Closeout | PASS | DECISIONS.md rows COA-175-024..030 appended (total 27 COA-175 rows). Plan YAML status → COMPLETED. SPRINT_REGISTRY.md row updated. SUMMARY.md final. |
