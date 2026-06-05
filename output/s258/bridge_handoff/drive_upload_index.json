@@ -1,0 +1,72 @@
+{
+  "folder_id": "1GnrFKICFYN6xz9IKeAFCM0xYtFN02OcE",
+  "folder_url": "https://drive.google.com/drive/folders/1GnrFKICFYN6xz9IKeAFCM0xYtFN02OcE",
+  "folder_name": "BEI COA Handoff",
+  "editors": [
+    "anna.r@bridge-ph.com",
+    "kim.c@bridge-ph.com",
+    "flor.a@bridge-ph.com",
+    "accountant.outsource@bridge-ph.com",
+    "denise@bebang.ph",
+    "anthony@bebang.ph",
+    "sheena@bebang.ph",
+    "drew@bebang.ph"
+  ],
+  "files": [
+    {
+      "name": "per_company_coa.zip",
+      "url": "https://drive.google.com/file/d/1yBidpnZaKF5b8gjxXwOB9DoKtAfEKiUN/view?usp=drivesdk",
+      "mime": "application/zip",
+      "id": "1yBidpnZaKF5b8gjxXwOB9DoKtAfEKiUN"
+    },
+    {
+      "name": "coa_export_zip_manifest.csv",
+      "url": "https://drive.google.com/file/d/1LU4peb6ExnqWwbcNGKQ-dpe0jVYmcNig/view?usp=drivesdk",
+      "mime": "text/csv",
+      "id": "1LU4peb6ExnqWwbcNGKQ-dpe0jVYmcNig"
+    },
+    {
+      "name": "upload_manifest.json",
+      "url": "https://drive.google.com/file/d/19aRaLmJyfy7hvH7lUgNwY5Dx_N9cZgHR/view?usp=drivesdk",
+      "mime": "application/json",
+      "id": "19aRaLmJyfy7hvH7lUgNwY5Dx_N9cZgHR"
+    },
+    {
+      "name": "master_reconciliation.xlsx",
+      "url": "https://docs.google.com/spreadsheets/d/1KZ1xeIIKiHPHRg_KOXVJy3Eq0d1wK3ph/edit?usp=drivesdk&ouid=115141803777443372092&rtpof=true&sd=true",
+      "mime": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "id": "1KZ1xeIIKiHPHRg_KOXVJy3Eq0d1wK3ph"
+    },
+    {
+      "name": "master_reconciliation (Google Sheets)",
+      "url": "https://docs.google.com/spreadsheets/d/1OBcaG1kxFb35VsadN2cLhXmlWFIt-Ll9XjKeCUGAZms/edit?usp=drivesdk",
+      "mime": "application/vnd.google-apps.spreadsheet",
+      "id": "1OBcaG1kxFb35VsadN2cLhXmlWFIt-Ll9XjKeCUGAZms"
+    },
+    {
+      "name": "SIGNOFF.docx",
+      "url": "https://docs.google.com/document/d/1T5QmwXy-65BwL2KrGKo5NOC3_i9TXEIH/edit?usp=drivesdk&ouid=115141803777443372092&rtpof=true&sd=true",
+      "mime": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "id": "1T5QmwXy-65BwL2KrGKo5NOC3_i9TXEIH"
+    },
+    {
+      "name": "SIGNOFF (Google Doc)",
+      "url": "https://docs.google.com/document/d/1MELen0KfU4Hp6jX-yDpOAzRtUKp11cDui5lyn-tjIRM/edit?usp=drivesdk",
+      "mime": "application/vnd.google-apps.document",
+      "id": "1MELen0KfU4Hp6jX-yDpOAzRtUKp11cDui5lyn-tjIRM"
+    },
+    {
+      "name": "validation (Google Doc)",
+      "url": "https://docs.google.com/document/d/1Jnq3SFD-jAik3EFHLPfFYch6cs-7Q0UfYFvcyjviEy8/edit?usp=drivesdk",
+      "mime": "application/vnd.google-apps.document",
+      "id": "1Jnq3SFD-jAik3EFHLPfFYch6cs-7Q0UfYFvcyjviEy8"
+    },
+    {
+      "name": "BRIDGE_READINESS_ASSESSMENT (Google Doc)",
+      "url": "https://docs.google.com/document/d/1Snw056nnWsCaHrqWeoc-KjPX7QvsLzlkN3pZTNSOcoI/edit?usp=drivesdk",
+      "mime": "application/vnd.google-apps.document",
+      "id": "1Snw056nnWsCaHrqWeoc-KjPX7QvsLzlkN3pZTNSOcoI"
+    }
+  ],
+  "uploaded_at": "2026-06-05T11:48:01+0800"
+}
