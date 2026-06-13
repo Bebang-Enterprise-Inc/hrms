@@ -58,6 +58,8 @@ DEVICE_TO_STORE = {
     'UDP3254701502': 'XENTROMALL MONTALBAN',  # S230: matches Frappe tabEmployee.branch for the 12 active Xentro crew + Frappe Company XENTROMALL MONTALBAN - PERPETUAL FOOD CORP.
     'UDP3254800655': '3MD COMMISSARY',  # S239 (2026-05-07): new commissary device at 3MD Logistics Camangyanan facility, Sta Maria, Bulacan — standalone (NOT in cluster 1-9, similar to Shaw Commissary). Renamed 2026-05-07 from CAMANGYANAN BULACAN per CEO directive.
     'UDP3254701583': 'ALABANG TOWN CENTER',  # S244 (2026-05-11): ATC store; joins Cluster 6 South (David Ramal) as D6 alongside Bicutan, BF Homes, Terminal, Festival, Southmall
+    'UDP3254800652': 'SM SAN PABLO',  # DTR-step1 (2026-06-13): live device, was syncing to Supabase as UNKNOWN
+    'UDP3254701501': 'ROBINSONS DASMA',  # DTR-step1 (2026-06-13): store opened ~2026-06-01, was syncing as UNKNOWN
 }
 
 def get_store_name(serial_number: str) -> str:
