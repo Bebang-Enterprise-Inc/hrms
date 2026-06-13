@@ -377,24 +377,98 @@ def _fetch_all_devices_range(ssm_client, start: date, end: date, store_filter: s
     return all_punches
 
 
-def _fetch_incremental(ssm_client) -> list[dict] | None:
-    """Fetch recent punches (last 2 hours) from all devices.
+INCREMENTAL_PAGE_SIZE = 250  # rows/page — well under the SSM ~24KB stdout cap
+INCREMENTAL_FLOOR_HOURS = 2  # if Supabase is empty, look back this far (PHT)
 
-    Returns None if SSM query failed (container unreachable, etc.).
-    Returns empty list if query succeeded but no punches found.
+
+def _incremental_watermark() -> datetime:
+    """Return the lower-bound for the incremental fetch, as PHT-naive wall-clock.
+
+    CONTRACT (see D-6): ADMS `event_time` is stored as PHT-naive wall-clock;
+    the ADMS DB session is UTC, so any bound passed to ADMS must be PHT-naive
+    (NOT `NOW()`, which is UTC and would select a ~10h span instead of the
+    intended window — the original D-1 bug). Supabase `event_time` is UTC, so
+    the high-watermark (MAX synced punch) is read in UTC and converted to PHT
+    wall-clock before it is handed to ADMS.
+
+    The watermark is the later of (a) MAX(event_time) already in Supabase and
+    (b) a NOW(PHT)-INTERVAL floor (guards a fresh/empty Supabase from pulling
+    the whole table). Re-fetching the boundary row across runs is harmless: the
+    upsert is idempotent (on_conflict=pin,event_time,device_sn).
     """
-    sql = (
-        "SELECT id, pin, event_time, status_code, verify_code, sn "
-        "FROM adms_attlog_raw "
-        "WHERE event_time >= NOW() - INTERVAL '2 hours' "
-        "ORDER BY event_time"
+    floor_pht = datetime.now(PHT).replace(tzinfo=None) - timedelta(
+        hours=INCREMENTAL_FLOOR_HOURS
     )
-    raw = _run_ssm_query(ssm_client, sql, "incremental-2h")
-    if raw is None:
-        return None  # SSM failed — caller must distinguish from "no data"
-    if not raw:
-        return []
-    return _parse_ssm_output(raw)
+    try:
+        r = httpx.get(
+            f"{SUPABASE_URL}/rest/v1/attendance_punches"
+            f"?select=event_time&order=event_time.desc&limit=1",
+            headers=_HEADERS,
+            timeout=30,
+        )
+        r.raise_for_status()
+        rows = r.json()
+        if rows:
+            # Supabase event_time is UTC ISO-8601 -> PHT wall-clock (naive).
+            max_utc = datetime.fromisoformat(rows[0]["event_time"])
+            max_pht = max_utc.astimezone(PHT).replace(tzinfo=None)
+            return max(floor_pht, max_pht)
+    except (httpx.HTTPError, KeyError, ValueError) as e:
+        print(f"  Watermark lookup failed ({e}); using {INCREMENTAL_FLOOR_HOURS}h floor", flush=True)
+    return floor_pht
+
+
+def _fetch_incremental(ssm_client) -> list[dict] | None:
+    """Fetch new punches since the high-watermark, paging so SSM never truncates.
+
+    Pages ADMS in ascending event_time, INCREMENTAL_PAGE_SIZE rows at a time,
+    advancing the lower bound past the last row of each page until a short page
+    signals exhaustion. This guarantees no punch is silently dropped — the
+    original bug used `ORDER BY ASC` with no LIMIT, so SSM's ~24KB stdout cap
+    kept only the OLDEST ~287 rows and silently lost the newest ~520/day.
+
+    Returns None if an SSM query failed (container unreachable, etc.).
+    Returns empty list if querying succeeded but no new punches exist.
+    """
+    watermark = _incremental_watermark()
+    print(f"  Incremental watermark (PHT): {watermark.isoformat(sep=' ')}", flush=True)
+
+    all_rows: list[dict] = []
+    seen_ids: set[str] = set()
+    bound = watermark.isoformat(sep=" ")
+
+    while True:
+        sql = (
+            f"SELECT id, pin, event_time, status_code, verify_code, sn "
+            f"FROM adms_attlog_raw "
+            f"WHERE event_time >= '{bound}' "
+            f"ORDER BY event_time ASC "
+            f"LIMIT {INCREMENTAL_PAGE_SIZE}"
+        )
+        raw = _run_ssm_query(ssm_client, sql, f"incremental from {bound}")
+        if raw is None:
+            return None  # SSM failed — caller must distinguish from "no data"
+        if not raw:
+            break
+        page = _parse_ssm_output(raw)
+        # De-dup the boundary rows re-read because the bound is inclusive (>=).
+        new = [p for p in page if p["adms_id"] not in seen_ids]
+        for p in new:
+            seen_ids.add(p["adms_id"])
+        all_rows.extend(new)
+        if len(page) < INCREMENTAL_PAGE_SIZE:
+            break  # last (short) page — exhausted
+        next_bound = page[-1]["event_time"]
+        if next_bound == bound:
+            # A full page that did not advance past the inclusive bound means
+            # >PAGE_SIZE rows share one second-resolution timestamp. Bail to
+            # avoid an infinite loop; the next run re-reads from the watermark
+            # (idempotent upsert), so this defers — never drops — those rows.
+            print(f"  WARN: >{INCREMENTAL_PAGE_SIZE} rows at {bound}; deferring tail to next run", flush=True)
+            break
+        bound = next_bound  # advance the inclusive lower bound
+
+    return all_rows
 
 
 # ---------------------------------------------------------------------------
@@ -445,8 +519,8 @@ def cmd_backfill(args):
 
 
 def cmd_incremental(args):
-    """Incremental sync (last 2 hours)."""
-    print("INCREMENTAL SYNC (last 2 hours)", flush=True)
+    """Incremental sync (paged from the high-watermark)."""
+    print("INCREMENTAL SYNC (paged from high-watermark)", flush=True)
 
     _load_employee_lookup()
     ssm = _get_ssm_client()
