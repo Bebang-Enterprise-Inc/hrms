@@ -60,7 +60,13 @@ SSM_POLL_INTERVAL = 2
 SUPABASE_URL = os.environ.get("SUPABASE_URL", "https://csnniykjrychgajfrgua.supabase.co")
 UPSERT_BATCH_SIZE = 500
 DEDUP_WINDOW_SECS = 60  # Near-duplicate suppression window
-BACKFILL_WINDOW_HOURS = 6
+# Backfill now issues ONE all-device query per window (see _fetch_window), so a
+# window packs ~50x more rows than the old per-device query. Busiest period is
+# ~1,100 punches/day across all stores (~46/hr, ~60 bytes/row), so a 3h window
+# is ~8.3KB typical — comfortably under SSM's ~24KB stdout cap, with adaptive
+# sub-splitting (halve-and-retry on truncation) as the completeness guarantee
+# for any abnormally busy window.
+BACKFILL_WINDOW_HOURS = 3
 PHT = timezone(timedelta(hours=8))
 
 
@@ -170,8 +176,15 @@ def _get_ssm_client():
     return boto3.client("ssm", region_name=REGION)
 
 
-def _run_ssm_query(ssm_client, sql: str, description: str = "query") -> str | None:
-    """Execute SQL via SSM and return pipe-delimited output."""
+def _run_ssm_query(ssm_client, sql: str, description: str = "query", return_truncation: bool = False):
+    """Execute SQL via SSM and return pipe-delimited output.
+
+    Default return is ``str | None`` (output, or None on SSM failure). When
+    ``return_truncation=True`` the return is ``tuple[str | None, bool]`` where
+    the second element is True iff SSM hit its ~24KB stdout cap. The backfill
+    window fetcher uses that flag to sub-split a window and retry (see
+    ``_fetch_window``); other callers keep the simple str|None contract.
+    """
     cmd = f"docker exec {DB_CONTAINER} psql -U adms -d adms -t -A -F'|' -c \"{sql}\""
     try:
         resp = ssm_client.send_command(
@@ -200,23 +213,24 @@ def _run_ssm_query(ssm_client, sql: str, description: str = "query") -> str | No
             # SSM truncates output at ~24KB, appending "--output truncated--"
             # which corrupts the last data line. Strip the marker and drop
             # the corrupted final line.
-            if output.endswith("--output truncated--"):
+            truncated = output.endswith("--output truncated--")
+            if truncated:
                 output = output[: -len("--output truncated--")]
                 lines = output.strip().splitlines()
                 if lines:
                     lines = lines[:-1]  # Drop last (partial) line
                 output = "\n".join(lines)
                 print(f"  SSM WARN [{description}]: output truncated, dropped last line", flush=True)
-            return output
+            return (output, truncated) if return_truncation else output
         else:
             status = result["Status"] if result else "NoResult"
             err = (result.get("StandardErrorContent", "") if result else "")[:300]
             print(f"  SSM FAILED [{description}]: {status} — {err}", flush=True)
-            return None
+            return (None, False) if return_truncation else None
 
     except Exception as e:
         print(f"  SSM ERROR [{description}]: {e}", flush=True)
-        return None
+        return (None, False) if return_truncation else None
 
 
 def _parse_ssm_output(raw: str) -> list[dict]:
@@ -321,29 +335,71 @@ def _upsert_punches(punches: list[dict], dry_run: bool = False) -> int:
 # Fetch Modes
 # ---------------------------------------------------------------------------
 
-def _fetch_device_window(ssm_client, device_sn: str, start_dt: datetime, end_dt: datetime) -> list[dict]:
-    """Fetch punches for one device for a bounded datetime window."""
+def _build_backfill_windows(start: date, end: date) -> list[tuple[datetime, datetime]]:
+    """Split a date range into BACKFILL_WINDOW_HOURS-sized [start, end) windows."""
+    windows = []
+    window_start = datetime.combine(start, datetime.min.time())
+    end_dt = datetime.combine(end + timedelta(days=1), datetime.min.time())
+    while window_start < end_dt:
+        window_end = min(window_start + timedelta(hours=BACKFILL_WINDOW_HOURS), end_dt)
+        windows.append((window_start, window_end))
+        window_start = window_end
+    return windows
+
+
+def _fetch_window(ssm_client, start_dt: datetime, end_dt: datetime, devices: list[str] | None) -> list[dict]:
+    """Fetch ALL target devices' punches for one [start, end) window in ONE query.
+
+    ``devices`` is the device-SN allow-list (from a --store filter) or None to
+    query every device with no ``sn`` filter. If SSM truncates the result
+    (window held more rows than the ~24KB cap), the window is split in half and
+    each half retried recursively, so completeness never depends on the window
+    size being small enough up front.
+    """
+    sn_clause = ""
+    if devices is not None:
+        sn_list = ",".join(f"'{d}'" for d in devices)
+        sn_clause = f"sn IN ({sn_list}) AND "
     sql = (
         f"SELECT id, pin, event_time, status_code, verify_code, sn "
         f"FROM adms_attlog_raw "
-        f"WHERE sn = '{device_sn}' "
-        f"AND event_time >= '{start_dt.isoformat(sep=' ')}' "
+        f"WHERE {sn_clause}"
+        f"event_time >= '{start_dt.isoformat(sep=' ')}' "
         f"AND event_time < '{end_dt.isoformat(sep=' ')}' "
         f"ORDER BY event_time"
     )
-    raw = _run_ssm_query(
+    raw, truncated = _run_ssm_query(
         ssm_client,
         sql,
-        f"{device_sn} {start_dt.isoformat(sep=' ')}..{end_dt.isoformat(sep=' ')}",
+        f"all-devices {start_dt.isoformat(sep=' ')}..{end_dt.isoformat(sep=' ')}",
+        return_truncation=True,
     )
+    if truncated:
+        # Too many rows for one SSM response. Split the window and retry each
+        # half. Stop splitting at 1-second granularity to avoid infinite
+        # recursion if a single second somehow exceeds the cap (impossible in
+        # practice: ~46 punches/hr all-store).
+        span = end_dt - start_dt
+        if span > timedelta(seconds=1):
+            mid = start_dt + span / 2
+            print(f"  Sub-split window {start_dt.isoformat(sep=' ')}..{end_dt.isoformat(sep=' ')} (truncated)", flush=True)
+            return (
+                _fetch_window(ssm_client, start_dt, mid, devices)
+                + _fetch_window(ssm_client, mid, end_dt, devices)
+            )
     if not raw:
         return []
     return _parse_ssm_output(raw)
 
 
 def _fetch_all_devices_range(ssm_client, start: date, end: date, store_filter: str | None = None) -> list[dict]:
-    """Fetch punches from all devices for a date range using small windows to avoid SSM truncation."""
-    devices = list(DEVICE_TO_STORE.keys())
+    """Fetch punches from all devices for a date range, ONE query per window.
+
+    Collapses the old N(devices)xM(windows) SSM round-trips to M: each window is
+    a single all-device query (with adaptive sub-split on truncation). For a
+    19-day all-store range that is ~152 windows instead of ~7,600 queries.
+    """
+    devices = None
     if store_filter:
         store_upper = store_filter.upper()
         devices = [d for d, s in DEVICE_TO_STORE.items() if store_upper in s.upper()]
@@ -352,28 +408,17 @@ def _fetch_all_devices_range(ssm_client, start: date, end: date, store_filter: s
             return []
 
     all_punches = []
-    total_devices = len(devices)
+    windows = _build_backfill_windows(start, end)
+    total_queries = len(windows)
 
-    windows = []
-    window_start = datetime.combine(start, datetime.min.time())
-    end_dt = datetime.combine(end + timedelta(days=1), datetime.min.time())
-    while window_start < end_dt:
-        window_end = min(window_start + timedelta(hours=BACKFILL_WINDOW_HOURS), end_dt)
-        windows.append((window_start, window_end))
-        window_start = window_end
+    for done, (window_start, window_end) in enumerate(windows, start=1):
+        if done % 20 == 0 or done == total_queries:
+            print(f"  SSM progress: {done}/{total_queries} windows ({len(all_punches)} rows so far)", flush=True)
+        rows = _fetch_window(ssm_client, window_start, window_end, devices)
+        all_punches.extend(rows)
 
-    total_queries = total_devices * len(windows)
-    done = 0
-
-    for window_start, window_end in windows:
-        for idx, device_sn in enumerate(devices):
-            done += 1
-            if done % 20 == 0 or done == total_queries:
-                print(f"  SSM progress: {done}/{total_queries} queries ({len(all_punches)} rows so far)", flush=True)
-            rows = _fetch_device_window(ssm_client, device_sn, window_start, window_end)
-            all_punches.extend(rows)
-
-    print(f"  Fetched {len(all_punches)} raw punches from {total_devices} devices", flush=True)
+    scope = f"{len(devices)} devices" if devices is not None else "all devices"
+    print(f"  Fetched {len(all_punches)} raw punches from {scope} ({total_queries} windows)", flush=True)
     return all_punches
 
 
